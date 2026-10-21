@@ -1,0 +1,15 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 5,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 0.8
+    },
+    {
+      "attr": "attack_speed",
+      "perLevel": 0.3
+    }
+  ],
+  "event": "ranged_power:0.20,crit:0.08"
+}

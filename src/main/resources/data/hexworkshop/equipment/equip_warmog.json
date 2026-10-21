@@ -1,0 +1,13 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 9,
+  "icon": "♥",
+  "sell": 1000,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 25.0
+    }
+  ],
+  "event": "regen:0.5"
+}

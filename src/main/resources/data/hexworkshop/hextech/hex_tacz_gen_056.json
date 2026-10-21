@@ -1,0 +1,11 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 8,
+  "mods": [
+    {
+      "attr": "movement_speed",
+      "perLevel": 0.012
+    }
+  ],
+  "event": "tacz_heal:3"
+}

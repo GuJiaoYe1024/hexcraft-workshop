@@ -1,0 +1,18 @@
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 8.0
+    },
+    {
+      "attr": "armor",
+      "perLevel": 2.0
+    },
+    {
+      "attr": "knockback_resistance",
+      "perLevel": 0.15
+    }
+  ]
+}

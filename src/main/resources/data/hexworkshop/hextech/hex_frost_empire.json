@@ -1,0 +1,11 @@
+{
+  "rarity": "GOLD",
+  "weight": 6,
+  "mods": [
+    {
+      "attr": "tough",
+      "perLevel": 2.0
+    }
+  ],
+  "event": "frost_bite:0.4,splash:0.2"
+}

@@ -1,0 +1,11 @@
+{
+  "rarity": "SILVER",
+  "weight": 10,
+  "mods": [
+    {
+      "attr": "attack_knockback",
+      "perLevel": 0.4
+    }
+  ],
+  "event": "jump:0.08"
+}

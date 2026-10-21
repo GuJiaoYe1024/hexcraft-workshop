@@ -1,0 +1,11 @@
+{
+  "rarity": "SILVER",
+  "weight": 8,
+  "mods": [
+    {
+      "attr": "movement_speed",
+      "perLevel": 0.02
+    }
+  ],
+  "event": "mobi_power:0.35"
+}

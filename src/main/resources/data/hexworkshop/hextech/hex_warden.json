@@ -1,0 +1,18 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 5,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 8.0
+    },
+    {
+      "attr": "knockback_resistance",
+      "perLevel": 0.2
+    },
+    {
+      "attr": "max_health",
+      "perLevel": 8.0
+    }
+  ]
+}

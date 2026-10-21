@@ -1,0 +1,17 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 9,
+  "icon": "⛊",
+  "sell": 1000,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 10.0
+    },
+    {
+      "attr": "tough",
+      "perLevel": 7.5
+    }
+  ],
+  "event": "melee_power:0.25"
+}

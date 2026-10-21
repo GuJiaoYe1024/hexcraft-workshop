@@ -1,0 +1,13 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "☠",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 8.0
+    }
+  ],
+  "event": "thorns:2.0,counter:0.1"
+}

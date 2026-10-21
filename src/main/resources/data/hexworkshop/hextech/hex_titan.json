@@ -1,0 +1,14 @@
+{
+  "rarity": "GOLD",
+  "weight": 6,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 2.5
+    },
+    {
+      "attr": "max_health",
+      "perLevel": 6.0
+    }
+  ]
+}

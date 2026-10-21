@@ -1,0 +1,13 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "♛",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 8.0
+    }
+  ],
+  "event": "death_defy:0.5"
+}

@@ -1,0 +1,17 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "☰",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 16.0
+    },
+    {
+      "attr": "attack_damage",
+      "perLevel": 1.0
+    }
+  ],
+  "event": "splash:0.35"
+}

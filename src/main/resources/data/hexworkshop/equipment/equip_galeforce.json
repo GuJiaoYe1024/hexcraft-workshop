@@ -1,0 +1,17 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 9,
+  "icon": "➶",
+  "sell": 1000,
+  "mods": [
+    {
+      "attr": "attack_speed",
+      "perLevel": 0.25
+    },
+    {
+      "attr": "movement_speed",
+      "perLevel": 0.025
+    }
+  ],
+  "event": "splash:0.4"
+}

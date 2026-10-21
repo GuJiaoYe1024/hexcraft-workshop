@@ -1,0 +1,11 @@
+{
+  "rarity": "SILVER",
+  "weight": 9,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 0.3
+    }
+  ],
+  "event": "echo:0.15"
+}

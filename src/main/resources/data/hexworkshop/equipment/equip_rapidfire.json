@@ -1,0 +1,17 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "➶",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "attack_speed",
+      "perLevel": 0.16
+    },
+    {
+      "attr": "movement_speed",
+      "perLevel": 0.02
+    }
+  ],
+  "event": "splash:0.15"
+}

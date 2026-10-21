@@ -1,0 +1,17 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 9,
+  "icon": "♆",
+  "sell": 1000,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 7.5
+    },
+    {
+      "attr": "tough",
+      "perLevel": 7.5
+    }
+  ],
+  "event": "stack_growth:0.02"
+}

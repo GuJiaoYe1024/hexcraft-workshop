@@ -1,0 +1,7 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "☠",
+  "sell": 625,
+  "event": "frost_bite:0.2,lifesteal:0.24"
+}

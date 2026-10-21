@@ -1,0 +1,13 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "₿",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 1.0
+    }
+  ],
+  "event": "execute:0.2,coin_bonus:0.25"
+}

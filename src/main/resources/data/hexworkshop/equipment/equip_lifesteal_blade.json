@@ -1,0 +1,13 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "⚔",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 3.0
+    }
+  ],
+  "event": "lifesteal:0.08"
+}

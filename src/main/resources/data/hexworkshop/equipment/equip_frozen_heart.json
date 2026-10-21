@@ -1,0 +1,13 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "❄",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 6.0
+    }
+  ],
+  "event": "frost_bite:0.3"
+}

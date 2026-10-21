@@ -1,0 +1,11 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [
+    {
+      "attr": "tough",
+      "perLevel": 4.0
+    }
+  ],
+  "event": "arcane_shield:0.15"
+}

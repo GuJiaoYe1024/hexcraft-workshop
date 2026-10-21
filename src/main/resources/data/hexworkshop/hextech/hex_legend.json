@@ -1,0 +1,26 @@
+{
+  "rarity": "GOLD",
+  "weight": 5,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 1.0
+    },
+    {
+      "attr": "armor",
+      "perLevel": 2.0
+    },
+    {
+      "attr": "max_health",
+      "perLevel": 4.0
+    },
+    {
+      "attr": "movement_speed",
+      "perLevel": 0.008
+    },
+    {
+      "attr": "attack_speed",
+      "perLevel": 0.15
+    }
+  ]
+}

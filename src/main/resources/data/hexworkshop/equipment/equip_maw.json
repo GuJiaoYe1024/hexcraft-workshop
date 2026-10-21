@@ -1,0 +1,13 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 9,
+  "icon": "☄",
+  "sell": 1000,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 2.5
+    }
+  ],
+  "event": "arcane_shield:0.2"
+}

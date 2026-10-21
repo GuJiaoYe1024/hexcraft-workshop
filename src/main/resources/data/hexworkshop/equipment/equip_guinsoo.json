@@ -1,0 +1,13 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "✦",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "attack_speed",
+      "perLevel": 0.3
+    }
+  ],
+  "event": "echo:0.1"
+}

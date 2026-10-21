@@ -1,0 +1,11 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 1.8
+    }
+  ],
+  "event": "regen:1.08"
+}

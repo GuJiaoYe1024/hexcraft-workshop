@@ -1,0 +1,17 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 9,
+  "icon": "◈",
+  "sell": 1000,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 7.5
+    },
+    {
+      "attr": "max_health",
+      "perLevel": 15.0
+    }
+  ],
+  "event": "thorns:3.0"
+}

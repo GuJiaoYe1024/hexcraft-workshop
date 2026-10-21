@@ -1,0 +1,8 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 9,
+  "icon": "➶",
+  "sell": 1000,
+  "event": "tacz_far_power:0.3,tacz_crit:0.1",
+  "mods": []
+}

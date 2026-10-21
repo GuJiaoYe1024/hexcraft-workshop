@@ -1,0 +1,13 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 9,
+  "icon": "◫",
+  "sell": 1000,
+  "mods": [
+    {
+      "attr": "movement_speed",
+      "perLevel": 0.05
+    }
+  ],
+  "event": "regen:0.2,splash:0.2"
+}

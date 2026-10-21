@@ -1,0 +1,13 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "✙",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 10.0
+    }
+  ],
+  "event": "stack_attr:atk:0.0015,arcane_shield:0.1"
+}

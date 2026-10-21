@@ -1,0 +1,14 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 8,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 12.0
+    },
+    {
+      "attr": "armor",
+      "perLevel": 4.0
+    }
+  ]
+}

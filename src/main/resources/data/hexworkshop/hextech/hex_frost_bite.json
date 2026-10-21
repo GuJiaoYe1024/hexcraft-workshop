@@ -1,0 +1,11 @@
+{
+  "rarity": "SILVER",
+  "weight": 8,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 0.5
+    }
+  ],
+  "event": "frost_bite:0.5"
+}

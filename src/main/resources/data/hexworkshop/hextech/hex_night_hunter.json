@@ -1,0 +1,11 @@
+{
+  "rarity": "SILVER",
+  "weight": 8,
+  "mods": [
+    {
+      "attr": "movement_speed",
+      "perLevel": 0.008
+    }
+  ],
+  "event": "night_power:0.15"
+}

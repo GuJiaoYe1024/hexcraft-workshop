@@ -1,0 +1,10 @@
+{
+  "rarity": "SILVER",
+  "weight": 10,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 1.5
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="hexworkshop"
+version="${file.jarVersion}"
+displayName="Hexcraft Workshop 海克斯工坊"
+description='''Hexcraft Workshop (海克斯工坊)
+以「双资源 → 三选一构筑」为核心的玩法强化模组，灵感来自英雄联盟海克斯大乱斗与斗魂竞技场。
+- 131 种海克斯增幅（白银/黄金/棱彩）：复合机制、永续成长、附魔与矿物联动、7 个海克斯×装备×锻造×交易联动
+- 属性锻造器：9 属性 + 16 机制词条，锻造无上限、数值消毒防崩坏
+- 44 件词条装备：无尽之刃、饮血剑、心之钢等 LOL 风格机制移植
+- 完整经济系统：击杀掉落晶币，6 种金属锭双向兑换（批量至 ×256）
+- TACZ 自动联动：安装永恒枪械工坊即解锁枪械海克斯/装备/锻造词条，弹药回复直通枪内子弹；未安装自动剔除
+- Cloth Config 标准配置界面：抽取/经济/联动/客户端/游戏规则五分类
+- 适配大型整合包：属性全走原版 API + 数值消毒，兼容 AttributeFix 等属性修复 MOD
+作者：GuJiaoYe、豆包'''
+authors="GuJiaoYe, 豆包"
+
+[[dependencies.hexworkshop]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.21)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="cloth_config"
+mandatory=false
+versionRange="[10,)"
+ordering="NONE"
+side="CLIENT"

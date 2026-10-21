@@ -1,0 +1,33 @@
+# Gradle / 构建产物
+build/
+.gradle/
+out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+bin/
+
+# 运行产物
+run/
+logs/
+crash-reports/
+
+# 配置（玩家本地生成）
+config/
+saves/
+
+# 一次性开发脚本（保留在本地，不进仓库）
+tools/dev/
+
+# 内部开发过程记录（删除/合并/数值调整等，不进公开仓库）
+docs/dev-notes/
+
+# 系统
+Thumbs.db
+Desktop.ini
+*.swp

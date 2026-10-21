@@ -1,0 +1,11 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 5,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 4.0
+    }
+  ],
+  "event": "stack_attr:hp:0.001,last_stand:0.08"
+}
