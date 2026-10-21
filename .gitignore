@@ -27,6 +27,9 @@ tools/dev/
 # 内部开发过程记录（删除/合并/数值调整等，不进公开仓库）
 docs/dev-notes/
 
+# 设计过程文件（封面/海报 Brief 等内部工作文件）
+.creative-design/
+
 # 系统
 Thumbs.db
 Desktop.ini
