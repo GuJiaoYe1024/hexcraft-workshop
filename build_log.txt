@@ -1,0 +1,46 @@
+﻿To honour the JVM settings for this build a single-use Daemon process will be forked. See https://docs.gradle.org/8.1.1/userguide/gradle_daemon.html#sec:disabling_the_daemon.
+Daemon will be stopped at the end of the build 
+
+> Task :compileJava
+gradle.bat : H:\MC1314\MOD\src\main\java\com\hexcraft\event\HextechEvents.java:1086: ����: [removal] ResourceLocation �
+е� ResourceLocation(String,String) �ѹ�ʱ, �ұ��Ϊ��ɾ��
+所在位置 行:1 字符: 31
++ ... C1314\MOD'; & 'C:\Users\Lenovo\AppData\Local\Programs\gradle-8.1.1-mi ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (H:\MC1314\MOD\s...ѹ�ʱ, �ұ��Ϊ��ɾ��:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+                    .getResource(new net.minecraft.resources.ResourceLocation(gunId.getNamespace(), "guns/" + gunId.get
+Path() + "_data.json"));
+                                 ^
+H:\MC1314\MOD\src\main\java\com\hexcraft\Hexcraft.java:32: ����: [removal] FMLJavaModLoadingContext �е� get() �ѹ�ʱ, �ұ�
+�Ϊ��ɾ��
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+                                                   ^
+H:\MC1314\MOD\src\main\java\com\hexcraft\Hexcraft.java:39: ����: [removal] ModLoadingContext �е� get() �ѹ�ʱ, �ұ��Ϊ��ɾ��
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, HexConfig.COMMON_SPEC, "hexworkshop-common.toml")
+;
+                         ^
+H:\MC1314\MOD\src\main\java\com\hexcraft\Hexcraft.java:40: ����: [removal] ModLoadingContext �е� get() �ѹ�ʱ, �ұ��Ϊ��ɾ��
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, HexConfig.CLIENT_SPEC, "hexworkshop-client.toml")
+;
+                         ^
+ע: H:\MC1314\MOD\src\main\java\com\hexcraft\event\HextechEvents.javaʹ�û򸲸����ѹ�ʱ�� API��
+ע: �й���ϸ��Ϣ, ��ʹ�� -Xlint:deprecation ���±��롣
+4 ������
+
+> Task :processResources
+> Task :classes
+> Task :jar
+> Task :downloadMcpConfig
+> Task :extractSrg UP-TO-DATE
+> Task :createMcpToSrg UP-TO-DATE
+> Task :reobfJar
+> Task :jarJar SKIPPED
+> Task :reobfJarJar SKIPPED
+> Task :assemble
+> Task :check
+> Task :build
+
+BUILD SUCCESSFUL in 24s
+7 actionable tasks: 5 executed, 2 up-to-date
