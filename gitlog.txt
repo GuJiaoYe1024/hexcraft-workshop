@@ -1,0 +1,5 @@
+﻿b3f0c3c v0.3.19: ForgeConfigSpec 接入翻译 key，Configured/MezzConfig 等配置界面显示当前游戏语言（中/英），lang 补 Configured tooltip 镜像 key
+133834d assets: compress mod icon to 128x128 (pack.png + logoFile)
+58c2129 docs+assets: PCL pack.png icon, apology statement in README/CHANGELOG
+c545d31 feat: add mod icon (hexworkshop_icon) and logoFile in mods.toml
+5ea15cb chore: 发布前整理 - TACZ 分类前缀修复、Cloth 可选依赖双通道配置界面、完整文档与开源文件（v0.3.18）

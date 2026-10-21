@@ -2,6 +2,13 @@
 
 本文档记录海克斯工坊（Hexcraft Workshop）的完整迭代历史。近期版本摘要见 [README](README.md)。
 
+## v0.3.19 — 配置界面多语言（2026-10-21）
+
+- **配置翻译接入官方通道**：ForgeConfigSpec 全部配置项（30 项）与分类（draw / economy / linked / client）挂接官方翻译 key（`Builder.translation`）
+- **第三方配置界面跟随游戏语言**：Configured / MezzConfig 等直接读 ForgeConfigSpec 的配置 mod，打开海克斯配置界面时条目名、分类名、说明 tooltip 全部显示当前游戏语言（中文 / English），不再显示英文 key 名
+- Cloth Config 界面共用同一套翻译 key，不受影响；lang 补 Configured 所需的 tooltip 镜像 key（中英各 +34 → 689 keys）
+- 自检：构建成功；配置 key 与 lang 全量对齐校验通过
+
 ## v0.3.18 — 联动海克斯体系（2026-10-21）
 
 - 新增 7 个联动海克斯（全部原版大类，自动入对应稀有度池）：
