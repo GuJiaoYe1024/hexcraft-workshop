@@ -284,6 +284,8 @@
   "hexcraft.gui.equip_sell": "卖出",
   "hexcraft.gui.equip_sell_tag": "卖出返还 25%%",
   "hexcraft.gui.equip_hint": "重复装备折算卖出价 · 槽位满自动替换最旧",
+  "hexcraft.gui.sell_hint": "卖出 +%s 晶币",
+  "hexcraft.gui.source_tag": "来源：%s",
   "message.hexcraft.equip_sold": "装备已卖出，获得 %s 晶币！",
   "hexcraft.forge.thorn_aspect.desc": "每级反弹 1 点攻击伤害（重复锻造可叠加）",
   "hexcraft.forge.regen_aspect.desc": "每级击杀回复 1 点生命（重复锻造可叠加）",

@@ -64,6 +64,10 @@ public class HextechPageScreen extends Screen {
     private int hexScroll;
     private int attrScroll;
     private int forgeScroll;
+    /** 自绘列表 hover 提示：鼠标位置与当前命中行的提示内容（render 每帧重置，末尾绘制） */
+    private int hoverX;
+    private int hoverY;
+    private java.util.List<net.minecraft.network.chat.Component> hoverTip = null;
     /** 海克斯页分类过滤：0=全部 1=战斗 2=生存 3=成长 4=经济 5=枪械 6=附魔 7=矿物 8=趣味 */
     private int hexCat = 0;
     private static final String[] HEX_CATS = {"all", "combat", "survive", "growth", "economy", "gun", "enchant", "mining", "fun"};
@@ -274,11 +278,18 @@ public class HextechPageScreen extends Screen {
         // 余额光点装饰
         g.fill(cx() + 104, y + 12, cx() + 106, y + 14, 0xFFFFD700);
 
+        hoverX = mx;
+        hoverY = my;
+        hoverTip = null;
         if (tab == 0) renderOverview(g, y);
         else if (tab == 1) renderHexes(g, y);
         else if (tab == 2) renderForge(g, y);
         else if (tab == 3) renderEquip(g, y);
         else renderRecharge(g, y);
+        // 自绘列表 hover 提示：最后绘制，盖在列表上方
+        if (hoverTip != null && !hoverTip.isEmpty()) {
+            g.renderComponentTooltip(this.font, hoverTip, mx, my);
+        }
     }
 
     private void renderOverview(GuiGraphics g, int y) {
@@ -493,6 +504,17 @@ public class HextechPageScreen extends Screen {
                 g.drawString(this.font, src.toUpperCase(java.util.Locale.ROOT), cx() + 186, ly,
                         "tacz".equals(src) ? 0xFF4DE6FF : 0xFFFFD700);
             }
+            // hover 提示：悬停查看海克斯具体效果（名称 + 描述 + 来源）
+            if (hoverX >= cx() + 4 && hoverX <= cx() + 210 && hoverY >= ly - 1 && hoverY <= ly + HEX_ROW_H - 2) {
+                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                tip.add(name.copy().withStyle(c -> c.withColor(rarityColor(rk))));
+                tip.add(Component.translatable("hexcraft.hextech." + h.id + ".desc"));
+                if (!"vanilla".equals(src)) {
+                    tip.add(Component.translatable("hexcraft.gui.source_tag",
+                            src.toUpperCase(java.util.Locale.ROOT)).withStyle(c -> c.withColor(0xFF4DE6FF)));
+                }
+                hoverTip = tip;
+            }
             ly += HEX_ROW_H;
         }
         if (list.isEmpty()) {
@@ -610,6 +632,18 @@ public class HextechPageScreen extends Screen {
             if (type == 1 && r.length > 3 && Boolean.TRUE.equals(r[3])) {
                 g.drawString(this.font, "TACZ", colX + 100, ly, 0xFF4DE6FF);
             }
+            // hover 提示：悬停查看锻造词条具体效果（名称 + 描述）
+            if (type == 1 && r.length > 4
+                    && hoverX >= colX && hoverX <= colX + 110 && hoverY >= ly - 1 && hoverY <= ly + rowH - 2) {
+                String stat = (String) r[4];
+                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                tip.add(Component.literal((String) r[1]).withStyle(c -> c.withColor((Integer) r[2])));
+                tip.add(Component.translatable("hexcraft.forge." + stat + ".desc"));
+                if (Boolean.TRUE.equals(r[3])) {
+                    tip.add(Component.translatable("hexcraft.gui.source_tag", "TACZ").withStyle(c -> c.withColor(0xFF4DE6FF)));
+                }
+                hoverTip = tip;
+            }
             ly += rowH;
         }
         if (maxForgeScroll() > 0) {
@@ -639,7 +673,7 @@ public class HextechPageScreen extends Screen {
             for (Map.Entry<String, Integer> e : agg.entrySet()) {
                 String name = Component.translatable("hexcraft.forge." + e.getKey() + ".name").getString();
                 boolean tacz = com.hexcraft.hextech.HextechRegistry.FORGE_TACZ_MECHANICS.contains(e.getKey());
-                rows.add(new Object[]{1, name + "  ×" + e.getValue(), tierColors[t], tacz});
+                rows.add(new Object[]{1, name + "  ×" + e.getValue(), tierColors[t], tacz, e.getKey()});
             }
         }
         return rows;
@@ -661,6 +695,21 @@ public class HextechPageScreen extends Screen {
                 String src = HextechRegistry.sourceOf(eq.id);
                 if (!"vanilla".equals(src)) {
                     g.drawString(this.font, src.toUpperCase(java.util.Locale.ROOT), cx() + 182, ly, 0xFF4DE6FF);
+                }
+                // hover 提示：悬停查看装备具体效果（名称 + 描述 + 卖价 + 来源）
+                if (def != null && hoverX >= cx() + 3 && hoverX <= cx() + 228 && hoverY >= ly - 1 && hoverY <= ly + 13) {
+                    net.minecraft.network.chat.MutableComponent eqName = Component.translatable("hexcraft.equip." + eq.id + ".name").copy();
+                    if (eq.level > 0) eqName = eqName.append("  Lv." + eq.level);
+                    if (eq.stacks > 0) eqName = eqName.append("  ×" + eq.stacks + "层");
+                    java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                    tip.add(eqName.withStyle(c -> c.withColor(rarityColor(rk))));
+                    tip.add(Component.translatable("hexcraft.equip." + eq.id + ".desc"));
+                    if (def.sell > 0) tip.add(Component.translatable("hexcraft.gui.sell_hint", def.sell));
+                    if (!"vanilla".equals(src)) {
+                        tip.add(Component.translatable("hexcraft.gui.source_tag",
+                                src.toUpperCase(java.util.Locale.ROOT)).withStyle(c -> c.withColor(0xFF4DE6FF)));
+                    }
+                    hoverTip = tip;
                 }
             } else {
                 g.drawString(this.font, "--", cx() + 6, ly, 0xFF3A4668);

@@ -284,6 +284,8 @@
   "hexcraft.gui.equip_sell": "Sell",
   "hexcraft.gui.equip_sell_tag": "Sells back 25%%",
   "hexcraft.gui.equip_hint": "Duplicate converts to sell value · Full slots auto-replace oldest",
+  "hexcraft.gui.sell_hint": "Sell for +%s coins",
+  "hexcraft.gui.source_tag": "Source: %s",
   "message.hexcraft.equip_sold": "Equipment sold for %s coins!",
   "hexcraft.forge.thorn_aspect.desc": "Reflect 1 damage per level (stacks)",
   "hexcraft.forge.regen_aspect.desc": "Heal 1 HP per kill per level (stacks)",
