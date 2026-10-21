@@ -277,27 +277,29 @@ public class WorldHexEvents {
             if (taken != 0) event.setAmount((float) (event.getAmount() * (1 + taken)));
         }
 
-        // 2) 友好/中立生物受击狂暴（力量 II + 速度 II，5 秒；田野之怒 / 野性本能）
+        // 2) 友好/中立生物受击狂暴（田野之怒 / 野性本能；v0.4.1：概率≥0.75 时力量/速度 III，否则 II，时长 5→7 秒）
         if (!(victim instanceof Player)) {
             String cat = categoryOf(victim);
             double ber = 0;
             if (WorldHexRegistry.CAT_FRIENDLY.equals(cat)) ber = passiveBerserk(sl);
             else if (WorldHexRegistry.CAT_NEUTRAL.equals(cat)) ber = neutralBerserk(sl);
             if (ber > 0 && sl.getRandom().nextFloat() < (float) ber) {
-                victim.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 100, 1));
-                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 1));
+                int amp = ber >= 0.75 ? 2 : 1;
+                victim.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 140, amp));
+                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 140, amp));
             }
         }
 
-        // 3) 敌对生物攻击吸血 + 对玩家施加虚弱/缓慢（恶魔契约）
+        // 3) 敌对生物攻击吸血 + 对玩家施加虚弱/缓慢（恶魔契约；v0.4.1：概率≥0.35 时虚弱 II/缓慢 III，时长 5→7 秒）
         if (event.getSource().getEntity() instanceof LivingEntity attacker
                 && WorldHexRegistry.CAT_HOSTILE.equals(categoryOf(attacker))) {
             double ls = hostileLifesteal(sl);
             if (ls > 0 && attacker.isAlive()) attacker.heal((float) (event.getAmount() * ls));
             double db = hostileDebuff(sl);
             if (db > 0 && victim instanceof ServerPlayer && sl.getRandom().nextFloat() < (float) db) {
-                victim.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 0));
-                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1));
+                int amp = db >= 0.35 ? 1 : 0;
+                victim.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 140, amp));
+                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 140, amp + 1));
             }
         }
     }

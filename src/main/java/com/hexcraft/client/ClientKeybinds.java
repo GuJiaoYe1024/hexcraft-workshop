@@ -18,8 +18,16 @@ public class ClientKeybinds {
             InputConstants.KEY_H,
             "key.categories.hexcraft");
 
+    /** v0.4.1：世界海克斯直达按键（默认 K，可在按键绑定中修改） */
+    public static final KeyMapping OPEN_WORLD_HEX = new KeyMapping(
+            "key.hexcraft.open_world",
+            InputConstants.Type.KEYSYM,
+            InputConstants.KEY_K,
+            "key.categories.hexcraft");
+
     @SubscribeEvent
     public static void onKeyRegister(RegisterKeyMappingsEvent event) {
         event.register(OPEN_HEXTECH);
+        event.register(OPEN_WORLD_HEX);
     }
 }

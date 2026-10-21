@@ -1,3 +1,50 @@
+Hexcraft Workshop v0.4.1 - Infernal Difficulty Raised Again + UI/Buttons/Keybind Fixes
+======================================================================================
+
+A heartfelt apology first: the author's ability is limited, this mod is mostly built with AI assistance, and it may not live up to everyone's expectations. Compatibility may also be poor. The author had no idea that Hextech-related mods already existed. The project is open source (MIT) and will keep being updated (likely still AI-driven). Thank you for your understanding.
+
+- **All 32 world augments re-buffed (higher stats, higher percentages)**:
+  - General: -30% coins, -25% damage dealt, +30% damage taken, Ancient Weakness -15 HP/-18% output, Death Harvest -25% output + x2.5 death XP loss, Genesis Pact +50% XP / -60% draw cost
+  - Friendly: 75% no-drop, Flock Shadow -10 HP, Beast King +14 HP/+4 atk, Angel Grace 1.5 regen, Pasture Harmony +15% speed
+  - Neutral: +4.5 atk, +60% follow range, Apex Presence +24 HP/+40% speed, Wild Instinct 75% counter, Neutral Dominion +10 HP/+6 atk / players -45% vs neutrals
+  - Hostile: +6 HP, +3 atk, +45% speed, +9 armor, Undead March 40% summon, Abyss Awaken +30 HP/+9 atk/+40% speed, Blood Feast +18 HP/+100% coins, Demon Contract 40% lifesteal + 40% debuff
+- **Mechanic escalation**: berserk/counter becomes Strength/Speed III when chance >=75% (else II); debuff becomes Weakness II + Slowness III when chance >=35%; all debuff/berserk durations 5s -> 7s
+- **UI fixes (World Hex Screen)**: block backgrounds now fixed height (empty categories render fully, no ragged panels); item text and cancel buttons are separated into columns (buttons no longer cover text)
+- **Button style unified**: all buttons on the World Hex screen and the 3-choice draw screen now use the Hextech sci-fi style (dark blue-purple gradient, neon top edge, hover glow), matching the main UI instead of vanilla gray
+- **New keybind**: K opens the World Hex screen directly (changeable in Controls), alongside H for the main screen
+- **Network protocol upgraded to VERSION=13**: all players must use the same version; v0.4.0 clients fail the handshake against a new server (expected)
+- Lang: 31 world-hex descriptions updated + 1 new keybind key per language (788 keys each)
+- Verified: offline build passed; server smoke OK; jar swapped into the client; content table synced
+
+Previous release notes:
+- v0.4.0: World Hextech "Infernal Difficulty" - 32 augments, cap 8, protocol v12.
+- v0.3.21: World Hextech (global world augments) - 24 augments, XP draw, coin cancel, second inventory tab.
+- v0.3.20: Hover tooltips for hex augments / forge stats / equipment.
+- v0.3.19: Full localization for config screens.
+- v0.3.18: Linked hextech system.
+
+====================================================
+
+Hexcraft Workshop v0.4.1 - 炼狱难度再拉高 + UI/按钮/按键修复
+====================================================
+
+先致歉：作者能力有限，本 mod 基本由 AI 辅助完成，可能达不到大家心里的预期，兼容性也可能较差；此前并不清楚已有人开发过海克斯相关 mod。项目已开源（MIT），后续会持续努力更新（虽然大概率仍由 AI 代跑）。感谢大家的理解与包容。
+
+- **炼狱数值再拉高（高属性、高百分比）**：32 个世界海克斯全量上调
+  - 通用：晶币 -30%、输出 -25%、受伤 +30%、远古衰弱 -15 血/-18% 输出、死亡收割 输出 -25% + 死亡经验惩罚 2.5 倍、创世契约 经验 +50%/-60% 抽取消耗
+  - 友好：不掉落 75%、牧群阴影 -10 血、万兽之王 +14 血/+4 攻、天使眷顾 1.5 回血、牧场丰饶 +15% 移速
+  - 中立：攻击 +4.5、索敌 +60%、终焉威压 +24 血/+40% 移速、野性本能 75% 反击、中立统御 +10 血/+6 攻/玩家对其 -45%
+  - 敌对：暗影 +6 血、尖牙 +3 攻、迅捷 +45% 移速、护甲 +9、亡灵行军 40% 召唤、深渊觉醒 +30 血/+9 攻/+40% 移速、血腥盛宴 +18 血/晶币 +100%、恶魔契约 40% 吸血 + 40% Debuff
+- **机制强度升级**：狂暴/反击概率 ≥75% 时力量与速度升级为 III 级（否则 II），Debuff 概率 ≥35% 时虚弱 II + 缓慢 III；所有 Debuff/狂暴时长 5 秒 → 7 秒
+- **UI 修复（世界海克斯界面）**：区块背景固定高度（空分类同样完整显示）；条目文本与取消按钮分列（按钮不再遮挡文字）
+- **按钮风格统一**：世界海克斯界面与三选一界面全部按钮改为海克斯科技风（深蓝紫渐变 + 霓虹顶边 + 悬停亮框），替代原版灰色按钮
+- **按键绑定更新**：新增 K 键直达「世界海克斯」界面（可在按键绑定中修改），与 H 键并存
+- **网络协议升级至 VERSION=13**：联机需全员同一版本（v0.4.0 旧客户端连新服务端握手失败属预期）
+- 翻译：中英各 31 处描述同步 + 1 个新按键 key（各 788 keys）
+- 自检：构建成功；服务器冒烟正常；正式客户端已替换；内容总表已同步
+
+====================================================
+
 Hexcraft Workshop v0.4.0 - World Hextech: Infernal Difficulty
 ============================================================
 

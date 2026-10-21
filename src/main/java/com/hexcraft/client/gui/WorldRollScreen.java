@@ -19,10 +19,22 @@ public class WorldRollScreen extends Screen {
     private static final int CARD_H = 142;
     private static final Button.CreateNarration NARR = s -> s.get();
 
-    /** 内部按钮子类：外部类无法直接 new Button（其构造器 protected），子类可调 super */
+    /** 科技风按钮：深蓝紫渐变底 + 霓虹顶边 + 悬停亮框（与主界面风格统一，替代原版灰色按钮） */
     static class WBtn extends Button {
         WBtn(int x, int y, int w, int h, Component label, OnPress onPress) {
             super(x, y, w, h, label, onPress, NARR);
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
+            boolean hover = this.isHoveredOrFocused();
+            int border = hover ? 0xFF8BD4FF : 0xFF1E6FE8;
+            int text = hover ? 0xFFFFFFFF : 0xFF9FB6FF;
+            g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, border);
+            g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xFF1E3A66, 0xFF0B1530);
+            g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF4AC7FF);
+            g.drawCenteredString(Minecraft.getInstance().font, this.getMessage(),
+                    getX() + width / 2, getY() + (height - 8) / 2, text);
         }
     }
 

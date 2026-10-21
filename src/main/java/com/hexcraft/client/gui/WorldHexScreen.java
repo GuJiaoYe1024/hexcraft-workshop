@@ -14,30 +14,47 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 世界海克斯界面（背包第二页签进入）：
+/** 世界海克斯界面（背包第二页签 / K 键进入）：
  *  - 左侧按钮栏：第一位"生物"（后续分类预留）；
  *  - 顶部抽取按钮（消耗经验，三选一）；
- *  - 下方四大类（通用/友好/中立/敌对）按稀有度排序展示已激活的世界海克斯，每条带取消按钮（消耗晶币）；
+ *  - 下方四大类（通用/友好/中立/敌对）按稀有度排序展示已激活的世界海克斯，每条右侧带取消按钮（消耗晶币）；
  *  - 激活列表全服共享，服务端广播即时更新。
+ *  v0.4.1：布局修复（区块背景固定高度、条目文本与取消按钮分列不遮挡）+ 全界面科技风按钮。
  */
 public class WorldHexScreen extends Screen {
     private static final Button.CreateNarration NARR = s -> s.get();
 
-    /** 内部按钮子类：外部类无法直接 new Button（其构造器 protected），子类可调 super */
+    /** 科技风按钮：深蓝紫渐变底 + 霓虹顶边 + 悬停亮框（与海克斯工坊主界面风格统一，替代原版灰色按钮） */
     static class WBtn extends Button {
         WBtn(int x, int y, int w, int h, Component label, OnPress onPress) {
             super(x, y, w, h, label, onPress, NARR);
         }
+
+        @Override
+        public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
+            boolean hover = this.isHoveredOrFocused();
+            int border = hover ? 0xFF8BD4FF : 0xFF1E6FE8;
+            int text = hover ? 0xFFFFFFFF : 0xFF9FB6FF;
+            g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, border);
+            g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xFF1E3A66, 0xFF0B1530);
+            g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF4AC7FF);
+            g.drawCenteredString(Minecraft.getInstance().font, this.getMessage(),
+                    getX() + width / 2, getY() + (height - 8) / 2, text);
+        }
     }
+
     private static final int SIDEBAR_X = 34;
     private static final int CONTENT_X = 168;
     private static final int COL_W = 300;
     private static final int COL_GAP = 22;
-    private static final int BLOCK_H = 172;
-    /** 每类区块内部双列网格（v0.4.0：上限提到 8 后单列放不下，改双列 4 行） */
+    /** 区块整体高度：标题行 20 + 条目区(24 + 4×32) + 底边 8 = 180；两排间距 16（v0.4.1 固定，空分类同样画满，消除参差） */
+    private static final int BLOCK_H = 196;
     private static final int ITEM_W = (COL_W - 14) / 2;   // 143
     private static final int ITEM_GAP = 14;
-    private static final int ROW_H = 34;
+    private static final int ROW_H = 32;
+    /** 条目右侧独立取消按钮列（不与文字重叠，v0.4.1） */
+    private static final int BTN_W = 56;
+    private static final int TEXT_W = ITEM_W - BTN_W - 6;
 
     private Button drawBtn;
     private final List<Button> cancelBtns = new ArrayList<>();
@@ -52,7 +69,7 @@ public class WorldHexScreen extends Screen {
         this.cancelBtns.clear();
         int centerX = this.width / 2;
 
-        // 顶部抽取按钮（内容区居中）
+        // 顶部抽取按钮（内容区居中，科技风）
         drawBtn = new WBtn(centerX - 160, 34, 320, 22,
                 Component.translatable("hexcraft.gui.world_draw", ClientDataStore.worldDrawXp),
                 b -> PacketHandler.CHANNEL.sendToServer(new Packets.C2SRequestWorldDraw()));
@@ -62,12 +79,12 @@ public class WorldHexScreen extends Screen {
         Button bio = new WBtn(SIDEBAR_X, 70, 96, 24,
                 Component.translatable("hexcraft.worldhex.cat_btn.bio"), b -> {});
         this.addRenderableWidget(bio);
-        // 预留位（不可用）
+        // 预留位（不可用，科技风灰）
         Button more = new WBtn(SIDEBAR_X, 100, 96, 24,
                 Component.translatable("hexcraft.gui.world_more"), b -> {});
         this.addRenderableWidget(more);
 
-        // 四大类区块：每类内部双列网格（激活项：列=row%2、行=row/2），每条右下带取消按钮
+        // 四大类区块：每类内部双列网格（激活项：列=row%2、行=row/2），每条右侧带取消按钮
         int catIndex = 0;
         for (String cat : WorldHexRegistry.CATEGORIES) {
             int col = catIndex % 2;
@@ -80,9 +97,9 @@ public class WorldHexScreen extends Screen {
                 int subCol = row % 2;
                 int subRow = row / 2;
                 int x = blockX + subCol * (ITEM_W + ITEM_GAP);
-                int y = blockY + 26 + subRow * ROW_H;
+                int y = blockY + 24 + subRow * ROW_H;
                 String id = d.id;
-                cancelBtns.add(new WBtn(x + ITEM_W - 64, y + 16, 60, 15,
+                cancelBtns.add(new WBtn(x + ITEM_W - BTN_W, y + 4, BTN_W, 20,
                         Component.translatable("hexcraft.gui.world_cancel", ClientDataStore.worldCancelCoin),
                         b -> {
                             Packets.C2SCancelWorldHex p = new Packets.C2SCancelWorldHex();
@@ -115,15 +132,16 @@ public class WorldHexScreen extends Screen {
         g.fill(SIDEBAR_X - 8, 62, SIDEBAR_X + 104, 130, 0xAA0B1530);
         g.fill(SIDEBAR_X - 8, 62, SIDEBAR_X - 7, 130, 0xFF1E6FE8);
 
-        // 各分类区块（内部双列：名称+效果一行，取消按钮在条目右下）
+        // 各分类区块：背景固定高度（标题 20 + 4 行条目区），空分类同样完整显示
         int catIndex = 0;
         for (String cat : WorldHexRegistry.CATEGORIES) {
             int col = catIndex % 2;
             int rowBlock = catIndex / 2;
             int blockX = CONTENT_X + col * (COL_W + COL_GAP);
             int blockY = 78 + rowBlock * BLOCK_H;
-            g.fill(blockX - 10, blockY - 20, blockX + COL_W + 4, blockY + 126, 0x550B1530);
-            g.fill(blockX - 10, blockY - 20, blockX - 9, blockY + 126, 0xFF2A5DB0);
+            // 背景盒：blockY-20（标题顶）到 blockY+24+4*32+6（4 行条目 + 底边）
+            g.fill(blockX - 10, blockY - 20, blockX + COL_W + 4, blockY + 158, 0x550B1530);
+            g.fill(blockX - 10, blockY - 20, blockX - 9, blockY + 158, 0xFF2A5DB0);
             Component catTitle = Component.translatable("hexcraft.worldhex.category." + cat);
             g.drawString(this.font, catTitle, blockX - 2, blockY - 15, 0xFF9FB6FF);
             // 激活计数（x/上限）
@@ -136,19 +154,19 @@ public class WorldHexScreen extends Screen {
                 int subCol = row % 2;
                 int subRow = row / 2;
                 int x = blockX + subCol * (ITEM_W + ITEM_GAP);
-                int y = blockY + 26 + subRow * ROW_H;
+                int y = blockY + 24 + subRow * ROW_H;
                 int color = rarityColor(d.rarity);
                 Component name = Component.translatable("hexcraft.worldhex." + d.id + ".name");
                 g.drawString(this.font, name, x - 2, y, color);
                 Component desc = Component.translatable("hexcraft.worldhex." + d.id + ".desc");
-                List<net.minecraft.util.FormattedCharSequence> lines = this.font.split(desc, ITEM_W - 66);
+                List<net.minecraft.util.FormattedCharSequence> lines = this.font.split(desc, TEXT_W);
                 if (!lines.isEmpty()) {
                     g.drawString(this.font, lines.get(0), x - 2, y + 10, 0xFFA9B4CC);
                 }
                 row++;
             }
             if (list.isEmpty()) {
-                g.drawString(this.font, Component.translatable("hexcraft.gui.world_empty"), blockX - 2, blockY + 26, 0xFF6A7B96);
+                g.drawString(this.font, Component.translatable("hexcraft.gui.world_empty"), blockX - 2, blockY + 24, 0xFF6A7B96);
             }
             catIndex++;
         }

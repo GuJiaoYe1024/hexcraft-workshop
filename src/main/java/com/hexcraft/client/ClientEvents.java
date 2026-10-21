@@ -26,6 +26,12 @@ public class ClientEvents {
                 mc.setScreen(new HextechPageScreen());
             }
         }
+        // v0.4.1：K 键直达世界海克斯界面
+        while (ClientKeybinds.OPEN_WORLD_HEX.consumeClick()) {
+            if (!(mc.screen instanceof com.hexcraft.client.gui.WorldHexScreen)) {
+                mc.setScreen(new com.hexcraft.client.gui.WorldHexScreen());
+            }
+        }
     }
 
     @SubscribeEvent
