@@ -1,3 +1,53 @@
+Hexcraft Workshop v0.4.0 - World Hextech: Infernal Difficulty
+============================================================
+
+A heartfelt apology first: the author's ability is limited, this mod is mostly built with AI assistance, and it may not live up to everyone's expectations. Compatibility may also be poor. The author had no idea that Hextech-related mods already existed. The project is open source (MIT) and will keep being updated (likely still AI-driven). Thank you for your understanding.
+
+This is a MAJOR version bump (v0.3.x -> v0.4.0): the World Hextech system enters "Infernal Difficulty".
+
+- **World Hextech expanded from 24 to 32 augments** - 2 new high-value, high-mechanic augments per category:
+  - General: Eternal Flame (all players take +20% damage), Death Harvest (-15% damage dealt + double XP loss on death)
+  - Friendly: Pacifist Oath (friendly mobs drop nothing 100% of the time), Wrath of Fields (100% chance to gain Strength+Speed when hit)
+  - Neutral: Wild Instinct (50% chance to counter with Strength+Speed when hit), Neutral Dominion (big HP/attack boost + players deal -30% to neutrals)
+  - Hostile: Undead March (25% chance to summon a copy on death), Demon Contract (30% lifesteal + 25% chance to apply Weakness/Slowness)
+- **All numbers buffed (difficulty raised)**: hostile/neutral HP, attack, speed, armor, follow range all increased; general curses worsened (-20% coins, -15% damage, Ancient Weakness -10 HP/-12% output); friendly buffs raised too (Life Echo +6, Angel Grace double regen, Genesis Pact +30% XP / -60% draw cost)
+- **Higher slot cap**: max active per category 4 -> 8 (configurable, cap 32); each category panel now renders as a 2-column grid (4 rows x 2), cancel buttons follow each entry
+- **Everyone sees everything**: the world hex list is save-level shared data (SavedData). When any player draws or cancels, the server broadcasts to all online players, so everyone's UI instantly shows what others activated/cancelled and the effects
+- **Network protocol upgraded to VERSION=12**: all players must use the same version; old clients (v0.3.x) fail the handshake against a new server (expected, not a bug)
+- **Crash-proof**: summons from Undead March carry a "no re-summon" flag, preventing chain-summon exponential blowups; all new mechanics use independent multipliers / events, no conflicts with other mods
+- Lang: +16 keys per language (8 new names/descriptions) + 20 description updates -> ~769 keys
+- Verified: offline build passed; server smoke test OK; content table synced to 32 world augments
+
+Previous release notes:
+- v0.3.21: World Hextech (global world augments) - 24 augments, XP draw, coin cancel, second inventory tab.
+- v0.3.20: Hover tooltips for hex augments / forge stats / equipment.
+- v0.3.19: Full localization for config screens (all 30 options + 4 categories registered official Forge translation keys; Configured / MezzConfig follow the game language).
+- v0.3.18: Linked hextech system - 7 new linked augments, triple attribute multiplier areas, PCL + Forge mod menu icons.
+
+====================================================
+
+Hexcraft Workshop v0.4.0 - 世界海克斯·炼狱难度
+====================================================
+
+先致歉：作者能力有限，本 mod 基本由 AI 辅助完成，可能达不到大家心里的预期，兼容性也可能较差；此前并不清楚已有人开发过海克斯相关 mod。项目已开源（MIT），后续会持续努力更新（虽然大概率仍由 AI 代跑）。感谢大家的理解与包容。
+
+本次为**大版本升级（v0.3.x → v0.4.0）**：世界海克斯体系正式进入"炼狱难度"阶段。
+
+- **世界海克斯扩充至 32 个**（原 24）：每类新增 2 个高数值高机制海克斯，难度上限大幅拉高
+  - 通用新增：永燃诅咒（全体受伤 +20%）、死亡收割（输出 -15% + 死亡经验惩罚翻倍）
+  - 友好新增：和平契约（友好生物 100% 不掉落）、田野之怒（受击 100% 力量+速度反扑）
+  - 中立新增：野性本能（受击 50% 反击）、中立统御（血攻大加强 + 玩家对其伤害 -30%）
+  - 敌对新增：亡灵行军（死亡 25% 召唤同类）、恶魔契约（30% 吸血 + 25% 施加虚弱/缓慢）
+- **全量数值上调**（难度拉高）：敌对/中立生物血量、攻击、移速、护甲、索敌全部上调；通用诅咒加重（晶币 -20%、伤害 -15%、远古衰弱 -10 血/-12% 输出）；友好增益同步上调
+- **装配上限提高**：每个分类最多同时激活 4 → 8 个（可配置，上限 32），界面分类区块改为双列网格展示
+- **全玩家可见**：世界海克斯为存档级共享，任何人抽取/取消后全服广播，所有人界面即时显示别人抽到/取消了什么及效果
+- **网络协议升级至 VERSION=12**：联机需全员同一版本，旧客户端连新服务端握手失败属预期
+- **防崩溃机制**：亡灵行军召唤物带"免召唤"标记，杜绝连环召唤指数爆炸；新机制全部独立乘区，不与其它 mod 冲突
+- 翻译：中英各 +16 keys + 20 处描述同步 → 约 769 keys
+- 自检：构建成功（offline build）；服务器冒烟正常；内容总表同步至 32 个世界海克斯
+
+====================================================
+
 Hexcraft Workshop v0.3.21 - World Hextech (Global World Augments)
 ====================================================================
 

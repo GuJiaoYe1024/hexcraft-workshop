@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 /** 世界海克斯注册表（内置定义，代码驱动）：
- *  24 个世界海克斯 = 通用 6 + 友好 6 + 中立 6 + 敌对 6；每类白银 2 / 黄金 2 / 棱彩 2。
+ *  32 个世界海克斯 = 通用 8 + 友好 8 + 中立 8 + 敌对 8；每类白银 2 / 黄金 3 / 棱彩 3。
  *  设计取向：多数提升世界难度（加强生物、诅咒玩家），少数对玩家有利，棱彩最难最强。
+ *  v0.4.0 起数值全面上调 + 新增高机制海克斯（受伤反扑/死亡召唤/吸血+Debuff/全掉落封锁/受伤增幅/死亡惩罚），难度上限大幅拉高。
  *  独立运算、独立乘区：效果全部走独立 AttributeModifier UUID 或事件独立倍率，不与其它 mod 冲突。
  */
 public class WorldHexRegistry {
@@ -25,35 +26,43 @@ public class WorldHexRegistry {
     static {
         // ============ 通用（影响全体玩家/世界）============
         register("whx_xp_friend", CAT_GENERAL, "silver", "player_xp:0.10");                 // 经验亲和（友好）
-        register("whx_coin_tax", CAT_GENERAL, "silver", "player_coin:-0.10");               // 晶币税（诅咒）
-        register("whx_dmg_shortage", CAT_GENERAL, "gold", "player_dmg:-0.10");              // 补给匮乏（诅咒）
-        register("whx_life_echo", CAT_GENERAL, "gold", "player_hp:4.0");                    // 生命共鸣（友好）
-        register("whx_ancient_weakness", CAT_GENERAL, "prismatic", "player_hp:-6.0,player_dmg:-0.08"); // 远古衰弱（大诅咒）
-        register("whx_genesis_pact", CAT_GENERAL, "prismatic", "player_xp:0.20,draw_cost:0.50");        // 创世契约（友好双刃）
+        register("whx_coin_tax", CAT_GENERAL, "silver", "player_coin:-0.20");               // 晶币税（诅咒，v0.4.0 加重）
+        register("whx_dmg_shortage", CAT_GENERAL, "gold", "player_dmg:-0.15");              // 补给匮乏（诅咒，v0.4.0 加重）
+        register("whx_life_echo", CAT_GENERAL, "gold", "player_hp:6.0");                    // 生命共鸣（友好，v0.4.0 上调）
+        register("whx_eternal_flame", CAT_GENERAL, "gold", "player_taken:0.20");            // 永燃诅咒（高机制：全体受伤 +20%）
+        register("whx_ancient_weakness", CAT_GENERAL, "prismatic", "player_hp:-10.0,player_dmg:-0.12"); // 远古衰弱（大诅咒，v0.4.0 加重）
+        register("whx_death_harvest", CAT_GENERAL, "prismatic", "player_dmg:-0.15,death_xp:1.00");       // 死亡收割（高机制：输出-15% + 死亡经验惩罚翻倍）
+        register("whx_genesis_pact", CAT_GENERAL, "prismatic", "player_xp:0.30,draw_cost:0.60");        // 创世契约（友好双刃，v0.4.0 上调）
 
         // ============ 友好生物（被动/驯养）============
         register("whx_pasture_harmony", CAT_FRIENDLY, "silver", "passive_speed:0.10");      // 牧场丰饶（友好）
-        register("whx_herd_watchful", CAT_FRIENDLY, "silver", "passive_no_drop:0.30");      // 家畜警觉（诅咒）
+        register("whx_herd_watchful", CAT_FRIENDLY, "silver", "passive_no_drop:0.50");      // 家畜警觉（诅咒，v0.4.0 加重）
         register("whx_loyal_guard", CAT_FRIENDLY, "gold", "passive_atk:2.0");               // 忠诚守护（友好）
-        register("whx_flock_shadow", CAT_FRIENDLY, "gold", "passive_hp:-4.0");              // 牧群阴影（诅咒）
+        register("whx_flock_shadow", CAT_FRIENDLY, "gold", "passive_hp:-6.0");              // 牧群阴影（诅咒，v0.4.0 加重）
+        register("whx_pacifist_oath", CAT_FRIENDLY, "gold", "passive_no_drop:1.00");        // 和平契约（高机制：友好生物 100% 不掉落）
         register("whx_beast_king", CAT_FRIENDLY, "prismatic", "passive_hp:8.0,passive_atk:2.0");      // 万兽之王（难度）
-        register("whx_angel_grace", CAT_FRIENDLY, "prismatic", "tamed_regen:0.5");          // 天使眷顾（友好）
+        register("whx_angel_grace", CAT_FRIENDLY, "prismatic", "tamed_regen:1.0");          // 天使眷顾（友好，v0.4.0 上调）
+        register("whx_wrath_of_fields", CAT_FRIENDLY, "prismatic", "passive_berserk:1.00"); // 田野之怒（高机制：友好生物受击 100% 力量+速度反扑）
 
         // ============ 中立生物（末影人/猪灵/狼等）============
-        register("whx_wild_spirit", CAT_NEUTRAL, "silver", "neutral_atk:1.0");              // 野性难驯（诅咒）
-        register("whx_vigilant_eye", CAT_NEUTRAL, "silver", "neutral_follow:0.30");         // 警惕之眼（难度）
-        register("whx_pack_rage", CAT_NEUTRAL, "gold", "neutral_atk:2.0");                  // 兽群狂暴（难度）
-        register("whx_hunter_eye", CAT_NEUTRAL, "gold", "player_dmg_vs_neutral:0.15");      // 猎人之眼（友好）
-        register("whx_apex_presence", CAT_NEUTRAL, "prismatic", "neutral_hp:10.0,neutral_speed:0.15"); // 终焉威压（难度）
-        register("whx_peace_vision", CAT_NEUTRAL, "prismatic", "player_dmg_vs_neutral:0.30");          // 和平愿景（友好）
+        register("whx_wild_spirit", CAT_NEUTRAL, "silver", "neutral_atk:2.0");              // 野性难驯（诅咒，v0.4.0 加重）
+        register("whx_vigilant_eye", CAT_NEUTRAL, "silver", "neutral_follow:0.45");         // 警惕之眼（难度，v0.4.0 上调）
+        register("whx_pack_rage", CAT_NEUTRAL, "gold", "neutral_atk:3.0");                  // 兽群狂暴（难度，v0.4.0 加重）
+        register("whx_hunter_eye", CAT_NEUTRAL, "gold", "player_dmg_vs_neutral:0.20");      // 猎人之眼（友好，v0.4.0 上调）
+        register("whx_wild_instinct", CAT_NEUTRAL, "gold", "neutral_berserk:0.50");         // 野性本能（高机制：中立生物受击 50% 力量+速度反击）
+        register("whx_apex_presence", CAT_NEUTRAL, "prismatic", "neutral_hp:16.0,neutral_speed:0.25"); // 终焉威压（难度，v0.4.0 大幅上调）
+        register("whx_peace_vision", CAT_NEUTRAL, "prismatic", "player_dmg_vs_neutral:0.40");          // 和平愿景（友好，v0.4.0 上调）
+        register("whx_neutral_dominion", CAT_NEUTRAL, "prismatic", "neutral_hp:6.0,neutral_atk:4.0,player_dmg_vs_neutral:-0.30"); // 中立统御（高机制高数值：血攻大加强 + 玩家对其伤害 -30%）
 
         // ============ 敌对生物（怪物）============
-        register("whx_shadow_power", CAT_HOSTILE, "silver", "hostile_hp:2.0");              // 暗影强化（难度）
-        register("whx_fang_claw", CAT_HOSTILE, "silver", "hostile_atk:1.0");                // 尖牙利爪（难度）
-        register("whx_predator_swift", CAT_HOSTILE, "gold", "hostile_speed:0.20");          // 捕食者迅捷（难度）
-        register("whx_armor_shell", CAT_HOSTILE, "gold", "hostile_armor:4.0");              // 装甲外壳（难度）
-        register("whx_abyss_awaken", CAT_HOSTILE, "prismatic", "hostile_hp:12.0,hostile_atk:4.0,hostile_speed:0.15"); // 深渊觉醒（难度）
-        register("whx_blood_feast", CAT_HOSTILE, "prismatic", "hostile_hp:8.0,mob_coin_bonus:0.50");              // 血腥盛宴（难度双刃）
+        register("whx_shadow_power", CAT_HOSTILE, "silver", "hostile_hp:4.0");              // 暗影强化（难度，v0.4.0 上调）
+        register("whx_fang_claw", CAT_HOSTILE, "silver", "hostile_atk:2.0");                // 尖牙利爪（难度，v0.4.0 上调）
+        register("whx_predator_swift", CAT_HOSTILE, "gold", "hostile_speed:0.30");          // 捕食者迅捷（难度，v0.4.0 上调）
+        register("whx_armor_shell", CAT_HOSTILE, "gold", "hostile_armor:6.0");              // 装甲外壳（难度，v0.4.0 上调）
+        register("whx_undead_march", CAT_HOSTILE, "gold", "hostile_resurrect:0.25");        // 亡灵行军（高机制：敌对生物死亡 25% 召唤同类）
+        register("whx_abyss_awaken", CAT_HOSTILE, "prismatic", "hostile_hp:20.0,hostile_atk:6.0,hostile_speed:0.25"); // 深渊觉醒（难度，v0.4.0 大幅上调）
+        register("whx_blood_feast", CAT_HOSTILE, "prismatic", "hostile_hp:12.0,mob_coin_bonus:0.75");              // 血腥盛宴（难度双刃，v0.4.0 上调）
+        register("whx_demon_contract", CAT_HOSTILE, "prismatic", "hostile_lifesteal:0.30,hostile_debuff:0.25");    // 恶魔契约（高机制：敌对生物 30% 吸血 + 25% 概率对玩家施虚弱/缓慢）
     }
 
     private static void register(String id, String category, String rarity, String effect) {

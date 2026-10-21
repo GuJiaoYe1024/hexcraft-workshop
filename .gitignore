@@ -16,10 +16,7 @@ bin/
 run/
 logs/
 crash-reports/
-
-# 配置（玩家本地生成）
-config/
-saves/
+run/config/
 
 # 一次性开发脚本（保留在本地，不进仓库）
 tools/dev/

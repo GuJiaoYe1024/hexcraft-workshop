@@ -5,8 +5,12 @@ import com.hexcraft.hextech.WorldHexDefinition;
 import com.hexcraft.hextech.WorldHexRegistry;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -18,6 +22,7 @@ import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -200,6 +205,28 @@ public class WorldHexEvents {
     /** 驯服生物回血（每 0.8s 一次） */
     public static double tamedRegen(ServerLevel level) { return sumEffect(level, "tamed_regen"); }
 
+    // ---- v0.4.0 高机制新键 ----
+    /** 玩家受到伤害增幅（0.20 = +20%，独立乘区） */
+    public static double playerTakenMult(ServerLevel level) { return sumEffect(level, "player_taken"); }
+
+    /** 玩家死亡经验惩罚倍率（1.00 = 翻倍） */
+    public static double deathXpMult(ServerLevel level) { return sumEffect(level, "death_xp"); }
+
+    /** 友好生物受击狂暴概率（力量+速度） */
+    public static double passiveBerserk(ServerLevel level) { return sumEffect(level, "passive_berserk"); }
+
+    /** 中立生物受击狂暴概率（力量+速度） */
+    public static double neutralBerserk(ServerLevel level) { return sumEffect(level, "neutral_berserk"); }
+
+    /** 敌对生物死亡召唤同类概率 */
+    public static double hostileResurrect(ServerLevel level) { return sumEffect(level, "hostile_resurrect"); }
+
+    /** 敌对生物攻击吸血率 */
+    public static double hostileLifesteal(ServerLevel level) { return sumEffect(level, "hostile_lifesteal"); }
+
+    /** 敌对生物攻击对玩家施加虚弱/缓慢概率 */
+    public static double hostileDebuff(ServerLevel level) { return sumEffect(level, "hostile_debuff"); }
+
     // ================= 事件 =================
 
     /** 实体生成时按世界海克斯列表附加生物 modifier（仅服务端） */
@@ -232,6 +259,78 @@ public class WorldHexEvents {
             if (p > 0 && sl.getRandom().nextFloat() < (float) p) {
                 event.setCanceled(true);
             }
+        }
+    }
+
+    // ================= v0.4.0 高机制事件 =================
+
+    /** 玩家受击增幅 + 友好/中立受击反扑 + 敌对生物吸血/Debuff（同一受伤事件结算，互不重叠） */
+    @SubscribeEvent
+    public static void onWorldHurt(LivingHurtEvent event) {
+        if (event.getEntity().level().isClientSide()) return;
+        if (!(event.getEntity().level() instanceof ServerLevel sl)) return;
+        LivingEntity victim = event.getEntity();
+
+        // 1) 玩家受到伤害增幅（永燃诅咒；独立乘区，与护甲/减伤各自结算）
+        if (victim instanceof ServerPlayer) {
+            double taken = playerTakenMult(sl);
+            if (taken != 0) event.setAmount((float) (event.getAmount() * (1 + taken)));
+        }
+
+        // 2) 友好/中立生物受击狂暴（力量 II + 速度 II，5 秒；田野之怒 / 野性本能）
+        if (!(victim instanceof Player)) {
+            String cat = categoryOf(victim);
+            double ber = 0;
+            if (WorldHexRegistry.CAT_FRIENDLY.equals(cat)) ber = passiveBerserk(sl);
+            else if (WorldHexRegistry.CAT_NEUTRAL.equals(cat)) ber = neutralBerserk(sl);
+            if (ber > 0 && sl.getRandom().nextFloat() < (float) ber) {
+                victim.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 100, 1));
+                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 1));
+            }
+        }
+
+        // 3) 敌对生物攻击吸血 + 对玩家施加虚弱/缓慢（恶魔契约）
+        if (event.getSource().getEntity() instanceof LivingEntity attacker
+                && WorldHexRegistry.CAT_HOSTILE.equals(categoryOf(attacker))) {
+            double ls = hostileLifesteal(sl);
+            if (ls > 0 && attacker.isAlive()) attacker.heal((float) (event.getAmount() * ls));
+            double db = hostileDebuff(sl);
+            if (db > 0 && victim instanceof ServerPlayer && sl.getRandom().nextFloat() < (float) db) {
+                victim.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 0));
+                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 1));
+            }
+        }
+    }
+
+    /** 玩家死亡经验惩罚翻倍（死亡收割；原版死亡掉经验由 attackingPlayer==null 分支结算） */
+    @SubscribeEvent
+    public static void onPlayerDeathXp(LivingExperienceDropEvent event) {
+        if (!(event.getEntity().level() instanceof ServerLevel sl)) return;
+        if (event.getEntity() instanceof ServerPlayer && event.getAttackingPlayer() == null) {
+            double mult = deathXpMult(sl);
+            if (mult != 0) event.setDroppedExperience((int) (event.getDroppedExperience() * (1 + mult)));
+        }
+    }
+
+    /** 敌对生物死亡召唤同类（亡灵行军；被召唤物打防连环 tag，防止指数爆炸） */
+    private static final String RESURRECT_TAG = "whx_resurrect_immune";
+
+    @SubscribeEvent
+    public static void onHostileResurrect(LivingDropsEvent event) {
+        if (event.getEntity().level().isClientSide()) return;
+        if (!(event.getEntity().level() instanceof ServerLevel sl)) return;
+        LivingEntity victim = event.getEntity();
+        if (!WorldHexRegistry.CAT_HOSTILE.equals(categoryOf(victim))) return;
+        if (victim.getPersistentData().getBoolean(RESURRECT_TAG)) return;
+        double p = hostileResurrect(sl);
+        if (p <= 0 || sl.getRandom().nextFloat() >= (float) p) return;
+        EntityType<?> type = victim.getType();
+        Entity e = type.create(sl);
+        if (e instanceof Mob m) {
+            m.moveTo(victim.getX(), victim.getY(), victim.getZ(), victim.getYRot(), victim.getXRot());
+            m.getPersistentData().putBoolean(RESURRECT_TAG, true);
+            m.setPersistenceRequired();
+            sl.addFreshEntity(m);
         }
     }
 

@@ -9,7 +9,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.Optional;
 
 public class PacketHandler {
-    public static final String VERSION = "11";
+    public static final String VERSION = "12";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Hexcraft.MODID, "main"),
             () -> VERSION,
@@ -51,7 +51,7 @@ public class PacketHandler {
         CHANNEL.registerMessage(id++, Packets.C2SSetGameRule.class,
                 Packets.C2SSetGameRule::encode, Packets.C2SSetGameRule::decode, Packets.C2SSetGameRule::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
-        // ---- v0.3.21 世界海克斯（5 个新包，VERSION bump 10→11；旧客户端连新服务端握手失败属预期）----
+        // ---- v0.3.21 世界海克斯（5 个新包，VERSION bump 10→11）；v0.4.0 新增 8 个高难海克斯（VERSION bump 11→12；旧客户端连新服务端握手失败属预期）----
         CHANNEL.registerMessage(id++, Packets.S2CSyncWorldHexes.class,
                 Packets.S2CSyncWorldHexes::encode, Packets.S2CSyncWorldHexes::decode, Packets.S2CSyncWorldHexes::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));

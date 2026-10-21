@@ -33,7 +33,11 @@ public class WorldHexScreen extends Screen {
     private static final int CONTENT_X = 168;
     private static final int COL_W = 300;
     private static final int COL_GAP = 22;
-    private static final int BLOCK_H = 190;
+    private static final int BLOCK_H = 172;
+    /** 每类区块内部双列网格（v0.4.0：上限提到 8 后单列放不下，改双列 4 行） */
+    private static final int ITEM_W = (COL_W - 14) / 2;   // 143
+    private static final int ITEM_GAP = 14;
+    private static final int ROW_H = 34;
 
     private Button drawBtn;
     private final List<Button> cancelBtns = new ArrayList<>();
@@ -63,7 +67,7 @@ public class WorldHexScreen extends Screen {
                 Component.translatable("hexcraft.gui.world_more"), b -> {});
         this.addRenderableWidget(more);
 
-        // 四大类区块与每行的取消按钮
+        // 四大类区块：每类内部双列网格（激活项：列=row%2、行=row/2），每条右下带取消按钮
         int catIndex = 0;
         for (String cat : WorldHexRegistry.CATEGORIES) {
             int col = catIndex % 2;
@@ -73,9 +77,12 @@ public class WorldHexScreen extends Screen {
             List<WorldHexDefinition> list = WorldHexRegistry.activeInCategory(ClientDataStore.worldHexes, cat);
             int row = 0;
             for (WorldHexDefinition d : list) {
-                int y = blockY + 26 + row * 34;
+                int subCol = row % 2;
+                int subRow = row / 2;
+                int x = blockX + subCol * (ITEM_W + ITEM_GAP);
+                int y = blockY + 26 + subRow * ROW_H;
                 String id = d.id;
-                cancelBtns.add(new WBtn(blockX + COL_W - 78, y + 1, 74, 18,
+                cancelBtns.add(new WBtn(x + ITEM_W - 64, y + 16, 60, 15,
                         Component.translatable("hexcraft.gui.world_cancel", ClientDataStore.worldCancelCoin),
                         b -> {
                             Packets.C2SCancelWorldHex p = new Packets.C2SCancelWorldHex();
@@ -108,15 +115,15 @@ public class WorldHexScreen extends Screen {
         g.fill(SIDEBAR_X - 8, 62, SIDEBAR_X + 104, 130, 0xAA0B1530);
         g.fill(SIDEBAR_X - 8, 62, SIDEBAR_X - 7, 130, 0xFF1E6FE8);
 
-        // 各分类区块
+        // 各分类区块（内部双列：名称+效果一行，取消按钮在条目右下）
         int catIndex = 0;
         for (String cat : WorldHexRegistry.CATEGORIES) {
             int col = catIndex % 2;
             int rowBlock = catIndex / 2;
             int blockX = CONTENT_X + col * (COL_W + COL_GAP);
             int blockY = 78 + rowBlock * BLOCK_H;
-            g.fill(blockX - 10, blockY - 20, blockX + COL_W + 4, blockY + 120, 0x550B1530);
-            g.fill(blockX - 10, blockY - 20, blockX - 9, blockY + 120, 0xFF2A5DB0);
+            g.fill(blockX - 10, blockY - 20, blockX + COL_W + 4, blockY + 126, 0x550B1530);
+            g.fill(blockX - 10, blockY - 20, blockX - 9, blockY + 126, 0xFF2A5DB0);
             Component catTitle = Component.translatable("hexcraft.worldhex.category." + cat);
             g.drawString(this.font, catTitle, blockX - 2, blockY - 15, 0xFF9FB6FF);
             // 激活计数（x/上限）
@@ -126,14 +133,17 @@ public class WorldHexScreen extends Screen {
                     blockX + COL_W - 70, blockY - 15, 0xFF6A7B96);
             int row = 0;
             for (WorldHexDefinition d : list) {
-                int y = blockY + 26 + row * 34;
+                int subCol = row % 2;
+                int subRow = row / 2;
+                int x = blockX + subCol * (ITEM_W + ITEM_GAP);
+                int y = blockY + 26 + subRow * ROW_H;
                 int color = rarityColor(d.rarity);
                 Component name = Component.translatable("hexcraft.worldhex." + d.id + ".name");
-                g.drawString(this.font, name, blockX - 2, y, color);
+                g.drawString(this.font, name, x - 2, y, color);
                 Component desc = Component.translatable("hexcraft.worldhex." + d.id + ".desc");
-                List<net.minecraft.util.FormattedCharSequence> lines = this.font.split(desc, COL_W - 96);
+                List<net.minecraft.util.FormattedCharSequence> lines = this.font.split(desc, ITEM_W - 66);
                 if (!lines.isEmpty()) {
-                    g.drawString(this.font, lines.get(0), blockX - 2, y + 10, 0xFFA9B4CC);
+                    g.drawString(this.font, lines.get(0), x - 2, y + 10, 0xFFA9B4CC);
                 }
                 row++;
             }
