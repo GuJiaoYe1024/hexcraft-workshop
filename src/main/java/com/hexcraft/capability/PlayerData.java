@@ -145,10 +145,16 @@ public class PlayerData {
     public RollOffer getPendingRoll() { return pendingRoll; }
     public void setPendingRoll(RollOffer offer) { pendingRoll = offer; }
 
+    /** 世界海克斯抽取的待确认三选一（transient，不持久化；服务端权威校验） */
+    private transient java.util.List<String> worldDrawOptions;
+    public java.util.List<String> getWorldDrawOptions() { return worldDrawOptions; }
+    public void setWorldDrawOptions(java.util.List<String> opts) { worldDrawOptions = opts; }
+
     public void clearAll() {
         coins = 0; forgesUsed = 0; pityGold = 0; pityPrismatic = 0;
         hexes.clear(); forges.clear(); equipment.clear();
         pendingRoll = null;
+        worldDrawOptions = null;
     }
 
     /** 升级或新增海克斯；返回晶币补偿（满级重复时 >0） */

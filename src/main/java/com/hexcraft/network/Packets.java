@@ -523,4 +523,194 @@ public class Packets {
         }
         PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), msg);
     }
+
+    // ================= 世界海克斯（v0.3.21）：全服共享、全局即时生效 =================
+
+    // ===== S2C：世界海克斯列表同步（登录 + 变更广播，全员可见）=====
+    public static class S2CSyncWorldHexes {
+        public List<String> active = new ArrayList<>();
+        public int maxPerCategory;
+        public int drawXp;
+        public int cancelCoin;
+
+        public static S2CSyncWorldHexes of(net.minecraft.server.MinecraftServer server) {
+            S2CSyncWorldHexes m = new S2CSyncWorldHexes();
+            com.hexcraft.hextech.WorldHexData wh = com.hexcraft.hextech.WorldHexData.get(server.overworld());
+            m.active.addAll(wh.active);
+            m.maxPerCategory = HexConfig.WORLD_MAX_PER_CATEGORY.get();
+            m.drawXp = HexConfig.WORLD_DRAW_XP.get();
+            m.cancelCoin = HexConfig.WORLD_CANCEL_COIN.get();
+            return m;
+        }
+
+        public static void encode(S2CSyncWorldHexes m, FriendlyByteBuf b) {
+            b.writeInt(m.active.size());
+            for (String id : m.active) b.writeUtf(id);
+            b.writeInt(m.maxPerCategory);
+            b.writeInt(m.drawXp);
+            b.writeInt(m.cancelCoin);
+        }
+        public static S2CSyncWorldHexes decode(FriendlyByteBuf b) {
+            S2CSyncWorldHexes m = new S2CSyncWorldHexes();
+            int n = b.readInt();
+            for (int i = 0; i < n; i++) m.active.add(b.readUtf());
+            m.maxPerCategory = b.readInt();
+            m.drawXp = b.readInt();
+            m.cancelCoin = b.readInt();
+            return m;
+        }
+        public static void handle(S2CSyncWorldHexes m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() ->
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientPacketHandler.syncWorldHexes(m)));
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
+    // ===== C2S：请求世界海克斯抽取（三选一；消耗经验，独立乘区 draw_cost 可减耗）=====
+    public static class C2SRequestWorldDraw {
+        public static void encode(C2SRequestWorldDraw m, FriendlyByteBuf b) { }
+        public static C2SRequestWorldDraw decode(FriendlyByteBuf b) { return new C2SRequestWorldDraw(); }
+        public static void handle(C2SRequestWorldDraw m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                ServerPlayer sp = ctx.get().getSender();
+                if (sp == null) return;
+                if (!(sp.level() instanceof net.minecraft.server.level.ServerLevel sl)) return;
+                if (!HexConfig.WORLD_ENABLED.get()) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.world_disabled"), true);
+                    return;
+                }
+                PlayerData data = ModCapabilities.get(sp);
+                if (data == null) return;
+                int cost = (int) Math.round(HexConfig.WORLD_DRAW_XP.get()
+                        * (1 + com.hexcraft.event.WorldHexEvents.drawCostMult(sl)));
+                if (sp.totalExperience < cost) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.xp_not_enough", cost), true);
+                    return;
+                }
+                sp.giveExperiencePoints(-cost);
+                com.hexcraft.hextech.WorldHexData wh = com.hexcraft.hextech.WorldHexData.get(sl);
+                List<String> opts = com.hexcraft.hextech.WorldHexRegistry.rollOptions(wh.active);
+                if (opts.isEmpty()) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.world_all_owned"), true);
+                    return;
+                }
+                data.setWorldDrawOptions(opts);
+                sendWorldDrawOptions(sp, opts);
+            });
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
+    // ===== S2C：世界海克斯三选一下发 =====
+    public static class S2CWorldDrawOptions {
+        public List<String> options = new ArrayList<>();
+        public int drawXp;
+        public static void encode(S2CWorldDrawOptions m, FriendlyByteBuf b) {
+            b.writeInt(m.options.size());
+            for (String id : m.options) b.writeUtf(id);
+            b.writeInt(m.drawXp);
+        }
+        public static S2CWorldDrawOptions decode(FriendlyByteBuf b) {
+            S2CWorldDrawOptions m = new S2CWorldDrawOptions();
+            int n = b.readInt();
+            for (int i = 0; i < n; i++) m.options.add(b.readUtf());
+            m.drawXp = b.readInt();
+            return m;
+        }
+        public static void handle(S2CWorldDrawOptions m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() ->
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientPacketHandler.worldDrawOptions(m)));
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
+    // ===== C2S：确认世界海克斯（index；服务端校验上限/重复，全局生效广播）=====
+    public static class C2SConfirmWorldHex {
+        public int index;
+        public static void encode(C2SConfirmWorldHex m, FriendlyByteBuf b) { b.writeInt(m.index); }
+        public static C2SConfirmWorldHex decode(FriendlyByteBuf b) { C2SConfirmWorldHex m = new C2SConfirmWorldHex(); m.index = b.readInt(); return m; }
+        public static void handle(C2SConfirmWorldHex m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                ServerPlayer sp = ctx.get().getSender();
+                if (sp == null) return;
+                if (!(sp.level() instanceof net.minecraft.server.level.ServerLevel sl)) return;
+                PlayerData data = ModCapabilities.get(sp);
+                if (data == null) return;
+                List<String> opts = data.getWorldDrawOptions();
+                if (opts == null || m.index < 0 || m.index >= opts.size()) return;
+                String pick = opts.get(m.index);
+                com.hexcraft.hextech.WorldHexDefinition def = com.hexcraft.hextech.WorldHexRegistry.get(pick);
+                com.hexcraft.hextech.WorldHexData wh = com.hexcraft.hextech.WorldHexData.get(sl);
+                data.setWorldDrawOptions(null);
+                if (def == null) return;
+                if (wh.active.contains(pick)) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.world_duplicate"), true);
+                    return;
+                }
+                int max = HexConfig.WORLD_MAX_PER_CATEGORY.get();
+                if (max > 0) {
+                    long inCat = wh.active.stream()
+                            .map(com.hexcraft.hextech.WorldHexRegistry::get)
+                            .filter(d -> d != null && d.category.equals(def.category)).count();
+                    if (inCat >= max) {
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.world_category_full", max), true);
+                        return;
+                    }
+                }
+                wh.active.add(pick);
+                wh.setDirty();
+                com.hexcraft.event.WorldHexEvents.refreshLevel(sl);
+                broadcastWorldHexes(sp.server);
+                sp.displayClientMessage(Component.translatable("message.hexcraft.world_activated",
+                        Component.translatable("hexcraft.worldhex." + pick + ".name")), true);
+            });
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
+    // ===== C2S：取消世界海克斯（id；消耗晶币代价，全服即时移除）=====
+    public static class C2SCancelWorldHex {
+        public String id;
+        public static void encode(C2SCancelWorldHex m, FriendlyByteBuf b) { b.writeUtf(m.id); }
+        public static C2SCancelWorldHex decode(FriendlyByteBuf b) { C2SCancelWorldHex m = new C2SCancelWorldHex(); m.id = b.readUtf(); return m; }
+        public static void handle(C2SCancelWorldHex m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                ServerPlayer sp = ctx.get().getSender();
+                if (sp == null) return;
+                if (!(sp.level() instanceof net.minecraft.server.level.ServerLevel sl)) return;
+                if (!com.hexcraft.hextech.WorldHexRegistry.exists(m.id)) return;
+                com.hexcraft.hextech.WorldHexData wh = com.hexcraft.hextech.WorldHexData.get(sl);
+                if (!wh.active.contains(m.id)) return;
+                PlayerData data = ModCapabilities.get(sp);
+                if (data == null) return;
+                int cost = HexConfig.WORLD_CANCEL_COIN.get();
+                if (!data.deductCoins(cost)) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.coins_not_enough", cost), true);
+                    return;
+                }
+                wh.active.remove(m.id);
+                wh.setDirty();
+                com.hexcraft.event.WorldHexEvents.refreshLevel(sl);
+                broadcastWorldHexes(sp.server);
+                sp.displayClientMessage(Component.translatable("message.hexcraft.world_cancelled",
+                        Component.translatable("hexcraft.worldhex." + m.id + ".name"), cost), true);
+            });
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
+    private static void sendWorldDrawOptions(ServerPlayer sp, List<String> opts) {
+        S2CWorldDrawOptions msg = new S2CWorldDrawOptions();
+        msg.options = new ArrayList<>(opts);
+        msg.drawXp = HexConfig.WORLD_DRAW_XP.get();
+        PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), msg);
+    }
+
+    /** 世界海克斯变更/登录后全服广播（所有玩家都看到即时生效） */
+    public static void broadcastWorldHexes(net.minecraft.server.MinecraftServer server) {
+        S2CSyncWorldHexes msg = S2CSyncWorldHexes.of(server);
+        for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
+            PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), msg);
+        }
+    }
 }

@@ -25,6 +25,12 @@ public class ClientDataStore {
     public static final List<PlayerData.EquipEntry> equipment = new ArrayList<>();
     public static final Map<String, Double> attrs = new LinkedHashMap<>();
 
+    // ---- 世界海克斯（v0.3.21）：全服列表客户端缓存 ----
+    public static final List<String> worldHexes = new ArrayList<>();
+    public static int worldMaxPerCategory;
+    public static int worldDrawXp;
+    public static int worldCancelCoin;
+
     public static void apply(Packets.S2CSyncData msg) {
         coins = msg.coins;
         forgesUsed = msg.forgesUsed;
@@ -43,5 +49,13 @@ public class ClientDataStore {
         equipment.addAll(msg.equipment);
         attrs.clear();
         attrs.putAll(msg.attrs);
+    }
+
+    public static void applyWorld(Packets.S2CSyncWorldHexes msg) {
+        worldHexes.clear();
+        worldHexes.addAll(msg.active);
+        worldMaxPerCategory = msg.maxPerCategory;
+        worldDrawXp = msg.drawXp;
+        worldCancelCoin = msg.cancelCoin;
     }
 }

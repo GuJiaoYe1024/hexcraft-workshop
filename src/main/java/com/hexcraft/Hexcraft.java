@@ -41,6 +41,7 @@ public class Hexcraft {
 
         MinecraftForge.EVENT_BUS.register(ModCapabilities.class);
         MinecraftForge.EVENT_BUS.register(HextechEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.WorldHexEvents.class);
         MinecraftForge.EVENT_BUS.register(HexCommand.class);
 
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.hexcraft.client.ClientSetup.init());

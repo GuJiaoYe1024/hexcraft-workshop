@@ -42,6 +42,7 @@ public class HexConfigScreen {
         drawCategory(b, eb);
         economyCategory(b, eb);
         linkedCategory(b, eb);
+        worldCategory(b, eb);
         clientCategory(b, eb);
         rulesCategory(b, eb);
 
@@ -142,6 +143,14 @@ public class HexConfigScreen {
         boolEntry(eb, cat, "linked.enableTaczHextech", HexConfig.ENABLE_TACZ_HEXTECH);
         boolEntry(eb, cat, "linked.enableTaczForge", HexConfig.ENABLE_TACZ_FORGE);
         boolEntry(eb, cat, "linked.enableTaczEquip", HexConfig.ENABLE_TACZ_EQUIP);
+    }
+
+    private static void worldCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
+        ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.world"));
+        boolEntry(eb, cat, "world.enabled", HexConfig.WORLD_ENABLED);
+        intEntry(eb, cat, "world.drawXp", HexConfig.WORLD_DRAW_XP, 10, 1000000, 2000);
+        intEntry(eb, cat, "world.cancelCoin", HexConfig.WORLD_CANCEL_COIN, 0, 100000, 800);
+        intEntry(eb, cat, "world.maxPerCategory", HexConfig.WORLD_MAX_PER_CATEGORY, 0, 24, 4);
     }
 
     private static void clientCategory(ConfigBuilder b, ConfigEntryBuilder eb) {

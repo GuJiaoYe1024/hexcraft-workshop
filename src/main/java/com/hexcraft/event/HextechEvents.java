@@ -130,6 +130,13 @@ public class HextechEvents {
             if (data == null) return;
             int coins = rollCoins(mob, killer);
             coins += (int) Math.floor(coins * effect(data, "coin_bonus"));
+            // 世界海克斯独立乘区：全体玩家晶币获取倍率 + 击杀敌对生物晶币加成（独立于玩家海克斯，不与其它 mod 冲突）
+            if (mob.level() instanceof net.minecraft.server.level.ServerLevel whLevel) {
+                double whCoin = com.hexcraft.event.WorldHexEvents.coinMult(whLevel);
+                if (whCoin != 0) coins += (int) Math.floor(coins * whCoin);
+                double whMob = com.hexcraft.event.WorldHexEvents.mobCoinBonus(whLevel, mob);
+                if (whMob != 0) coins += (int) Math.floor(coins * whMob);
+            }
             if (coins > 0) data.addCoins(coins);
 
             double heal = effect(data, "kill_heal");
@@ -432,6 +439,15 @@ public class HextechEvents {
         // 连杀狂潮（击杀后 5 秒）
         if (System.currentTimeMillis() < RAMPAGE_UNTIL.getOrDefault(sp.getUUID(), 0L)) {
             dmgMul *= (float) (1 + effect(data, "rampage"));
+        }
+        // 世界海克斯独立乘区：全体玩家造成伤害倍率 + 对中立生物伤害倍率（独立于玩家海克斯，不与其它 mod 冲突）
+        if (sp.level() instanceof net.minecraft.server.level.ServerLevel whLevel) {
+            double whDmg = com.hexcraft.event.WorldHexEvents.playerDamageMult(whLevel);
+            if (whDmg != 0) dmgMul *= (float) (1 + whDmg);
+            if (target != null && com.hexcraft.event.WorldHexEvents.isNeutral(target)) {
+                double whVsNeutral = com.hexcraft.event.WorldHexEvents.playerDmgVsNeutral(whLevel);
+                if (whVsNeutral != 0) dmgMul *= (float) (1 + whVsNeutral);
+            }
         }
         if (dmgMul != 1.0f) event.setAmount(amount * dmgMul);
 
@@ -940,6 +956,8 @@ public class HextechEvents {
             if (data == null) return;
             data.applyModifiers(sp);
             sync(sp);
+            // 世界海克斯（v0.3.21）：登录时同步全服列表（所有玩家都能看到已生效的世界海克斯）
+            com.hexcraft.network.Packets.broadcastWorldHexes(sp.server);
         }
     }
 

@@ -46,13 +46,26 @@ public class ClientEvents {
         // 使用 Forge ScreenEvent.Init.Post 提供的 addListener（内部绑定到 screen::addRenderableWidget，
         // 生产/开发环境均有效；替代旧反射方案——反射硬编码 official 方法名在生产环境（SRG）找不到导致页签失效）
         event.addListener(btn);
+        // 世界海克斯页签（v0.3.21）：紧挨海克斯工坊页签右侧错开
+        TabButton worldBtn = new TabButton(
+                guiLeft + 78, guiTop - 27,
+                Component.translatable("hexcraft.gui.world_tab"),
+                b -> Minecraft.getInstance().setScreen(new com.hexcraft.client.gui.WorldHexScreen()));
+        event.addListener(worldBtn);
         Hexcraft.LOGGER.info("[Hexcraft] 背包/合成页签注入成功 x={} y={} screen={}",
                 btn.getX(), btn.getY(), screen.getClass().getSimpleName());
     }
 
     static class TabButton extends Button {
+        private final Component glyph;
+
         TabButton(int x, int y, OnPress onPress) {
-            super(x, y, 24, 28, Component.literal("◆"), onPress, DEFAULT_NARRATION);
+            this(x, y, Component.literal("◆"), onPress);
+        }
+
+        TabButton(int x, int y, Component glyph, OnPress onPress) {
+            super(x, y, 24, 28, glyph, onPress, DEFAULT_NARRATION);
+            this.glyph = glyph;
         }
 
         @Override
@@ -60,7 +73,7 @@ public class ClientEvents {
             int bg = this.isHoveredOrFocused() ? 0xFF1E3A5F : 0xAA0B1530;
             g.fill(getX(), getY(), getX() + width, getY() + height, bg);
             g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF1E6FE8);
-            g.drawCenteredString(Minecraft.getInstance().font, Component.literal("◆"),
+            g.drawCenteredString(Minecraft.getInstance().font, glyph,
                     getX() + width / 2, getY() + 7, 0xFF9FB6FF);
         }
     }

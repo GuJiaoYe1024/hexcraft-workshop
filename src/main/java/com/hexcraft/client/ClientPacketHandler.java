@@ -18,4 +18,12 @@ public class ClientPacketHandler {
     public static void syncData(Packets.S2CSyncData msg) {
         ClientDataStore.apply(msg);
     }
+
+    public static void syncWorldHexes(Packets.S2CSyncWorldHexes msg) {
+        ClientDataStore.applyWorld(msg);
+    }
+
+    public static void worldDrawOptions(Packets.S2CWorldDrawOptions msg) {
+        Minecraft.getInstance().setScreen(new com.hexcraft.client.gui.WorldRollScreen(msg));
+    }
 }
