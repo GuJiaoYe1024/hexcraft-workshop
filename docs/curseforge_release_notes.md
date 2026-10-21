@@ -1,3 +1,37 @@
+Hexcraft Workshop v0.4.2 - UI Fixes: Ghosting, GUI Scale, Coming Soon Page
+=========================================================================
+
+A heartfelt apology first: the author's ability is limited, this mod is mostly built with AI assistance, and it may not live up to everyone's expectations. Compatibility may also be poor. The author had no idea that Hextech-related mods already existed. The project is open source (MIT) and will keep being updated (likely still AI-driven). Thank you for your understanding.
+
+- **Fixed text ghosting on the 3-choice draw screen**: removed the old "glow = draw same text twice" trick (a +1px offset made it look like ghosting); names are now drawn once, cleanly
+- **World Hex screen now adapts to GUI Scale**: layout is computed from screen height dynamically (rows and panels shrink on small screens) and supports mouse-wheel scrolling - no more off-screen panels when GUI Scale is set to 3 or 4; stays roomy on high resolutions
+- **"More" button now opens a "Coming Soon" screen**: the left-sidebar "More" button on the World Hex screen opens a coming-soon page (title + note + back button) as the entry point for future categories; new i18n keys added (zh/en)
+- Pure client-side display changes: no network/data/registry changes, protocol stays VERSION=13 - v0.4.1 players can update directly without a full re-install (syncing everyone is still recommended)
+- Verified: offline build passed; server smoke OK; jar swapped into the client
+
+Previous release notes:
+- v0.4.1: All 32 world augments re-buffed, mechanic escalation (III tiers), UI fixes, unified sci-fi buttons, new K keybind, protocol v13.
+- v0.4.0: World Hextech "Infernal Difficulty" - 32 augments, cap 8, protocol v12.
+- v0.3.21: World Hextech (global world augments) - 24 augments, XP draw, coin cancel, second inventory tab.
+- v0.3.20: Hover tooltips for hex augments / forge stats / equipment.
+- v0.3.19: Full localization for config screens.
+- v0.3.18: Linked hextech system.
+
+====================================================
+
+Hexcraft Workshop v0.4.2 - 界面修复轮：重影 / 超屏 / 敬请期待页
+====================================================
+
+先致歉：作者能力有限，本 mod 基本由 AI 辅助完成，可能达不到大家心里的预期，兼容性也可能较差；此前并不清楚已有人开发过海克斯相关 mod。项目已开源（MIT），后续会持续努力更新（虽然大概率仍由 AI 代跑）。感谢大家的理解与包容。
+
+- **修复三选一界面文字重影**：移除旧的"辉光 = 同名文字画两次"做法（+1 像素偏移叠加观感如重影），现在名称只绘制一遍，观感干净
+- **世界海克斯界面随界面尺寸（GUI Scale）自适应**：布局改为按屏幕高度动态计算（矮屏自动压缩行高与区块高度），并支持滚轮滚动——界面尺寸调到 3 / 4 时也不再超屏，第二排分类区块滚动即可完整查看；高分辨率下保持舒展布局
+- **「更多」按钮点击后打开「敬请期待」页**：世界海克斯界面左侧「更多」按钮现在会弹出一个敬请期待页面（标题 + 说明 + 返回按钮），提示更多分类正在开发中，为后续版本预留入口；新增中英翻译 key
+- 纯客户端显示层改动：不动网络协议 / 同步数据 / 注册表，协议保持 VERSION=13，v0.4.1 联机玩家可直接升级，无需全员重装（仍建议全员同步更新）
+- 自检：编译 / 构建成功（offline build）；服务器冒烟启动正常；正式客户端已替换
+
+====================================================
+
 Hexcraft Workshop v0.4.1 - Infernal Difficulty Raised Again + UI/Buttons/Keybind Fixes
 ======================================================================================
 

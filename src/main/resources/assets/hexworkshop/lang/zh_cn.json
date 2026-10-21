@@ -786,5 +786,7 @@
   "hexcraft.worldhex.whx_undead_march.desc": "敌对生物死亡时 40% 概率在原地召唤 1 只同类",
   "hexcraft.worldhex.whx_demon_contract.name": "恶魔契约",
   "hexcraft.worldhex.whx_demon_contract.desc": "敌对生物攻击吸血 40%，40% 概率对玩家施加虚弱与缓慢（7 秒）",
-  "key.hexcraft.open_world": "打开世界海克斯页面"
+  "key.hexcraft.open_world": "打开世界海克斯页面",
+  "hexcraft.gui.future_title": "敬请期待",
+  "hexcraft.gui.future_desc": "更多分类正在开发中（后续版本将陆续开放新玩法与新分类），敬请期待！"
 }

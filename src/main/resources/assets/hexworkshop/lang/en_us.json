@@ -786,5 +786,7 @@
   "hexcraft.worldhex.whx_undead_march.desc": "Hostile mobs summon 1 copy on death 40% of the time",
   "hexcraft.worldhex.whx_demon_contract.name": "Demon Contract",
   "hexcraft.worldhex.whx_demon_contract.desc": "Hostile mobs heal 40% of damage dealt; 40% chance to apply Weakness and Slowness to players (7s)",
-  "key.hexcraft.open_world": "Open World Hex Screen"
+  "key.hexcraft.open_world": "Open World Hex Screen",
+  "hexcraft.gui.future_title": "Coming Soon",
+  "hexcraft.gui.future_desc": "More categories are under development. They will arrive in future updates - stay tuned!"
 }

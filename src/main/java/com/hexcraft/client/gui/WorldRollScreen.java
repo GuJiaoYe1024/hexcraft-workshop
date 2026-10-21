@@ -97,8 +97,8 @@ public class WorldRollScreen extends Screen {
             int cx = cardX[i] + CARD_W / 2;
             int cy = cardY;
 
+            // v0.4.2：移除重复绘制（旧辉光画两次导致文字重影）
             g.drawCenteredString(this.font, name, cx, cy + 42, color);
-            g.drawCenteredString(this.font, name, cx + 1, cy + 43, color);
             g.fill(cardX[i] + 14, cy + 56, cardX[i] + CARD_W - 14, cy + 57, 0x33505F88);
             List<FormattedCharSequence> lines = this.font.split(desc, CARD_W - 24);
             int dy = cy + 62;
