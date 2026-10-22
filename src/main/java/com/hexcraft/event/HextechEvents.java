@@ -106,6 +106,24 @@ public class HextechEvents {
         return v;
     }
 
+    /** v0.5.0 段位强度：锻造词条档位倍率（白银×1 / 黄金×2 / 棱彩×3，钳制非法档位） */
+    public static double forgeTierMult(PlayerData.ForgeEntry f) {
+        if (f == null) return 1;
+        int t = f.tier;
+        if (t < 0 || t >= com.hexcraft.hextech.HextechRegistry.FORGE_TIER_MULT.length) return 1;
+        return com.hexcraft.hextech.HextechRegistry.FORGE_TIER_MULT[t];
+    }
+
+    /** v0.5.0 段位加权总等级：Σ 等级×档位倍率（TACZ 枪械/暴击/弹药词条统一按档位加权，配得上棱彩档） */
+    public static double forgeLevelMult(PlayerData data, String stat) {
+        if (data == null) return 0;
+        double v = 0;
+        for (PlayerData.ForgeEntry f : data.getForges()) {
+            if (f.stat.equals(stat)) v += f.level * forgeTierMult(f);
+        }
+        return v;
+    }
+
     @SubscribeEvent
     public static void onKill(LivingDeathEvent event) {
         LivingEntity victim = event.getEntity();
@@ -186,11 +204,13 @@ public class HextechEvents {
                             Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
                 }
             }
-            // 掷骰狂人：击杀几率免费获得一次随机锻造
+            // 掷骰狂人：击杀几率免费获得一次随机锻造（档位与词条同步随机；tier 记录实际档位 → 强度倍率配档）
             double dice = effect(data, "dice_forge");
             if (dice > 0 && killer.getRandom().nextFloat() < (float) dice) {
-                String stat = HextechRegistry.randomForgeStat();
-                data.getForges().add(new PlayerData.ForgeEntry(stat, 1, killer.getRandom().nextInt(3)));
+                int t = HextechRegistry.randomTier();
+                List<String> pool = HextechRegistry.forgePool(t);
+                String stat = pool.get(killer.getRandom().nextInt(pool.size()));
+                data.getForges().add(new PlayerData.ForgeEntry(stat, 1, t));
                 killer.displayClientMessage(Component.translatable("message.hexcraft.dice_forge"), true);
                 grew = true;
             }
@@ -199,7 +219,7 @@ public class HextechEvents {
             }
 
             // TACZ 弹药回复：tacz_ammo 稳定补弹比例 / tacz_ammo_full 几率补满；弹药补给锻造词条（ammo_aspect +20%/档）提升回复量
-            double ammoBoost = 1.0 + forgeLevel(data, "ammo_aspect") * 0.20;
+            double ammoBoost = 1.0 + forgeLevelMult(data, "ammo_aspect") * 0.20; // v0.5.0 按档位加权（棱彩档×3）
             double ammo = effect(data, "tacz_ammo");
             if (ammo > 0 && restoreTaczAmmo(killer, ammo * ammoBoost)) {
                 killer.displayClientMessage(Component.translatable("message.hexcraft.tacz_ammo"), true);
@@ -242,11 +262,12 @@ public class HextechEvents {
                         mob.getX(), mob.getY(), mob.getZ(), (int) Math.floor(xp * xpDrop));
                 mob.level().addFreshEntity(orb);
             }
-            // 锻造机制：击杀回血 / 击杀晶币
+            // 锻造机制：击杀回血 / 击杀晶币（v0.5.0 按档位倍率：棱彩抽的再生/聚财之刃效果配得上其段位）
             for (PlayerData.ForgeEntry f : data.getForges()) {
+                double tm = forgeTierMult(f);
                 switch (f.stat) {
-                    case "regen_aspect" -> killer.heal(1.0f * f.level);
-                    case "gold_aspect" -> data.addCoins(1 * f.level);
+                    case "regen_aspect" -> killer.heal((float) (1.0f * f.level * tm));
+                    case "gold_aspect" -> data.addCoins((int) (1 * f.level * tm));
                     default -> { }
                 }
             }
@@ -433,9 +454,9 @@ public class HextechEvents {
             if (tc > 0 && sp.getRandom().nextFloat() < (float) tc) dmgMul *= 1.5f;
             double twin = effect(data, "twin_shot"); // 双子射击：几率双倍枪伤
             if (twin > 0 && sp.getRandom().nextFloat() < (float) twin) dmgMul *= 2;
-            // TACZ 联动锻造词条：枪械之刃（枪械伤害 +4%/档）、枪械暴击（+3%/档 1.5x）
-            dmgMul *= (float) (1 + forgeLevel(data, "gun_aspect") * 0.04);
-            if (sp.getRandom().nextFloat() < forgeLevel(data, "gun_crit_aspect") * 0.03f) dmgMul *= 1.5f;
+            // TACZ 联动锻造词条：枪械之刃（枪械伤害 +4%/档）、枪械暴击（+3%/档 1.5x）——v0.5.0 按档位加权（棱彩档×3）
+            dmgMul *= (float) (1 + forgeLevelMult(data, "gun_aspect") * 0.04);
+            if (sp.getRandom().nextFloat() < forgeLevelMult(data, "gun_crit_aspect") * 0.03f) dmgMul *= 1.5f;
             if (target != null) {
                 double dist = sp.distanceTo(target);
                 if (dist < 5) dmgMul *= (float) (1 + effect(data, "tacz_close_power"));
@@ -447,8 +468,11 @@ public class HextechEvents {
         // 疾风剑客：移速转伤
         double mobi = effect(data, "mobi_power");
         if (mobi > 0) {
-            double speed = sp.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED).getValue();
-            dmgMul *= (float) (1 + mobi * speed * 10);
+            AttributeInstance spd = sp.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+            if (spd != null) { // v0.5.0 判空防御
+                double speed = spd.getValue();
+                dmgMul *= (float) (1 + mobi * speed * 10);
+            }
         }
         // 刽子手（低血斩杀）/ 屠龙者（精英首领增伤）/ 附魔增伤（亡灵杀手/节肢杀手）
         if (target != null) {
@@ -485,62 +509,64 @@ public class HextechEvents {
         if (dmgMul != 1.0f) event.setAmount(amount * dmgMul);
 
         // 锻造机制词条：燃烧固定 2 秒（叠加不延长时间，等级改为加深燃烧伤害）；其余固定时长提升强度
+        // v0.5.0 段位强度：所有机制数值/概率/时长按锻造档位乘倍率（白银×1 / 黄金×2 / 棱彩×3），配得上档位划分
         if (target != null && target.isAlive()) {
             for (PlayerData.ForgeEntry f : data.getForges()) {
+                double tm = forgeTierMult(f);
                 switch (f.stat) {
                     case "fire_aspect" -> {
                         target.setSecondsOnFire(2);
-                        if (target.isOnFire()) extraDamage(sp, target, amount * 0.04f * f.level);
+                        if (target.isOnFire()) extraDamage(sp, target, amount * 0.04f * f.level * (float) tm);
                     }
-                    case "frost_aspect" -> applyTo(target, MobEffects.MOVEMENT_SLOWDOWN, 2 * 20, f.level - 1);
-                    case "poison_aspect" -> applyTo(target, MobEffects.POISON, 2 * 20, f.level - 1);
-                    case "leech_aspect" -> sp.heal(amount * 0.025f * f.level);
-                    case "pierce_aspect" -> target.hurt(sp.damageSources().magic(), amount * 0.025f * f.level);
+                    case "frost_aspect" -> applyTo(target, MobEffects.MOVEMENT_SLOWDOWN, (int) (2 * tm) * 20, f.level - 1);
+                    case "poison_aspect" -> applyTo(target, MobEffects.POISON, (int) (2 * tm) * 20, f.level - 1);
+                    case "leech_aspect" -> sp.heal(amount * 0.025f * f.level * (float) tm);
+                    case "pierce_aspect" -> extraDamage(sp, target, amount * 0.025f * f.level * (float) tm); // v0.5.0 走重入锁防递归
                     case "crit_aspect" -> {
-                        if (sp.getRandom().nextFloat() < 0.07f * f.level) {
+                        if (sp.getRandom().nextFloat() < Math.min(1f, 0.07f * f.level * (float) tm)) {
                             extraDamage(sp, target, amount * 0.5f);
                         }
                     }
                     case "execute_aspect" -> {
                         float tRatio = target.getHealth() / Math.max(1f, target.getMaxHealth());
-                        if (tRatio < 0.2f) extraDamage(sp, target, amount * 0.2f * f.level);
+                        if (tRatio < 0.2f) extraDamage(sp, target, amount * 0.2f * f.level * (float) tm);
                     }
                     case "splash_aspect" -> {
-                        if (melee) splashAround(sp, target, amount * 0.1f * f.level, 2.0);
+                        if (melee) splashAround(sp, target, amount * 0.1f * f.level * (float) tm, 2.0);
                     }
                     // ===== 大乱斗/斗魂竞技场风格重做机制（无上限锻造 → 每级数值下调）=====
                     // 雷电之刃：7%/级 几率连锁闪电劈击附近敌人（30% 伤害）
                     case "lightning_aspect" -> {
-                        if (sp.getRandom().nextFloat() < 0.07f * f.level) {
+                        if (sp.getRandom().nextFloat() < Math.min(1f, 0.07f * f.level * (float) tm)) {
                             chainLightning(sp, target, amount * 0.30f, 2.5);
                         }
                     }
-                    // 积聚之刃：命中 50% 叠 1 层（上限 50），每层额外伤害 +1%/级
+                    // 积聚之刃：命中 50% 叠 1 层（上限 50），每层额外伤害 +1%/级（v0.5.0 按档位乘倍率：棱彩叠的层伤害配得上其段位）
                     case "stack_aspect" -> {
                         if (f.stacks < 50 && sp.getRandom().nextFloat() < 0.5f) {
                             f.stacks++;
                             sp.displayClientMessage(Component.translatable("message.hexcraft.forge_stack", f.stacks), true);
                             sync(sp);
                         }
-                        extraDamage(sp, target, amount * 0.01f * f.level * f.stacks);
+                        extraDamage(sp, target, amount * 0.01f * f.level * f.stacks * (float) tm);
                     }
                     // 刀锋之舞：攻速溢出部分按 8%/级 转化为额外伤害（参考重磅一击）
                     case "dance_aspect" -> {
                         AttributeInstance asi = sp.getAttribute(Attributes.ATTACK_SPEED);
                         double aspd = asi == null ? 0 : asi.getValue();
-                        if (aspd > 1.0) extraDamage(sp, target, amount * 0.08f * f.level * (float) (aspd - 1.0));
+                        if (aspd > 1.0) extraDamage(sp, target, amount * 0.08f * f.level * (float) tm * (float) (aspd - 1.0));
                     }
                     // 血怒之刃：半血以下吸血 2%/级 并增伤 6%/级
                     case "bloodlust_aspect" -> {
                         if (sp.getHealth() < sp.getMaxHealth() * 0.5f) {
-                            sp.heal(amount * 0.02f * f.level);
-                            extraDamage(sp, target, amount * 0.06f * f.level);
+                            sp.heal(amount * 0.02f * f.level * (float) tm);
+                            extraDamage(sp, target, amount * 0.06f * f.level * (float) tm);
                         }
                     }
                     // 收割之刃：对低于 35% 生命的目标造成 30%/级 额外真实伤害（参考收割）
                     case "reaper_aspect" -> {
                         float tr = target.getHealth() / Math.max(1f, target.getMaxHealth());
-                        if (tr < 0.35f) target.hurt(sp.damageSources().magic(), amount * 0.3f * f.level);
+                        if (tr < 0.35f) extraDamage(sp, target, amount * 0.3f * f.level * (float) tm); // v0.5.0 走重入锁防递归
                     }
                     default -> { }
                 }
@@ -719,12 +745,12 @@ public class HextechEvents {
                 && sp.getAbsorptionAmount() < (float) lowShield) {
             sp.setAbsorptionAmount((float) lowShield);
         }
-        // 荆棘反伤 + 反击风暴 + 锻造反伤
+        // 荆棘反伤 + 反击风暴 + 锻造反伤（v0.5.0 反伤之刃按档位加权：棱彩抽的反伤配得上其段位）
         double thorns = effect(data, "thorns");
         double counter = effect(data, "counter");
         double forgeThorn = 0;
         for (PlayerData.ForgeEntry f : data.getForges()) {
-            if ("thorn_aspect".equals(f.stat)) forgeThorn += f.level;
+            if ("thorn_aspect".equals(f.stat)) forgeThorn += f.level * forgeTierMult(f);
         }
         if (thorns <= 0 && counter <= 0 && forgeThorn <= 0) return;
         if (event.getSource().getEntity() instanceof LivingEntity attacker

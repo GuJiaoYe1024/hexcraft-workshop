@@ -1,0 +1,15 @@
+{
+  "rarity": "SILVER",
+  "weight": 10,
+  "mods": [
+    {
+      "attr": "movement_speed",
+      "perLevel": 0.03
+    },
+    {
+      "attr": "attack_speed",
+      "perLevel": 0.1
+    }
+  ],
+  "event": ""
+}

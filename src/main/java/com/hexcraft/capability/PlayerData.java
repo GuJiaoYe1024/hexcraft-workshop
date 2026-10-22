@@ -263,7 +263,16 @@ public class PlayerData {
         for (ForgeEntry f : forges) {
             HextechDefinition.ModSpec mod = HextechRegistry.forgeMod(f.stat);
             if (mod == null) continue;
-            applyOne(player, mod.attr, "forge:" + f.stat + "#" + idx++, mod.perLevel * f.level * forgePower);
+            // v0.5.0 段位强度：属性词条数值按锻造器档位乘倍率（白银×1 / 黄金×2 / 棱彩×3）——
+            // 同词条在棱彩锻造器抽出比黄金/白银更强，配得上"棱彩最好"的段位划分
+            double tierMult = (f.tier >= 0 && f.tier < com.hexcraft.hextech.HextechRegistry.FORGE_TIER_MULT.length)
+                    ? com.hexcraft.hextech.HextechRegistry.FORGE_TIER_MULT[f.tier] : 1.0;
+            // 棱彩百分比词条（hppct/aspdpct）走乘法叠加，数值已按棱彩档设计（每级 +2% 生命 / +1.5% 攻速），不乘档位倍率
+            if (f.stat.equals("hppct") || f.stat.equals("aspdpct")) {
+                applyOneMulti(player, mod.attr, "forge:" + f.stat + "#" + idx++, mod.perLevel * f.level * forgePower);
+            } else {
+                applyOne(player, mod.attr, "forge:" + f.stat + "#" + idx++, mod.perLevel * f.level * tierMult * forgePower);
+            }
         }
         // 装备属性加成（level 恒 1）+ 装备成长属性（stack_attr_onhit:键:倍率 → 每层乘法叠加）
         for (EquipEntry eq : equipment) {
@@ -364,9 +373,13 @@ public class PlayerData {
         pityGold = tag.getInt("pityGold");
         pityPrismatic = tag.getInt("pityPrismatic");
         hexes.clear();
+        int dropHex = 0, dropForge = 0, dropEquip = 0;
         for (Tag t : tag.getList("hexes", 10)) {
             CompoundTag c = (CompoundTag) t;
-            HexEntry e = new HexEntry(c.getString("id"), c.getInt("level"));
+            String hid = c.getString("id");
+            // v0.5.0 存档消毒：删除/改版后不存在的海克斯自动丢弃（旧档不残留、界面不报错）
+            if (com.hexcraft.hextech.HextechRegistry.get(hid) == null) { dropHex++; continue; }
+            HexEntry e = new HexEntry(hid, c.getInt("level"));
             e.stacks = c.getInt("stacks");
             if (e.id.equals("hex_stack_drake")) e.stacks = 0; // 叠角龙自身不叠层（旧档残留层数一次性清零）
             hexes.add(e);
@@ -374,17 +387,25 @@ public class PlayerData {
         forges.clear();
         for (Tag t : tag.getList("forges", 10)) {
             CompoundTag c = (CompoundTag) t;
-            ForgeEntry f = new ForgeEntry(c.getString("stat"), c.getInt("level"));
+            String stat = c.getString("stat");
+            // 锻造词条消毒：不在当前词条池（含已删除词条）自动丢弃
+            if (!com.hexcraft.hextech.HextechRegistry.forgeStatsAll().contains(stat)) { dropForge++; continue; }
+            ForgeEntry f = new ForgeEntry(stat, c.getInt("level"));
             f.stacks = c.getInt("stacks");
-            f.tier = c.getInt("tier"); // 旧存档缺省 0（白银档），兼容
+            f.tier = c.getInt("tier"); // 保留实际锻造档位（0=白银 1=黄金 2=棱彩，决定词条强度倍率 ×1/×2/×3）
             forges.add(f);
         }
         equipment.clear();
         for (Tag t : tag.getList("equipment", 10)) {
             CompoundTag c = (CompoundTag) t;
-            EquipEntry eq = new EquipEntry(c.getString("id"), c.getInt("level"));
+            String eid = c.getString("id");
+            if (com.hexcraft.hextech.HextechRegistry.getEquip(eid) == null) { dropEquip++; continue; }
+            EquipEntry eq = new EquipEntry(eid, c.getInt("level"));
             eq.stacks = c.getInt("stacks");
             equipment.add(eq);
+        }
+        if (dropHex + dropForge + dropEquip > 0) {
+            com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 存档消毒：清理已删除内容 海克斯={} 锻造={} 装备={}", dropHex, dropForge, dropEquip);
         }
     }
 
@@ -395,19 +416,23 @@ public class PlayerData {
         this.pityPrismatic = old.pityPrismatic;
         this.hexes.clear();
         for (HexEntry e : old.hexes) {
+            // v0.5.0 存档消毒：已删除海克斯不复制（重生/登录恢复同样自动清理）
+            if (com.hexcraft.hextech.HextechRegistry.get(e.id) == null) continue;
             HexEntry ne = new HexEntry(e.id, e.level);
             ne.stacks = e.id.equals("hex_stack_drake") ? 0 : e.stacks; // 叠角龙自身不叠层
             this.hexes.add(ne);
         }
         this.forges.clear();
         for (ForgeEntry f : old.forges) {
+            if (!com.hexcraft.hextech.HextechRegistry.forgeStatsAll().contains(f.stat)) continue;
             ForgeEntry nf = new ForgeEntry(f.stat, f.level);
             nf.stacks = f.stacks;
-            nf.tier = f.tier;
+            nf.tier = f.tier; // 保留实际锻造档位（强度倍率随档位）
             this.forges.add(nf);
         }
         this.equipment.clear();
         for (EquipEntry eq : old.equipment) {
+            if (com.hexcraft.hextech.HextechRegistry.getEquip(eq.id) == null) continue;
             EquipEntry ne = new EquipEntry(eq.id, eq.level);
             ne.stacks = eq.stacks;
             this.equipment.add(ne);

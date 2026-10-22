@@ -78,15 +78,20 @@ public class HextechRegistry {
                 mod(Attributes.ARMOR, 8.0), mod(Attributes.KNOCKBACK_RESISTANCE, 0.2), mod(Attributes.MAX_HEALTH, 8.0)), null);
 
         // ---- 锻造属性池（倍率 1/2/3 对应基础/黄金/棱彩锻造器；无上限锻造 → 数值全部下调防崩坏）----
-        FORGE_MODS.put("atk", mod(Attributes.ATTACK_DAMAGE, 0.25));
-        FORGE_MODS.put("armor", mod(Attributes.ARMOR, 0.5));
-        FORGE_MODS.put("hp", mod(Attributes.MAX_HEALTH, 1.0));
+        // v0.5.0 数值上调：基础生命/攻击/防御多给一点，配得上三档价格
+        FORGE_MODS.put("atk", mod(Attributes.ATTACK_DAMAGE, 0.5));
+        FORGE_MODS.put("armor", mod(Attributes.ARMOR, 1.0));
+        FORGE_MODS.put("hp", mod(Attributes.MAX_HEALTH, 2.0));
         FORGE_MODS.put("spd", mod(Attributes.MOVEMENT_SPEED, 0.0015));
         FORGE_MODS.put("aspd", mod(Attributes.ATTACK_SPEED, 0.025));
         FORGE_MODS.put("luck", mod(Attributes.LUCK, 0.25));
         FORGE_MODS.put("knockback", mod(Attributes.ATTACK_KNOCKBACK, 0.12));
         FORGE_MODS.put("resist", mod(Attributes.KNOCKBACK_RESISTANCE, 0.025));
         FORGE_MODS.put("tough", mod(Attributes.ARMOR_TOUGHNESS, 0.25));
+        // v0.5.0 棱彩百分比词条（乘法叠加；applyModifiers 对这两个 stat 走 MULTIPLY_BASE）
+        // 数值上调：棱彩每档一次 +5% 生命 / +3% 攻速（原 2%/1.5% 太少）
+        FORGE_MODS.put("hppct", mod(Attributes.MAX_HEALTH, 0.05));        // 每级最大生命 +5%
+        FORGE_MODS.put("aspdpct", mod(Attributes.ATTACK_SPEED, 0.03));    // 每级攻击速度 +3%
     }
 
     /** Forge 扩展属性（ENTITY_REACH/STEP_HEIGHT）在注册完成后惰性加入锻造池，避免静态块时机问题 */
@@ -167,12 +172,37 @@ public class HextechRegistry {
     public static final List<String> FORGE_TACZ_MECHANICS = List.of(
             "gun_aspect", "gun_crit_aspect", "ammo_aspect");
 
+    /** v0.5.0 锻造词条按档位分池（白银=纯数值属性、黄金=数值+简单机制、棱彩=百分比+强机制），
+     *  解决旧版三档共用同一词条池导致的"白银/黄金/棱彩出现同名同效果词条"问题 */
+    public static final List<String> FORGE_TIER_SILVER = List.of(
+            "atk", "armor", "hp", "spd", "aspd", "luck", "knockback", "resist", "tough");
+    public static final List<String> FORGE_TIER_GOLD = List.of(
+            "atk", "hp", "aspd", "armor",
+            "crit_aspect", "execute_aspect", "splash_aspect", "leech_aspect", "pierce_aspect",
+            "thorn_aspect", "gold_aspect", "fire_aspect", "frost_aspect", "poison_aspect", "regen_aspect");
+    public static final List<String> FORGE_TIER_PRISMATIC = List.of(
+            "lightning_aspect", "stack_aspect", "dance_aspect", "bloodlust_aspect", "reaper_aspect",
+            "hppct", "aspdpct");
+
     /** 当前环境可锻造词条池（原版 + 已启用的联动词条） */
     public static List<String> forgeStats() {
         ensureForgeExt();
         List<String> out = new ArrayList<>(FORGE_MODS.keySet());
         out.addAll(FORGE_MECHANICS);
         if (isSourceEnabled("tacz", "forge")) out.addAll(FORGE_TACZ_MECHANICS);
+        return out;
+    }
+
+    /** v0.5.0：按档位取锻造词条池（0=白银 / 1=黄金 / 2=棱彩），仅当前可用词条（来源启用过滤） */
+    public static List<String> forgePool(int tier) {
+        ensureForgeExt();
+        List<String> base = switch (tier) {
+            case 1 -> FORGE_TIER_GOLD;
+            case 2 -> FORGE_TIER_PRISMATIC;
+            default -> FORGE_TIER_SILVER;
+        };
+        List<String> out = new ArrayList<>(base);
+        if (tier == 2 && isSourceEnabled("tacz", "forge")) out.addAll(FORGE_TACZ_MECHANICS);
         return out;
     }
 
@@ -183,12 +213,6 @@ public class HextechRegistry {
         out.addAll(FORGE_MECHANICS);
         out.addAll(FORGE_TACZ_MECHANICS);
         return out;
-    }
-
-    /** 随机一个锻造词条（属性或机制，仅当前可用池），用于「掷骰狂人」免费锻造 */
-    public static String randomForgeStat() {
-        List<String> pool = forgeStats();
-        return pool.get(new Random().nextInt(pool.size()));
     }
 
     public static HextechDefinition.ModSpec forgeMod(String stat) {

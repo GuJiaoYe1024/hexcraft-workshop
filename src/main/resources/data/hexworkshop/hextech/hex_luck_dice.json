@@ -1,0 +1,11 @@
+{
+  "rarity": "SILVER",
+  "weight": 10,
+  "mods": [
+    {
+      "attr": "luck",
+      "perLevel": 1.0
+    }
+  ],
+  "event": ""
+}

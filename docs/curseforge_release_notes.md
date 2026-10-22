@@ -1,4 +1,21 @@
+Hexcraft Workshop v0.5.0 - Content overhaul: 3-tier forge pools + 10 new hexes + save sanitization
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- FIXED Stack Drake showing in the growth page: Stack Drake never stacks itself (it only amplifies other stack effects), so it is excluded from the "Growth Stacks" panel (no more "x0 stacks")
+- FORGE OVERHAUL - three tier-specific pools (fixes identical names/effects across Silver/Gold/Prismatic): Silver = pure numeric stats (Atk/Armor/HP/Speed/Aspd/Luck/Knockback/Resist/Tough); Gold = stats + simple mechanics (4 stats + crit/execute/splash/leech/pierce/thorn/gold/fire/frost/poison/regen blades); Prismatic = percentage + strong mechanics (lightning/stack/dance/bloodlust/reaper blades + NEW "Vitality Surge +5% HP/level" and "Alacrity Surge +3% ASPD/level" percentage stats + TACZ ammo stats). Rolling/re-rolling draws from the tier's own pool. **TIER STRENGTH**: stat values AND mechanic effects (crit/execute/splash/leech/pierce/thorn/gold/fire/frost/poison/regen/lightning/stack/dance/bloodlust/reaper/gun/gun-crit/ammo) are multiplied by the forge tier (Silver x1 / Gold x2 / Prismatic x3) - the same aspect (including Crescendo Blade) is genuinely stronger when rolled from a higher-tier forge, so Prismatic results match its "best" tier
+- **BASE STATS BUFFED**: Atk 0.25->0.5, Armor 0.5->1.0, HP 1.0->2.0 per level; Prismatic percentage stats buffed (Vitality +2%->+5%, Alacrity +1.5%->+3% per level) - forge strength now matches the tier prices
+- **CLEARER PROMPTS**: random-gift and stack prompts reworded ("[Random Gift] Got XX xN!") - how many stacks / what you got is now obvious at a glance
+- FIXED two extra-damage infinite recursion (Pierce Blade / Reaper Blade resolved magic damage without the re-entry lock - holding them could re-trigger on-hit effects in a loop) - now routed through the locked extra-damage channel
+- EQUIPMENT DEDUP: Randuin's Omen duplicated Frozen Heart (both frost_bite:0.3) - Randuin now focuses on high armor/HP + thorn reflect (thorns:1.5), clearly distinct from Frozen Heart's frost slow
+- 10 NEW HEXES (Silver = pure numbers, Gold = numbers+mechanics, Prismatic = percentages+mechanics): Silver "Armor Core / Lucky Dice / Swift Feet"; Gold "Critical Leech / Frosty Fortune / Echo Rampage / Executioner's Gold"; Prismatic "Prismatic Immortal / Full-HP Blade (25% crit + 50% crit damage at full HP) / Lucky Streak". All reuse existing effect keys - zero new event code, lowest risk
+- OLD SAVES AUTO-UPDATE: save sanitization on load (login / respawn copy) - hexes/forge stats/equipment whose IDs were removed are dropped automatically (with a log line), so old saves never touch empty definitions; also cleaned one redundant registry lookup in the page screen
+- Content total: 148 hexes + 44 equipment (192 items); all JSON parses, zh_cn & en_us translations complete
+- Protocol stays VERSION=15 - v0.4.15 players can upgrade directly
+
 Hexcraft Workshop v0.4.15 - XP recognition fix: accepts experience granted by other mods (FTB Quests etc.)
+=============================================================================
 
 Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
 

@@ -109,7 +109,7 @@ public class Packets {
                 }
                 offer.options.clear();
                 offer.options.addAll(offer.forge
-                        ? HextechRoller.rollForgeOptions()
+                        ? HextechRoller.rollForgeOptions(offer.tier) // v0.5.0 按档位分池
                         : (offer.equip ? HextechRegistry.rollEquipOptions(
                                 offer.tier == 1 ? com.hexcraft.hextech.HextechRarity.PRISMATIC : com.hexcraft.hextech.HextechRarity.GOLD)
                                 : HextechRoller.rollHexOptions(data)));
@@ -207,7 +207,7 @@ public class Packets {
                 }
                 data.setForgesUsed(data.getForgesUsed() + 1);
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(true, m.tier);
-                offer.options.addAll(HextechRoller.rollForgeOptions());
+                offer.options.addAll(HextechRoller.rollForgeOptions(m.tier)); // v0.5.0 按档位分池
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
             });
@@ -242,7 +242,7 @@ public class Packets {
                 }
                 data.setForgesUsed(data.getForgesUsed() + 1);
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(true, tier);
-                offer.options.addAll(HextechRoller.rollForgeOptions());
+                offer.options.addAll(HextechRoller.rollForgeOptions(tier)); // v0.5.0 按档位分池
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
             });

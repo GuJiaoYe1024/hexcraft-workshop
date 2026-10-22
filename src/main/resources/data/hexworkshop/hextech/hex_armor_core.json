@@ -1,0 +1,11 @@
+{
+  "rarity": "SILVER",
+  "weight": 10,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 3.0
+    }
+  ],
+  "event": ""
+}

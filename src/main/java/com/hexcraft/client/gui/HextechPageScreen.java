@@ -389,10 +389,11 @@ public class HextechPageScreen extends HexScaledScreen {
         return rows;
     }
 
-    /** 可叠层海克斯：event 含 stack_growth / stack_attr: / stack_attr_onhit:（全部展示，含 0 层） */
+    /** 可叠层海克斯：event 含 stack_growth / stack_attr: / stack_attr_onhit:（全部展示，含 0 层）；叠角龙自身不叠层，不出现在成长叠层栏 */
     private static List<PlayerData.HexEntry> stackableHexes() {
         List<PlayerData.HexEntry> out = new java.util.ArrayList<>();
         for (PlayerData.HexEntry h : ClientDataStore.hexes) {
+            if (h.id.equals("hex_stack_drake")) continue; // v0.5.0：叠角龙自身不叠层，不显示
             HextechDefinition def = HextechRegistry.get(h.id);
             if (def != null && def.event != null
                     && (def.event.contains("stack_growth") || def.event.contains("stack_attr:")
@@ -496,10 +497,11 @@ public class HextechPageScreen extends HexScaledScreen {
         java.util.List<PlayerData.HexEntry> list = visibleHexes();
         int ly = top - hexScroll;
         for (var h : list) {
-            if (HextechRegistry.get(h.id) == null) { ly += HEX_ROW_H; continue; } // 旧档残留（已删除海克斯）不显示
+            HextechDefinition def = HextechRegistry.get(h.id);
+            if (def == null) { ly += HEX_ROW_H; continue; } // 旧档残留（已删除海克斯）不显示
             if (ly + 8 < top) { ly += HEX_ROW_H; continue; }
             if (ly > bottom) break;
-            String rk = HextechRegistry.get(h.id).rarity.key;
+            String rk = def.rarity.key;
             Component name = Component.translatable("hexcraft.hextech." + h.id + ".name")
                     .copy().append("  Lv." + h.level);
             if (h.stacks > 0) name = name.copy().append("  ×" + h.stacks + "层");
@@ -705,7 +707,7 @@ public class HextechPageScreen extends HexScaledScreen {
         return h;
     }
 
-    /** 已锻造词条按来源档位分组：白银 / 黄金 / 棱彩，从低到高；TACZ 联动词条打标 */
+    /** 已锻造词条按实际锻造档位分组（v0.5.0：档位即强度，白银 ×1 / 黄金 ×2 / 棱彩 ×3——在哪档抽的显示在哪组） */
     private java.util.List<ForgeGroup> forgeGroups() {
         java.util.List<ForgeGroup> groups = new java.util.ArrayList<>();
         int[] tierColors = {0xFFD8D8D8, 0xFFFFC94A, 0xFFC77DFF};

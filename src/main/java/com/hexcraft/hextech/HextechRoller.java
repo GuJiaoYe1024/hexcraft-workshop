@@ -56,9 +56,9 @@ public class HextechRoller {
         return r;
     }
 
-    /** 锻造属性三选一 */
-    public static List<String> rollForgeOptions() {
-        List<String> pool = new ArrayList<>(HextechRegistry.forgeStats());
+    /** 锻造三选一（按档位分池：0=白银纯数值 / 1=黄金数值+机制 / 2=棱彩百分比+强机制） */
+    public static List<String> rollForgeOptions(int tier) {
+        List<String> pool = new ArrayList<>(HextechRegistry.forgePool(tier));
         List<String> out = new ArrayList<>(3);
         while (out.size() < 3 && !pool.isEmpty()) {
             out.add(pool.remove(RANDOM.nextInt(pool.size())));
