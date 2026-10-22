@@ -130,12 +130,13 @@ public class HextechEvents {
             if (data == null) return;
             int coins = rollCoins(mob, killer);
             coins += (int) Math.floor(coins * effect(data, "coin_bonus"));
-            // 世界海克斯独立乘区：全体玩家晶币获取倍率 + 击杀敌对生物晶币加成（独立于玩家海克斯，不与其它 mod 冲突）
+            // 世界海克斯独立乘区：全体玩家晶币获取倍率 + 击杀敌对生物晶币加成 + 固定晶币税（独立于玩家海克斯，不与其它 mod 冲突）
             if (mob.level() instanceof net.minecraft.server.level.ServerLevel whLevel) {
                 double whCoin = com.hexcraft.event.WorldHexEvents.coinMult(whLevel);
                 if (whCoin != 0) coins += (int) Math.floor(coins * whCoin);
                 double whMob = com.hexcraft.event.WorldHexEvents.mobCoinBonus(whLevel, mob);
                 if (whMob != 0) coins += (int) Math.floor(coins * whMob);
+                coins += (int) Math.floor(com.hexcraft.event.WorldHexEvents.coinFlat(whLevel)); // 晶币税（白银纯数字固定值）
             }
             if (coins > 0) data.addCoins(coins);
 
@@ -372,6 +373,14 @@ public class HextechEvents {
         float amount = event.getAmount();
         if (amount <= 0) return;
 
+        // v0.4.7 伤害机制分层（参考 LOL 海克斯大乱斗）：
+        // ① 反伤（荆棘/反伤锻造/反击）默认是"纯反伤"——只反弹伤害，不触发任何攻击特效
+        //   （吸血 / 暴击 / 增伤 / 锻造词条 / 附魔 / 叠层 / 命中回粮等一律不生效）；
+        // ② 仅当玩家持有棱彩海克斯「万伤皆刃」(all_damage_proc) 时，归于玩家的所有伤害
+        //   （含反伤）都能触发全部攻击特效——叠层、吸血、词条照常结算。
+        boolean thornsHit = event.getSource().getMsgId().contains("thorns");
+        if (thornsHit && effect(data, "all_damage_proc") <= 0) return;
+
         // —— 吸血（动态提升：嗜血狂怒 / 满血过载）+ 溢出转盾 ——
         double lifesteal = effect(data, "lifesteal");
         float hpRatio = sp.getHealth() / Math.max(1f, sp.getMaxHealth());
@@ -545,36 +554,34 @@ public class HextechEvents {
                 sp.displayClientMessage(Component.translatable("message.hexcraft.gold_punch"), true);
             }
             // 心之钢等：攻击命中概率叠永久属性层（stack_attr_onhit:键:倍率，25% 几率）；叠角龙在场时叠层翻倍——提示带海克斯名称
-            // v0.4.3 修复：荆棘/反伤伤害（生物攻击被玩家反伤、伤害源显示为玩家）不属于"攻击命中"，不再触发叠层
-            boolean thornsHit = event.getSource().getMsgId().contains("thorns");
+            // v0.4.3 修复：荆棘/反伤伤害不再无脑触发叠层；v0.4.7 起：反伤默认在 onDamageDealt 开头已短路（纯反伤），
+            // 持有「万伤皆刃」棱彩海克斯时反伤也触发叠层（到达此处时 thorns 只可能是 all_damage_proc 放行或非反伤来源）
             boolean onHitDrake = data.getHexes().stream().anyMatch(e -> e.id.equals("hex_stack_drake"));
             int onHitGain = onHitDrake ? 2 : 1;
             boolean attrStacked = false;
-            if (!thornsHit) {
-                for (PlayerData.HexEntry e : data.getHexes()) {
-                    if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不被命中叠层
-                    HextechDefinition def = HextechRegistry.get(e.id);
-                    if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
-                        if (sp.getRandom().nextFloat() < 0.25f) {
-                            e.stacks += onHitGain;
-                            data.applyModifiers(sp);
-                            sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                                    Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
-                            attrStacked = true;
-                        }
+            for (PlayerData.HexEntry e : data.getHexes()) {
+                if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不被命中叠层
+                HextechDefinition def = HextechRegistry.get(e.id);
+                if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
+                    if (sp.getRandom().nextFloat() < 0.25f) {
+                        e.stacks += onHitGain;
+                        data.applyModifiers(sp);
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
+                                Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
+                        attrStacked = true;
                     }
                 }
-                // 可叠层装备（心之钢等装备的 stack_attr_onhit）：装备层数独立累计，25% 几率叠 1 层（叠角龙在场翻倍）——提示带装备名称
-                for (PlayerData.EquipEntry eq : data.getEquipment()) {
-                    HextechDefinition def = HextechRegistry.getEquip(eq.id);
-                    if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
-                        if (sp.getRandom().nextFloat() < 0.25f) {
-                            eq.stacks += onHitGain;
-                            data.applyModifiers(sp);
-                            sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
-                                    Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), true);
-                            attrStacked = true;
-                        }
+            }
+            // 可叠层装备（心之钢等装备的 stack_attr_onhit）：装备层数独立累计，25% 几率叠 1 层（叠角龙在场翻倍）——提示带装备名称
+            for (PlayerData.EquipEntry eq : data.getEquipment()) {
+                HextechDefinition def = HextechRegistry.getEquip(eq.id);
+                if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
+                    if (sp.getRandom().nextFloat() < 0.25f) {
+                        eq.stacks += onHitGain;
+                        data.applyModifiers(sp);
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
+                                Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), true);
+                        attrStacked = true;
                     }
                 }
             }

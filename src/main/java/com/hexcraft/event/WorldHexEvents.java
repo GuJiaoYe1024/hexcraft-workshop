@@ -43,12 +43,16 @@ public class WorldHexEvents {
     // ================= 独立 modifier UUID 池（每个 effect 键一个固定 UUID，避免互相覆盖）=================
     private static final Map<String, UUID> MOD_UUIDS = new HashMap<>();
     private static final UUID WH_PLAYER_HP = UUID.nameUUIDFromBytes("hexcraft_wh_player_hp".getBytes());
+    private static final UUID WH_PLAYER_HP_PCT = UUID.nameUUIDFromBytes("hexcraft_wh_player_hp_pct".getBytes());
 
     static {
         String[] keys = {
                 "hostile_hp", "hostile_atk", "hostile_armor", "hostile_speed",
+                "hostile_hp_pct", "hostile_atk_pct",
                 "neutral_hp", "neutral_atk", "neutral_armor", "neutral_speed", "neutral_follow",
-                "passive_hp", "passive_atk", "passive_speed"
+                "neutral_hp_pct", "neutral_atk_pct",
+                "passive_hp", "passive_atk", "passive_speed",
+                "passive_hp_pct", "passive_atk_pct"
         };
         for (String k : keys) MOD_UUIDS.put(k, UUID.nameUUIDFromBytes(("hexcraft_wh_" + k).getBytes()));
     }
@@ -70,10 +74,13 @@ public class WorldHexEvents {
     public static boolean isNeutral(LivingEntity e) { return e instanceof NeutralMob; }
 
     // ================= 属性映射（null 表示该键不在此分类上生效）=================
+    // v0.4.7 分层设计：白银=纯数字（ADDITION）、黄金=数值+少量百分比、棱彩=百分比/倍数（MULTIPLY_TOTAL）
     private static AttributeKind attrOf(String key) {
         return switch (key) {
             case "hostile_hp", "neutral_hp", "passive_hp" -> new AttributeKind(Attributes.MAX_HEALTH, AttributeModifier.Operation.ADDITION);
+            case "hostile_hp_pct", "neutral_hp_pct", "passive_hp_pct" -> new AttributeKind(Attributes.MAX_HEALTH, AttributeModifier.Operation.MULTIPLY_TOTAL);
             case "hostile_atk", "neutral_atk", "passive_atk" -> new AttributeKind(Attributes.ATTACK_DAMAGE, AttributeModifier.Operation.ADDITION);
+            case "hostile_atk_pct", "neutral_atk_pct", "passive_atk_pct" -> new AttributeKind(Attributes.ATTACK_DAMAGE, AttributeModifier.Operation.MULTIPLY_TOTAL);
             case "hostile_armor", "neutral_armor" -> new AttributeKind(Attributes.ARMOR, AttributeModifier.Operation.ADDITION);
             case "hostile_speed", "neutral_speed", "passive_speed" -> new AttributeKind(Attributes.MOVEMENT_SPEED, AttributeModifier.Operation.MULTIPLY_TOTAL);
             case "neutral_follow" -> new AttributeKind(Attributes.FOLLOW_RANGE, AttributeModifier.Operation.MULTIPLY_TOTAL);
@@ -138,25 +145,33 @@ public class WorldHexEvents {
         }
     }
 
-    // ================= 玩家世界海克斯 modifier（player_hp 独立 UUID，不与 PlayerData 的 UUID 池冲突）=================
+    // ================= 玩家世界海克斯 modifier（player_hp / player_hp_pct 独立 UUID，不与 PlayerData 的 UUID 池冲突）=================
     public static void applyPlayerWorldMods(ServerPlayer sp, ServerLevel level) {
         AttributeInstance ai = sp.getAttribute(Attributes.MAX_HEALTH);
         if (ai == null) return;
         if (ai.getModifier(WH_PLAYER_HP) != null) ai.removeModifier(WH_PLAYER_HP);
+        if (ai.getModifier(WH_PLAYER_HP_PCT) != null) ai.removeModifier(WH_PLAYER_HP_PCT);
         double sum = 0;
+        double pct = 0;
         for (String id : WorldHexData.get(level).active) {
             WorldHexDefinition d = WorldHexRegistry.get(id);
             if (d == null) continue;
             for (String token : d.effect.split(",")) {
                 int ci = token.indexOf(':');
                 if (ci <= 0) continue;
-                if (token.substring(0, ci).equals("player_hp")) {
+                String key = token.substring(0, ci);
+                if (key.equals("player_hp")) {
                     try { sum += Double.parseDouble(token.substring(ci + 1)); } catch (Exception ignored) { }
+                } else if (key.equals("player_hp_pct")) {
+                    try { pct += Double.parseDouble(token.substring(ci + 1)); } catch (Exception ignored) { }
                 }
             }
         }
         if (sum != 0) {
             ai.addPermanentModifier(new AttributeModifier(WH_PLAYER_HP, "world_hex_player_hp", sum, AttributeModifier.Operation.ADDITION));
+        }
+        if (pct != 0) {
+            ai.addPermanentModifier(new AttributeModifier(WH_PLAYER_HP_PCT, "world_hex_player_hp_pct", pct, AttributeModifier.Operation.MULTIPLY_TOTAL));
         }
         if (sp.getHealth() > sp.getMaxHealth()) sp.setHealth(sp.getMaxHealth());
     }
@@ -202,6 +217,12 @@ public class WorldHexEvents {
     /** 友好生物死亡不掉落概率（0.30 = 30%） */
     public static double passiveNoDrop(ServerLevel level) { return sumEffect(level, "passive_no_drop"); }
 
+    /** 击杀敌对生物额外固定经验（白银纯数字：player_xp_flat，如 3 = 额外 +3 点经验） */
+    public static double xpFlat(ServerLevel level) { return sumEffect(level, "player_xp_flat"); }
+
+    /** 击杀生物额外固定晶币（白银纯数字：player_coin_flat，如 -3 = 每击杀 -3 晶币） */
+    public static double coinFlat(ServerLevel level) { return sumEffect(level, "player_coin_flat"); }
+
     /** 驯服生物回血（每 0.8s 一次） */
     public static double tamedRegen(ServerLevel level) { return sumEffect(level, "tamed_regen"); }
 
@@ -238,7 +259,7 @@ public class WorldHexEvents {
         applyEntityMods(le, (ServerLevel) event.getLevel());
     }
 
-    /** 玩家经验倍率（独立乘区，与玩家海克斯 xp_bonus 各自计算后相乘） */
+    /** 玩家经验倍率（独立乘区，与玩家海克斯 xp_bonus 各自计算后相乘）+ 固定经验（白银纯数字） */
     @SubscribeEvent
     public static void onXpDrop(LivingExperienceDropEvent event) {
         if (!(event.getAttackingPlayer() instanceof ServerPlayer)) return;
@@ -246,6 +267,10 @@ public class WorldHexEvents {
         double mult = playerXpMult(sl);
         if (mult != 0) {
             event.setDroppedExperience((int) (event.getDroppedExperience() * (1 + mult)));
+        }
+        double flat = xpFlat(sl);
+        if (flat != 0) {
+            event.setDroppedExperience(Math.max(0, event.getDroppedExperience() + (int) Math.floor(flat)));
         }
     }
 

@@ -14,6 +14,11 @@ import java.util.Map;
  *    白银 = 数值类（纯属性 / 纯倍率数值，无机制）；
  *    黄金 = 数值 + 机制（保留炼狱主数值，附加一类机制效果）；
  *    棱彩 = 百分比数值 + 机制（百分比主数值 + 机制，最难最强）。
+ *  v0.4.7 数值形态再分层（用户追认）：
+ *    白银 = 纯数字数值（固定点数，如 +6 生命 / +3 攻击 / 固定经验 / 固定晶币，无百分比）；
+ *    黄金 = 数值 + 少量百分比（主数值保留，百分比 ≤20%，如输出 -15% 等）；
+ *    棱彩 = 百分比 / 倍数数值（百分比生命、百分比攻击、百分比移速或经验倍率，30% 起步，
+ *           部分可达 ×2 / ×3 的倍数级效果）。
  *  机制效果类型：受击反扑（berserk）、死亡召唤（resurrect）、吸血（lifesteal）、
  *    施加虚弱/缓慢（debuff）、驯服回血（regen）、掉落抑制（no_drop）、
  *    击杀晶币加成（mob_coin_bonus）、抽取折扣（draw_cost）、死亡经验惩罚（death_xp）。
@@ -31,56 +36,56 @@ public class WorldHexRegistry {
 
     static {
         // ============ 通用（影响全体玩家/世界）============
-        // 白银：数值类
-        register("whx_xp_friend", CAT_GENERAL, "silver", "player_xp:0.15");                 // 经验亲和：全体经验 +15%
-        register("whx_coin_tax", CAT_GENERAL, "silver", "player_coin:-0.30");               // 晶币税：全体晶币 -30%
-        // 黄金：数值 + 机制
-        register("whx_dmg_shortage", CAT_GENERAL, "gold", "player_dmg:-0.25,mob_coin_bonus:0.50"); // 补给匮乏：输出 -25%，击杀敌对晶币 +50%（匮乏中靠掠夺补给）
-        register("whx_eternal_flame", CAT_GENERAL, "gold", "player_taken:0.30,player_xp:0.25");    // 永燃诅咒：全体受伤 +30%，经验 +25%（浴火成长双刃）
-        register("whx_life_echo", CAT_GENERAL, "gold", "player_hp:8.0,tamed_regen:0.6");           // 生命共鸣：全体玩家 +8 血，驯服生物持续回血（生命联动）
-        // 棱彩：百分比数值 + 机制
-        register("whx_ancient_weakness", CAT_GENERAL, "prismatic", "player_dmg:-0.20,player_hp:-10.0,death_xp:0.30"); // 远古衰弱：输出 -20%、生命 -10，死亡经验惩罚 +30%
-        register("whx_death_harvest", CAT_GENERAL, "prismatic", "player_dmg:-0.25,death_xp:1.50");       // 死亡收割：输出 -25% + 死亡经验惩罚 2.5 倍
-        register("whx_genesis_pact", CAT_GENERAL, "prismatic", "player_xp:0.50,draw_cost:0.40");        // 创世契约：经验 +50%，抽取消耗 -60%
+        // 白银：纯数字数值（固定经验 / 固定晶币，无百分比）
+        register("whx_xp_friend", CAT_GENERAL, "silver", "player_xp_flat:3");                 // 经验亲和：击杀敌对生物额外 +3 经验
+        register("whx_coin_tax", CAT_GENERAL, "silver", "player_coin_flat:-3");               // 晶币税：击杀生物获得的晶币 -3
+        // 黄金：数值 + 少量百分比
+        register("whx_dmg_shortage", CAT_GENERAL, "gold", "player_dmg:-0.15,mob_coin_bonus:0.10"); // 补给匮乏：输出 -15%，击杀敌对晶币 +10%
+        register("whx_eternal_flame", CAT_GENERAL, "gold", "player_taken:0.15,player_xp:0.10");    // 永燃诅咒：受伤 +15%，经验 +10%
+        register("whx_life_echo", CAT_GENERAL, "gold", "player_hp:8.0,tamed_regen:0.6");           // 生命共鸣：全体玩家 +8 血，驯服生物持续回血
+        // 棱彩：百分比 / 倍数数值 + 机制
+        register("whx_ancient_weakness", CAT_GENERAL, "prismatic", "player_dmg:-0.30,player_hp_pct:-0.15,death_xp:0.50"); // 远古衰弱：输出 -30%、最大生命 -15%、死亡经验惩罚 +50%
+        register("whx_death_harvest", CAT_GENERAL, "prismatic", "player_dmg:-0.30,death_xp:2.00");       // 死亡收割：输出 -30% + 死亡经验惩罚 ×3
+        register("whx_genesis_pact", CAT_GENERAL, "prismatic", "player_xp:0.75,draw_cost:0.45");        // 创世契约：经验 +75%，抽取消耗 -55%
 
         // ============ 友好生物（被动/驯养）============
-        // 白银：数值类
-        register("whx_pasture_harmony", CAT_FRIENDLY, "silver", "passive_speed:0.15");      // 牧场丰饶：友好生物移速 +15%
-        register("whx_herd_watchful", CAT_FRIENDLY, "silver", "passive_no_drop:0.75");      // 家畜警觉：友好生物 75% 不掉落
-        // 黄金：数值 + 机制
-        register("whx_loyal_guard", CAT_FRIENDLY, "gold", "passive_atk:3.0,tamed_regen:0.5"); // 忠诚守护：友好生物攻击 +3，驯服生物回血（守护联动）
-        register("whx_flock_shadow", CAT_FRIENDLY, "gold", "passive_hp:-10.0,passive_no_drop:0.30"); // 牧群阴影：生命 -10 + 30% 不掉落（双诅咒）
-        register("whx_pacifist_oath", CAT_FRIENDLY, "gold", "passive_no_drop:1.00");        // 和平契约：友好生物 100% 不掉落（掉落抑制机制）
+        // 白银：纯数字数值
+        register("whx_pasture_harmony", CAT_FRIENDLY, "silver", "passive_speed:0.10");      // 牧场丰饶：友好生物移速 +10%
+        register("whx_herd_watchful", CAT_FRIENDLY, "silver", "passive_hp:6.0");            // 家畜警觉：友好生物最大生命 +6
+        // 黄金：数值 + 机制（少量百分比）
+        register("whx_loyal_guard", CAT_FRIENDLY, "gold", "passive_atk:3.0,tamed_regen:0.5"); // 忠诚守护：友好攻击 +3，驯服生物回血
+        register("whx_flock_shadow", CAT_FRIENDLY, "gold", "passive_hp:-10.0,passive_no_drop:0.30"); // 牧群阴影：生命 -10 + 30% 不掉落
+        register("whx_pacifist_oath", CAT_FRIENDLY, "gold", "passive_no_drop:1.00,passive_speed:0.05"); // 和平契约：100% 不掉落 + 移速 +5%
         // 棱彩：百分比数值 + 机制
-        register("whx_beast_king", CAT_FRIENDLY, "prismatic", "passive_hp:14.0,passive_atk:4.0,passive_berserk:0.35"); // 万兽之王：血攻大加强 + 受击 35% 狂暴反扑
-        register("whx_angel_grace", CAT_FRIENDLY, "prismatic", "tamed_regen:1.5,passive_speed:0.25"); // 天使眷顾：驯服回血 1.5 + 友好移速 +25%
-        register("whx_wrath_of_fields", CAT_FRIENDLY, "prismatic", "passive_berserk:1.00,passive_speed:0.20"); // 田野之怒：受击 100% 力量+速度反扑 + 移速 20%
+        register("whx_beast_king", CAT_FRIENDLY, "prismatic", "passive_hp_pct:0.30,passive_atk_pct:0.20,passive_berserk:0.35"); // 万兽之王：生命 +30%、攻击 +20% + 受击 35% 狂暴反扑
+        register("whx_angel_grace", CAT_FRIENDLY, "prismatic", "tamed_regen:2.0,passive_speed:0.30"); // 天使眷顾：驯服回血 2 + 友好移速 +30%
+        register("whx_wrath_of_fields", CAT_FRIENDLY, "prismatic", "passive_berserk:1.00,passive_speed:0.30"); // 田野之怒：100% 狂暴反扑 + 移速 +30%
 
         // ============ 中立生物（末影人/猪灵/狼等）============
-        // 白银：数值类
-        register("whx_wild_spirit", CAT_NEUTRAL, "silver", "neutral_atk:3.0");              // 野性难驯：中立生物攻击 +3
-        register("whx_vigilant_eye", CAT_NEUTRAL, "silver", "neutral_follow:0.60");         // 警惕之眼：中立生物索敌 +60%
-        // 黄金：数值 + 机制
+        // 白银：纯数字数值
+        register("whx_wild_spirit", CAT_NEUTRAL, "silver", "neutral_atk:3.0");              // 野性难驯：中立攻击 +3
+        register("whx_vigilant_eye", CAT_NEUTRAL, "silver", "neutral_follow:0.40");         // 警惕之眼：中立索敌 +40%
+        // 黄金：数值 + 少量百分比
         register("whx_pack_rage", CAT_NEUTRAL, "gold", "neutral_atk:4.5,neutral_berserk:0.25"); // 兽群狂暴：攻击 +4.5 + 受击 25% 反扑
-        register("whx_hunter_eye", CAT_NEUTRAL, "gold", "player_dmg_vs_neutral:0.30,player_xp:0.20"); // 猎人之眼：对中立伤害 +30%，猎杀经验 +20%
-        register("whx_wild_instinct", CAT_NEUTRAL, "gold", "neutral_berserk:0.75,neutral_speed:0.15"); // 野性本能：受击 75% 反扑 + 移速 15%
+        register("whx_hunter_eye", CAT_NEUTRAL, "gold", "player_dmg_vs_neutral:0.20,player_xp:0.10"); // 猎人之眼：对中立伤害 +20%，猎杀经验 +10%
+        register("whx_wild_instinct", CAT_NEUTRAL, "gold", "neutral_berserk:0.75,neutral_speed:0.10"); // 野性本能：75% 反扑 + 移速 +10%
         // 棱彩：百分比数值 + 机制
-        register("whx_apex_presence", CAT_NEUTRAL, "prismatic", "neutral_hp:24.0,neutral_speed:0.40,neutral_berserk:0.30"); // 终焉威压：血攻大加强 + 受击 30% 反扑
-        register("whx_peace_vision", CAT_NEUTRAL, "prismatic", "player_dmg_vs_neutral:0.55,draw_cost:0.40"); // 和平愿景：对中立伤害 +55%，抽取消耗 -60%
-        register("whx_neutral_dominion", CAT_NEUTRAL, "prismatic", "neutral_hp:10.0,neutral_atk:6.0,player_dmg_vs_neutral:-0.45,neutral_berserk:0.20"); // 中立统御：血攻大加强 + 玩家对其伤害 -45% + 受击反扑
+        register("whx_apex_presence", CAT_NEUTRAL, "prismatic", "neutral_hp_pct:0.35,neutral_atk_pct:0.25,neutral_berserk:0.30"); // 终焉威压：生命 +35%、攻击 +25% + 受击 30% 反扑
+        register("whx_peace_vision", CAT_NEUTRAL, "prismatic", "player_dmg_vs_neutral:0.60,draw_cost:0.45"); // 和平愿景：对中立伤害 +60%，抽取消耗 -55%
+        register("whx_neutral_dominion", CAT_NEUTRAL, "prismatic", "neutral_hp_pct:0.30,neutral_atk_pct:0.25,player_dmg_vs_neutral:-0.45,neutral_berserk:0.20"); // 中立统御：生命 +30%、攻击 +25% + 玩家对其 -45% + 受击反扑
 
         // ============ 敌对生物（怪物）============
-        // 白银：数值类
-        register("whx_shadow_power", CAT_HOSTILE, "silver", "hostile_hp:6.0");              // 暗影强化：敌对生物生命 +6
-        register("whx_fang_claw", CAT_HOSTILE, "silver", "hostile_atk:3.0");                // 尖牙利爪：敌对生物攻击 +3
-        // 黄金：数值 + 机制
-        register("whx_predator_swift", CAT_HOSTILE, "gold", "hostile_speed:0.45,hostile_lifesteal:0.15"); // 捕食者迅捷：移速 +45% + 攻击吸血 15%
-        register("whx_armor_shell", CAT_HOSTILE, "gold", "hostile_armor:9.0,hostile_debuff:0.25");       // 装甲外壳：护甲 +9 + 攻击 25% 概率施虚弱/缓慢
+        // 白银：纯数字数值
+        register("whx_shadow_power", CAT_HOSTILE, "silver", "hostile_hp:6.0");              // 暗影强化：敌对生命 +6
+        register("whx_fang_claw", CAT_HOSTILE, "silver", "hostile_atk:3.0");                // 尖牙利爪：敌对攻击 +3
+        // 黄金：数值 + 少量百分比
+        register("whx_predator_swift", CAT_HOSTILE, "gold", "hostile_speed:0.20,hostile_lifesteal:0.10"); // 捕食者迅捷：移速 +20% + 攻击吸血 10%
+        register("whx_armor_shell", CAT_HOSTILE, "gold", "hostile_armor:9.0,hostile_debuff:0.25");       // 装甲外壳：护甲 +9 + 攻击 25% 施虚弱/缓慢
         register("whx_undead_march", CAT_HOSTILE, "gold", "hostile_resurrect:0.40,hostile_hp:4.0");      // 亡灵行军：死亡 40% 召唤同类 + 生命 +4
-        // 棱彩：百分比数值 + 机制
-        register("whx_abyss_awaken", CAT_HOSTILE, "prismatic", "hostile_hp:30.0,hostile_atk:9.0,hostile_speed:0.40,hostile_debuff:0.30"); // 深渊觉醒：血攻速大加强 + 攻击 30% 施虚弱/缓慢
-        register("whx_blood_feast", CAT_HOSTILE, "prismatic", "hostile_hp:18.0,hostile_lifesteal:0.15,mob_coin_bonus:0.60"); // 血腥盛宴：生命 +18 + 吸血 15% + 击杀晶币 +60%
-        register("whx_demon_contract", CAT_HOSTILE, "prismatic", "hostile_lifesteal:0.40,hostile_debuff:0.40"); // 恶魔契约：吸血 40% + 40% 概率施虚弱/缓慢
+        // 棱彩：百分比 / 倍数数值 + 机制
+        register("whx_abyss_awaken", CAT_HOSTILE, "prismatic", "hostile_hp_pct:0.40,hostile_atk_pct:0.30,hostile_speed:0.40,hostile_debuff:0.30"); // 深渊觉醒：生命 +40%、攻击 +30%、移速 +40% + 攻击 30% 施虚弱/缓慢
+        register("whx_blood_feast", CAT_HOSTILE, "prismatic", "hostile_hp_pct:0.35,hostile_lifesteal:0.20,mob_coin_bonus:0.60"); // 血腥盛宴：生命 +35% + 吸血 20% + 击杀晶币 +60%
+        register("whx_demon_contract", CAT_HOSTILE, "prismatic", "hostile_lifesteal:0.40,hostile_debuff:0.40"); // 恶魔契约：吸血 40% + 40% 施虚弱/缓慢
     }
 
     private static void register(String id, String category, String rarity, String effect) {

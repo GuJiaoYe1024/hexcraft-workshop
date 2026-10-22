@@ -1,3 +1,25 @@
+Hexcraft Workshop v0.4.7 - World Hex Number Rework: Silver=Flat / Gold=Flat+Small % / Prismatic=Percentage & Multipliers + Damage Layering + New Prismatic Hex
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- **World Hex number design reworked (per your confirmed design)**: Silver = pure flat numbers (fixed points like +6 max health / +3 attack / flat XP / flat coin tax, no percentages); Gold = flat number + a small percentage (<=20%); Prismatic = percentage / multiplier numbers (percentage max health, percentage attack, percentage speed or XP multipliers, 30%+ and up to x2/x3)
+- **New percentage effect keys (independent multiplier, independent UUID modifiers)**: mob percentage health/attack `hostile/neutral/passive_hp_pct, atk_pct` (MULTIPLY_TOTAL) and player percentage health `player_hp_pct` - Prismatic hexes now bring real percentage shifts like "+40% max health", "+30% attack"
+- **New silver flat keys**: `player_xp_flat` (flat XP per hostile kill) and `player_coin_flat` (flat coin tax per kill), so the Silver tier is truly "flat numbers"
+- **All 32 World Hexes re-numbered to the new tiers**: ids/categories/rarities unchanged, numbers and descriptions rewritten (table below)
+- **Reflect damage fixed (damage layering, Arena-style)**: thorns / reflect-forge / counter damage is now "pure reflect" by default - it no longer triggers lifesteal, crits, damage boosts, forge aspects, enchantments, stacking or on-hit rewards
+- **New Prismatic player hex "Omni-Damage Edge" (all_damage_proc)**: all damage attributed to you (including thorns/reflect) triggers every on-hit effect (lifesteal, crit, stacking, forge aspects, enchantments) - want reflect to stack Heartsteel again? Draw this hex
+- ZH/EN translations updated in sync: all 32 World Hex descriptions rewritten plus the new hex's name/desc (795 keys each)
+- Content/effect-definition layer only: network protocol stays VERSION=14, v0.4.6 players can upgrade directly
+
+World Hex design table (v0.4.7):
+- General: Silver XP Affinity = +3 flat XP per hostile kill; Silver Coin Tax = -3 flat coins per kill; Gold Supply Shortage = -15% damage / +10% hostile-kill coins; Gold Eternal Flame = +15% damage taken / +10% XP; Gold Life Echo = +8 player max health + tamed regen; Prismatic Ancient Weakness = -30% damage / -15% max health / +50% death XP penalty; Prismatic Death Harvest = -30% damage / x3 death XP penalty; Prismatic Genesis Pact = +75% XP / -55% draw cost
+- Friendly: Silver Pasture Harmony = +10% friendly speed; Silver Herd Watchful = +6 friendly max health; Gold Loyal Guard = +3 friendly attack + tamed regen; Gold Flock Shadow = -10 friendly health + 30% no-drop; Gold Pacifist Oath = 100% no-drop + 5% speed; Prismatic Beast King = +30% health / +20% attack + 35% hit-frenzy; Prismatic Angel Grace = tamed regen 2 + 30% speed; Prismatic Wrath of Fields = 100% hit-frenzy + 30% speed
+- Neutral: Silver Wild Spirit = +3 neutral attack; Silver Vigilant Eye = +40% aggro; Gold Pack Rage = +4.5 attack + 25% counter; Gold Hunter Eye = +20% damage to neutrals / +10% XP; Gold Wild Instinct = 75% counter + 10% speed; Prismatic Apex Presence = +35% health / +25% attack + 30% frenzy; Prismatic Peace Vision = +60% vs neutrals / -55% draw cost; Prismatic Neutral Dominion = +30% health / +25% attack / players -45% vs them / 20% counter
+- Hostile: Silver Shadow Power = +6 hostile health; Silver Fang Claw = +3 hostile attack; Gold Predator Swift = +20% speed + 10% lifesteal; Gold Armor Shell = +9 armor + 25% debuff; Gold Undead March = 40% summon + 4 health; Prismatic Abyss Awakened = +40% health / +30% attack / +40% speed / 30% debuff; Prismatic Blood Feast = +35% health + 20% lifesteal + 60% kill coins; Prismatic Demon Contract = 40% lifesteal + 40% debuff
+
+Previous release notes:
+- v0.4.6: World Hex rarity design rework (Silver=Stat / Gold=Stat+Mechanic / Prismatic=Percentage+Mechanic), protocol v14.
 Hexcraft Workshop v0.4.6 - World Hex Rarity Design Rework (Silver=Stat / Gold=Stat+Mechanic / Prismatic=Percentage+Mechanic)
 =============================================================================
 
