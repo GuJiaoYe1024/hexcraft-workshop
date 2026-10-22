@@ -31,6 +31,17 @@ public class Packets {
         return (int) Math.floor(price * Math.max(0.1, 1 - disc));
     }
 
+    /** v0.4.8 赌博海克斯：解析 event 中的 transform:目标（gold / prismatic / double），非赌博返回 null */
+    private static String transformOf(String id) {
+        HextechDefinition def = HextechRegistry.get(id);
+        if (def == null || def.event == null) return null;
+        for (String tok : def.event.split(",")) {
+            int ci = tok.indexOf(':');
+            if (ci > 0 && tok.substring(0, ci).equals("transform")) return tok.substring(ci + 1);
+        }
+        return null;
+    }
+
     // ================= C2S：请求抽取海克斯 =================
     public static class C2SRequestDraw {
         public static void encode(C2SRequestDraw m, FriendlyByteBuf b) { }
@@ -108,6 +119,35 @@ public class Packets {
                 } else {
                     int refund = data.applyHex(pick);
                     if (refund > 0) data.addCoins(refund);
+                    // v0.4.8 赌博海克斯（transform:*）：选中即一次性兑现——白银赌随机黄金 / 黄金赌随机棱彩 / 棱彩赌随机两个海克斯
+                    String tx = transformOf(pick);
+                    if (tx != null) {
+                        data.removeHex(pick);
+                        switch (tx) {
+                            case "gold" -> {
+                                String g = com.hexcraft.hextech.HextechRegistry.randomOf(com.hexcraft.hextech.HextechRarity.GOLD, pick);
+                                if (g != null) data.applyHex(g);
+                                sp.displayClientMessage(Component.translatable("message.hexcraft.gamble_gold",
+                                        Component.translatable("hexcraft.hextech." + (g != null ? g : pick) + ".name")), true);
+                            }
+                            case "prismatic" -> {
+                                String p = com.hexcraft.hextech.HextechRegistry.randomOf(com.hexcraft.hextech.HextechRarity.PRISMATIC, pick);
+                                if (p != null) data.applyHex(p);
+                                sp.displayClientMessage(Component.translatable("message.hexcraft.gamble_prism",
+                                        Component.translatable("hexcraft.hextech." + (p != null ? p : pick) + ".name")), true);
+                            }
+                            case "double" -> {
+                                String a = com.hexcraft.hextech.HextechRegistry.randomAny(pick);
+                                String b = com.hexcraft.hextech.HextechRegistry.randomAny(a);
+                                if (a != null) data.applyHex(a);
+                                if (b != null) data.applyHex(b);
+                                sp.displayClientMessage(Component.translatable("message.hexcraft.gamble_double",
+                                        Component.translatable("hexcraft.hextech." + (a != null ? a : pick) + ".name"),
+                                        Component.translatable("hexcraft.hextech." + (b != null ? b : a != null ? a : pick) + ".name")), true);
+                            }
+                            default -> { }
+                        }
+                    }
                 }
                 data.setPendingRoll(null);
                 data.applyModifiers(sp);

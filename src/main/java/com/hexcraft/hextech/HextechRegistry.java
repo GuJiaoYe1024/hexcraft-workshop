@@ -206,4 +206,33 @@ public class HextechRegistry {
         if (roll < wPrism + wGold) return 1;
         return 0;
     }
+
+    // ================= v0.4.8 赌博海克斯随机抽取（选中即一次性转化）=================
+    private static final Random RNG = new Random();
+
+    /** 指定稀有度池内随机 1 个海克斯（可排除指定 id；池空返回 null） */
+    public static String randomOf(HextechRarity rarity, String exclude) {
+        List<String> p = new ArrayList<>(pool(rarity));
+        if (exclude != null) p.remove(exclude);
+        if (p.isEmpty()) return null;
+        return p.get(RNG.nextInt(p.size()));
+    }
+
+    /** 按稀有度权重（60/30/10）随机稀有度后随机 1 个海克斯（可排除指定 id） */
+    public static String randomAny(String exclude) {
+        HextechRarity r = switch (randomTier()) {
+            case 2 -> HextechRarity.PRISMATIC;
+            case 1 -> HextechRarity.GOLD;
+            default -> HextechRarity.SILVER;
+        };
+        String pick = randomOf(r, exclude);
+        if (pick != null) return pick;
+        // 该档池空则降档补位
+        for (HextechRarity fallback : new HextechRarity[]{HextechRarity.SILVER, HextechRarity.GOLD, HextechRarity.PRISMATIC}) {
+            if (fallback == r) continue;
+            String alt = randomOf(fallback, exclude);
+            if (alt != null) return alt;
+        }
+        return null;
+    }
 }

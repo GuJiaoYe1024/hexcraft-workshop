@@ -186,6 +186,11 @@ public class PlayerData {
         };
     }
 
+    /** v0.4.8 赌博海克斯：移除指定海克斯（一次性转化用） */
+    public void removeHex(String id) {
+        hexes.removeIf(e -> e.id.equals(id));
+    }
+
     /** 汇总玩家当前属性总值（供客户端属性总览页展示） */
     public static java.util.Map<String, Double> computeAttrs(ServerPlayer player) {
         java.util.Map<String, Double> out = new java.util.LinkedHashMap<>();

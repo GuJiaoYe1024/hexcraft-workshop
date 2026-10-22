@@ -1,3 +1,18 @@
+Hexcraft Workshop v0.4.8 - Player Hex Gambling System: Transform-into-random hexes + Random Gift text fix + New pool entries
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- **New gambling/random player hexes (transform on pick, Arena-of-Impact style)**:
+  - "Bet: Rise" (Silver): on pick, instantly transform into 1 random Gold hex - the gamble is the randomness: god-tier or bottom-tier
+  - "Bet: Prismatic" (Gold): on pick, instantly transform into 1 random Prismatic hex
+  - "Bet: Double" (Prismatic): on pick, instantly gain 2 random hexes (each rarity rolled independently - double the gamble)
+- **Random Gift text fixed & polished**: kill message now shows the item count ("Random gift: Iron Ingot x2")
+- **All 29 English raw-format descriptions rewritten**: hover tooltips used to show raw mechanic code (e.g. "random_loot 1"); now natural English descriptions aligned with the Chinese ones
+- **3 new regular player hexes**: Lucky Clover (Silver, 25% bonus emeralds on kill), Shield Bash (Gold, 3 shield at low HP + 15% reflect), Omni Drain (Prismatic, 30% lifesteal + 15% echo + 15% vamp rage at low HP)
+- Player pool now 138 hexes (+6); ZH/EN translations updated in sync (810 keys each)
+- Content/effect-definition layer only: network protocol stays VERSION=14, v0.4.7 players can upgrade directly
+
 Hexcraft Workshop v0.4.7 - World Hex Number Rework: Silver=Flat / Gold=Flat+Small % / Prismatic=Percentage & Multipliers + Damage Layering + New Prismatic Hex
 =============================================================================
 

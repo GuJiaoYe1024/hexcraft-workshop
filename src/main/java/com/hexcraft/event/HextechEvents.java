@@ -299,7 +299,7 @@ public class HextechEvents {
                     killer.drop(st, false);
                 }
                 killer.displayClientMessage(Component.translatable("message.hexcraft.random_loot",
-                        st.getHoverName()), true);
+                        st.getHoverName(), n), true);
             }
 
             LAST_KILL_STREAK.put(killer.getUUID(), System.currentTimeMillis());
