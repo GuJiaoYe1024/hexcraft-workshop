@@ -21,8 +21,9 @@ import java.util.Map;
 /**
  * 海克斯主界面（海克斯科技风格）：
  * 左侧竖排导航（属性 / 海克斯 / 锻造器 / 装备），右侧内容区；深蓝紫渐变 + 霓虹光效。
+ * v0.4.4：接入 UI 缩放（配置「界面缩放」整体放大/缩小）；修复锻造器页文字重叠（标题/按钮/词条行距）。
  */
-public class HextechPageScreen extends Screen {
+public class HextechPageScreen extends HexScaledScreen {
     private static final int W = 304;
     private static final int H = 300;
     private static final int NAV_W = 54;
@@ -86,8 +87,8 @@ public class HextechPageScreen extends Screen {
 
     @Override
     protected void init() {
-        int x = (this.width - W) / 2;
-        int y = (this.height - H) / 2;
+        int x = (this.guiW() - W) / 2;
+        int y = (this.guiH() - H) / 2;
 
         // 左侧导航（竖排五页签：充值 / 属性 / 海克斯 / 锻造器 / 装备；界面加高后拉大间距）
         for (int i = 0; i < TABS.length; i++) {
@@ -180,7 +181,8 @@ public class HextechPageScreen extends Screen {
         int[] tierColors = {0xFFD8D8D8, 0xFFFFC94A, 0xFFC77DFF};
         for (int i = 0; i < 3; i++) {
             final int t = i;
-            this.addRenderableWidget(new HexButton(cx() + 4 + i * (bw + 5), cy() + 44, bw, 14,
+            // v0.4.4：价格按钮下移 2px，避免与上方「已锻造 N 次」文字贴边重叠
+            this.addRenderableWidget(new HexButton(cx() + 4 + i * (bw + 5), cy() + 46, bw, 14,
                     Component.translatable("hexcraft.gui.buy_forge",
                             Component.translatable("hexcraft.forge.tier." + TIER_KEYS[t]), prices[i]),
                     tierColors[i], b -> {
@@ -189,7 +191,7 @@ public class HextechPageScreen extends Screen {
                         PacketHandler.CHANNEL.sendToServer(p);
                     }));
         }
-        this.addRenderableWidget(new HexButton(cx() + 4 + (bw + 5), cy() + 61, bw * 2 - 5, 14,
+        this.addRenderableWidget(new HexButton(cx() + 4 + (bw + 5), cy() + 63, bw * 2 - 5, 14,
                 Component.translatable("hexcraft.gui.forge_random"), ACCENT,
                 b -> PacketHandler.CHANNEL.sendToServer(new Packets.C2SRandomForge())));
     }
@@ -234,10 +236,9 @@ public class HextechPageScreen extends Screen {
     // ================= 渲染 =================
 
     @Override
-    public void render(GuiGraphics g, int mx, int my, float pt) {
-        this.renderBackground(g);
-        int x = (this.width - W) / 2;
-        int y = (this.height - H) / 2;
+    protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
+        int x = (this.guiW() - W) / 2;
+        int y = (this.guiH() - H) / 2;
 
         // 深蓝紫渐变底板
         g.fillGradient(x, y, x + W, y + H, 0xF40D1224, 0xE8241836);
@@ -267,7 +268,7 @@ public class HextechPageScreen extends Screen {
             g.fill(px, py, px + sz, py + sz, a << 24 | 0x009FE4FF);
         }
 
-        super.render(g, mx, my, pt);
+        this.renderWidgets(g, mx, my, pt);
 
         // 标题（顶左上，发光双层）+ 余额（同行右侧，不超界面）
         String title = Component.translatable("hexcraft.gui.page_title").getString();
@@ -600,7 +601,7 @@ public class HextechPageScreen extends Screen {
             attrScroll = Math.max(0, Math.min(maxAttrScroll(), attrScroll - (int) Math.round(delta * ROW_H)));
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX / uiScale(), mouseY / uiScale(), delta);
     }
 
     /** 锻造器分类组：标题条 + 组内词条（词条按组内索引分两列，标题不占列，v0.4.3 修复错位） */
@@ -620,7 +621,8 @@ public class HextechPageScreen extends Screen {
                 ? Component.translatable("hexcraft.gui.forge_done", ClientDataStore.forgesUsed).getString()
                 : Component.translatable("hexcraft.gui.forge_count", ClientDataStore.forgesUsed, ClientDataStore.maxForges).getString();
         g.drawString(this.font, forgeText, cx() + 4, y + 36, 0xFF9FE4FF);
-        g.drawString(this.font, Component.translatable("hexcraft.gui.forged"), cx() + 4, y + 81, 0xFF9FE4FF);
+        // v0.4.4：标题上移 5px（y+81→y+76），避免与下方「白银」分组框顶部重叠
+        g.drawString(this.font, Component.translatable("hexcraft.gui.forged"), cx() + 4, y + 76, 0xFF9FE4FF);
         // v0.4.3：分类分组框（科技风：框体 + 档位色条 + 组名 + 计数），组内两列排布
         java.util.List<ForgeGroup> groups = forgeGroups();
         if (groups.isEmpty()) {
@@ -632,7 +634,7 @@ public class HextechPageScreen extends Screen {
         int ly = top - forgeScroll;
         for (ForgeGroup grp : groups) {
             int rows = (grp.items.size() + 1) / 2;
-            int groupH = 16 + rows * 12 + 4;
+            int groupH = 16 + rows * 13 + 4;
             if (ly + groupH < top) { ly += groupH + 6; continue; } // 整组在可视区上方
             if (ly > bottom) break;                                 // 已滚过可视区
             // 分组框：半透明底 + 细边框
@@ -645,11 +647,11 @@ public class HextechPageScreen extends Screen {
             g.fill(cx() + 3, ly + 3, cx() + 5, ly + 13, grp.color);
             g.drawString(this.font, Component.translatable("hexcraft.forge.tier." + grp.tierKey), cx() + 8, ly + 3, grp.color);
             g.drawString(this.font, Component.literal(grp.items.size() + " 条"), cx() + 178, ly + 3, 0xFF6A7B96);
-            // 组内词条两列（组内索引分列，不跨组，标题不再挤占列位）
+            // 组内词条两列（组内索引分列，不跨组，标题不再挤占列位）；v0.4.4 行距 12→13 防文字挤压
             for (int i = 0; i < grp.items.size(); i++) {
                 Object[] it = grp.items.get(i);
                 int colX = cx() + 6 + (i % 2) * 112;
-                int iy = ly + 17 + (i / 2) * 12;
+                int iy = ly + 17 + (i / 2) * 13;
                 if (iy < top) continue;
                 if (iy > bottom) break;
                 g.drawString(this.font, (String) it[0], colX, iy, 0xFFAAB6D8);
@@ -658,7 +660,7 @@ public class HextechPageScreen extends Screen {
                     g.drawString(this.font, "TACZ", colX + 100, iy, 0xFF4DE6FF);
                 }
                 // hover 提示：悬停查看锻造词条具体效果（名称 + 描述 + 来源）
-                if (hoverX >= colX && hoverX <= colX + 110 && hoverY >= iy - 1 && hoverY <= iy + 11) {
+                if (hoverX >= colX && hoverX <= colX + 110 && hoverY >= iy - 1 && hoverY <= iy + 12) {
                     java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
                     tip.add(Component.literal((String) it[0]).withStyle(c -> c.withColor(grp.color)));
                     tip.add(Component.translatable("hexcraft.forge." + it[2] + ".desc"));
@@ -684,7 +686,7 @@ public class HextechPageScreen extends Screen {
         int h = 0;
         for (ForgeGroup grp : forgeGroups()) {
             int rows = (grp.items.size() + 1) / 2;
-            h += 16 + rows * 12 + 4 + 6;
+            h += 16 + rows * 13 + 4 + 6;
         }
         return h;
     }
@@ -752,8 +754,8 @@ public class HextechPageScreen extends Screen {
 
     // ================= 工具 =================
 
-    private int cx() { return (this.width - W) / 2 + NAV_W + 12; }
-    private int cy() { return (this.height - H) / 2; }
+    private int cx() { return (this.guiW() - W) / 2 + NAV_W + 12; }
+    private int cy() { return (this.guiH() - H) / 2; }
 
     public static String fmt(double v) {
         String s = String.format("%.2f", v);
@@ -783,7 +785,7 @@ public class HextechPageScreen extends Screen {
 
         @Override
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
-            boolean hot = this.isHoveredOrFocused();
+            boolean hot = isHover(mx, my, this);
             int border = selected ? ACCENT : hot ? 0xFFC8D0E8 : 0xFF3A4668;
             int from = selected ? 0x664FD8FF : 0x22283250;
             int to = selected ? 0x22153A66 : 0x180E1424;
@@ -811,7 +813,7 @@ public class HextechPageScreen extends Screen {
 
         @Override
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
-            boolean hot = this.isHoveredOrFocused();
+            boolean hot = isHover(mx, my, this);
             int border = hot ? 0xFFFFFFFF : accent;
             if (hot) { // 悬停柔光外圈
                 g.fill(getX() - 2, getY() - 2, getX() + width + 2, getY() + height + 2, 0x3330A8E0);

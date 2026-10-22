@@ -5,7 +5,6 @@ import com.hexcraft.network.PacketHandler;
 import com.hexcraft.network.Packets;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
@@ -13,8 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/** 三选一抽取界面（海克斯大乱斗风格）：稀有度辉光边框 + 缎带 + 图标 + 粒子 + 入场/缩放动画 + 保底进度 */
-public class RollScreen extends Screen {
+/** 三选一抽取界面（海克斯大乱斗风格）：稀有度辉光边框 + 缎带 + 图标 + 粒子 + 入场/缩放动画 + 保底进度
+ *  v0.4.4：接入 UI 缩放（配置「界面缩放」）。 */
+public class RollScreen extends HexScaledScreen {
     private static final int CARD_W = 170;
     private static final int CARD_H = 142;
 
@@ -37,8 +37,8 @@ public class RollScreen extends Screen {
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        this.cardY = this.height / 2 - CARD_H / 2 - 10;
+        int centerX = this.guiW() / 2;
+        this.cardY = this.guiH() / 2 - CARD_H / 2 - 10;
         for (int i = 0; i < 3; i++) {
             cardX[i] = centerX - CARD_W * 3 / 2 - 26 + i * (CARD_W + 26);
             final int idx = i;
@@ -69,7 +69,7 @@ public class RollScreen extends Screen {
         ensureParts();
         for (float[] p : parts) {
             p[1] -= p[2];
-            if (p[1] < -6f) { p[1] = this.height + 6f; p[0] = P_RAND.nextFloat() * this.width; }
+            if (p[1] < -6f) { p[1] = this.guiH() + 6f; p[0] = P_RAND.nextFloat() * this.guiW(); }
         }
     }
 
@@ -77,7 +77,7 @@ public class RollScreen extends Screen {
         if (partsInit) return;
         partsInit = true;
         for (int i = 0; i < 24; i++) {
-            parts.add(new float[]{P_RAND.nextFloat() * this.width, P_RAND.nextFloat() * this.height,
+            parts.add(new float[]{P_RAND.nextFloat() * this.guiW(), P_RAND.nextFloat() * this.guiH(),
                     0.20f + P_RAND.nextFloat() * 0.30f, P_RAND.nextFloat() * 6.28f,
                     1f + P_RAND.nextFloat() * 1.5f, P_RAND.nextBoolean() ? 0xFF9FE4FF : 0xFFC77DFF});
         }
@@ -98,9 +98,8 @@ public class RollScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mx, int my, float pt) {
-        this.renderBackground(g);
-        int centerX = this.width / 2;
+    protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
+        int centerX = this.guiW() / 2;
 
         // 背景粒子
         ensureParts();
@@ -114,8 +113,8 @@ public class RollScreen extends Screen {
         }
 
         // 海克斯辉光背景：卡片区两侧光晕
-        g.fillGradient(0, cardY - 30, this.width, cardY + CARD_H + 6, 0x2A123056, 0x00000000);
-        g.fillGradient(0, cardY + CARD_H - 20, this.width, cardY + CARD_H + 30, 0x00000000, 0x2A123056);
+        g.fillGradient(0, cardY - 30, this.guiW(), cardY + CARD_H + 6, 0x2A123056, 0x00000000);
+        g.fillGradient(0, cardY + CARD_H - 20, this.guiW(), cardY + CARD_H + 30, 0x00000000, 0x2A123056);
 
         // 标题与装饰条
         String tierKey = msg.forge
@@ -133,7 +132,7 @@ public class RollScreen extends Screen {
             float p = Math.max(0f, Math.min(1f, (anim - i * 0.13f) / 0.74f));
             float e = p * p;
             cards[i].alpha = e;
-            cards[i].scale = 0.90f + 0.10f * e + (cards[i].isHoveredOrFocused() ? 0.04f : 0f);
+            cards[i].scale = 0.90f + 0.10f * e + (isHover(mx, my, cards[i]) ? 0.04f : 0f);
             cards[i].dy = (int) ((1f - p) * 44f);
             cards[i].glowPulse = 0.6f + 0.4f * (float) Math.sin(pTick * 0.15f + i * 2.1f);
         }
@@ -144,7 +143,7 @@ public class RollScreen extends Screen {
             b.dy = (int) ((1f - bp) * 26f);
         }
 
-        super.render(g, mx, my, pt);
+        this.renderWidgets(g, mx, my, pt);
 
         for (int i = 0; i < 3; i++) {
             String id = msg.options.get(i);
@@ -223,7 +222,7 @@ public class RollScreen extends Screen {
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
             int yy = getY() + dy;
             int a = (int) (alpha * 255);
-            int border = this.isHoveredOrFocused() ? 0xFFFFFFFF : color;
+            int border = isHover(mx, my, this) ? 0xFFFFFFFF : color;
             int cx = getX() + width / 2;
             int cy = yy + height / 2;
             int w2 = (int) (width * scale);
@@ -261,10 +260,10 @@ public class RollScreen extends Screen {
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
             int a = (int) (alpha * 255);
             int yy = getY() + dy;
-            int col = this.isHoveredOrFocused() ? 0xFFFFFFFF : border;
+            int col = isHover(mx, my, this) ? 0xFFFFFFFF : border;
             g.fill(getX() - 1, yy - 1, getX() + width + 1, yy + height + 1, a << 24 | (col & 0x00FFFFFF));
             g.fill(getX(), yy, getX() + width, yy + height, a * 240 / 255 << 24 | 0x00151B33);
-            int textCol = this.isHoveredOrFocused() ? 0xFFFFFFFF : 0xFFC8D0E8;
+            int textCol = isHover(mx, my, this) ? 0xFFFFFFFF : 0xFFC8D0E8;
             g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font, this.getMessage(),
                     getX() + width / 2, yy + (height - 8) / 2, a << 24 | (textCol & 0x00FFFFFF));
         }

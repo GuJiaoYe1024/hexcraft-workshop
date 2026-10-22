@@ -1,3 +1,16 @@
+Hexcraft Workshop v0.4.4 - UI Fixes: UI Scale Now Works, World Hex Layout, Forge Text Overlap
+=============================================================================
+
+A heartfelt apology first: the author's ability is limited, this mod is mostly built with AI assistance, and it may not live up to everyone's expectations. Compatibility may also be poor. The author had no idea that Hextech-related mods already existed. The project is open source (MIT) and will keep being updated (likely still AI-driven). Thank you for your understanding.
+
+- **"UI Scale" option now actually works**: Config menu -> Client -> "UI Scale" (0.5x-2.0x, default 1.0) now scales the whole mod UI (main screen, World Hex screen, three-choice draws, "Coming Soon" page). Changes apply immediately, no restart needed
+- **World Hex screen no longer hugs the screen bottom at GUI Scale 3/4**: tightened the compact-layout parameters - at GUI Scale 3 (1920x1080) both category rows fit fully with margin, no scrolling required
+- **Fixed overlapping text on the Forge screen**: the "Forged Stats" title no longer collides with the group panel top; the three tier price buttons gained spacing from the "Forged N times" text; stat row spacing increased so long names and the "TACZ" tag no longer crowd
+- **Code self-review**: all 6 screens now share a scaling base class (rendered with a global scale transform, mouse coordinates and hover detection converted accordingly), no conflicting references left; offline build passed (23s); server smoke OK (Done 3.1s); jar swapped into the client (328486B)
+- Client-side display only: network protocol stays VERSION=14, v0.4.3 players can upgrade directly
+
+Previous release notes:
+- v0.4.3: Fixes - scroll overlap, Heartsteel stacking, Forge UI categories, protocol v14.
 Hexcraft Workshop v0.4.3 - Fixes: Scroll Overlap, Heartsteel Stacking, Forge UI
 =============================================================================
 
@@ -21,6 +34,19 @@ Previous release notes:
 
 ====================================================
 
+Hexcraft Workshop v0.4.4 - UI 修复版：界面缩放生效 / 世界海克斯矮屏布局 / 锻造器文字重叠
+====================================================
+
+先致歉：作者能力有限，本 mod 基本由 AI 辅助完成，可能达不到大家心里的预期，兼容性也可能较差；此前并不清楚已有人开发过海克斯相关 mod。项目已开源（MIT），后续会持续努力更新（虽然大概率仍由 AI 代跑）。感谢大家的理解与包容。
+
+- **「界面缩放」配置现在真正生效**：配置菜单 → 客户端 →「界面缩放」（0.5x ~ 2.0x，默认 1.0）可整体放大/缩小海克斯工坊全部界面（主界面、世界海克斯、三选一抽取、敬请期待页），修改后即时生效、无需重开
+- **修复世界海克斯界面在界面尺寸 3 / 4 下仍挤贴屏幕底**：矮屏压缩参数收紧，界面尺寸 3（1920×1080）下两排分类区块完整容纳、留有余量，不再贴底
+- **修复锻造器界面文字重叠遮挡**：「已锻造属性」标题与下方分组框顶部不再重叠；三档价格按钮与「已锻造 N 次」文字留出间距；词条行距加大，长词条与「TACZ」角标不再拥挤
+- **代码自检**：6 个界面统一接入缩放基类（渲染整体缩放 + 鼠标坐标/悬停判定同步换算），无冲突引用残留；编译构建成功（offline build 23s）；服务器冒烟启动正常（Done 3.1s）；正式客户端已替换（328486B）
+- 纯客户端显示层改动：网络协议保持 VERSION=14，v0.4.3 联机玩家可直接升级
+
+之前版本：
+- v0.4.3：修复轮 - 滚动遮挡 / 心之钢叠层 / 锻造器分类，协议 v14。
 Hexcraft Workshop v0.4.3 - 修复轮：滚动遮挡 / 心之钢叠层 / 锻造器分类
 ====================================================
 

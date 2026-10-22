@@ -4,7 +4,6 @@ import com.hexcraft.network.PacketHandler;
 import com.hexcraft.network.Packets;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
@@ -12,8 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/** 装备三选一抽取界面（斗魂竞技场/海克斯大乱斗风格）：图标 + 机制 + 属性卡片，入场动画同海克斯抽取 */
-public class EquipRollScreen extends Screen {
+/** 装备三选一抽取界面（斗魂竞技场/海克斯大乱斗风格）：图标 + 机制 + 属性卡片，入场动画同海克斯抽取
+ *  v0.4.4：接入 UI 缩放（配置「界面缩放」）。 */
+public class EquipRollScreen extends HexScaledScreen {
     private static final int CARD_W = 180;
     private static final int CARD_H = 158;
 
@@ -36,8 +36,8 @@ public class EquipRollScreen extends Screen {
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        this.cardY = this.height / 2 - CARD_H / 2 - 10;
+        int centerX = this.guiW() / 2;
+        this.cardY = this.guiH() / 2 - CARD_H / 2 - 10;
         for (int i = 0; i < 3; i++) {
             cardX[i] = centerX - CARD_W * 3 / 2 - 26 + i * (CARD_W + 26);
             final int idx = i;
@@ -66,7 +66,7 @@ public class EquipRollScreen extends Screen {
         ensureParts();
         for (float[] p : parts) {
             p[1] -= p[2];
-            if (p[1] < -6f) { p[1] = this.height + 6f; p[0] = P_RAND.nextFloat() * this.width; }
+            if (p[1] < -6f) { p[1] = this.guiH() + 6f; p[0] = P_RAND.nextFloat() * this.guiW(); }
         }
     }
 
@@ -74,7 +74,7 @@ public class EquipRollScreen extends Screen {
         if (partsInit) return;
         partsInit = true;
         for (int i = 0; i < 24; i++) {
-            parts.add(new float[]{P_RAND.nextFloat() * this.width, P_RAND.nextFloat() * this.height,
+            parts.add(new float[]{P_RAND.nextFloat() * this.guiW(), P_RAND.nextFloat() * this.guiH(),
                     0.20f + P_RAND.nextFloat() * 0.30f, P_RAND.nextFloat() * 6.28f,
                     1f + P_RAND.nextFloat() * 1.5f, P_RAND.nextBoolean() ? 0xFF9FE4FF : 0xFFC77DFF});
         }
@@ -95,9 +95,8 @@ public class EquipRollScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mx, int my, float pt) {
-        this.renderBackground(g);
-        int centerX = this.width / 2;
+    protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
+        int centerX = this.guiW() / 2;
 
         ensureParts();
         for (float[] p : parts) {
@@ -109,8 +108,8 @@ public class EquipRollScreen extends Screen {
             g.fill((int) p[0], (int) p[1], (int) p[0] + sz, (int) p[1] + sz, a << 24 | ((int) p[5] & 0x00FFFFFF));
         }
 
-        g.fillGradient(0, cardY - 30, this.width, cardY + CARD_H + 6, 0x2A123056, 0x00000000);
-        g.fillGradient(0, cardY + CARD_H - 20, this.width, cardY + CARD_H + 30, 0x00000000, 0x2A123056);
+        g.fillGradient(0, cardY - 30, this.guiW(), cardY + CARD_H + 6, 0x2A123056, 0x00000000);
+        g.fillGradient(0, cardY + CARD_H - 20, this.guiW(), cardY + CARD_H + 30, 0x00000000, 0x2A123056);
 
         Component title = Component.translatable("hexcraft.gui.equip_title");
         g.drawCenteredString(this.font, title, centerX, cardY - 34, 0xFFFFFF);
@@ -131,7 +130,7 @@ public class EquipRollScreen extends Screen {
             b.dy = (int) ((1f - bp) * 26f);
         }
 
-        super.render(g, mx, my, pt);
+        this.renderWidgets(g, mx, my, pt);
 
         for (int i = 0; i < 3; i++) {
             String id = msg.options.get(i);

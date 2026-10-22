@@ -20,8 +20,9 @@ import java.util.List;
  *  - 下方四大类（通用/友好/中立/敌对）按稀有度排序展示已激活的世界海克斯，每条右侧带取消按钮；
  *  - 激活列表全服共享，服务端广播即时更新。
  *  v0.4.2：布局自适应压缩 + 高度不足时滚轮滚动（界面尺寸 3/4 也能完整查看）；文字与按钮分列不遮挡。
+ *  v0.4.4：矮屏压缩参数收紧（GUI Scale 3/4 下两排区块完整容纳不贴底）；接入 UI 缩放（配置「界面缩放」）。
  */
-public class WorldHexScreen extends Screen {
+public class WorldHexScreen extends HexScaledScreen {
     private static final Button.CreateNarration NARR = s -> s.get();
 
     /** 科技风按钮：深蓝紫渐变底 + 霓虹顶边 + 悬停亮框（与海克斯工坊主界面风格统一） */
@@ -32,7 +33,7 @@ public class WorldHexScreen extends Screen {
 
         @Override
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
-            boolean hover = this.isHoveredOrFocused();
+            boolean hover = isHover(mx, my, this);
             int border = hover ? 0xFF8BD4FF : 0xFF1E6FE8;
             int text = hover ? 0xFFFFFFFF : 0xFF9FB6FF;
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, border);
@@ -54,11 +55,12 @@ public class WorldHexScreen extends Screen {
     /** 每类最多 4 行（上限 8 = 4 行 × 2 列） */
     private static final int MAX_ROWS = 4;
 
-    /** 自适应行高/区块高度：屏幕矮时压缩（界面尺寸 3+ 也能容纳），高分辨率时舒展 */
-    private int rowH() { return this.height < 460 ? 26 : 32; }
-    private int panelH() { return 24 + MAX_ROWS * rowH() + 6; }          // 条目区 + 底边
-    private int blockStep() { return 20 + panelH() + 14; }               // 标题区 + 面板 + 间距（两排步长）
-    private int startY() { return this.height < 460 ? 62 : 78; }
+    /** 自适应行高/区块高度：屏幕矮时压缩（界面尺寸 3+ 也能容纳），高分辨率时舒展。
+     *  v0.4.4：矮屏参数收紧——GUI Scale 3（逻辑高 340）下两排区块完整容纳且不贴底。 */
+    private int rowH() { return this.guiH() < 460 ? 22 : 32; }
+    private int panelH() { return this.guiH() < 460 ? 22 + 4 * rowH() + 4 : 24 + 4 * rowH() + 6; } // 标题条 + 4 行 + 底边
+    private int blockStep() { return this.guiH() < 460 ? 12 + panelH() + 8 : 20 + panelH() + 14; }   // 标题上方 + 面板 + 间距（两排步长）
+    private int startY() { return this.guiH() < 460 ? 72 : 78; }
 
     /** 内容底部（用于滚动范围计算） */
     private int contentBottom() { return startY() + blockStep() + panelH(); }
@@ -77,7 +79,7 @@ public class WorldHexScreen extends Screen {
     private void buildWidgets() {
         this.clearWidgets();
         this.cancelBtns.clear();
-        int centerX = this.width / 2;
+        int centerX = this.guiW() / 2;
         int top = this.startY() - this.scrollY;
 
         // 顶部抽取按钮（内容区居中，科技风；v0.4.3：随滚动偏移，不再固定遮挡下方内容）
@@ -131,7 +133,8 @@ public class WorldHexScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double delta) {
-        int maxScroll = Math.max(0, contentBottom() - this.height + 20);
+        double s = uiScale();
+        int maxScroll = Math.max(0, contentBottom() - this.guiH() + 20);
         if (maxScroll > 0) {
             int ns = (int) (this.scrollY - delta * 24);
             ns = Math.max(0, Math.min(ns, maxScroll));
@@ -141,19 +144,18 @@ public class WorldHexScreen extends Screen {
                 return true;
             }
         }
-        return super.mouseScrolled(mx, my, delta);
+        return super.mouseScrolled(mx / s, my / s, delta);
     }
 
     @Override
-    public void render(GuiGraphics g, int mx, int my, float pt) {
+    protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
         // 服务端广播后列表变化 → 重建按钮（即时反映全局生效）
         if (ClientDataStore.worldHexes.size() != lastSize) {
             lastSize = ClientDataStore.worldHexes.size();
             this.scrollY = 0;
             buildWidgets();
         }
-        this.renderBackground(g);
-        int centerX = this.width / 2;
+        int centerX = this.guiW() / 2;
         int top = this.startY() - this.scrollY;
 
         // 标题
@@ -203,7 +205,7 @@ public class WorldHexScreen extends Screen {
             }
             catIndex++;
         }
-        super.render(g, mx, my, pt);
+        this.renderWidgets(g, mx, my, pt);
     }
 
     private static int rarityColor(String key) {

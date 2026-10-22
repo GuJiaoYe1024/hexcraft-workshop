@@ -7,14 +7,14 @@ import com.hexcraft.network.Packets;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
 
-/** 世界海克斯三选一界面（服务端下发三个候选，点击确认后全服即时生效） */
-public class WorldRollScreen extends Screen {
+/** 世界海克斯三选一界面（服务端下发三个候选，点击确认后全服即时生效）
+ *  v0.4.4：接入 UI 缩放（配置「界面缩放」）。 */
+public class WorldRollScreen extends HexScaledScreen {
     private static final int CARD_W = 170;
     private static final int CARD_H = 142;
     private static final Button.CreateNarration NARR = s -> s.get();
@@ -27,7 +27,7 @@ public class WorldRollScreen extends Screen {
 
         @Override
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
-            boolean hover = this.isHoveredOrFocused();
+            boolean hover = isHover(mx, my, this);
             int border = hover ? 0xFF8BD4FF : 0xFF1E6FE8;
             int text = hover ? 0xFFFFFFFF : 0xFF9FB6FF;
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, border);
@@ -51,8 +51,8 @@ public class WorldRollScreen extends Screen {
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        this.cardY = this.height / 2 - CARD_H / 2 - 10;
+        int centerX = this.guiW() / 2;
+        this.cardY = this.guiH() / 2 - CARD_H / 2 - 10;
         for (int i = 0; i < 3 && i < msg.options.size(); i++) {
             cardX[i] = centerX - CARD_W * 3 / 2 - 26 + i * (CARD_W + 26);
             final int idx = i;
@@ -76,9 +76,8 @@ public class WorldRollScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mx, int my, float pt) {
-        this.renderBackground(g);
-        int centerX = this.width / 2;
+    protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
+        int centerX = this.guiW() / 2;
 
         // 标题与装饰条
         Component title = Component.translatable("hexcraft.gui.world_hex_title");
@@ -86,7 +85,7 @@ public class WorldRollScreen extends Screen {
         int barW = this.font.width(title) + 40;
         g.fillGradient(centerX - barW / 2, cardY - 20, centerX + barW / 2, cardY - 19, 0xFFFFC94A, 0xFFC77DFF);
 
-        super.render(g, mx, my, pt);
+        this.renderWidgets(g, mx, my, pt);
 
         for (int i = 0; i < 3 && i < msg.options.size(); i++) {
             WorldHexDefinition def = WorldHexRegistry.get(msg.options.get(i));
@@ -133,7 +132,7 @@ public class WorldRollScreen extends Screen {
 
         @Override
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
-            int border = this.isHoveredOrFocused() ? 0xFFFFFFFF : color;
+            int border = isHover(mx, my, this) ? 0xFFFFFFFF : color;
             g.fill(getX() - 3, getY() - 3, getX() + width + 3, getY() + height + 3, 0x66 << 24 | (color & 0x00FFFFFF));
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, 0xFF << 24 | (border & 0x00FFFFFF));
             g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xF02C2E58, 0xF00D1220);
