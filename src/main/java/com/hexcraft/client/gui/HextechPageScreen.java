@@ -270,14 +270,17 @@ public class HextechPageScreen extends HexScaledScreen {
 
         this.renderWidgets(g, mx, my, pt);
 
-        // 标题（顶左上，发光双层）+ 余额（同行右侧，不超界面）
+        // 标题（顶左上，发光双层）+ 余额（右对齐内容区右缘，不压标题、不超界面）
         String title = Component.translatable("hexcraft.gui.page_title").getString();
         g.drawString(this.font, title, x + 12, y + 9, 0xFF1A2340);
         g.drawString(this.font, title, x + 11, y + 8, 0xFFE8F6FF);
-        g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.coins", ClientDataStore.coins),
-                cx() + 116, y + 10, 0xFFFFD700);
-        // 余额光点装饰
-        g.fill(cx() + 104, y + 12, cx() + 106, y + 14, 0xFFFFD700);
+        Component coinText = Component.translatable("hexcraft.gui.coins", ClientDataStore.coins);
+        int coinW = this.font.width(coinText);
+        int coinRight = cx() + 226;                    // 内容区右缘
+        int coinX = Math.max(x + 90, coinRight - coinW); // 不侵入标题区（窄屏右对齐自适应）
+        g.drawString(this.font, coinText, coinX, y + 10, 0xFFFFD700);
+        // 余额光点装饰（文字右侧留 5px，不再压住文字）
+        g.fill(coinX + coinW + 4, y + 12, coinX + coinW + 6, y + 14, 0xFFFFD700);
 
         hoverX = mx;
         hoverY = my;
@@ -296,7 +299,9 @@ public class HextechPageScreen extends HexScaledScreen {
     private void renderOverview(GuiGraphics g, int y) {
         g.drawString(this.font, Component.translatable("hexcraft.gui.overview_title"), cx() + 4, y + 36, 0xFF9FE4FF);
         // 全部内容（基础/隐藏/叠层三框）整体滚动，保证显示全、不出边框
-        g.enableScissor(cx() + 2, y + 46, cx() + 232, cy() + H - 34);
+        double s = uiScale();
+        g.enableScissor((int) ((cx() + 2) * s), (int) ((y + 46) * s),
+                (int) ((cx() + 232) * s), (int) ((cy() + H - 34) * s));
         int top = y + 48 - attrScroll;
         int idx;
         // ===== 框1 基础属性（标题紧凑：间隔 8px、框底留白 6px）=====
@@ -631,6 +636,10 @@ public class HextechPageScreen extends HexScaledScreen {
         }
         int top = y + 88;
         int bottom = y + 234;
+        // v0.4.5：滚动区裁剪——分组框/标题条滚出可视区时被裁掉，不再溢出遮挡「已锻造属性」与价格按钮
+        double s = uiScale();
+        g.enableScissor((int) ((cx() + 2) * s), (int) ((y + 76) * s),
+                (int) ((cx() + 232) * s), (int) ((y + 238) * s));
         int ly = top - forgeScroll;
         for (ForgeGroup grp : groups) {
             int rows = (grp.items.size() + 1) / 2;
@@ -654,15 +663,19 @@ public class HextechPageScreen extends HexScaledScreen {
                 int iy = ly + 17 + (i / 2) * 13;
                 if (iy < top) continue;
                 if (iy > bottom) break;
-                g.drawString(this.font, (String) it[0], colX, iy, 0xFFAAB6D8);
-                // 来源角标：TACZ 联动词条行尾青色「TACZ」（原版词条不标）
+                String nameStr = (String) it[0];
+                g.drawString(this.font, nameStr, colX, iy, 0xFFAAB6D8);
+                // v0.4.5：来源角标按词条名实际宽度动态定位（名字后 4px），不再固定 colX+100 侵入右列词条
                 if (Boolean.TRUE.equals(it[1])) {
-                    g.drawString(this.font, "TACZ", colX + 100, iy, 0xFF4DE6FF);
+                    int tagX = colX + this.font.width(nameStr) + 4;
+                    if (tagX + this.font.width("TACZ") <= colX + 110) {
+                        g.drawString(this.font, "TACZ", tagX, iy, 0xFF4DE6FF);
+                    }
                 }
                 // hover 提示：悬停查看锻造词条具体效果（名称 + 描述 + 来源）
                 if (hoverX >= colX && hoverX <= colX + 110 && hoverY >= iy - 1 && hoverY <= iy + 12) {
                     java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
-                    tip.add(Component.literal((String) it[0]).withStyle(c -> c.withColor(grp.color)));
+                    tip.add(Component.literal(nameStr).withStyle(c -> c.withColor(grp.color)));
                     tip.add(Component.translatable("hexcraft.forge." + it[2] + ".desc"));
                     if (Boolean.TRUE.equals(it[1])) {
                         tip.add(Component.translatable("hexcraft.gui.source_tag", "TACZ").withStyle(c -> c.withColor(0xFF4DE6FF)));
@@ -672,6 +685,7 @@ public class HextechPageScreen extends HexScaledScreen {
             }
             ly += groupH + 6;
         }
+        g.disableScissor();
         if (maxForgeScroll() > 0) {
             g.drawString(this.font, Component.translatable("hexcraft.gui.scroll_hint"), cx() + 150, bottom - 10, 0xFF5A6A90);
         }

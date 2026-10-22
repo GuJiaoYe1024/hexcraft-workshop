@@ -8,19 +8,17 @@ import com.hexcraft.network.Packets;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /** 世界海克斯界面（背包第二页签 / K 键进入）：
- *  - 左侧按钮栏：第一位"生物"（当前页），"更多"点击打开敬请期待页（v0.4.2）；
  *  - 顶部抽取按钮（消耗经验，三选一）；
- *  - 下方四大类（通用/友好/中立/敌对）按稀有度排序展示已激活的世界海克斯，每条右侧带取消按钮；
- *  - 激活列表全服共享，服务端广播即时更新。
- *  v0.4.2：布局自适应压缩 + 高度不足时滚轮滚动（界面尺寸 3/4 也能完整查看）；文字与按钮分列不遮挡。
- *  v0.4.4：矮屏压缩参数收紧（GUI Scale 3/4 下两排区块完整容纳不贴底）；接入 UI 缩放（配置「界面缩放」）。
+ *  - 左侧按钮栏：第一位"生物"（当前页），"更多"点击打开敬请期待页（v0.4.2）；
+ *  - 下方四大类（通用/友好/中立/敌对）2×2 等分网格（v0.4.5 重新排版：区块同宽同高、条目行高等分铺满，
+ *    任意 GUI Scale 下不再超屏缺角；条目只显示名字，鼠标悬停才显示介绍）。
+ *  v0.4.5 设计口径：白银=数值类、黄金=数值+机制、棱彩=百分比数值+机制（悬停提示中标注）。
  */
 public class WorldHexScreen extends HexScaledScreen {
     private static final Button.CreateNarration NARR = s -> s.get();
@@ -44,29 +42,51 @@ public class WorldHexScreen extends HexScaledScreen {
         }
     }
 
+    /** 左侧按钮栏 */
     private static final int SIDEBAR_X = 34;
-    private static final int CONTENT_X = 168;
-    private static final int COL_W = 300;
-    private static final int COL_GAP = 22;
-    private static final int ITEM_W = (COL_W - 14) / 2;   // 143
-    private static final int ITEM_GAP = 14;
+    private static final int SIDEBAR_W = 96;
+    /** 内容区起点（左侧栏右侧留 6px 间隙） */
+    private static final int CONTENT_X = 140;
+    /** 内容区右侧留白 */
+    private static final int CONTENT_R_MARGIN = 20;
+    /** 2×2 网格间距 */
+    private static final int GRID_GAP = 14;
+    /** 区块标题条高（分类名 + x/上限） */
+    private static final int TITLE_H = 18;
+    /** 区块上下内边距（标题条下 + 条目区下） */
+    private static final int BLOCK_PAD = 12;
+    /** 取消按钮宽 */
     private static final int BTN_W = 56;
-    private static final int TEXT_W = ITEM_W - BTN_W - 6;
-    /** 每类最多 4 行（上限 8 = 4 行 × 2 列） */
-    private static final int MAX_ROWS = 4;
+    /** 条目内名字区最小宽度（名字 + 间隙） */
+    private static final int NAME_MIN_W = 46;
 
-    /** 自适应行高/区块高度：屏幕矮时压缩（界面尺寸 3+ 也能容纳），高分辨率时舒展。
-     *  v0.4.4：矮屏参数收紧——GUI Scale 3（逻辑高 340）下两排区块完整容纳且不贴底。 */
-    private int rowH() { return this.guiH() < 460 ? 22 : 32; }
-    private int panelH() { return this.guiH() < 460 ? 22 + 4 * rowH() + 4 : 24 + 4 * rowH() + 6; } // 标题条 + 4 行 + 底边
-    private int blockStep() { return this.guiH() < 460 ? 12 + panelH() + 8 : 20 + panelH() + 14; }   // 标题上方 + 面板 + 间距（两排步长）
-    private int startY() { return this.guiH() < 460 ? 72 : 78; }
+    private int rowH() { return this.guiH() < 300 ? 12 : this.guiH() < 460 ? 18 : 22; }
+    /** 区块高：按可用内容区高度等分（两排），保证 2×2 网格上下对称 */
+    private int blockH(int contentH) { return Math.max(12 + 4 * rowH() + TITLE_H, (contentH - GRID_GAP) / 2); }
+    /** 内容区宽（右侧留白） */
+    private int contentW() { return Math.max(200, this.guiW() - CONTENT_X - CONTENT_R_MARGIN); }
+    /** 区块宽：两列等分 */
+    private int blockW() { return (contentW() - GRID_GAP) / 2; }
+    /** 条目宽：区块内两列等分 */
+    private int itemW() { return (blockW() - 8 - 8) / 2; }
+    /** 名字区宽（条目宽 - 取消按钮 - 间隙） */
+    private int nameW() { return Math.max(NAME_MIN_W, itemW() - BTN_W - 6); }
+    /** 区块内条目区起点（条目在区块内垂直居中，保证整齐） */
+    private int entryTop(int blockY, int contentH) {
+        int inner = blockH(contentH) - TITLE_H - BLOCK_PAD - 4 * rowH();
+        return blockY + TITLE_H + 4 + Math.max(0, inner / 2);
+    }
 
-    /** 内容底部（用于滚动范围计算） */
-    private int contentBottom() { return startY() + blockStep() + panelH(); }
+    /** 内容顶部（抽取按钮下方） */
+    private int contentTop() { return this.guiH() < 300 ? 60 : 72; }
+    /** 内容底部（界面底部留白） */
+    private int contentBottom() { return this.guiH() - 26; }
+    /** 内容区高 */
+    private int contentH() { return Math.max(40, contentBottom() - contentTop()); }
+    /** 全部内容高度（含网格间距，用于极矮屏滚动） */
+    private int totalContentH() { return contentTop() + 2 * blockH(contentH()) + GRID_GAP; }
 
     private int scrollY;
-
     private Button drawBtn;
     private final List<Button> cancelBtns = new ArrayList<>();
     private int lastSize = -1;
@@ -80,7 +100,7 @@ public class WorldHexScreen extends HexScaledScreen {
         this.clearWidgets();
         this.cancelBtns.clear();
         int centerX = this.guiW() / 2;
-        int top = this.startY() - this.scrollY;
+        int top = this.contentTop() - this.scrollY;
 
         // 顶部抽取按钮（内容区居中，科技风；v0.4.3：随滚动偏移，不再固定遮挡下方内容）
         drawBtn = new WBtn(centerX - 160, 34 - this.scrollY, 320, 22,
@@ -89,29 +109,29 @@ public class WorldHexScreen extends HexScaledScreen {
         this.addRenderableWidget(drawBtn);
 
         // 左侧按钮栏：第一位"生物"（当前页，高亮）
-        this.addRenderableWidget(new WBtn(SIDEBAR_X, top + 8, 96, 24,
+        this.addRenderableWidget(new WBtn(SIDEBAR_X, top + 8, SIDEBAR_W, 24,
                 Component.translatable("hexcraft.worldhex.cat_btn.bio"), b -> {}));
         // "更多"：点击打开敬请期待页（v0.4.2）
-        this.addRenderableWidget(new WBtn(SIDEBAR_X, top + 38, 96, 24,
+        this.addRenderableWidget(new WBtn(SIDEBAR_X, top + 38, SIDEBAR_W, 24,
                 Component.translatable("hexcraft.gui.world_more"),
                 b -> Minecraft.getInstance().setScreen(new FutureScreen())));
 
-        // 四大类区块：每类内部双列网格，每条右侧带取消按钮
-        int catIndex = 0;
-        for (String cat : WorldHexRegistry.CATEGORIES) {
-            int col = catIndex % 2;
-            int rowBlock = catIndex / 2;
-            int blockX = CONTENT_X + col * (COL_W + COL_GAP);
-            int blockY = top + rowBlock * blockStep();
+        // 四大类区块：2×2 等分网格，每条目右侧带取消按钮
+        int blockX0 = CONTENT_X;
+        int blockY0 = top;
+        for (int i = 0; i < 4; i++) {
+            String cat = WorldHexRegistry.CATEGORIES[i];
+            int bx = blockX0 + (i % 2) * (blockW() + GRID_GAP);
+            int by = blockY0 + (i / 2) * (blockH(contentH()) + GRID_GAP);
+            int eTop = entryTop(by, contentH());
             List<WorldHexDefinition> list = WorldHexRegistry.activeInCategory(ClientDataStore.worldHexes, cat);
             int row = 0;
             for (WorldHexDefinition d : list) {
-                int subCol = row % 2;
-                int subRow = row / 2;
-                int x = blockX + subCol * (ITEM_W + ITEM_GAP);
-                int y = blockY + 24 + subRow * rowH();
+                int x = bx + 8 + (row % 2) * (itemW() + 8);
+                int y = eTop + (row / 2) * rowH();
                 String id = d.id;
-                cancelBtns.add(new WBtn(x + ITEM_W - BTN_W, y + 4, BTN_W, 20,
+                int bw = Math.min(BTN_W, itemW() - NAME_MIN_W - 4);
+                cancelBtns.add(new WBtn(x + itemW() - bw, y, bw, Math.min(20, rowH()),
                         Component.translatable("hexcraft.gui.world_cancel", ClientDataStore.worldCancelCoin),
                         b -> {
                             Packets.C2SCancelWorldHex p = new Packets.C2SCancelWorldHex();
@@ -120,7 +140,6 @@ public class WorldHexScreen extends HexScaledScreen {
                         }));
                 row++;
             }
-            catIndex++;
         }
         for (Button b : cancelBtns) this.addRenderableWidget(b);
     }
@@ -134,7 +153,7 @@ public class WorldHexScreen extends HexScaledScreen {
     @Override
     public boolean mouseScrolled(double mx, double my, double delta) {
         double s = uiScale();
-        int maxScroll = Math.max(0, contentBottom() - this.guiH() + 20);
+        int maxScroll = Math.max(0, totalContentH() - this.guiH() + 20);
         if (maxScroll > 0) {
             int ns = (int) (this.scrollY - delta * 24);
             ns = Math.max(0, Math.min(ns, maxScroll));
@@ -156,7 +175,7 @@ public class WorldHexScreen extends HexScaledScreen {
             buildWidgets();
         }
         int centerX = this.guiW() / 2;
-        int top = this.startY() - this.scrollY;
+        int top = this.contentTop() - this.scrollY;
 
         // 标题
         Component title = Component.translatable("hexcraft.gui.world_hex_title");
@@ -164,46 +183,56 @@ public class WorldHexScreen extends HexScaledScreen {
         g.fillGradient(centerX - 120, 24, centerX + 120, 25, 0xFFFFC94A, 0xFFC77DFF);
 
         // 左侧栏装饰
-        g.fill(SIDEBAR_X - 8, top + 2, SIDEBAR_X + 104, top + 70, 0xAA0B1530);
+        g.fill(SIDEBAR_X - 8, top + 2, SIDEBAR_X + SIDEBAR_W + 8, top + 70, 0xAA0B1530);
         g.fill(SIDEBAR_X - 8, top + 2, SIDEBAR_X - 7, top + 70, 0xFF1E6FE8);
 
-        // 各分类区块：背景固定高度（标题 + 4 行条目区），空分类同样完整显示
-        int catIndex = 0;
-        for (String cat : WorldHexRegistry.CATEGORIES) {
-            int col = catIndex % 2;
-            int rowBlock = catIndex / 2;
-            int blockX = CONTENT_X + col * (COL_W + COL_GAP);
-            int blockY = top + rowBlock * blockStep();
-            // 背景盒：标题区（-20..0）+ 条目区（0..panelH）
-            g.fill(blockX - 10, blockY - 20, blockX + COL_W + 4, blockY + panelH(), 0x550B1530);
-            g.fill(blockX - 10, blockY - 20, blockX - 9, blockY + panelH(), 0xFF2A5DB0);
-            Component catTitle = Component.translatable("hexcraft.worldhex.category." + cat);
-            g.drawString(this.font, catTitle, blockX - 2, blockY - 15, 0xFF9FB6FF);
-            // 激活计数（x/上限）
+        // 2×2 等分网格：四大类区块（同宽同高，对称工整）
+        int blockY0 = top;
+        for (int i = 0; i < 4; i++) {
+            String cat = WorldHexRegistry.CATEGORIES[i];
+            int bx = CONTENT_X + (i % 2) * (blockW() + GRID_GAP);
+            int by = blockY0 + (i / 2) * (blockH(contentH()) + GRID_GAP);
+            int eTop = entryTop(by, contentH());
             List<WorldHexDefinition> list = WorldHexRegistry.activeInCategory(ClientDataStore.worldHexes, cat);
             int max = ClientDataStore.worldMaxPerCategory;
+
+            // 区块背景（统一尺寸，空分类同样完整显示）
+            g.fill(bx, by, bx + blockW(), by + blockH(contentH()), 0x550B1530);
+            g.fill(bx, by, bx + 1, by + blockH(contentH()), 0xFF2A5DB0);
+            g.fill(bx, by + blockH(contentH()) - 1, bx + blockW(), by + blockH(contentH()), 0x882A5DB0);
+            // 标题条：分类名（左）+ 激活计数（右）
+            Component catTitle = Component.translatable("hexcraft.worldhex.category." + cat);
+            g.drawString(this.font, catTitle, bx + 6, by + 4, 0xFF9FB6FF);
             g.drawString(this.font, Component.literal(list.size() + "/" + (max > 0 ? max : "∞")),
-                    blockX + COL_W - 70, blockY - 15, 0xFF6A7B96);
+                    bx + blockW() - 8 - this.font.width(Component.literal("00/00")), by + 4, 0xFF6A7B96);
+
+            // 条目：只显示名字（稀有度色），悬停才显示介绍（v0.4.5）
             int row = 0;
             for (WorldHexDefinition d : list) {
-                int subCol = row % 2;
-                int subRow = row / 2;
-                int x = blockX + subCol * (ITEM_W + ITEM_GAP);
-                int y = blockY + 24 + subRow * rowH();
+                int x = bx + 8 + (row % 2) * (itemW() + 8);
+                int y = eTop + (row / 2) * rowH();
                 int color = rarityColor(d.rarity);
                 Component name = Component.translatable("hexcraft.worldhex." + d.id + ".name");
-                g.drawString(this.font, name, x - 2, y, color);
-                Component desc = Component.translatable("hexcraft.worldhex." + d.id + ".desc");
-                List<net.minecraft.util.FormattedCharSequence> lines = this.font.split(desc, TEXT_W);
-                if (!lines.isEmpty()) {
-                    g.drawString(this.font, lines.get(0), x - 2, y + 10, 0xFFA9B4CC);
+                String nstr = name.getString();
+                if (this.font.width(nstr) > nameW()) {
+                    nstr = this.font.plainSubstrByWidth(nstr, nameW()) + "…";
+                }
+                g.drawString(this.font, nstr, x, y + 3, color);
+                // hover 提示：名字 + 稀有度类型 + 描述
+                if (mx >= x - 2 && mx <= x + itemW() && my >= y - 1 && my <= y + rowH() - 1) {
+                    List<Component> tip = new ArrayList<>();
+                    tip.add(name.copy().withStyle(c -> c.withColor(color)));
+                    tip.add(Component.translatable("hexcraft.worldhex.tierstyle." + d.rarity)
+                            .withStyle(c -> c.withColor(0xFF6A7B96)));
+                    tip.add(Component.translatable("hexcraft.worldhex." + d.id + ".desc"));
+                    g.renderComponentTooltip(this.font, tip, mx, my);
                 }
                 row++;
             }
             if (list.isEmpty()) {
-                g.drawString(this.font, Component.translatable("hexcraft.gui.world_empty"), blockX - 2, blockY + 24, 0xFF6A7B96);
+                g.drawString(this.font, Component.translatable("hexcraft.gui.world_empty"),
+                        bx + 8, eTop + 4, 0xFF6A7B96);
             }
-            catIndex++;
         }
         this.renderWidgets(g, mx, my, pt);
     }

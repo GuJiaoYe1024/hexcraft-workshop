@@ -1,3 +1,18 @@
+Hexcraft Workshop v0.4.5 - UI Redesign: World Hex 2x2 Equal Grid / Forge Scroll Clipping / TACZ Tag Fix / Coin Display Fix
+=============================================================================
+
+A heartfelt apology first: the author's ability is limited, this mod is mostly built with AI assistance, and it may not live up to everyone's expectations. Compatibility may also be poor. The author had no idea that Hextech-related mods already existed. The project is open source (MIT) and will keep being updated (likely still AI-driven). Thank you for your understanding.
+
+- **World Hex screen fully redesigned (2x2 equal grid)**: all four category panels are now identical in width and height, symmetric and tidy, with rows evenly distributed; no more panels clipped off-screen at any GUI Scale (2/3/4) - the right-side Friendly/Hostile panels are no longer pushed outside the screen
+- **World Hex entries now show info on hover**: entries only display their name (colored by rarity); the full description appears on mouse hover, with a new rarity tier label - Silver = Stat-based, Gold = Stat + Mechanic, Prismatic = Percentage + Mechanic
+- **Fixed Forge screen scroll overlap**: the forged-stats list now has a scroll clip; group titles and panels are clipped away once scrolled out, no longer floating over the "Forged Stats" title and price buttons
+- **Fixed TACZ tag overlap on the Forge screen**: the cyan "TACZ" tag now positions dynamically after the actual stat name width, no longer overlapping the right-column stat (e.g. TA Lightning Blade)
+- **Fixed coin balance display**: the decorative dot no longer overlaps the text; the balance right-aligns to the content area and shrinks on narrow screens so it never crosses the edge or collides with the title
+- **Code self-review**: verified all 34 config entries have real use points - except "Effects Switch" (PARTICLES_ENABLED, reserved config without a particle implementation yet); also fixed a hidden bug where the stats-page scroll clip used unscaled coordinates under UI Scale
+- Client-side display only: network protocol stays VERSION=14, v0.4.4 players can upgrade directly
+
+Previous release notes:
+- v0.4.4: UI fixes - UI Scale now works, World Hex compact layout, Forge text overlap, protocol v14.
 Hexcraft Workshop v0.4.4 - UI Fixes: UI Scale Now Works, World Hex Layout, Forge Text Overlap
 =============================================================================
 
@@ -34,6 +49,21 @@ Previous release notes:
 
 ====================================================
 
+Hexcraft Workshop v0.4.5 - UI 重排版版：世界海克斯 2×2 等分网格 / 锻造器滚动裁剪 / TACZ 角标修复 / 余额显示修复
+====================================================
+
+先致歉：作者能力有限，本 mod 基本由 AI 辅助完成，可能达不到大家心里的预期，兼容性也可能较差；此前并不清楚已有人开发过海克斯相关 mod。项目已开源（MIT），后续会持续努力更新（虽然大概率仍由 AI 代跑）。感谢大家的理解与包容。
+
+- **世界海克斯界面全新重排（2×2 等分网格）**：四大分类区块同宽同高、上下左右对称工整，条目行高等分铺满；任意界面尺寸（GUI Scale 2/3/4）下都不再超屏缺角，右侧「友好/敌对」区块不再被挤出屏幕外
+- **世界海克斯条目改为悬停查看**：条目只显示名字（按稀有度着色），鼠标放上去才显示完整介绍；并新增稀有度分层标注——白银=数值类、黄金=数值+机制、棱彩=百分比数值+机制
+- **修复锻造器界面滚动遮挡**：为锻造列表加滚动裁剪，分类标题条与分组框滚出可视区即被裁剪隐藏，不再固定悬浮遮挡「已锻造属性」与价格按钮
+- **修复锻造器 TACZ 角标重叠**：弹药补给等 TACZ 词条的「TACZ」角标改为按词条名实际宽度动态定位，不再侵入右侧「雷电之刃」等词条的显示区域
+- **修复晶币余额显示**：余额文字与顶部光点装饰不再压叠，余额改为右对齐内容区、窄屏下自动收缩不超界面、不与「海克斯工坊」标题冲突
+- **代码自检**：全量核查 34 项配置的引用点——除「特效开关」为保留配置项（当前无粒子实现点，已注明）外，其余全部有实际应用；修复属性页裁剪在界面缩放下坐标错位的隐藏问题
+- 纯客户端显示层改动：网络协议保持 VERSION=14，v0.4.4 联机玩家可直接升级
+
+之前版本：
+- v0.4.4：UI 修复版 - 界面缩放生效 / 世界海克斯矮屏布局 / 锻造器文字重叠，协议 v14。
 Hexcraft Workshop v0.4.4 - UI 修复版：界面缩放生效 / 世界海克斯矮屏布局 / 锻造器文字重叠
 ====================================================
 
