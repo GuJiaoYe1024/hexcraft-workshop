@@ -44,6 +44,10 @@ public class WorldRollScreen extends HexScaledScreen {
     private int cardY;
     private boolean closed;
 
+    /** v0.4.9 抽取动画：三张候选卡错峰上浮淡入 + 光柱扫过（总时长） */
+    private static final int ANIM_MS = 1100;
+    private long openAt = -1;
+
     public WorldRollScreen(Packets.S2CWorldDrawOptions msg) {
         super(Component.translatable("hexcraft.gui.world_hex_title"));
         this.msg = msg;
@@ -51,6 +55,7 @@ public class WorldRollScreen extends HexScaledScreen {
 
     @Override
     protected void init() {
+        if (openAt < 0) openAt = System.currentTimeMillis();
         int centerX = this.guiW() / 2;
         this.cardY = this.guiH() / 2 - CARD_H / 2 - 10;
         for (int i = 0; i < 3 && i < msg.options.size(); i++) {
@@ -85,30 +90,72 @@ public class WorldRollScreen extends HexScaledScreen {
         int barW = this.font.width(title) + 40;
         g.fillGradient(centerX - barW / 2, cardY - 20, centerX + barW / 2, cardY - 19, 0xFFFFC94A, 0xFFC77DFF);
 
-        this.renderWidgets(g, mx, my, pt);
-
-        for (int i = 0; i < 3 && i < msg.options.size(); i++) {
-            WorldHexDefinition def = WorldHexRegistry.get(msg.options.get(i));
-            if (def == null) continue;
-            Component name = Component.translatable("hexcraft.worldhex." + def.id + ".name");
-            Component desc = Component.translatable("hexcraft.worldhex." + def.id + ".desc");
-            int color = rarityColor(def.rarity);
-            int cx = cardX[i] + CARD_W / 2;
-            int cy = cardY;
-
-            // v0.4.2：移除重复绘制（旧辉光画两次导致文字重影）
-            g.drawCenteredString(this.font, name, cx, cy + 42, color);
-            g.fill(cardX[i] + 14, cy + 56, cardX[i] + CARD_W - 14, cy + 57, 0x33505F88);
-            List<FormattedCharSequence> lines = this.font.split(desc, CARD_W - 24);
-            int dy = cy + 62;
-            for (FormattedCharSequence line : lines) {
-                g.drawCenteredString(this.font, line, cx, dy, 0xFFC8D0E8);
-                dy += 11;
-                if (dy > cy + CARD_H - 6) break;
+        // v0.4.9 抽取动画：动画期间隐藏按钮（避免半成品可点），手绘卡片；结束后恢复正常渲染
+        float t = Math.min(1f, (System.currentTimeMillis() - openAt) / (float) ANIM_MS);
+        if (t < 1f) {
+            // 光柱从左向右扫过
+            int sweep = (int) (t * (this.guiW() + 320)) - 160;
+            g.fill(sweep, 0, sweep + 60, this.guiH(), 0x18FFFFFF);
+            g.fill(sweep + 14, 0, sweep + 46, this.guiH(), 0x10FFC94A);
+            for (int i = 0; i < 3 && i < msg.options.size(); i++) {
+                WorldHexDefinition def = WorldHexRegistry.get(msg.options.get(i));
+                if (def == null) continue;
+                // 每张卡错峰（依次延迟约 1/3 时长）上浮 + 淡入，三次缓动
+                float ti = Math.min(1f, Math.max(0f, t * 3f - i));
+                float ease = 1f - (1f - ti) * (1f - ti) * (1f - ti);
+                int dy = (int) ((1f - ease) * 26f);
+                int alpha = 40 + (int) (ease * 215f);
+                drawAnimatedCard(g, i, def, dy, alpha);
             }
-            g.drawCenteredString(this.font,
-                    Component.translatable("hexcraft.worldhex.cost_xp", msg.drawXp), cx, cy + CARD_H - 4, 0xFF9FB6FF);
+            g.drawCenteredString(this.font, Component.translatable("hexcraft.worldhex.anim_draw"),
+                    centerX, cardY + CARD_H + 26, 0xFF9FB6FF);
+        } else {
+            this.renderWidgets(g, mx, my, pt);
+            for (int i = 0; i < 3 && i < msg.options.size(); i++) {
+                WorldHexDefinition def = WorldHexRegistry.get(msg.options.get(i));
+                if (def == null) continue;
+                int color = rarityColor(def.rarity);
+                drawCardText(g, i, def, color, cardX[i] + CARD_W / 2, cardY);
+            }
         }
+    }
+
+    /** 动画模式手绘整卡（背景 + 缎带 + 文字），带透明度和上浮偏移 */
+    private void drawAnimatedCard(GuiGraphics g, int idx, WorldHexDefinition def, int dy, int alpha) {
+        int color = rarityColor(def.rarity);
+        int x = cardX[idx];
+        int y = cardY + dy;
+        int cx = x + CARD_W / 2;
+        // 辉光 + 边框 + 渐变底（alpha 淡入）
+        g.fill(x - 3, y - 3, x + CARD_W + 3, y + CARD_H + 3, (alpha >> 1) << 24 | (color & 0x00FFFFFF));
+        g.fill(x - 1, y - 1, x + CARD_W + 1, y + CARD_H + 1, alpha << 24 | (color & 0x00FFFFFF));
+        g.fillGradient(x, y, x + CARD_W, y + CARD_H,
+                (alpha * 240 / 255) << 24 | 0x2C2E58, (alpha * 240 / 255) << 24 | 0x0D1220);
+        g.fill(x, y, x + CARD_W, y + 16, alpha << 24 | (color & 0x00FFFFFF));
+        g.drawCenteredString(this.font, catLabel(def), cx, y + 4, 0xFF101018);
+        g.drawCenteredString(this.font, "◆", cx, y + 22, color);
+        drawCardText(g, idx, def, color, cx, y);
+    }
+
+    /** 卡片文字内容（名字 + 分隔线 + 描述 + 消耗），正常与动画模式共用 */
+    private void drawCardText(GuiGraphics g, int idx, WorldHexDefinition def, int color, int cx, int cy) {
+        Component name = Component.translatable("hexcraft.worldhex." + def.id + ".name");
+        Component desc = Component.translatable("hexcraft.worldhex." + def.id + ".desc");
+        g.drawCenteredString(this.font, name, cx, cy + 42, color);
+        g.fill(cx - CARD_W / 2 + 14, cy + 56, cx + CARD_W / 2 - 14, cy + 57, 0x33505F88);
+        List<FormattedCharSequence> lines = this.font.split(desc, CARD_W - 24);
+        int dy = cy + 62;
+        for (FormattedCharSequence line : lines) {
+            g.drawCenteredString(this.font, line, cx, dy, 0xFFC8D0E8);
+            dy += 11;
+            if (dy > cy + CARD_H - 6) break;
+        }
+        g.drawCenteredString(this.font,
+                Component.translatable("hexcraft.worldhex.cost_xp", msg.drawXp), cx, cy + CARD_H - 4, 0xFF9FB6FF);
+    }
+
+    private static String catLabel(WorldHexDefinition def) {
+        return def == null ? "" : Component.translatable("hexcraft.worldhex.category." + def.category).getString();
     }
 
     private static int rarityColor(String key) {

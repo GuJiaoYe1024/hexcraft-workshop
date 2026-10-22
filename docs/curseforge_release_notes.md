@@ -1,3 +1,14 @@
+Hexcraft Workshop v0.4.9 - Demon Contract rework (debuffs scale but capped) + Full code audit + Content table update
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- **Demon Contract (hostile World Hex) debuff rework (per your confirmed design)**: the Weakness/Slowness applied to players can now scale with contract strength (Weakness I/II, Slowness II/III - no longer pinned at level I); but the trigger chance is reduced (about 40% discount, capped at 40%); duration stacking is capped (7s per proc, total capped at 10s - no more infinite refresh extension)
+- **Full code audit (nothing registered-but-unused)**: all 138 player hex JSONs (all 80 event keys have a settlement point, including special keys sell_bonus / exchange_bonus / trade_discount / hex·forge·equip_power / stack_attr / transform), all 32 World Hexes (all 34 event keys settled in WorldHexEvents), all 44 equipment pieces (all 27 event keys applied), all 32 forge aspects (65 EN/ZH translation pairs complete), all 4 game rules (keepHexes / keepForges / keepEquips / keepCoins all referenced in death handling)
+- **Content master table fully updated**: player hexes 124 -> 138, World Hexes 32 (v0.4.7 tier numbers), equipment 44, forge aspects 32
+- World Hex draw animation (kept from v0.4.8): fade-in cards + draw progress hint on the 3-choice screen
+- Effect-logic/client-layer only: network protocol stays VERSION=14, v0.4.8 players can upgrade directly
+
 Hexcraft Workshop v0.4.8 - Player Hex Gambling System: Transform-into-random hexes + Random Gift text fix + New pool entries
 =============================================================================
 

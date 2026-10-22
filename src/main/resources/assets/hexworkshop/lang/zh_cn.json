@@ -808,5 +808,6 @@
   "hexcraft.hextech.hex_omni_drain.desc": "攻击吸血 30%；15% 回声连锁；低血狂暴吸血 15%",
   "message.hexcraft.gamble_gold": "赌局兑现：随机晋升为黄金海克斯「%s」",
   "message.hexcraft.gamble_prism": "赌局兑现：随机晋升为棱彩海克斯「%s」",
-  "message.hexcraft.gamble_double": "赌局兑现：随机获得两个海克斯「%s」「%s」"
+  "message.hexcraft.gamble_double": "赌局兑现：随机获得两个海克斯「%s」「%s」",
+  "hexcraft.worldhex.anim_draw": "正在抽取世界海克斯…"
 }

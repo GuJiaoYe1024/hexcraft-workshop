@@ -315,17 +315,31 @@ public class WorldHexEvents {
             }
         }
 
-        // 3) 敌对生物攻击吸血 + 对玩家施加虚弱/缓慢（恶魔契约；v0.4.1：概率≥0.35 时虚弱 II/缓慢 III，时长 5→7 秒）
+        // 3) 敌对生物攻击吸血 + 对玩家施加虚弱/缓慢（恶魔契约；v0.4.9：概率调小约 6 折封顶 40%，但命中时等级随契约强度提高——虚弱 I/II、缓慢 II/III；时长叠加封顶 10 秒，防止无限刷新延长）
         if (event.getSource().getEntity() instanceof LivingEntity attacker
                 && WorldHexRegistry.CAT_HOSTILE.equals(categoryOf(attacker))) {
             double ls = hostileLifesteal(sl);
             if (ls > 0 && attacker.isAlive()) attacker.heal((float) (event.getAmount() * ls));
             double db = hostileDebuff(sl);
-            if (db > 0 && victim instanceof ServerPlayer && sl.getRandom().nextFloat() < (float) db) {
-                int amp = db >= 0.35 ? 1 : 0;
-                victim.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 140, amp));
-                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 140, amp + 1));
+            if (db > 0 && victim instanceof ServerPlayer) {
+                double chance = Math.min(0.4, db * 0.6); // 概率调小：约 6 折，封顶 40%
+                if (sl.getRandom().nextFloat() < (float) chance) {
+                    int amp = db >= 0.35 ? 1 : 0; // 等级可随契约强度提高（虚弱 I/II，缓慢 II/III）
+                    applyPlayerDebuff((ServerPlayer) victim, MobEffects.WEAKNESS, 7, amp, 10);
+                    applyPlayerDebuff((ServerPlayer) victim, MobEffects.MOVEMENT_SLOWDOWN, 7, amp + 1, 10);
+                }
             }
+        }
+    }
+
+    /** v0.4.9：给玩家施加负面效果。等级以本次为准（允许提高、不降级）；时长按秒累加但封顶 capSeconds，防止无限叠加刷新延长 */
+    private static void applyPlayerDebuff(ServerPlayer p, net.minecraft.world.effect.MobEffect e, int seconds, int amp, int capSeconds) {
+        net.minecraft.world.effect.MobEffectInstance cur = p.getEffect(e);
+        if (cur == null) {
+            p.addEffect(new net.minecraft.world.effect.MobEffectInstance(e, seconds * 20, amp));
+        } else {
+            int newDur = Math.min(capSeconds * 20, cur.getDuration() + seconds * 20);
+            p.addEffect(new net.minecraft.world.effect.MobEffectInstance(e, newDur, Math.max(amp, cur.getAmplifier())));
         }
     }
 

@@ -808,5 +808,6 @@
   "hexcraft.hextech.hex_omni_drain.desc": "30% lifesteal; 15% echo chain; 15% vamp rage at low HP",
   "message.hexcraft.gamble_gold": "Bet paid off: promoted to random Gold hex \"%s\"",
   "message.hexcraft.gamble_prism": "Bet paid off: promoted to random Prismatic hex \"%s\"",
-  "message.hexcraft.gamble_double": "Bet paid off: two random hexes \"%s\" & \"%s\""
+  "message.hexcraft.gamble_double": "Bet paid off: two random hexes \"%s\" & \"%s\"",
+  "hexcraft.worldhex.anim_draw": "Drawing world hex..."
 }
