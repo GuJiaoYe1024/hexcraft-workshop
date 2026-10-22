@@ -1,3 +1,11 @@
+Hexcraft Workshop v0.4.15 - XP recognition fix: accepts experience granted by other mods (FTB Quests etc.)
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- FIXED draw not recognizing external XP: hex draw & world-hex draw checked the cached totalExperience field, which desyncs when mods (FTB Quests, commands, XP injection) set the player's level directly - players with plenty of XP got "not enough XP". Now the real total XP is recomputed from the level formula every time, so XP from ANY source counts - if you have the XP, you can roll
+- Cost is still deducted via giveExperiencePoints(-cost), syncing the cache from the real level
+- Pure server-side logic change, protocol stays VERSION=15 - v0.4.14 players can upgrade directly
+
 Hexcraft Workshop v0.4.14 - Full persistence: data survives logout/login + final full self-check
 =============================================================================
 

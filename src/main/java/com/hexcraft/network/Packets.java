@@ -53,7 +53,7 @@ public class Packets {
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
                 int cost = HexConfig.XP_COST_PER_DRAW.get();
-                if (sp.totalExperience < cost) {
+                if (realTotalXp(sp) < cost) {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.xp_not_enough", cost), true);
                     return;
                 }
@@ -65,6 +65,29 @@ public class Packets {
             });
             ctx.get().setPacketHandled(true);
         }
+    }
+
+    /**
+     * 玩家真实总经验（点数）。
+     * totalExperience 是缓存字段：FTB Quest 等 mod 直接赋值 experienceLevel / experienceProgress
+     * （或经由 NBT/等级 API 注入）时缓存不同步，会误判"经验不足"无法抽取。
+     * 这里按 Minecraft 标准等级公式逐级实时重算，任何来源给予的经验都能被识别。
+     */
+    private static int realTotalXp(ServerPlayer sp) {
+        int lvl = sp.experienceLevel;
+        long total = 0;
+        for (int i = 0; i < lvl; i++) {
+            total += xpNeededForLevel(i);
+        }
+        total += (long) (sp.experienceProgress * xpNeededForLevel(lvl));
+        return (int) Math.min(total, Integer.MAX_VALUE);
+    }
+
+    /** Minecraft 1.20 标准经验公式：某等级升到下一级所需经验点数 */
+    private static int xpNeededForLevel(int level) {
+        if (level >= 30) return 112 + (level - 30) * 9;
+        if (level >= 15) return 37 + (level - 15) * 5;
+        return 7 + level * 2;
     }
 
     // ================= C2S：三选一刷新 =================
@@ -630,7 +653,7 @@ public class Packets {
                 if (data == null) return;
                 int cost = (int) Math.round(HexConfig.WORLD_DRAW_XP.get()
                         * (1 + com.hexcraft.event.WorldHexEvents.drawCostMult(sl)));
-                if (sp.totalExperience < cost) {
+                if (realTotalXp(sp) < cost) {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.xp_not_enough", cost), true);
                     return;
                 }
