@@ -571,6 +571,8 @@
   "hexcraft.gui.cat.fun": "趣味",
   "hexcraft.gui.cat_empty": "该分类暂无海克斯",
   "message.hexcraft.gamerule_set": "已将 %s 设为%s",
+  "message.hexcraft.gamerule_local_only": "已保存到本地配置（主菜单无法修改服务端，进入世界后生效）",
+  "message.hexcraft.gamerule_client_primary": "以客户端配置为主：主菜单即可设置并保存，进入世界即生效；服务端 gamerule 任一开启同样保留",
   "message.hexcraft.on": "开",
   "message.hexcraft.off": "关",
   "hexcraft.hextech.hex_fire_resist.name": "耐火之躯",

@@ -13,9 +13,10 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 /**
  * 配置界面（Cloth Config 标准样式）：在 Mods 列表 → 本 Mod → Config 按钮打开。
- * 五个分类：海克斯抽取 / 经济系统 / 联动内容 / 客户端 / 游戏规则。
- * - 前四类直接绑定 HexConfig 的 ForgeConfigSpec 静态字段（即时保存 toml）；
- * - 游戏规则为服务端权威：toggle 点击发送 C2SSetGameRule，客户端显示服务端同步值。
+ * 六个分类：海克斯抽取 / 经济系统 / 联动内容 / 世界海克斯 / 客户端 / 游戏规则。
+ * - 前五类直接绑定 HexConfig 的 ForgeConfigSpec 静态字段（即时保存 toml）；
+ * - 游戏规则（死亡保留）v0.4.11 起以客户端配置为主：开关读写 HexConfig.KEEP_DEATH_*（主菜单即可保存，
+ *   不依赖网络、不崩溃），已连接世界时额外推送服务端 gamerule；死亡处理 = 客户端配置 OR 服务端 gamerule 任一开启即保留。
  * 依赖 Cloth Config v10 API（cloth_config，正式客户端已安装 11.1.136）。
  */
 public class HexConfigScreen {
@@ -25,13 +26,13 @@ public class HexConfigScreen {
     /** 死亡保留游戏规则 lang key 后缀 */
     private static final String[] RULE_KEYS = {"Hexes", "Forges", "Equips", "Coins"};
 
-    /** 动态读取服务端同步的当前值（v0.4.10：去掉 static final 快照，界面打开时显示真实 gamerule，避免显示"是"但服务端为"否"） */
+    /** 读取"生效值"（v0.4.11：客户端配置 OR 服务端 gamerule，任一开启即保留；主菜单时服务端同步值为默认，显示即客户端配置） */
     private static boolean ruleValue(int i) {
         switch (i) {
-            case 0: return ClientDataStore.keepHexes;
-            case 1: return ClientDataStore.keepForges;
-            case 2: return ClientDataStore.keepEquips;
-            default: return ClientDataStore.keepCoins;
+            case 0: return HexConfig.KEEP_DEATH_HEXES.get() || ClientDataStore.keepHexes;
+            case 1: return HexConfig.KEEP_DEATH_FORGES.get() || ClientDataStore.keepForges;
+            case 2: return HexConfig.KEEP_DEATH_EQUIPS.get() || ClientDataStore.keepEquips;
+            default: return HexConfig.KEEP_DEATH_COINS.get() || ClientDataStore.keepCoins;
         }
     }
 
@@ -173,13 +174,29 @@ public class HexConfigScreen {
                             Component.translatable("gamerule.hexworkshopKeep" + RULE_KEYS[i]),
                             ruleValue(idx))
                     .setSaveConsumer(v -> {
-                        // 服务端权威：点击后发送"直接设置目标值"请求（v0.4.10 起不再翻转，界面显示与服务端一一对应）
-                        Packets.C2SSetGameRule p = new Packets.C2SSetGameRule();
-                        p.ruleIndex = idx;
-                        p.value = v;
-                        PacketHandler.CHANNEL.sendToServer(p);
+                        // v0.4.11：以客户端配置为主——先写本地配置（主菜单也能保存、不依赖网络、不崩溃）
+                        switch (idx) {
+                            case 0: HexConfig.KEEP_DEATH_HEXES.set(v); break;
+                            case 1: HexConfig.KEEP_DEATH_FORGES.set(v); break;
+                            case 2: HexConfig.KEEP_DEATH_EQUIPS.set(v); break;
+                            default: HexConfig.KEEP_DEATH_COINS.set(v); break;
+                        }
+                        // 已连接世界时额外推送服务端 gamerule（世界内点击即时生效、联机同步）；
+                        // 主菜单无连接时仅本地生效（getConnection()==null 时直接 sendToServer 会 NPE，v0.4.10 崩溃根因）
+                        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+                        if (mc.getConnection() != null) {
+                            Packets.C2SSetGameRule p = new Packets.C2SSetGameRule();
+                            p.ruleIndex = idx;
+                            p.value = v;
+                            PacketHandler.CHANNEL.sendToServer(p);
+                        } else if (mc.player != null) {
+                            mc.player.displayClientMessage(
+                                    Component.translatable("message.hexcraft.gamerule_local_only"), true);
+                        }
                     })
-                    .setTooltip(Component.translatable("gamerule.hexworkshopKeep" + RULE_KEYS[i] + ".description"))
+                    .setTooltip(
+                            Component.translatable("gamerule.hexworkshopKeep" + RULE_KEYS[i] + ".description"),
+                            Component.translatable("message.hexcraft.gamerule_client_primary"))
                     .build());
         }
     }

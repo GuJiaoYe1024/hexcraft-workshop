@@ -114,10 +114,12 @@ public class HextechEvents {
             PlayerData data = ModCapabilities.get(sp);
             if (data != null) {
                 GameRules gr = sp.serverLevel().getGameRules();
-                if (!gr.getBoolean(HexGameRules.KEEP_HEXES)) data.getHexes().clear();
-                if (!gr.getBoolean(HexGameRules.KEEP_FORGES)) data.getForges().clear();
-                if (!gr.getBoolean(HexGameRules.KEEP_EQUIPS)) data.getEquipment().clear();
-                if (!gr.getBoolean(HexGameRules.KEEP_COINS)) data.setCoins(0);
+                // v0.4.11：死亡保留以客户端配置为主（主菜单即可设置并保存，进世界即生效）；
+                // 服务端 gamerule（创建世界界面 / 服务端指令）任一开启即保留，两链互不阻塞
+                if (!(gr.getBoolean(HexGameRules.KEEP_HEXES) || com.hexcraft.config.HexConfig.KEEP_DEATH_HEXES.get())) data.getHexes().clear();
+                if (!(gr.getBoolean(HexGameRules.KEEP_FORGES) || com.hexcraft.config.HexConfig.KEEP_DEATH_FORGES.get())) data.getForges().clear();
+                if (!(gr.getBoolean(HexGameRules.KEEP_EQUIPS) || com.hexcraft.config.HexConfig.KEEP_DEATH_EQUIPS.get())) data.getEquipment().clear();
+                if (!(gr.getBoolean(HexGameRules.KEEP_COINS) || com.hexcraft.config.HexConfig.KEEP_DEATH_COINS.get())) data.setCoins(0);
                 sync(sp);
             }
             return;

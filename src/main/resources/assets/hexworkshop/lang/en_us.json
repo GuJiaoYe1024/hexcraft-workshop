@@ -571,6 +571,8 @@
   "hexcraft.gui.cat.fun": "Fun",
   "hexcraft.gui.cat_empty": "No hextech in this category",
   "message.hexcraft.gamerule_set": "Set %s to %s",
+  "message.hexcraft.gamerule_local_only": "Saved to local config (server rules cannot be changed from the main menu; takes effect after entering a world)",
+  "message.hexcraft.gamerule_client_primary": "Client config is authoritative: can be set & saved from the main menu, takes effect in-world; server gamerule also keeps if enabled",
   "message.hexcraft.on": "ON",
   "message.hexcraft.off": "OFF",
   "hexcraft.hextech.hex_fire_resist.name": "Fireproof Body",

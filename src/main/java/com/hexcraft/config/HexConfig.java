@@ -47,6 +47,11 @@ public class HexConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.DoubleValue UI_SCALE;
     public static final ForgeConfigSpec.BooleanValue PARTICLES_ENABLED;
+    // ---- 死亡保留（以客户端配置为主，v0.4.11）：主菜单即可设置并保存，进世界即生效 ----
+    public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_HEXES;
+    public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_FORGES;
+    public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_EQUIPS;
+    public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_COINS;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -102,6 +107,12 @@ public class HexConfig {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
         UI_SCALE = b.comment("UI缩放倍率").translation("hexcraft.config.client.uiScale").defineInRange("uiScale", 1.0, 0.5, 2.0);
         PARTICLES_ENABLED = b.comment("抽取/入账特效开关").translation("hexcraft.config.client.particlesEnabled").define("particlesEnabled", true);
+        b.comment("死亡保留（客户端配置为主：主菜单即可设置并保存，进世界即生效；服务端 gamerule 任一开启即保留）").translation("hexcraft.config.cat.keepOnDeath").push("keepOnDeath");
+        KEEP_DEATH_HEXES = b.comment("死亡保留海克斯").translation("hexcraft.config.client.keepDeathHexes").define("keepDeathHexes", false);
+        KEEP_DEATH_FORGES = b.comment("死亡保留锻造属性").translation("hexcraft.config.client.keepDeathForges").define("keepDeathForges", false);
+        KEEP_DEATH_EQUIPS = b.comment("死亡保留装备").translation("hexcraft.config.client.keepDeathEquips").define("keepDeathEquips", false);
+        KEEP_DEATH_COINS = b.comment("死亡保留晶币").translation("hexcraft.config.client.keepDeathCoins").define("keepDeathCoins", false);
+        b.pop();
         CLIENT_SPEC = b.build();
     }
 }

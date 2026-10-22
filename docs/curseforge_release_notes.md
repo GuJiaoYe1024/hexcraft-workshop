@@ -1,3 +1,14 @@
+Hexcraft Workshop v0.4.11 - Fixed Cloth Config crash + death-keep rules are now client-config-first
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- **Fixed Cloth Config screen crash (crash report crash-2026-10-22_12.03.08)**: clicking the death-keep toggles on the "Game Rules" tab while NOT in a world (main menu / before world creation) threw an NPE inside sendToServer because Minecraft.getConnection() was null - the whole Cloth Config screen crashed, and the change never reached the server anyway
+- **Death-keep rules are now CLIENT-CONFIG-FIRST (core change)**: the four toggles (Hexes / Forges / Equips / Coins) now write to the client-local config hexworkshop-client.toml - they can be set and saved from the main menu, work without any network connection, never crash, and apply to every world you join; while in a world, toggling also pushes the server gamerule (instant effect, syncs for multiplayer)
+- **Combined death-keep semantics**: client config OR server gamerule - whichever enables it, you keep it. Rules set via the Create-World screen or /gamerule in-game are still fully honored
+- **Verified the world-creation path**: gamerules set on the Create-World screen are correctly written into the save's level.dat (hexworkshopKeepHexes/Forges/Equips/Coins=true confirmed present in a fresh save); the vanilla transfer works - the earlier "not working" was mostly caused by the main-menu crash discarding your changes / the old stale-snapshot display
+- **Network protocol stays VERSION=15** (client display/config layer only, no structural change) - v0.4.10 players can upgrade directly
+
 Hexcraft Workshop v0.4.10 - Fixed "death-keep game rules not working": UI display desynced from real server gamerule + toggle now sets value directly
 =============================================================================
 
