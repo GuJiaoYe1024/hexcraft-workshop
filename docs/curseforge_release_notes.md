@@ -1,3 +1,16 @@
+Hexcraft Workshop v0.4.6 - World Hex Rarity Design Rework (Silver=Stat / Gold=Stat+Mechanic / Prismatic=Percentage+Mechanic)
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- **New World Hex rarity design standard**: Silver = stat-based (plain stats/multipliers); Gold = stat + mechanic; Prismatic = percentage stat + mechanic (hardest and strongest). A design direction for World Hex (more designs may come later); all 32 entries are reworked to fit it now
+- **All 32 World Hex reworked**: hell difficulty core stats kept, mechanic effects added to Gold/Prismatic entries that were previously pure stats (hit-frenzy / death-summon / lifesteal / debuff / tamed regen / drop suppression / kill coin bonus / draw discount / death XP penalty) so every tier now lives up to its name
+- **Hover label simplified**: World Hex entries now show only "Silver/Gold/Prismatic + description" on hover; internal design tags removed
+- ZH/EN translations updated in sync: all 32 World Hex descriptions rewritten to match new effects (both languages stay at 793 keys)
+- Content + client-label only: network protocol stays VERSION=14, v0.4.5 players can upgrade directly
+
+Previous release notes:
+- v0.4.5: UI redesign - World Hex 2x2 equal grid / Forge scroll clipping / TACZ tag fix / coin display fix, protocol v14.
 Hexcraft Workshop v0.4.5 - UI Redesign: World Hex 2x2 Equal Grid / Forge Scroll Clipping / TACZ Tag Fix / Coin Display Fix
 =============================================================================
 
@@ -49,6 +62,19 @@ Previous release notes:
 
 ====================================================
 
+Hexcraft Workshop v0.4.6 - 世界海克斯分层设计重排：白银=数值 / 黄金=数值+机制 / 棱彩=百分比数值+机制
+====================================================
+
+先致歉：作者能力有限，本 mod 基本由 AI 辅助完成，可能达不到大家心里的预期，兼容性也可能较差；此前并不清楚已有人开发过海克斯相关 mod。项目已开源（MIT），后续会持续努力更新（虽然大概率仍由 AI 代跑）。感谢大家的理解与包容。
+
+- **确立世界海克斯稀有度分层设计规范**：白银 = 数值类（纯属性/纯倍率）；黄金 = 数值 + 机制；棱彩 = 百分比数值 + 机制（最难最强）。这是世界海克斯的一种设计要求（未来可扩展更多设计），当前全部 32 个按此规范重新整理
+- **32 个世界海克斯全部重排**：保留炼狱难度主数值不变，给黄金/棱彩中原本"纯数值"的海克斯补充机制效果（受击反扑 / 死亡召唤 / 吸血 / 施毒 / 驯服回血 / 掉落抑制 / 击杀晶币加成 / 抽取折扣 / 死亡经验惩罚），让每一档名副其实
+- **悬停标注精简**：世界海克斯条目悬停提示只显示「稀有度（白银/黄金/棱彩）+ 介绍」，不再显示内部设计标签
+- 中英翻译同步更新：32 个世界海克斯介绍全部按新效果改写，双语言 key 数对等（各 793）
+- 纯内容与客户端标注改动：网络协议保持 VERSION=14，v0.4.5 联机玩家可直接升级
+
+之前版本：
+- v0.4.5：UI 重排版 - 世界海克斯 2×2 等分网格 / 锻造器滚动裁剪 / TACZ 角标修复 / 余额显示修复，协议 v14。
 Hexcraft Workshop v0.4.5 - UI 重排版版：世界海克斯 2×2 等分网格 / 锻造器滚动裁剪 / TACZ 角标修复 / 余额显示修复
 ====================================================
 
