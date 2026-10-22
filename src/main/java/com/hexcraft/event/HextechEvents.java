@@ -116,10 +116,32 @@ public class HextechEvents {
                 GameRules gr = sp.serverLevel().getGameRules();
                 // v0.4.11：死亡保留以客户端配置为主（主菜单即可设置并保存，进世界即生效）；
                 // 服务端 gamerule（创建世界界面 / 服务端指令）任一开启即保留，两链互不阻塞
-                if (!(gr.getBoolean(HexGameRules.KEEP_HEXES) || com.hexcraft.config.HexConfig.KEEP_DEATH_HEXES.get())) data.getHexes().clear();
-                if (!(gr.getBoolean(HexGameRules.KEEP_FORGES) || com.hexcraft.config.HexConfig.KEEP_DEATH_FORGES.get())) data.getForges().clear();
-                if (!(gr.getBoolean(HexGameRules.KEEP_EQUIPS) || com.hexcraft.config.HexConfig.KEEP_DEATH_EQUIPS.get())) data.getEquipment().clear();
-                if (!(gr.getBoolean(HexGameRules.KEEP_COINS) || com.hexcraft.config.HexConfig.KEEP_DEATH_COINS.get())) data.setCoins(0);
+                boolean keepH = gr.getBoolean(HexGameRules.KEEP_HEXES) || com.hexcraft.config.HexConfig.KEEP_DEATH_HEXES.get();
+                boolean keepF = gr.getBoolean(HexGameRules.KEEP_FORGES) || com.hexcraft.config.HexConfig.KEEP_DEATH_FORGES.get();
+                boolean keepE = gr.getBoolean(HexGameRules.KEEP_EQUIPS) || com.hexcraft.config.HexConfig.KEEP_DEATH_EQUIPS.get();
+                boolean keepC = gr.getBoolean(HexGameRules.KEEP_COINS) || com.hexcraft.config.HexConfig.KEEP_DEATH_COINS.get();
+                // v0.4.12：死亡决策日志（诊断"开了保留仍被清"用：打印 gamerule 与客户端配置各自实际值）
+                com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 玩家 {} 死亡：gamerule={}/{}/{}/{} 客户端配置={}/{}/{}/{} → 实际保留={}/{}/{}/{}",
+                        sp.getName().getString(),
+                        gr.getBoolean(HexGameRules.KEEP_HEXES), gr.getBoolean(HexGameRules.KEEP_FORGES),
+                        gr.getBoolean(HexGameRules.KEEP_EQUIPS), gr.getBoolean(HexGameRules.KEEP_COINS),
+                        com.hexcraft.config.HexConfig.KEEP_DEATH_HEXES.get(), com.hexcraft.config.HexConfig.KEEP_DEATH_FORGES.get(),
+                        com.hexcraft.config.HexConfig.KEEP_DEATH_EQUIPS.get(), com.hexcraft.config.HexConfig.KEEP_DEATH_COINS.get(),
+                        keepH, keepF, keepE, keepC);
+                if (!keepH) data.getHexes().clear();
+                if (!keepF) data.getForges().clear();
+                if (!keepE) data.getEquipment().clear();
+                if (!keepC) data.setCoins(0);
+                // v0.4.13：死亡瞬间把 PlayerData 备份进 persistentData（随玩家 NBT 保存 & 随重生 copyFrom 复制），
+                // onClone 双通道恢复——capability 在死亡/重生过程中失效也不丢数据；
+                // v0.4.14：同步写全量持久化快照 hexcraft_data（登出/自动保存后重进也可恢复）
+                try {
+                    CompoundTag bak = data.serializeNBT();
+                    sp.getPersistentData().put("hexcraft_keep", bak);
+                    sp.getPersistentData().put("hexcraft_data", bak);
+                } catch (Exception e) {
+                    // 备份失败不影响主流程
+                }
                 sync(sp);
             }
             return;
@@ -967,6 +989,19 @@ public class HextechEvents {
         if (event.getEntity() instanceof ServerPlayer sp) {
             PlayerData data = ModCapabilities.get(sp);
             if (data == null) return;
+            // v0.4.12：客户端配置为主——进服时把客户端死亡保留配置应用到服务端 gamerule（任一开启即保留；
+            // 单机 integrated server 同进程可读客户端配置；联机专用服务端无客户端配置则跳过，以房主/服务端 gamerule 为准）
+            applyClientKeepRules(sp);
+            // v0.4.13/0.4.14：登录恢复兜底——capability 为空时优先从死亡备份恢复，其次从全量快照恢复（死亡后登出重进也不丢）
+            CompoundTag bak = sp.getPersistentData().getCompound("hexcraft_keep");
+            if (bak.isEmpty()) bak = sp.getPersistentData().getCompound("hexcraft_data");
+            if (!bak.isEmpty() && data.getHexes().isEmpty() && data.getForges().isEmpty()
+                    && data.getEquipment().isEmpty() && data.getCoins() == 0) {
+                data.deserializeNBT(bak);
+                com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 玩家 {} 登录：从 persistentData 恢复备份 海克斯={} 锻造={} 装备={} 晶币={}",
+                        sp.getName().getString(), data.getHexes().size(), data.getForges().size(),
+                        data.getEquipment().size(), data.getCoins());
+            }
             data.applyModifiers(sp);
             sync(sp);
             // 世界海克斯（v0.3.21）：登录时同步全服列表（所有玩家都能看到已生效的世界海克斯）
@@ -974,18 +1009,80 @@ public class HextechEvents {
         }
     }
 
-    @SubscribeEvent
-    public static void onClone(PlayerEvent.Clone event) {
+    /** v0.4.12：把客户端配置的死亡保留项应用到服务端 gamerule（只开不关，尊重服务端显式设置） */
+    private static void applyClientKeepRules(ServerPlayer sp) {
         try {
-            PlayerData old = ModCapabilities.get(event.getOriginal());
-            PlayerData neu = ModCapabilities.get(event.getEntity());
-            if (old != null && neu != null) {
-                neu.copyFrom(old);
+            GameRules gr = sp.serverLevel().getGameRules();
+            if (com.hexcraft.config.HexConfig.KEEP_DEATH_HEXES.get() && !gr.getBoolean(HexGameRules.KEEP_HEXES))
+                gr.getRule(HexGameRules.KEEP_HEXES).set(true, sp.server);
+            if (com.hexcraft.config.HexConfig.KEEP_DEATH_FORGES.get() && !gr.getBoolean(HexGameRules.KEEP_FORGES))
+                gr.getRule(HexGameRules.KEEP_FORGES).set(true, sp.server);
+            if (com.hexcraft.config.HexConfig.KEEP_DEATH_EQUIPS.get() && !gr.getBoolean(HexGameRules.KEEP_EQUIPS))
+                gr.getRule(HexGameRules.KEEP_EQUIPS).set(true, sp.server);
+            if (com.hexcraft.config.HexConfig.KEEP_DEATH_COINS.get() && !gr.getBoolean(HexGameRules.KEEP_COINS))
+                gr.getRule(HexGameRules.KEEP_COINS).set(true, sp.server);
+        } catch (Exception e) {
+            // 联机专用服务端无客户端配置，跳过即可
+        }
+    }
+
+    @SubscribeEvent
+    public static void onSaveToFile(PlayerEvent.SaveToFile event) {
+        // v0.4.14：全量持久化——玩家数据写盘前把 PlayerData 快照写入 persistentData（随玩家 NBT 保存，登出/重进不丢）
+        try {
+            PlayerData d = ModCapabilities.get(event.getEntity());
+            if (d != null) event.getEntity().getPersistentData().put("hexcraft_data", d.serializeNBT());
+        } catch (Exception e) {
+            // 忽略
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLoadFromFile(PlayerEvent.LoadFromFile event) {
+        // v0.4.14：全量持久化——玩家文件加载后，capability 为空但有历史快照时恢复（登出重进数据保留）
+        try {
+            CompoundTag saved = event.getEntity().getPersistentData().getCompound("hexcraft_data");
+            if (saved.isEmpty()) return;
+            PlayerData d = ModCapabilities.get(event.getEntity());
+            if (d != null && d.getHexes().isEmpty() && d.getForges().isEmpty()
+                    && d.getEquipment().isEmpty() && d.getCoins() == 0) {
+                d.deserializeNBT(saved);
+                com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 玩家 {} 文件加载：从 hexcraft_data 恢复 海克斯={} 锻造={} 装备={} 晶币={}",
+                        event.getEntity().getName().getString(), d.getHexes().size(), d.getForges().size(),
+                        d.getEquipment().size(), d.getCoins());
             }
         } catch (Exception e) {
-            // 旧实体 capability 异常时不阻断重生；服务端数据以玩家 NBT 为准
+            // 忽略
         }
-        // 无论 copyFrom 是否成功，都强制重算属性并刷新客户端界面（杜绝"死亡清零但面板残留旧界面"）
+    }
+
+    @SubscribeEvent
+    public static void onClone(PlayerEvent.Clone event) {
+        String way = "NONE";
+        try {
+            PlayerData neu = ModCapabilities.get(event.getEntity());
+            PlayerData old = ModCapabilities.get(event.getOriginal());
+            // v0.4.13：死亡保留双通道恢复——通道 1：死亡瞬间写入 persistentData 的备份（最稳，capability 失效也能恢复）；
+            // 通道 2：capability copyFrom 兜底（旧实体 capability 仍有效时复制）
+            CompoundTag backup = event.getOriginal().getPersistentData().getCompound("hexcraft_keep");
+            if (neu != null && !backup.isEmpty()) {
+                neu.deserializeNBT(backup);
+                way = "persistentData备份";
+            }
+            if (neu != null && old != null) {
+                neu.copyFrom(old);
+                way = way.equals("NONE") ? "copyFrom" : "persistentData备份+copyFrom";
+            }
+            if (neu != null) {
+                com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 玩家重生恢复：方式={} 海克斯={} 锻造={} 装备={} 晶币={}",
+                        way, neu.getHexes().size(), neu.getForges().size(), neu.getEquipment().size(), neu.getCoins());
+            } else {
+                com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft] 玩家重生恢复：方式={} (capability 为空!)", way);
+            }
+        } catch (Exception e) {
+            com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft] 玩家重生恢复异常：{}", e.toString());
+        }
+        // 无论恢复是否成功，都强制重算属性并刷新客户端界面（杜绝"死亡清零但面板残留旧界面"）
         if (event.getEntity() instanceof ServerPlayer sp) {
             PlayerData d = ModCapabilities.get(sp);
             if (d != null) {

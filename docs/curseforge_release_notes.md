@@ -1,3 +1,34 @@
+Hexcraft Workshop v0.4.14 - Full persistence: data survives logout/login + final full self-check
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- **New full persistence (fixes losing data on logout/re-login)**: previously PlayerData (hexes/forges/equips/coins) only lived in runtime memory and was lost on logout or world rejoin (only a death backup could restore it). v0.4.14 adds four persistence channels: 1) full snapshot written on death; 2) snapshot auto-written before the player data is saved to disk (SaveToFile); 3) auto-restore on file load when the capability is empty (LoadFromFile); 4) on login, restore the death backup first, then the full snapshot - data survives logout/login and death
+- **Final full self-check (all passed)**: all 38 HexConfig options have an application point (0 "registered but not applied"; PARTICLES_ENABLED is a display/reserved item); all 4 gamerules (keep hexes/forges/equips/coins) are referenced in onKill decision, onLogin auto-apply and Packets UI sync; four restore channels with logs (respawn/login/file-load)
+- **Multiplayer hardening**: C2SSetGameRule now has a permission guard - normal players on a dedicated server cannot change the server death-keep rules (host/OP only; unauthorized requests are rejected and logged); the config screen shows a new multiplayer note ("server rules are set by the host/admin"); all v0.4.12-0.4.14 additions (login auto-apply/death backup/two-channel respawn/file persistence) are pure server-side logic and are skipped safely on dedicated servers without a client config
+- Death-keep chain unchanged: client config OR server gamerule - whichever enables it wins; config screen set & saved from the main menu; protocol stays VERSION=15 - v0.4.13 players can upgrade directly
+
+Hexcraft Workshop v0.4.13 - Death-keep fully fixed: two-channel respawn recovery (persistentData backup + capability copyFrom fallback)
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- **Root cause found (you tested: keep decision was all-true but hexes/forges/equips/coins still emptied on death)**: the respawn data copy channel was broken - PlayerEvent.Clone only relied on capability copyFrom, but the old entity capability can already be invalidated during the death/respawn flow (returns null), the copy was skipped and the new entity spawned empty
+- **Fix (two-channel recovery)**: 1) on death, once the keep decision passes, the full PlayerData is backed up into the player's persistentData (saved with the player NBT and auto-copied on vanilla respawn); 2) on Clone, restore from the persistentData backup first, and additionally copyFrom when the old capability is still valid
+- **Login fallback**: on login, if the capability is empty but a persistentData backup exists, it is restored automatically - data survives logout/login after a death
+- **New recovery diagnostic log**: [Hexcraft] player respawn restore: way=persistentData-backup/copyFrom/NONE hexes=N forges=N equips=N coins=N - success and channel are visible at a glance
+- Existing chain unchanged: client config OR server gamerule - whichever enables it wins; config screen set & saved from the main menu; protocol stays VERSION=15 - v0.4.12 players can upgrade directly
+
+Hexcraft Workshop v0.4.12 - Death-keep double safety (auto-apply client config to gamerule + diagnostic log)
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- On joining a world, the client death-keep config (Hexes/Forges/Equips/Coins) is now automatically applied to the server gamerule (set only, never clears) - as long as the client config is enabled, the gamerule becomes true on login
+- A diagnostic log line is printed on player death ([Hexcraft] player XXX death: gamerule=... client-config=... -> actual keep=...) to make the actual read values visible in logs/latest.log
+- Existing chain unchanged: client config OR server gamerule - whichever enables it wins; config screen can be set & saved from the main menu (no network, no crash); Create-World screen and /gamerule still fully work
+- Network protocol stays VERSION=15 - v0.4.11 players can upgrade directly
+
 Hexcraft Workshop v0.4.11 - Fixed Cloth Config crash + death-keep rules are now client-config-first
 =============================================================================
 

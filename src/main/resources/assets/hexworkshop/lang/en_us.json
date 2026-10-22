@@ -573,6 +573,7 @@
   "message.hexcraft.gamerule_set": "Set %s to %s",
   "message.hexcraft.gamerule_local_only": "Saved to local config (server rules cannot be changed from the main menu; takes effect after entering a world)",
   "message.hexcraft.gamerule_client_primary": "Client config is authoritative: can be set & saved from the main menu, takes effect in-world; server gamerule also keeps if enabled",
+  "message.hexcraft.gamerule_mp_note": "Multiplayer: server rules are set by the host/admin (changing this here is local-only for normal players, not applied by the server)",
   "message.hexcraft.on": "ON",
   "message.hexcraft.off": "OFF",
   "hexcraft.hextech.hex_fire_resist.name": "Fireproof Body",

@@ -196,7 +196,8 @@ public class HexConfigScreen {
                     })
                     .setTooltip(
                             Component.translatable("gamerule.hexworkshopKeep" + RULE_KEYS[i] + ".description"),
-                            Component.translatable("message.hexcraft.gamerule_client_primary"))
+                            Component.translatable("message.hexcraft.gamerule_client_primary"),
+                            Component.translatable("message.hexcraft.gamerule_mp_note"))
                     .build());
         }
     }

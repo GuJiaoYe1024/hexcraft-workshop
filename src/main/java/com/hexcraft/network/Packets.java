@@ -418,6 +418,12 @@ public class Packets {
             ctx.get().enqueueWork(() -> {
                 ServerPlayer sp = ctx.get().getSender();
                 if (sp == null || m.ruleIndex < 0 || m.ruleIndex >= com.hexcraft.config.HexGameRules.KEYS.length) return;
+                // v0.4.14：权限守卫——仅房主（单机 integrated server）或 OP（hasPermissions(2)）可改服务器规则；
+                // 联机普通玩家只改自己客户端配置（本地生效），无权改服务器 gamerule
+                if (sp.server.isDedicatedServer() && !sp.hasPermissions(2)) {
+                    com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 拒绝玩家 {} 修改服务器游戏规则（非 OP）", sp.getName().getString());
+                    return;
+                }
                 var key = com.hexcraft.config.HexGameRules.KEYS[m.ruleIndex];
                 GameRules rules = sp.server.getGameRules();
                 rules.getRule(key).set(m.value, sp.server);
