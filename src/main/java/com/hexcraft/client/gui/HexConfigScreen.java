@@ -24,10 +24,16 @@ public class HexConfigScreen {
 
     /** 死亡保留游戏规则 lang key 后缀 */
     private static final String[] RULE_KEYS = {"Hexes", "Forges", "Equips", "Coins"};
-    /** 死亡保留规则当前值（来自服务端 gamerule 同步，打开界面时读取一次） */
-    private static final boolean[] RULE_VALUES = {
-            ClientDataStore.keepHexes, ClientDataStore.keepForges,
-            ClientDataStore.keepEquips, ClientDataStore.keepCoins};
+
+    /** 动态读取服务端同步的当前值（v0.4.10：去掉 static final 快照，界面打开时显示真实 gamerule，避免显示"是"但服务端为"否"） */
+    private static boolean ruleValue(int i) {
+        switch (i) {
+            case 0: return ClientDataStore.keepHexes;
+            case 1: return ClientDataStore.keepForges;
+            case 2: return ClientDataStore.keepEquips;
+            default: return ClientDataStore.keepCoins;
+        }
+    }
 
     public static Screen create(Screen parent) {
         ConfigBuilder b = ConfigBuilder.create()
@@ -165,11 +171,12 @@ public class HexConfigScreen {
             final int idx = i;
             cat.addEntry(eb.startBooleanToggle(
                             Component.translatable("gamerule.hexworkshopKeep" + RULE_KEYS[i]),
-                            RULE_VALUES[i])
+                            ruleValue(idx))
                     .setSaveConsumer(v -> {
-                        // 服务端权威：点击后发送翻转请求，客户端显示值以服务端广播为准
+                        // 服务端权威：点击后发送"直接设置目标值"请求（v0.4.10 起不再翻转，界面显示与服务端一一对应）
                         Packets.C2SSetGameRule p = new Packets.C2SSetGameRule();
                         p.ruleIndex = idx;
+                        p.value = v;
                         PacketHandler.CHANNEL.sendToServer(p);
                     })
                     .setTooltip(Component.translatable("gamerule.hexworkshopKeep" + RULE_KEYS[i] + ".description"))

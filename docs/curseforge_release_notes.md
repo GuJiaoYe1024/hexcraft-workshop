@@ -1,3 +1,13 @@
+Hexcraft Workshop v0.4.10 - Fixed "death-keep game rules not working": UI display desynced from real server gamerule + toggle now sets value directly
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- **Root cause 1 (UI illusion)**: the four toggles under the "Game Rules" tab (keep Hexes / Forges / Equips / Coins on death) displayed a class-load-time static snapshot, while the server-side gamerule changes when the world changes / the server restarts / another player edits it - the UI could show "on" while the server was actually "off", so death still wiped everything, looking like "enabled but not working"
+- **Root cause 2 (toggle semantics)**: clicking sent a "flip" request (invert the server's current value); when UI and server were desynced, one click flipped the wrong way
+- **Fix**: the UI now reads the latest server-synced value when opened (no more stale snapshot); clicking sends a "set target value" request (true=keep / false=wipe on death) - UI display and server state are now one-to-one and take effect immediately
+- **Network protocol VERSION 14->15** (rule packet structure changed; all clients must update to v0.4.10 to play together)
+
 Hexcraft Workshop v0.4.9 - Demon Contract rework (debuffs scale but capped) + Full code audit + Content table update
 =============================================================================
 

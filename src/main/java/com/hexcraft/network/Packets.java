@@ -410,19 +410,20 @@ public class Packets {
     public static class C2SSetGameRule {
         /** 0=海克斯 1=锻造 2=装备 3=晶币 */
         public int ruleIndex;
-        public static void encode(C2SSetGameRule m, FriendlyByteBuf b) { b.writeInt(m.ruleIndex); }
-        public static C2SSetGameRule decode(FriendlyByteBuf b) { C2SSetGameRule m = new C2SSetGameRule(); m.ruleIndex = b.readInt(); return m; }
+        /** 目标值：true=保留，false=死亡清零（v0.4.10 由"翻转"改为"直接设置"，修复界面显示与服务端脱节时点反方向） */
+        public boolean value;
+        public static void encode(C2SSetGameRule m, FriendlyByteBuf b) { b.writeInt(m.ruleIndex); b.writeBoolean(m.value); }
+        public static C2SSetGameRule decode(FriendlyByteBuf b) { C2SSetGameRule m = new C2SSetGameRule(); m.ruleIndex = b.readInt(); m.value = b.readBoolean(); return m; }
         public static void handle(C2SSetGameRule m, Supplier<NetworkEvent.Context> ctx) {
             ctx.get().enqueueWork(() -> {
                 ServerPlayer sp = ctx.get().getSender();
                 if (sp == null || m.ruleIndex < 0 || m.ruleIndex >= com.hexcraft.config.HexGameRules.KEYS.length) return;
                 var key = com.hexcraft.config.HexGameRules.KEYS[m.ruleIndex];
                 GameRules rules = sp.server.getGameRules();
-                boolean next = !rules.getBoolean(key);
-                rules.getRule(key).set(next, sp.server);
+                rules.getRule(key).set(m.value, sp.server);
                 sp.displayClientMessage(Component.translatable("message.hexcraft.gamerule_set",
                         Component.translatable("gamerule." + key.getId()),
-                        Component.translatable(next ? "message.hexcraft.on" : "message.hexcraft.off")), true);
+                        Component.translatable(m.value ? "message.hexcraft.on" : "message.hexcraft.off")), true);
                 HextechEvents.sync(sp); // 回广播新值到客户端（含配置界面显示）
             });
             ctx.get().setPacketHandled(true);

@@ -9,7 +9,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.Optional;
 
 public class PacketHandler {
-    public static final String VERSION = "14";
+    public static final String VERSION = "15";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Hexcraft.MODID, "main"),
             () -> VERSION,
