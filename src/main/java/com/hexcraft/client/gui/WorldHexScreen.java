@@ -80,8 +80,8 @@ public class WorldHexScreen extends Screen {
         int centerX = this.width / 2;
         int top = this.startY() - this.scrollY;
 
-        // 顶部抽取按钮（内容区居中，科技风）
-        drawBtn = new WBtn(centerX - 160, 34, 320, 22,
+        // 顶部抽取按钮（内容区居中，科技风；v0.4.3：随滚动偏移，不再固定遮挡下方内容）
+        drawBtn = new WBtn(centerX - 160, 34 - this.scrollY, 320, 22,
                 Component.translatable("hexcraft.gui.world_draw", ClientDataStore.worldDrawXp),
                 b -> PacketHandler.CHANNEL.sendToServer(new Packets.C2SRequestWorldDraw()));
         this.addRenderableWidget(drawBtn);

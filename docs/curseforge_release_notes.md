@@ -1,3 +1,40 @@
+Hexcraft Workshop v0.4.3 - Fixes: Scroll Overlap, Heartsteel Stacking, Forge UI
+=============================================================================
+
+A heartfelt apology first: the author's ability is limited, this mod is mostly built with AI assistance, and it may not live up to everyone's expectations. Compatibility may also be poor. The author had no idea that Hextech-related mods already existed. The project is open source (MIT) and will keep being updated (likely still AI-driven). Thank you for your understanding.
+
+- **Fixed scroll overlap on the World Hex screen**: the "Draw World Hex" button used to stay pinned on top and covered the category panels while scrolling; it now scrolls together with the content, so nothing is hidden behind it
+- **Fixed Heartsteel stacking on incoming damage**: "stack on hit" augments/gear (stack_attr_onhit) were wrongly triggered by thorns reflect damage - the Heartsteel gear comes with built-in thorns, so when a mob hits you the reflected damage counted as "your attack" and stacked layers. Reflect (thorns) damage no longer triggers stack-on-hit; stacking now only happens on your own attack hits. Heartsteel Soul (kill stacking) is unaffected
+- **Forge UI category redesign**: forged stats now show in sci-fi group panels (Silver/Gold/Prismatic: tier color bar + group name + stat count, two-column layout within each group), fixing the previous layout bug where the first stat landed in the right column after a category header
+- **Code self-review**: rechecked player event (deal damage / take damage / kill) cross-triggering and recursion guards; World Hex screen scroll-rebuild consistency; world vs player hex multipliers stay independent
+- **Protocol upgraded to VERSION=14**: mechanic fix included - everyone must update to the same version (v0.4.2 clients failing the handshake with new servers is expected)
+- Verified: offline build passed (23s); server smoke OK (Done 3.1s); jar swapped into the client (325788B)
+
+Previous release notes:
+- v0.4.2: UI fixes - text ghosting, GUI Scale adaption + scrolling, "Coming Soon" page, protocol v13.
+- v0.4.1: All 32 world augments re-buffed, mechanic escalation (III tiers), UI fixes, unified sci-fi buttons, new K keybind, protocol v13.
+- v0.4.0: World Hextech "Infernal Difficulty" - 32 augments, cap 8, protocol v12.
+- v0.3.21: World Hextech (global world augments) - 24 augments, XP draw, coin cancel, second inventory tab.
+- v0.3.20: Hover tooltips for hex augments / forge stats / equipment.
+- v0.3.19: Full localization for config screens.
+- v0.3.18: Linked hextech system.
+
+====================================================
+
+Hexcraft Workshop v0.4.3 - 修复轮：滚动遮挡 / 心之钢叠层 / 锻造器分类
+====================================================
+
+先致歉：作者能力有限，本 mod 基本由 AI 辅助完成，可能达不到大家心里的预期，兼容性也可能较差；此前并不清楚已有人开发过海克斯相关 mod。项目已开源（MIT），后续会持续努力更新（虽然大概率仍由 AI 代跑）。感谢大家的理解与包容。
+
+- **修复世界海克斯界面滚动遮挡**：顶部「抽取世界海克斯」按钮不再固定挡内容，随滚动一起移动，滚动查看不互相遮挡
+- **修复心之钢受击也叠层的 Bug**：心之钢等「攻击命中叠层」之前会被荆棘反伤误触发（心之钢装备自带荆棘反伤，生物攻击你时反弹伤害被判定为"玩家造成伤害"）。现在反伤来源的伤害不再触发叠层，仅玩家主动攻击命中时叠层；心之钢魂（击杀叠层）不受影响
+- **锻造器界面分类 UI 优化**：已锻造词条改为科技风分组框（白银/黄金/棱彩：档位色条 + 组名 + 计数，组内两列），修复分类标题导致首词条错位到右列的布局问题
+- **代码自检**：复查玩家事件触发交叉与递归防护、界面滚动重建一致性、世界海克斯乘区独立性
+- **网络协议升级至 VERSION=14**：涉及机制修复，联机需全员同步更新（v0.4.2 旧客户端连新服务端握手失败属预期）
+- 自检：编译 / 构建成功（offline build 23s）；服务器冒烟启动正常（Done 3.1s）；正式客户端已替换（325788B）
+
+====================================================
+
 Hexcraft Workshop v0.4.2 - UI Fixes: Ghosting, GUI Scale, Coming Soon Page
 =========================================================================
 

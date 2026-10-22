@@ -603,48 +603,72 @@ public class HextechPageScreen extends Screen {
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
+    /** 锻造器分类组：标题条 + 组内词条（词条按组内索引分两列，标题不占列，v0.4.3 修复错位） */
+    private static class ForgeGroup {
+        final String tierKey;
+        final int color;
+        final java.util.List<Object[]> items = new java.util.ArrayList<>();
+
+        ForgeGroup(String tierKey, int color) {
+            this.tierKey = tierKey;
+            this.color = color;
+        }
+    }
+
     private void renderForge(GuiGraphics g, int y) {
         String forgeText = ClientDataStore.maxForges <= 0
                 ? Component.translatable("hexcraft.gui.forge_done", ClientDataStore.forgesUsed).getString()
                 : Component.translatable("hexcraft.gui.forge_count", ClientDataStore.forgesUsed, ClientDataStore.maxForges).getString();
         g.drawString(this.font, forgeText, cx() + 4, y + 36, 0xFF9FE4FF);
         g.drawString(this.font, Component.translatable("hexcraft.gui.forged"), cx() + 4, y + 81, 0xFF9FE4FF);
-        // 已锻造词条按来源档位分组展示：白银 / 黄金 / 棱彩，从低到高配色；组标题独占一行，词条两列；TACZ 联动词条行尾青色角标
-        java.util.List<Object[]> rows = forgeRows();
-        if (rows.isEmpty()) {
+        // v0.4.3：分类分组框（科技风：框体 + 档位色条 + 组名 + 计数），组内两列排布
+        java.util.List<ForgeGroup> groups = forgeGroups();
+        if (groups.isEmpty()) {
             g.drawString(this.font, "--", cx() + 6, y + 91, 0xFF3A4668);
             return;
         }
         int top = y + 88;
         int bottom = y + 234;
-        int rowH = 12;
         int ly = top - forgeScroll;
-        for (int i = 0; i < rows.size(); i++) {
-            if (ly + 8 < top) { ly += rowH; continue; }
-            if (ly > bottom) break;
-            Object[] r = rows.get(i);
-            int type = (Integer) r[0];
-            // 标题行独占一行居左；词条行按全局行号奇偶分左右两列
-            int colX = cx() + 4;
-            if (type == 1 && (i % 2 == 1)) colX = cx() + 118;
-            g.drawString(this.font, (String) r[1], colX, ly, (Integer) r[2]);
-            // 来源角标：TACZ 联动锻造词条行尾青色「TACZ」（原版词条不标）
-            if (type == 1 && r.length > 3 && Boolean.TRUE.equals(r[3])) {
-                g.drawString(this.font, "TACZ", colX + 100, ly, 0xFF4DE6FF);
-            }
-            // hover 提示：悬停查看锻造词条具体效果（名称 + 描述）
-            if (type == 1 && r.length > 4
-                    && hoverX >= colX && hoverX <= colX + 110 && hoverY >= ly - 1 && hoverY <= ly + rowH - 2) {
-                String stat = (String) r[4];
-                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
-                tip.add(Component.literal((String) r[1]).withStyle(c -> c.withColor((Integer) r[2])));
-                tip.add(Component.translatable("hexcraft.forge." + stat + ".desc"));
-                if (Boolean.TRUE.equals(r[3])) {
-                    tip.add(Component.translatable("hexcraft.gui.source_tag", "TACZ").withStyle(c -> c.withColor(0xFF4DE6FF)));
+        for (ForgeGroup grp : groups) {
+            int rows = (grp.items.size() + 1) / 2;
+            int groupH = 16 + rows * 12 + 4;
+            if (ly + groupH < top) { ly += groupH + 6; continue; } // 整组在可视区上方
+            if (ly > bottom) break;                                 // 已滚过可视区
+            // 分组框：半透明底 + 细边框
+            g.fill(cx() + 2, ly, cx() + 230, ly + groupH, 0x180A1A2E);
+            g.fill(cx() + 2, ly, cx() + 230, ly + 1, 0xFF30466B);
+            g.fill(cx() + 2, ly + groupH - 1, cx() + 230, ly + groupH, 0xFF30466B);
+            g.fill(cx() + 2, ly, cx() + 3, ly + groupH, 0xFF30466B);
+            g.fill(cx() + 229, ly, cx() + 230, ly + groupH, 0xFF30466B);
+            // 标题条：左侧档位色条 + 组名（档位色）+ 右侧词条计数
+            g.fill(cx() + 3, ly + 3, cx() + 5, ly + 13, grp.color);
+            g.drawString(this.font, Component.translatable("hexcraft.forge.tier." + grp.tierKey), cx() + 8, ly + 3, grp.color);
+            g.drawString(this.font, Component.literal(grp.items.size() + " 条"), cx() + 178, ly + 3, 0xFF6A7B96);
+            // 组内词条两列（组内索引分列，不跨组，标题不再挤占列位）
+            for (int i = 0; i < grp.items.size(); i++) {
+                Object[] it = grp.items.get(i);
+                int colX = cx() + 6 + (i % 2) * 112;
+                int iy = ly + 17 + (i / 2) * 12;
+                if (iy < top) continue;
+                if (iy > bottom) break;
+                g.drawString(this.font, (String) it[0], colX, iy, 0xFFAAB6D8);
+                // 来源角标：TACZ 联动词条行尾青色「TACZ」（原版词条不标）
+                if (Boolean.TRUE.equals(it[1])) {
+                    g.drawString(this.font, "TACZ", colX + 100, iy, 0xFF4DE6FF);
                 }
-                hoverTip = tip;
+                // hover 提示：悬停查看锻造词条具体效果（名称 + 描述 + 来源）
+                if (hoverX >= colX && hoverX <= colX + 110 && hoverY >= iy - 1 && hoverY <= iy + 11) {
+                    java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                    tip.add(Component.literal((String) it[0]).withStyle(c -> c.withColor(grp.color)));
+                    tip.add(Component.translatable("hexcraft.forge." + it[2] + ".desc"));
+                    if (Boolean.TRUE.equals(it[1])) {
+                        tip.add(Component.translatable("hexcraft.gui.source_tag", "TACZ").withStyle(c -> c.withColor(0xFF4DE6FF)));
+                    }
+                    hoverTip = tip;
+                }
             }
-            ly += rowH;
+            ly += groupH + 6;
         }
         if (maxForgeScroll() > 0) {
             g.drawString(this.font, Component.translatable("hexcraft.gui.scroll_hint"), cx() + 150, bottom - 10, 0xFF5A6A90);
@@ -652,16 +676,22 @@ public class HextechPageScreen extends Screen {
     }
 
     private int maxForgeScroll() {
-        return Math.max(0, forgeRowCount() * 12 - (234 - 88));
+        return Math.max(0, forgeGroupHeight() - (234 - 88));
     }
 
-    private int forgeRowCount() {
-        java.util.List<Object[]> rows = forgeRows();
-        return rows.size();
+    /** 全部分组总高度（含组间距 6） */
+    private int forgeGroupHeight() {
+        int h = 0;
+        for (ForgeGroup grp : forgeGroups()) {
+            int rows = (grp.items.size() + 1) / 2;
+            h += 16 + rows * 12 + 4 + 6;
+        }
+        return h;
     }
 
-    private java.util.List<Object[]> forgeRows() {
-        java.util.List<Object[]> rows = new java.util.ArrayList<>();
+    /** 已锻造词条按来源档位分组：白银 / 黄金 / 棱彩，从低到高；TACZ 联动词条打标 */
+    private java.util.List<ForgeGroup> forgeGroups() {
+        java.util.List<ForgeGroup> groups = new java.util.ArrayList<>();
         int[] tierColors = {0xFFD8D8D8, 0xFFFFC94A, 0xFFC77DFF};
         String[] tierKeys = {"basic", "gold", "prismatic"};
         for (int t = 0; t < 3; t++) {
@@ -669,14 +699,15 @@ public class HextechPageScreen extends Screen {
             for (PlayerData.ForgeEntry f : ClientDataStore.forges)
                 if (f.tier == t) agg.merge(f.stat, 1, Integer::sum);
             if (agg.isEmpty()) continue;
-            rows.add(new Object[]{0, Component.translatable("hexcraft.forge.tier." + tierKeys[t]).getString(), tierColors[t]});
+            ForgeGroup grp = new ForgeGroup(tierKeys[t], tierColors[t]);
             for (Map.Entry<String, Integer> e : agg.entrySet()) {
                 String name = Component.translatable("hexcraft.forge." + e.getKey() + ".name").getString();
                 boolean tacz = com.hexcraft.hextech.HextechRegistry.FORGE_TACZ_MECHANICS.contains(e.getKey());
-                rows.add(new Object[]{1, name + "  ×" + e.getValue(), tierColors[t], tacz, e.getKey()});
+                grp.items.add(new Object[]{name + "  ×" + e.getValue(), tacz, e.getKey()});
             }
+            groups.add(grp);
         }
-        return rows;
+        return groups;
     }
 
     private void renderEquip(GuiGraphics g, int y) {

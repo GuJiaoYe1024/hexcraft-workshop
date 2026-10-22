@@ -545,32 +545,36 @@ public class HextechEvents {
                 sp.displayClientMessage(Component.translatable("message.hexcraft.gold_punch"), true);
             }
             // 心之钢等：攻击命中概率叠永久属性层（stack_attr_onhit:键:倍率，25% 几率）；叠角龙在场时叠层翻倍——提示带海克斯名称
+            // v0.4.3 修复：荆棘/反伤伤害（生物攻击被玩家反伤、伤害源显示为玩家）不属于"攻击命中"，不再触发叠层
+            boolean thornsHit = event.getSource().getMsgId().contains("thorns");
             boolean onHitDrake = data.getHexes().stream().anyMatch(e -> e.id.equals("hex_stack_drake"));
             int onHitGain = onHitDrake ? 2 : 1;
             boolean attrStacked = false;
-            for (PlayerData.HexEntry e : data.getHexes()) {
-                if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不被命中叠层
-                HextechDefinition def = HextechRegistry.get(e.id);
-                if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
-                    if (sp.getRandom().nextFloat() < 0.25f) {
-                        e.stacks += onHitGain;
-                        data.applyModifiers(sp);
-                        sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                                Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
-                        attrStacked = true;
+            if (!thornsHit) {
+                for (PlayerData.HexEntry e : data.getHexes()) {
+                    if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不被命中叠层
+                    HextechDefinition def = HextechRegistry.get(e.id);
+                    if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
+                        if (sp.getRandom().nextFloat() < 0.25f) {
+                            e.stacks += onHitGain;
+                            data.applyModifiers(sp);
+                            sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
+                                    Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
+                            attrStacked = true;
+                        }
                     }
                 }
-            }
-            // 可叠层装备（心之钢等装备的 stack_attr_onhit）：装备层数独立累计，25% 几率叠 1 层（叠角龙在场翻倍）——提示带装备名称
-            for (PlayerData.EquipEntry eq : data.getEquipment()) {
-                HextechDefinition def = HextechRegistry.getEquip(eq.id);
-                if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
-                    if (sp.getRandom().nextFloat() < 0.25f) {
-                        eq.stacks += onHitGain;
-                        data.applyModifiers(sp);
-                        sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
-                                Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), true);
-                        attrStacked = true;
+                // 可叠层装备（心之钢等装备的 stack_attr_onhit）：装备层数独立累计，25% 几率叠 1 层（叠角龙在场翻倍）——提示带装备名称
+                for (PlayerData.EquipEntry eq : data.getEquipment()) {
+                    HextechDefinition def = HextechRegistry.getEquip(eq.id);
+                    if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
+                        if (sp.getRandom().nextFloat() < 0.25f) {
+                            eq.stacks += onHitGain;
+                            data.applyModifiers(sp);
+                            sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
+                                    Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), true);
+                            attrStacked = true;
+                        }
                     }
                 }
             }
