@@ -149,8 +149,17 @@ public class RollScreen extends HexScaledScreen {
             String id = msg.options.get(i);
             Component name = Component.translatable(msg.forge
                     ? "hexcraft.forge." + id + ".name" : "hexcraft.hextech." + id + ".name");
-            Component desc = Component.translatable(msg.forge
-                    ? "hexcraft.forge." + id + ".desc" : "hexcraft.hextech." + id + ".desc");
+            Component desc;
+            if (msg.forge) {
+                // v0.6.2 锻造卡：lang 模板占位符 {tierName}/{displayValue} 运行时填充（与属性页 tooltip 同口径）
+                String forgeTierKey = msg.tier == 0 ? "basic" : msg.tier == 1 ? "gold" : "prismatic";
+                String tierName = Component.translatable("hexcraft.forge.tier." + forgeTierKey).getString();
+                String real = forgeCardValueText(id, msg.tier);
+                desc = Component.literal(Component.translatable("hexcraft.forge." + id + ".desc").getString()
+                        .replace("{tierName}", tierName).replace("{displayValue}", real));
+            } else {
+                desc = Component.translatable("hexcraft.hextech." + id + ".desc");
+            }
             int color = rarityColor(msg.rarities.get(i));
             int cx = cardX[i] + CARD_W / 2;
             int a = (int) (cards[i].alpha * 255);
@@ -165,6 +174,15 @@ public class RollScreen extends HexScaledScreen {
                 g.drawCenteredString(this.font, line, cx, dy, (a << 24) | 0x00C8D0E8);
                 dy += 11;
                 if (dy > cy + CARD_H - 6) break;
+            }
+            // v0.6.2 海克斯卡叠层标签后缀（运行时拼接【叠层：xxx｜xxx｜xxx】）
+            if (!msg.forge) {
+                String tagSuffix = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(
+                        com.hexcraft.hextech.HextechRegistry.get(id),
+                        net.minecraft.client.Minecraft.getInstance().options.languageCode.startsWith("zh"));
+                if (tagSuffix != null) {
+                    g.drawCenteredString(this.font, tagSuffix, cx, dy + 2, (a << 24) | 0x008FA6C8);
+                }
             }
         }
 
@@ -267,5 +285,20 @@ public class RollScreen extends HexScaledScreen {
             g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font, this.getMessage(),
                     getX() + width / 2, yy + (height - 8) / 2, a << 24 | (textCol & 0x00FFFFFF));
         }
+    }
+
+    /** v0.6.2 锻造卡实际加成文本：基础值 × 档位倍率（与属性页 tooltip 同口径，百分比词条转百分号） */
+    private static String forgeCardValueText(String stat, int tier) {
+        com.hexcraft.hextech.HextechDefinition.ModSpec m = com.hexcraft.hextech.HextechRegistry.forgeMod(stat);
+        if (m == null) return "?";
+        double v = m.perLevel * com.hexcraft.hextech.HextechRegistry.tierMult(tier);
+        if (stat.equals("hppct") || stat.equals("aspdpct")) {
+            String p = String.format(java.util.Locale.ROOT, "%.2f", v * 100.0).replaceFirst("\\.?0+$", "");
+            return "+" + p + "%";
+        }
+        String s = String.format(java.util.Locale.ROOT, "%.4f", v);
+        s = s.replaceFirst("0+$", "");
+        if (s.endsWith(".")) s += "0";
+        return "+" + s;
     }
 }

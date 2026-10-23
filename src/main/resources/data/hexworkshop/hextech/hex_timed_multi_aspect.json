@@ -1,0 +1,1 @@
+{"rarity":"PRISMATIC","weight":3,"event":"tick_gain:1,timed_multi_aspect:0.02,lifesteal:0.01","stack":{"key":"timed_multi_aspect","cap":40,"combat":false,"decayDelay":-1,"decayRate":0},"stackTag":["timed_stack","on_tick_stack","damage_stack","leech_stack"]}

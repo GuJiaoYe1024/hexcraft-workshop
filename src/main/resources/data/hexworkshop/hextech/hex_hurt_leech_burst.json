@@ -1,0 +1,1 @@
+{"rarity":"GOLD","weight":7,"event":"hurt_gain:1,lifesteal:0.004","stack":{"key":"hurt_leech_burst","cap":30,"combat":true,"decayDelay":100,"decayRate":1},"stackTag":["combat_stack","leech_stack","on_hurt_stack"]}

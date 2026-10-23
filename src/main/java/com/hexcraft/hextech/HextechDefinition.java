@@ -21,20 +21,26 @@ public class HextechDefinition {
     public final String source;
     /** v0.6.0 通用叠层配置（可选；有值则该海克斯在命中时自动叠层，并参与叠层乘区/衰减结算） */
     public final StackSpec stack;
+    /** v0.6.2 叠层标签体系：stackTag[] 枚举字符串数组（代码内置中英翻译表），tooltip 运行时拼接【叠层：xxx｜xxx｜xxx】 */
+    public final List<String> stackTags;
 
     public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event) {
-        this(id, rarity, weight, mods, event, null, 0, null, null);
+        this(id, rarity, weight, mods, event, null, 0, null, null, null);
     }
 
     public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event, String icon, int sell) {
-        this(id, rarity, weight, mods, event, icon, sell, null, null);
+        this(id, rarity, weight, mods, event, icon, sell, null, null, null);
     }
 
     public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event, String icon, int sell, String source) {
-        this(id, rarity, weight, mods, event, icon, sell, source, null);
+        this(id, rarity, weight, mods, event, icon, sell, source, null, null);
     }
 
     public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event, String icon, int sell, String source, StackSpec stack) {
+        this(id, rarity, weight, mods, event, icon, sell, source, stack, null);
+    }
+
+    public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event, String icon, int sell, String source, StackSpec stack, List<String> stackTags) {
         this.id = id;
         this.rarity = rarity;
         this.weight = weight;
@@ -43,6 +49,7 @@ public class HextechDefinition {
         this.icon = icon;
         this.sell = sell;
         this.stack = stack;
+        this.stackTags = stackTags;
         // 来源归一化：显式指定优先；否则按 id 前缀自动归类（tacz_ → tacz，其余 vanilla；未来联动注册见 HextechRegistry.registerSourcePrefix）
         this.source = source != null && !source.isEmpty() ? source : HextechRegistry.sourceOf(id);
     }

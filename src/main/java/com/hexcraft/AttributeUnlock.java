@@ -10,7 +10,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
  */
 public final class AttributeUnlock {
     public static void unlock() {
-        Hexcraft.LOGGER.info("[Hexcraft] v0.6.0 属性上限：modifier 路径天然突破原版 maxValue（maxValue 仅钳制 baseValue），无需反射；无上限锻造不受上限限制");
+        Hexcraft.LOGGER.info("[Hexcraft] v0.6.2 属性上限：modifier 路径天然突破原版 maxValue（maxValue 仅钳制 baseValue），无需反射；无上限锻造不受上限限制");
     }
 
     private AttributeUnlock() { }

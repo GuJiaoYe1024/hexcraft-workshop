@@ -31,18 +31,26 @@ public class WorldHexDataLoader extends SimpleJsonResourceReloadListener {
         for (Map.Entry<ResourceLocation, JsonElement> e : map.entrySet()) {
             try {
                 String id = e.getKey().getPath();
-                JsonObject obj = e.getValue().getAsJsonObject();
-                String category = GsonHelper.getAsString(obj, "category", WorldHexRegistry.CAT_GENERAL);
-                String rarity = GsonHelper.getAsString(obj, "rarity", "gold");
-                String effect = GsonHelper.getAsString(obj, "effect", "");
-                WorldHexRegistry.put(id, new WorldHexDefinition(id, category, rarity, effect));
+                WorldHexDefinition def = parse(id, e.getValue().getAsJsonObject());
+                if (def == null) { failed++; continue; }
+                WorldHexRegistry.put(id, def);
                 loaded++;
             } catch (Exception ex) {
                 failed++;
                 Hexcraft.LOGGER.error("Hexcraft: failed to load world hex {}", e.getKey(), ex);
             }
         }
+        // v0.6.2 DLC 外接包：加载启用的纯数据包内容（world_hex 类）
+        loaded += com.hexcraft.dlc.DlcManager.applyWorldHexPacks();
         Hexcraft.LOGGER.info("Hexcraft: loaded {} world hex definition(s) from datapack ({} failed); total={}",
                 loaded, failed, WorldHexRegistry.all().size());
+    }
+
+    /** v0.6.2 抽公共解析：数据包 JSON / DLC 外接包共用 */
+    public static WorldHexDefinition parse(String id, JsonObject obj) {
+        String category = GsonHelper.getAsString(obj, "category", WorldHexRegistry.CAT_GENERAL);
+        String rarity = GsonHelper.getAsString(obj, "rarity", "gold");
+        String effect = GsonHelper.getAsString(obj, "effect", "");
+        return new WorldHexDefinition(id, category, rarity, effect);
     }
 }

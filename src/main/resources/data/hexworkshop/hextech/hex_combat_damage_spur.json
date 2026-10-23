@@ -1,0 +1,1 @@
+{"rarity":"SILVER","weight":8,"event":"combat_damage_spur:0.02","mods":[{"attr":"attack_damage","perLevel":0.15}],"stack":{"key":"combat_damage_spur","cap":60,"combat":true,"decayDelay":80,"decayRate":2},"stackTag":["combat_stack","damage_stack","on_hit_stack"]}

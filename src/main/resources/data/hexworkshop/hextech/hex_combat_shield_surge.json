@@ -1,0 +1,1 @@
+{"rarity":"GOLD","weight":7,"event":"combat_shield_surge:0.01,shield_gain:0.5","stack":{"key":"combat_shield_surge","cap":40,"combat":true,"decayDelay":80,"decayRate":1},"stackTag":["combat_stack","shield_stack","on_hit_stack"]}

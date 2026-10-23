@@ -1,11 +1,1 @@
-{
-  "rarity": "PRISMATIC",
-  "weight": 6,
-  "mods": [
-    {
-      "attr": "max_health",
-      "perLevel": 5.0
-    }
-  ],
-  "event": "stack_attr:hp:0.0025"
-}
+{"rarity":"PRISMATIC","weight":6,"mods":[{"attr":"max_health","perLevel":5.0}],"event":"stack_attr_onhit:hp:0.0015,thorns:2.0,chance:0.25","stackTag":["permanent_stack","on_hit_stack"]}

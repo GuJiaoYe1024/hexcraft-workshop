@@ -51,6 +51,7 @@ public class HexConfigScreen {
         linkedCategory(b, eb);
         worldCategory(b, eb);
         v060Category(b, eb);
+        dlcCategory(b, eb); // v0.6.2 DLC 外接内容包顶层页面
         clientCategory(b, eb);
         rulesCategory(b, eb);
 
@@ -161,6 +162,44 @@ public class HexConfigScreen {
         intEntry(eb, cat, "world.maxPerCategory", HexConfig.WORLD_MAX_PER_CATEGORY, 0, 24, 4);
     }
 
+    /** v0.6.2 DLC 外接内容包顶层页面：扫描 hexworkshop_dlc/packs 展示包名/简介/版本/依赖/启用开关；
+     *  isCodeDlc=true 的包不提供开关（置灰），提示放入 mods 文件夹并重启——本 DLC 系统不加载 Java 类代码 */
+    private static void dlcCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
+        ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.dlc"));
+        // 客户端也扫描一次本地 packs 目录（服务端在 AddReloadListenerEvent 扫描）
+        com.hexcraft.dlc.DlcManager.scan();
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.dlc.hint")).build());
+        for (com.hexcraft.dlc.DlcManager.PackInfo p : com.hexcraft.dlc.DlcManager.packs()) {
+            String title = p.name + (p.version.isEmpty() ? "" : "  v" + p.version);
+            if (!p.error.isEmpty()) {
+                cat.addEntry(eb.startTextDescription(Component.literal(title + "  [⚠ " + p.error + "]")
+                        .withStyle(c -> c.withColor(0xFFFF6B6B))).build());
+                continue;
+            }
+            if (p.isCodeDlc) {
+                // 置灰提示：包含 Java 代码扩展，必须放入 mods 文件夹并重启游戏
+                cat.addEntry(eb.startTextDescription(Component.literal(title)
+                                .append(Component.literal("\n" + p.description).withStyle(c -> c.withColor(0xFF8FA6C8)))
+                                .append(Component.translatable("hexcraft.config.dlc.code_hint").withStyle(c -> c.withColor(0xFFFFD27E))))
+                        .build());
+                continue;
+            }
+            cat.addEntry(eb.startBooleanToggle(
+                            Component.translatable("hexcraft.config.dlc.toggle", title),
+                            p.enabled)
+                    .setSaveConsumer(v -> com.hexcraft.dlc.DlcManager.setEnabled(p.id, v))
+                    .setDefaultValue(false)
+                    .setTooltip(Component.literal(p.description),
+                            p.dependencies.isEmpty() ? null :
+                                    Component.translatable("hexcraft.config.dlc.deps", String.join(", ", p.dependencies)),
+                            Component.translatable("hexcraft.config.dlc.note"))
+                    .build());
+        }
+        if (com.hexcraft.dlc.DlcManager.packs().isEmpty()) {
+            cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.dlc.empty")).build());
+        }
+    }
+
     private static void clientCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.client"));
         doubleEntry(eb, cat, "client.uiScale", HexConfig.UI_SCALE, 0.5, 2.0, 1.0);
@@ -185,6 +224,9 @@ public class HexConfigScreen {
         doubleEntry(eb, cat, "v060.forgeMultSilver", HexConfig.FORGE_MULT_SILVER, 0.1, 20.0, 1.0);
         doubleEntry(eb, cat, "v060.forgeMultGold", HexConfig.FORGE_MULT_GOLD, 0.1, 20.0, 2.0);
         doubleEntry(eb, cat, "v060.forgeMultPrismatic", HexConfig.FORGE_MULT_PRISMATIC, 0.1, 20.0, 3.0);
+        // v0.6.2 永久叠层全局倍率/上限（服务端生效，防作弊）
+        doubleEntry(eb, cat, "v060.permanentStackMult", HexConfig.PERMANENT_STACK_MULT, 0.1, 10.0, 1.0);
+        intEntry(eb, cat, "v060.permanentStackCap", HexConfig.PERMANENT_STACK_CAP, 10, 10000, 200);
     }
 
     private static void rulesCategory(ConfigBuilder b, ConfigEntryBuilder eb) {

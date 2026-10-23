@@ -46,38 +46,46 @@ public class EquipmentDataLoader extends SimpleJsonResourceReloadListener {
         for (Map.Entry<ResourceLocation, JsonElement> e : map.entrySet()) {
             try {
                 String id = e.getKey().getPath();
-                JsonObject obj = e.getValue().getAsJsonObject();
-                HextechRarity rarity = HextechRarity.byKey(GsonHelper.getAsString(obj, "rarity", "GOLD"));
-                int weight = GsonHelper.getAsInt(obj, "weight", 10);
-                String event = GsonHelper.getAsString(obj, "event", "");
-                String icon = GsonHelper.getAsString(obj, "icon", "◆");
-                int sell = GsonHelper.getAsInt(obj, "sell", 0);
-                String source = GsonHelper.getAsString(obj, "source", ""); // 可选：显式内容来源（缺省按 id 前缀自动归类）
-                List<HextechDefinition.ModSpec> mods = new ArrayList<>();
-                if (obj.has("mods")) {
-                    JsonArray arr = GsonHelper.getAsJsonArray(obj, "mods");
-                    for (JsonElement m : arr) {
-                        JsonObject mo = m.getAsJsonObject();
-                        String attrName = GsonHelper.getAsString(mo, "attr");
-                        double perLevel = GsonHelper.getAsDouble(mo, "perLevel");
-                        Attribute attr = ATTRIBUTES.get(attrName);
-                        if (attr == null) {
-                            Hexcraft.LOGGER.warn("Hexcraft: unknown attr '{}' in equipment {}", attrName, id);
-                            continue;
-                        }
-                        mods.add(new HextechDefinition.ModSpec(attr, perLevel));
-                    }
-                }
-                HextechRegistry.putEquip(id, new HextechDefinition(id, rarity, weight, mods, event, icon, sell, source));
+                HextechDefinition def = parse(id, e.getValue().getAsJsonObject());
+                if (def == null) { failed++; continue; }
+                HextechRegistry.putEquip(id, def);
                 loaded++;
             } catch (Exception ex) {
                 failed++;
                 Hexcraft.LOGGER.error("Hexcraft: failed to load equipment {}", e.getKey(), ex);
             }
         }
+        // v0.6.2 DLC 外接包：加载启用的纯数据包内容（equipment 类）
+        loaded += com.hexcraft.dlc.DlcManager.applyEquipPacks();
         Hexcraft.LOGGER.info("Hexcraft: loaded {} equipment definition(s) from datapack ({} failed)", loaded, failed);
         Hexcraft.LOGGER.info("Hexcraft: equip pools -> gold={} prismatic={}",
                 HextechRegistry.equipPool(HextechRarity.GOLD).size(),
                 HextechRegistry.equipPool(HextechRarity.PRISMATIC).size());
+    }
+
+    /** v0.6.2 抽公共解析：数据包 JSON / DLC 外接包共用 */
+    public static HextechDefinition parse(String id, JsonObject obj) {
+        HextechRarity rarity = HextechRarity.byKey(GsonHelper.getAsString(obj, "rarity", "GOLD"));
+        int weight = GsonHelper.getAsInt(obj, "weight", 10);
+        String event = GsonHelper.getAsString(obj, "event", "");
+        String icon = GsonHelper.getAsString(obj, "icon", "◆");
+        int sell = GsonHelper.getAsInt(obj, "sell", 0);
+        String source = GsonHelper.getAsString(obj, "source", "");
+        List<HextechDefinition.ModSpec> mods = new ArrayList<>();
+        if (obj.has("mods")) {
+            JsonArray arr = GsonHelper.getAsJsonArray(obj, "mods");
+            for (JsonElement m : arr) {
+                JsonObject mo = m.getAsJsonObject();
+                String attrName = GsonHelper.getAsString(mo, "attr");
+                double perLevel = GsonHelper.getAsDouble(mo, "perLevel");
+                Attribute attr = ATTRIBUTES.get(attrName);
+                if (attr == null) {
+                    Hexcraft.LOGGER.warn("Hexcraft: unknown attr '{}' in equipment {}", attrName, id);
+                    continue;
+                }
+                mods.add(new HextechDefinition.ModSpec(attr, perLevel));
+            }
+        }
+        return new HextechDefinition(id, rarity, weight, mods, event, icon, sell, source);
     }
 }

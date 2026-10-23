@@ -1,0 +1,1 @@
+{"rarity":"SILVER","weight":9,"event":"tick_gain:1,shield_gain:1.0","mods":[{"attr":"armor","perLevel":0.5}],"stack":{"key":"tick_shield_gain","cap":20,"combat":false,"decayDelay":-1,"decayRate":0},"stackTag":["timed_stack","on_tick_stack","shield_stack"]}

@@ -46,49 +46,66 @@ public class HexDataLoader extends SimpleJsonResourceReloadListener {
         for (Map.Entry<ResourceLocation, JsonElement> e : map.entrySet()) {
             try {
                 String id = e.getKey().getPath();
-                JsonObject obj = e.getValue().getAsJsonObject();
-                HextechRarity rarity = HextechRarity.byKey(GsonHelper.getAsString(obj, "rarity", "SILVER"));
-                int weight = GsonHelper.getAsInt(obj, "weight", 10);
-                String event = GsonHelper.getAsString(obj, "event", "");
-                String source = GsonHelper.getAsString(obj, "source", ""); // 可选：显式内容来源（缺省按 id 前缀自动归类）
-                // v0.6.0 通用叠层配置（可选；JSON 驱动新增叠层海克斯零代码）
-                HextechDefinition.StackSpec stackSpec = null;
-                if (obj.has("stack")) {
-                    JsonObject so = obj.getAsJsonObject("stack");
-                    String skey = GsonHelper.getAsString(so, "key", "stack_" + id);
-                    double scap = GsonHelper.getAsDouble(so, "cap", 50);
-                    boolean scombat = GsonHelper.getAsBoolean(so, "combat", true);
-                    int sdelay = GsonHelper.getAsInt(so, "decayDelay", -1);
-                    double srate = GsonHelper.getAsDouble(so, "decayRate", 1);
-                    boolean sonKill = GsonHelper.getAsBoolean(so, "onKill", false);
-                    stackSpec = new HextechDefinition.StackSpec(skey, scap, scombat, sdelay, srate, sonKill);
-                }
-                List<HextechDefinition.ModSpec> mods = new ArrayList<>();
-                if (obj.has("mods")) {
-                    JsonArray arr = GsonHelper.getAsJsonArray(obj, "mods");
-                    for (JsonElement m : arr) {
-                        JsonObject mo = m.getAsJsonObject();
-                        String attrName = GsonHelper.getAsString(mo, "attr");
-                        double perLevel = GsonHelper.getAsDouble(mo, "perLevel");
-                        Attribute attr = ATTRIBUTES.get(attrName);
-                        if (attr == null) {
-                            Hexcraft.LOGGER.warn("Hexcraft: unknown attr '{}' in hextech {}", attrName, id);
-                            continue;
-                        }
-                        mods.add(new HextechDefinition.ModSpec(attr, perLevel));
-                    }
-                }
-                HextechRegistry.put(id, new HextechDefinition(id, rarity, weight, mods, event, null, 0, source, stackSpec));
+                HextechDefinition def = parse(id, e.getValue().getAsJsonObject());
+                if (def == null) { failed++; continue; }
+                HextechRegistry.put(id, def);
                 loaded++;
             } catch (Exception ex) {
                 failed++;
                 Hexcraft.LOGGER.error("Hexcraft: failed to load hextech {}", e.getKey(), ex);
             }
         }
+        // v0.6.2 DLC 外接包：加载 hexworkshop_dlc/packs 下启用的纯数据包内容（hex 类）
+        loaded += com.hexcraft.dlc.DlcManager.applyHexPacks();
         Hexcraft.LOGGER.info("Hexcraft: loaded {} hextech definition(s) from datapack ({} failed)", loaded, failed);
         Hexcraft.LOGGER.info("Hexcraft: hex pools -> silver={} gold={} prismatic={}",
                 HextechRegistry.pool(HextechRarity.SILVER).size(),
                 HextechRegistry.pool(HextechRarity.GOLD).size(),
                 HextechRegistry.pool(HextechRarity.PRISMATIC).size());
+    }
+
+    /** v0.6.2 抽公共解析：数据包 JSON / DLC 外接包共用（stackTag[] 解析进定义，tooltip 运行时拼接标签后缀） */
+    public static HextechDefinition parse(String id, JsonObject obj) {
+        HextechRarity rarity = HextechRarity.byKey(GsonHelper.getAsString(obj, "rarity", "SILVER"));
+        int weight = GsonHelper.getAsInt(obj, "weight", 10);
+        String event = GsonHelper.getAsString(obj, "event", "");
+        String source = GsonHelper.getAsString(obj, "source", "");
+        HextechDefinition.StackSpec stackSpec = null;
+        if (obj.has("stack")) {
+            JsonObject so = obj.getAsJsonObject("stack");
+            String skey = GsonHelper.getAsString(so, "key", "stack_" + id);
+            double scap = GsonHelper.getAsDouble(so, "cap", 50);
+            boolean scombat = GsonHelper.getAsBoolean(so, "combat", true);
+            int sdelay = GsonHelper.getAsInt(so, "decayDelay", -1);
+            double srate = GsonHelper.getAsDouble(so, "decayRate", 1);
+            boolean sonKill = GsonHelper.getAsBoolean(so, "onKill", false);
+            stackSpec = new HextechDefinition.StackSpec(skey, scap, scombat, sdelay, srate, sonKill);
+        }
+        List<HextechDefinition.ModSpec> mods = new ArrayList<>();
+        if (obj.has("mods")) {
+            JsonArray arr = GsonHelper.getAsJsonArray(obj, "mods");
+            for (JsonElement m : arr) {
+                JsonObject mo = m.getAsJsonObject();
+                String attrName = GsonHelper.getAsString(mo, "attr");
+                double perLevel = GsonHelper.getAsDouble(mo, "perLevel");
+                Attribute attr = ATTRIBUTES.get(attrName);
+                if (attr == null) {
+                    Hexcraft.LOGGER.warn("Hexcraft: unknown attr '{}' in hextech {}", attrName, id);
+                    continue;
+                }
+                mods.add(new HextechDefinition.ModSpec(attr, perLevel));
+            }
+        }
+        // v0.6.2 叠层标签：stackTag[]（可选，tooltip 显示用；未知标签名跳过不崩溃）
+        List<String> stackTags = null;
+        if (obj.has("stackTag")) {
+            stackTags = new ArrayList<>();
+            for (JsonElement t : GsonHelper.getAsJsonArray(obj, "stackTag")) {
+                String tag = t.getAsString();
+                if (com.hexcraft.hextech.StackTagKeys.has(tag)) stackTags.add(tag);
+            }
+            if (stackTags.isEmpty()) stackTags = null;
+        }
+        return new HextechDefinition(id, rarity, weight, mods, event, null, 0, source, stackSpec, stackTags);
     }
 }

@@ -236,6 +236,9 @@ public class WorldHexEvents {
     /** 玩家永久叠层获取速度加成（0.50 = 获取 +50%，世界海克斯「永续成长」） */
     public static double permStackGainBonus(ServerLevel level) { return sumEffect(level, "perm_stack_gain"); }
 
+    /** v0.6.2 世界海克斯「转瞬」：计时叠层时长修正（负值=缩短，-0.50 即减半） */
+    public static double timedStackShort(ServerLevel level) { return sumEffect(level, "timed_stack_short"); }
+
     // ---- v0.4.0 高机制新键 ----
     /** 玩家受到伤害增幅（0.20 = +20%，独立乘区） */
     public static double playerTakenMult(ServerLevel level) { return sumEffect(level, "player_taken"); }

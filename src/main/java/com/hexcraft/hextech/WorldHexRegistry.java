@@ -86,6 +86,13 @@ public class WorldHexRegistry {
         register("whx_abyss_awaken", CAT_HOSTILE, "prismatic", "hostile_hp_pct:0.40,hostile_atk_pct:0.30,hostile_speed:0.40,hostile_debuff:0.30"); // 深渊觉醒：生命 +40%、攻击 +30%、移速 +40% + 攻击 30% 施虚弱/缓慢
         register("whx_blood_feast", CAT_HOSTILE, "prismatic", "hostile_hp_pct:0.35,hostile_lifesteal:0.20,mob_coin_bonus:0.60"); // 血腥盛宴：生命 +35% + 吸血 20% + 击杀晶币 +60%
         register("whx_demon_contract", CAT_HOSTILE, "prismatic", "hostile_lifesteal:0.40,hostile_debuff:0.40"); // 恶魔契约：吸血 40% + 40% 施虚弱/缓慢
+
+        // ============ v0.6.2 叠层相关世界海克斯（通用）============
+        // 黄金：数值 + 少量百分比；棱彩：百分比 / 倍数数值 + 机制
+        register("whx_world_perm_grow_boost", CAT_GENERAL, "prismatic", "perm_stack_gain:0.50");             // 永恒增殖：永久叠层获取 +50%
+        register("whx_world_combat_decay_fast", CAT_GENERAL, "gold", "combat_stack_decay:0.50");              // 战消：战斗叠层脱战衰减速度 +50%（更早清零）
+        register("whx_world_combat_decay_slow", CAT_GENERAL, "gold", "combat_stack_decay:-0.30");             // 久战：战斗叠层脱战衰减速度 -30%（叠层留存更久）
+        register("whx_world_timed_stack_short", CAT_GENERAL, "gold", "timed_stack_short:-0.50");              // 转瞬：计时叠层时长减半（到期更快消失）
     }
 
     private static void register(String id, String category, String rarity, String effect) {

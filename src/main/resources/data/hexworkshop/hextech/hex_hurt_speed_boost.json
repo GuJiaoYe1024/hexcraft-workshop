@@ -1,0 +1,1 @@
+{"rarity":"SILVER","weight":8,"event":"stack_attr_onhurt:attack_speed:0.02","mods":[{"attr":"movement_speed","perLevel":0.002}],"stackTag":["permanent_stack","speed_stack","on_hurt_stack"]}

@@ -1,12 +1,1 @@
-{
-  "rarity": "PRISMATIC",
-  "weight": 5,
-  "event": "crescendo:0.01",
-  "stack": {
-    "key": "crescendo",
-    "cap": 200,
-    "combat": true,
-    "decayDelay": 120,
-    "decayRate": 2
-  }
-}
+{"rarity":"PRISMATIC","weight":5,"event":"crescendo:0.01","stack":{"key":"crescendo","cap":200,"combat":true,"decayDelay":120,"decayRate":2},"stackTag":["combat_stack","damage_stack","on_hit_stack"]}

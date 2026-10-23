@@ -1,0 +1,1 @@
+{"rarity":"GOLD","weight":7,"event":"tick_gain:1,tick_damage_wax:0.02","stack":{"key":"tick_damage_wax","cap":30,"combat":false,"decayDelay":-1,"decayRate":0},"stackTag":["timed_stack","damage_stack","on_tick_stack"]}

@@ -1,5 +1,1 @@
-{
-  "rarity": "PRISMATIC",
-  "weight": 4,
-  "event": "stack_gain:1.0"
-}
+{"rarity":"PRISMATIC","weight":4,"event":"stack_gain:1.0","stackTag":["combat_stack"]}

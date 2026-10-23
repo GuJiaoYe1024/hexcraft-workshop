@@ -47,6 +47,9 @@ public class HexConfig {
     public static final ForgeConfigSpec.DoubleValue FORGE_MULT_SILVER;
     public static final ForgeConfigSpec.DoubleValue FORGE_MULT_GOLD;
     public static final ForgeConfigSpec.DoubleValue FORGE_MULT_PRISMATIC;
+    // ---- v0.6.2 永久叠层全局倍率/上限（服务端生效） ----
+    public static final ForgeConfigSpec.DoubleValue PERMANENT_STACK_MULT;
+    public static final ForgeConfigSpec.IntValue PERMANENT_STACK_CAP;
 
     // ---- Client ----
     public static final ForgeConfigSpec CLIENT_SPEC;
@@ -118,6 +121,9 @@ public class HexConfig {
         FORGE_MULT_SILVER = b.comment("白银锻造倍率（服务端生效，默认 1.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultSilver").defineInRange("forgeMultiplierSilver", 1.0, 0.1, 20.0);
         FORGE_MULT_GOLD = b.comment("黄金锻造倍率（服务端生效，默认 2.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultGold").defineInRange("forgeMultiplierGold", 2.0, 0.1, 20.0);
         FORGE_MULT_PRISMATIC = b.comment("棱彩锻造倍率（服务端生效，默认 3.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultPrismatic").defineInRange("forgeMultiplierPrismatic", 3.0, 0.1, 20.0);
+        // v0.6.2 永久叠层全局倍率/上限（服务端权威，客户端修改不生效防作弊）
+        PERMANENT_STACK_MULT = b.comment("永久叠层全局获取倍率（服务端生效，默认 1.0；叠角龙/世界海克斯等永久叠层海克斯击杀获取层数 × 该倍率）").translation("hexcraft.config.v060.permanentStackMult").defineInRange("permanentStackGlobalMultiplier", 1.0, 0.1, 10.0);
+        PERMANENT_STACK_CAP = b.comment("永久叠层全局最大上限（服务端生效，默认 200；超过该值的永久叠层被钳制，防无上限叠层失控）").translation("hexcraft.config.v060.permanentStackCap").defineInRange("permanentStackGlobalCap", 200, 10, 10000);
         b.pop();
 
         COMMON_SPEC = b.build();

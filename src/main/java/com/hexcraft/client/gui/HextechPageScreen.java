@@ -550,6 +550,12 @@ public class HextechPageScreen extends HexScaledScreen {
                 java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
                 tip.add(name.copy().withStyle(c -> c.withColor(rarityColor(rk))));
                 tip.add(Component.translatable("hexcraft.hextech." + h.id + ".desc"));
+                // v0.6.2 叠层标签后缀：tooltip 运行时自动拼接【叠层：xxx｜xxx｜xxx】（新增海克斯仅改 JSON stackTag 数组）
+                String tagSuffix = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(
+                        com.hexcraft.hextech.HextechRegistry.get(h.id), net.minecraft.client.Minecraft.getInstance().options.languageCode.startsWith("zh"));
+                if (tagSuffix != null) {
+                    tip.add(Component.literal(tagSuffix).withStyle(c -> c.withColor(0xFF8FA6C8)));
+                }
                 if (!"vanilla".equals(src)) {
                     tip.add(Component.translatable("hexcraft.gui.source_tag",
                             src.toUpperCase(java.util.Locale.ROOT)).withStyle(c -> c.withColor(0xFF4DE6FF)));
@@ -710,14 +716,25 @@ public class HextechPageScreen extends HexScaledScreen {
                     }
                 }
                 // hover 提示：悬停查看锻造词条具体效果（名称 + 实际加成 + 档位 + 描述 + 来源）
-                // v0.6.1：标题后追加括号显示【当前实际加成数值】（基础值×运行时倍率），方便校验倍率是否生效
+                // v0.6.2：lang 模板占位符动态渲染——{name}/{mult}/{displayValue}/{tierName} 运行时按档位倍率填充，
+                // 修改 forgeMultiplierSilver/Gold/Prismatic 配置后 tooltip 数值自动跟随（无需改 lang）
                 if (hoverX >= colX && hoverX <= colX + 110 && hoverY >= iy - 1 && hoverY <= iy + 12) {
                     java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
                     String stat = (String) it[2];
                     String real = forgeValueText(stat, grp.tierIdx);
                     String tierName = Component.translatable("hexcraft.forge.tier." + grp.tierKey).getString();
-                    tip.add(Component.literal(nameStr + "  (" + real + "/级)【" + tierName + "】").withStyle(c -> c.withColor(grp.color)));
-                    tip.add(Component.translatable("hexcraft.forge." + stat + ".desc"));
+                    double mult = com.hexcraft.hextech.HextechRegistry.tierMult(grp.tierIdx);
+                    String multText = "×" + String.format(java.util.Locale.ROOT, "%.1f", mult).replaceFirst("\\.0$", "");
+                    String nameTpl = Component.translatable("hexcraft.forge." + stat + ".name").getString();
+                    String descTpl = Component.translatable("hexcraft.forge." + stat + ".desc").getString();
+                    tip.add(Component.literal(nameTpl
+                            .replace("{name}", nameStr)
+                            .replace("{mult}", multText)
+                            .replace("{displayValue}", real)
+                            .replace("{tierName}", tierName)).withStyle(c -> c.withColor(grp.color)));
+                    tip.add(Component.literal(descTpl
+                            .replace("{tierName}", tierName)
+                            .replace("{displayValue}", real)));
                     if (Boolean.TRUE.equals(it[1])) {
                         tip.add(Component.translatable("hexcraft.gui.source_tag", "TACZ").withStyle(c -> c.withColor(0xFF4DE6FF)));
                     }
@@ -807,6 +824,12 @@ public class HextechPageScreen extends HexScaledScreen {
                     java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
                     tip.add(eqName.withStyle(c -> c.withColor(rarityColor(rk))));
                     tip.add(Component.translatable("hexcraft.equip." + eq.id + ".desc"));
+                    // v0.6.2 装备叠层标签后缀（心之钢等）
+                    String eqTag = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(def,
+                            net.minecraft.client.Minecraft.getInstance().options.languageCode.startsWith("zh"));
+                    if (eqTag != null) {
+                        tip.add(Component.literal(eqTag).withStyle(c -> c.withColor(0xFF8FA6C8)));
+                    }
                     if (def.sell > 0) tip.add(Component.translatable("hexcraft.gui.sell_hint", def.sell));
                     if (!"vanilla".equals(src)) {
                         tip.add(Component.translatable("hexcraft.gui.source_tag",

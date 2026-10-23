@@ -83,9 +83,16 @@ public class HexCommand {
                                 .executes(ctx -> {
                                     String module = StringArgumentType.getString(ctx, "module");
                                     String mod = switch (module) {
-                                        case "hexes", "forging", "equipment", "world" -> module;
+                                        case "hexes", "forging", "equipment", "world", "dlc" -> module;
                                         default -> "all";
                                     };
+                                    // v0.6.2 DLC 外接包：/hexcraft reload dlc 独立热重载（扫描 packs + 应用数据包，无需整包资源重载）
+                                    if ("dlc".equals(mod)) {
+                                        com.hexcraft.dlc.DlcManager.reloadDlc();
+                                        broadcastRefresh(ctx.getSource(), "all");
+                                        ctx.getSource().sendSuccess(() -> Component.literal("Hexcraft: reloaded module [dlc]"), true);
+                                        return 1;
+                                    }
                                     ctx.getSource().getServer().reloadResources(Collections.emptyList());
                                     broadcastRefresh(ctx.getSource(), mod);
                                     ctx.getSource().sendSuccess(() -> Component.literal("Hexcraft: reloaded module [" + mod + "]"), true);

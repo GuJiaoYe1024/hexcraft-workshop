@@ -61,9 +61,15 @@ public class PlayerData {
         public final int decayDelay; // 脱战多少 tick 后开始衰减（-1=不衰减）
         public final double decayRate; // 每 tick 衰减量
         public int idle;           // 已脱战 tick 计数
+        /** v0.6.2 计时叠层：>0 = 剩余存活 tick（到期自动消失）；0 = 非计时叠层（旧档缺省 0 兼容） */
+        public int timedTicks;
         public StackEntry(String key, double cap, boolean combat, int decayDelay, double decayRate) {
             this.key = key; this.cap = cap; this.combat = combat;
             this.decayDelay = decayDelay; this.decayRate = decayRate;
+        }
+        public StackEntry(String key, double cap, boolean combat, int decayDelay, double decayRate, int timedTicks) {
+            this(key, cap, combat, decayDelay, decayRate);
+            this.timedTicks = timedTicks;
         }
     }
 
@@ -334,12 +340,13 @@ public class PlayerData {
             for (HextechDefinition.ModSpec mod : def.mods) {
                 applyOne(player, mod.attr, "hex:" + e.id + "#" + idx++, mod.perLevel * e.level * hexPower);
             }
-            // 成长属性：stack_attr:键:倍率 / stack_attr_onhit:键:倍率 → 乘法叠加（每层 × 等级）
+            // 成长属性：stack_attr:键:倍率 / stack_attr_onhit:键:倍率 / stack_attr_onhurt:键:倍率 → 乘法叠加（每层 × 等级）
             if (e.stacks > 0 && def.event != null) {
                 for (String token : def.event.split(",")) {
                     String[] parts = token.split(":");
                     if (parts.length == 3) {
-                        if (token.startsWith("stack_attr:") || token.startsWith("stack_attr_onhit:")) {
+                        if (token.startsWith("stack_attr:") || token.startsWith("stack_attr_onhit:")
+                                || token.startsWith("stack_attr_onhurt:")) {
                             Attribute a = STACK_ATTRS.get(parts[1]);
                             if (a != null) {
                                 try {
@@ -379,7 +386,8 @@ public class PlayerData {
                 for (String token : def.event.split(",")) {
                     String[] parts = token.split(":");
                     if (parts.length == 3) {
-                        if (token.startsWith("stack_attr:") || token.startsWith("stack_attr_onhit:")) {
+                        if (token.startsWith("stack_attr:") || token.startsWith("stack_attr_onhit:")
+                                || token.startsWith("stack_attr_onhurt:")) {
                             Attribute a = STACK_ATTRS.get(parts[1]);
                             if (a != null) {
                                 try {
@@ -468,6 +476,7 @@ public class PlayerData {
             t.putBoolean("combat", s.combat);
             t.putInt("decayDelay", s.decayDelay);
             t.putDouble("decayRate", s.decayRate);
+            if (s.timedTicks > 0) t.putInt("timed", s.timedTicks); // v0.6.2 计时叠层剩余时长（缺省 0=非计时）
             stackList.add(t);
         }
         tag.put("stacks", stackList);
@@ -519,7 +528,7 @@ public class PlayerData {
             CompoundTag c = (CompoundTag) t;
             try {
                 StackEntry s = new StackEntry(c.getString("key"), c.getDouble("cap"), c.getBoolean("combat"),
-                        c.getInt("decayDelay"), c.getDouble("decayRate"));
+                        c.getInt("decayDelay"), c.getDouble("decayRate"), c.getInt("timed"));
                 s.value = c.getDouble("value");
                 stacks.put(s.key, s);
             } catch (Exception ignored) { }
@@ -556,9 +565,25 @@ public class PlayerData {
         }
         this.stacks.clear();
         for (StackEntry s : old.stacks.values()) {
-            this.stacks.put(s.key, new StackEntry(s.key, s.cap, s.combat, s.decayDelay, s.decayRate) {{
+            this.stacks.put(s.key, new StackEntry(s.key, s.cap, s.combat, s.decayDelay, s.decayRate, s.timedTicks) {{
                 value = s.value; idle = s.idle;
             }});
         }
+    }
+
+    /** v0.6.2 计时叠层：每 20 tick 递减剩余时长，到期自动移除（转瞬世界海克斯可缩短初始时长） */
+    public void tickTimedStacks() {
+        stacks.values().removeIf(s -> {
+            if (s.timedTicks <= 0) return false;
+            s.timedTicks -= 20;
+            return s.timedTicks <= 0;
+        });
+    }
+
+    /** v0.6.2 计时叠层初始时长（默认 600 tick=30 秒；世界海克斯「转瞬」缩短时长为 ×(1+timed_stack_short)，负值即减半） */
+    public int timedBaseTicks(double shortMult) {
+        int base = 600;
+        if (shortMult < 0) base = (int) (base * (1 + shortMult));
+        return Math.max(40, base);
     }
 }

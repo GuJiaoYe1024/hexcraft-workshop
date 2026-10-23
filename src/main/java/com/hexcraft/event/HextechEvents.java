@@ -51,6 +51,24 @@ public class HextechEvents {
     /** 额外伤害重入锁：echo/splash/fire_chain/frost_bite 的额外 hurt 不再触发本类伤害事件 */
     private static volatile boolean EXTRA_BUSY = false;
 
+    /** v0.6.2 流血 DoT（独立实例，独立计时不互相覆盖）：目标UUID → [dmgPerTick, remainingTicks] */
+    private static final Map<UUID, List<double[]>> BLEEDS = new ConcurrentHashMap<>();
+    /** v0.6.2 猎手标记（3.5 秒）：目标UUID → 标记来源玩家UUID */
+    private static final Map<UUID, UUID> MARKS = new ConcurrentHashMap<>();
+
+    /** 施加流血实例（每 tick 伤害 / 存活 tick）；独立计时，多次命中叠加多个实例 */
+    private static void applyBleed(LivingEntity target, float dmgPerTick, int ticks) {
+        if (dmgPerTick <= 0 || target == null || target.isRemoved()) return;
+        BLEEDS.computeIfAbsent(target.getUUID(), k -> new java.util.concurrent.CopyOnWriteArrayList<>())
+                .add(new double[]{dmgPerTick, ticks});
+    }
+
+    /** 施加猎手标记（70 tick = 3.5 秒） */
+    private static void applyMark(ServerPlayer sp, LivingEntity target) {
+        if (target == null || target.isRemoved()) return;
+        MARKS.put(target.getUUID(), sp.getUUID());
+    }
+
     /** v0.6.0 校准：stack_attr_onhit 叠层概率数据化——JSON event 中带 chance:xxx 则读取（0~1），
      *  缺省回退 0.25f（兼容旧数据包，如心之钢 v0.5.0 前无 chance 字段）。概率不随等级缩放。 */
     public static float stackOnHitChance(HextechDefinition def) {
@@ -240,6 +258,55 @@ public class HextechEvents {
             if (grew) {
                 data.applyModifiers(killer);
             }
+
+            // ===== v0.6.2 击杀触发叠层（def.stack.onKill=true）=====
+            // 击杀获取 1 层（叠角龙在场翻倍；永续成长世界海克斯 +50%）；永久叠层吃全局倍率/上限（服务端配置）
+            boolean killStacked = false;
+            for (PlayerData.HexEntry e : data.getHexes()) {
+                HextechDefinition sdef = HextechRegistry.get(e.id);
+                if (sdef == null || sdef.stack == null || !sdef.stack.onKill) continue;
+                if (data.getStack(sdef.stack.key) == null) {
+                    data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat,
+                            sdef.stack.decayDelay, sdef.stack.decayRate));
+                }
+                double g = 1.0;
+                if (drake) g *= 2;
+                if (killer.level() instanceof net.minecraft.server.level.ServerLevel whKL) {
+                    g *= (1 + com.hexcraft.event.WorldHexEvents.permStackGainBonus(whKL));
+                }
+                if (!sdef.stack.combat) {
+                    g *= com.hexcraft.config.HexConfig.PERMANENT_STACK_MULT.get();
+                }
+                data.addStack(sdef.stack.key, g, 1);
+                PlayerData.StackEntry s = data.getStack(sdef.stack.key);
+                // 永久叠层全局上限钳制（防无上限叠层失控）
+                if (!sdef.stack.combat && s != null && s.value > com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get()) {
+                    s.value = com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get();
+                }
+                if (s != null) {
+                    killer.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), true);
+                }
+                killStacked = true;
+            }
+            // ===== v0.6.2 流血扩散（bleed_spread）：目标死亡时若处流血状态，向周围 2.5 格敌对生物扩散流血 =====
+            double spread = effect(data, "bleed_spread");
+            if (spread > 0) {
+                java.util.List<double[]> insts = BLEEDS.remove(mob.getUUID());
+                if (insts != null && !insts.isEmpty()) {
+                    double maxDmg = 0;
+                    for (double[] d : insts) maxDmg = Math.max(maxDmg, d[0]);
+                    if (maxDmg > 0) {
+                        for (LivingEntity other : killer.level().getEntitiesOfClass(LivingEntity.class,
+                                mob.getBoundingBox().inflate(2.5),
+                                o -> o != killer && o != mob && o.isAlive() && o instanceof net.minecraft.world.entity.monster.Monster)) {
+                            applyBleed(other, (float) (maxDmg * (1 + spread)), 100);
+                        }
+                        killer.displayClientMessage(Component.translatable("message.hexcraft.bleed_spread"), true);
+                    }
+                }
+            }
+            if (killStacked) sync(killer);
 
             // TACZ 弹药回复：tacz_ammo 稳定补弹比例 / tacz_ammo_full 几率补满（v0.6.0 弹药补给锻造词条 ammo_aspect 迁出，回复量由海克斯等级直接驱动）
             double ammoBoost = 1.0;
@@ -579,11 +646,15 @@ public class HextechEvents {
                     ? com.hexcraft.event.WorldHexEvents.permStackGainBonus(whLvl3) : 0;
             for (PlayerData.HexEntry e : data.getHexes()) {
                 HextechDefinition sdef = HextechRegistry.get(e.id);
-                if (sdef == null || sdef.stack == null || sdef.stack.onKill) continue;
-                if (data.getStack(sdef.stack.key) == null) {
-                    data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat, sdef.stack.decayDelay, sdef.stack.decayRate));
+                if (sdef == null || sdef.stack == null) continue;
+                // v0.6.2 onKill=true 的叠层（击杀触发）：命中时不获取层数（击杀时获取），但仍按层数结算每层伤害
+                boolean killStack = sdef.stack.onKill;
+                if (!killStack) {
+                    if (data.getStack(sdef.stack.key) == null) {
+                        data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat, sdef.stack.decayDelay, sdef.stack.decayRate));
+                    }
+                    data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"), 1 + effect(data, "stack_cap") + whCapBonus);
                 }
-                data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"), 1 + effect(data, "stack_cap") + whCapBonus);
                 double perStack = 0;
                 for (String token : sdef.event.split(",")) {
                     int ci = token.indexOf(':');
@@ -633,6 +704,39 @@ public class HextechEvents {
                     extraDamage(sp, target, amount * 0.08f * (float) crescendoMult * (float) (aspd2 - 1.0)
                             * (float) Math.min(2.0, cs.value / 100.0));
                 }
+            }
+            // ===== v0.6.2 实装预留事件：流血 / 减速 / 标记 / 处决（bleed_damage / slow_on_hit / mark_target / mark_execute）=====
+            // 流血：命中施加 DoT（每 tick 伤害 = 本次伤害 × 倍率×等级 × 0.1，持续 5 秒；独立实例不互相覆盖，多次命中叠加多个实例）
+            double bleedHit = effect(data, "bleed_damage");
+            if (bleedHit > 0) {
+                applyBleed(target, amount * (float) bleedHit * 0.1f, 100);
+                sp.displayClientMessage(Component.translatable("message.hexcraft.bleed_apply"), true);
+            }
+            // 减速：命中施加减速（持续 4 秒，等级加深最高 3 级）
+            double slowHit = effect(data, "slow_on_hit");
+            if (slowHit > 0) {
+                int amp = Math.min(3, Math.max(0, (int) Math.floor(slowHit * 4)));
+                applyTo(target, MobEffects.MOVEMENT_SLOWDOWN, 80, amp);
+                sp.displayClientMessage(Component.translatable("message.hexcraft.slow_hit", amp + 1), true);
+            }
+            // 处决者（mark_execute）：命中自动标记目标（3.5 秒）；目标生命 ≤ 20% 最大生命时立即处决（最大生命 × 35% 魔法伤害，不触发反伤/不递归）
+            double exec = effect(data, "mark_execute");
+            if (exec > 0) {
+                applyMark(sp, target);
+                float thr = target.getMaxHealth() * 0.20f;
+                if (target.getHealth() <= thr) {
+                    target.hurt(sp.damageSources().magic(), target.getMaxHealth() * 0.35f);
+                    MARKS.remove(target.getUUID());
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.mark_execute"), true);
+                } else {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.mark_target"), true);
+                }
+            }
+            // 猎手标记（mark_target）：命中概率标记目标（3.5 秒；配合处决者消耗）
+            double markT = effect(data, "mark_target");
+            if (markT > 0 && sp.getRandom().nextFloat() < (float) Math.min(1.0, markT)) {
+                applyMark(sp, target);
+                sp.displayClientMessage(Component.translatable("message.hexcraft.mark_target"), true);
             }
             // 命中刷新战斗叠层脱战计时
             data.refreshCombatStacks();
@@ -822,6 +926,64 @@ public class HextechEvents {
                 && sp.getAbsorptionAmount() < (float) lowShield) {
             sp.setAbsorptionAmount((float) lowShield);
         }
+        // ===== v0.6.2 受击叠层（on_hurt_stack：event 含 hurt_gain 键的海克斯，受击叠 1 层）=====
+        boolean hurtStacked = false;
+        double whCapBonusHurt = sp.level() instanceof net.minecraft.server.level.ServerLevel whLv2
+                ? com.hexcraft.event.WorldHexEvents.combatStackCapBonus(whLv2) : 0;
+        for (PlayerData.HexEntry e : data.getHexes()) {
+            if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不受击叠层
+            HextechDefinition sdef = HextechRegistry.get(e.id);
+            if (sdef == null || sdef.stack == null || sdef.stack.onKill || !sdef.event.contains("hurt_gain")) continue;
+            if (data.getStack(sdef.stack.key) == null) {
+                data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat,
+                        sdef.stack.decayDelay, sdef.stack.decayRate));
+            }
+            data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"), 1 + effect(data, "stack_cap") + whCapBonusHurt);
+            PlayerData.StackEntry s = data.getStack(sdef.stack.key);
+            if (s != null) {
+                sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
+                        Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), true);
+            }
+            hurtStacked = true;
+        }
+        // ===== v0.6.2 受击永久属性层（stack_attr_onhurt：受击概率叠永久属性层，死亡保留）=====
+        boolean attrHurtStacked = false;
+        for (PlayerData.HexEntry e : data.getHexes()) {
+            if (e.id.equals("hex_stack_drake")) continue;
+            HextechDefinition def = HextechRegistry.get(e.id);
+            if (def != null && def.event != null && def.event.contains("stack_attr_onhurt:")) {
+                if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
+                    e.stacks += 1;
+                    data.applyModifiers(sp);
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
+                    attrHurtStacked = true;
+                }
+            }
+        }
+        for (PlayerData.EquipEntry eq : data.getEquipment()) {
+            HextechDefinition def = HextechRegistry.getEquip(eq.id);
+            if (def != null && def.event != null && def.event.contains("stack_attr_onhurt:")) {
+                if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
+                    eq.stacks += 1;
+                    data.applyModifiers(sp);
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
+                            Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), true);
+                    attrHurtStacked = true;
+                }
+            }
+        }
+        // ===== v0.6.2 荆棘点燃（thorns_fire）：被近战攻击概率点燃攻击者 4 秒 =====
+        double thornFire = effect(data, "thorns_fire");
+        if (thornFire > 0 && event.getSource().getDirectEntity() instanceof LivingEntity directAtk
+                && directAtk == event.getSource().getEntity()
+                && directAtk != sp && directAtk.isAlive()) {
+            if (sp.getRandom().nextFloat() < (float) Math.min(1.0, thornFire)) {
+                directAtk.setSecondsOnFire(4);
+                sp.displayClientMessage(Component.translatable("message.hexcraft.thorns_fire"), true);
+            }
+        }
+        if (hurtStacked || attrHurtStacked) sync(sp);
         // 荆棘反伤 + 反击风暴（v0.6.0 反伤之刃锻造词条迁出，已有 thorns/counter 海克斯覆盖反伤）
         double thorns = effect(data, "thorns");
         double counter = effect(data, "counter");
@@ -1059,6 +1221,82 @@ public class HextechEvents {
             double decayBonus = sp.level() instanceof net.minecraft.server.level.ServerLevel whLvl
                     ? com.hexcraft.event.WorldHexEvents.combatStackDecayBonus(whLvl) : 0;
             data.tickStacks(1 + decayBonus);
+            // v0.6.2 计时叠层：固定时长到期自动消失
+            data.tickTimedStacks();
+            // v0.6.2 流血 DoT 结算（每 20 tick；魔法伤害不归属玩家，不触发反伤/不再进 onDamageDealt）
+            if (!BLEEDS.isEmpty()) {
+                java.util.Iterator<Map.Entry<UUID, List<double[]>>> it = BLEEDS.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry<UUID, List<double[]>> e = it.next();
+                    net.minecraft.world.entity.Entity ent = sp.serverLevel().getEntity(e.getKey());
+                    if (!(ent instanceof LivingEntity target) || target.isRemoved() || !target.isAlive()) {
+                        it.remove();
+                        continue;
+                    }
+                    float total = 0;
+                    java.util.Iterator<double[]> inst = e.getValue().iterator();
+                    while (inst.hasNext()) {
+                        double[] d = inst.next();
+                        total += d[0];
+                        d[1] -= 20;
+                        if (d[1] <= 0) inst.remove();
+                    }
+                    if (total > 0) {
+                        target.hurt(sp.damageSources().magic(), total);
+                    }
+                    if (e.getValue().isEmpty()) it.remove();
+                }
+            }
+            // v0.6.2 猎手标记过期清理（70 tick 已到即移除）
+            if (!MARKS.isEmpty()) {
+                MARKS.entrySet().removeIf(en -> {
+                    net.minecraft.world.entity.Entity t = sp.serverLevel().getEntity(en.getKey());
+                    return !(t instanceof LivingEntity livingT) || livingT.isRemoved() || !livingT.isAlive();
+                });
+            }
+        }
+        // v0.6.2 周期叠层（on_tick_stack：tick_gain 键海克斯，每 5 秒自动叠 1 层；计时叠层刷新剩余时长，
+        // 世界海克斯「转瞬」缩短时长为 ×(1+timed_stack_short)）
+        if (sp.tickCount % 100 == 0) {
+            double shortMult = sp.level() instanceof net.minecraft.server.level.ServerLevel whTL
+                    ? com.hexcraft.event.WorldHexEvents.timedStackShort(whTL) : 0;
+            boolean tickStacked = false;
+            for (PlayerData.HexEntry e : data.getHexes()) {
+                HextechDefinition sdef = HextechRegistry.get(e.id);
+                if (sdef == null || sdef.stack == null || sdef.stack.onKill || !sdef.event.contains("tick_gain")) continue;
+                if (data.getStack(sdef.stack.key) == null) {
+                    data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat,
+                            sdef.stack.decayDelay, sdef.stack.decayRate));
+                }
+                data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"), 1 + effect(data, "stack_cap"));
+                PlayerData.StackEntry s = data.getStack(sdef.stack.key);
+                if (s != null) {
+                    s.timedTicks = data.timedBaseTicks(shortMult); // 刷新计时叠层剩余时长（到期自动消失）
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), true);
+                }
+                tickStacked = true;
+            }
+            if (tickStacked) sync(sp);
+        }
+        // v0.6.2 叠层护盾（shield_gain 键：固垒/鏖战屏障等——每层提供吸收护盾 量×等级，随叠层增长补满护盾）
+        if (sp.tickCount % 40 == 0) {
+            for (PlayerData.HexEntry e : data.getHexes()) {
+                HextechDefinition sdef = HextechRegistry.get(e.id);
+                if (sdef == null || sdef.stack == null || !sdef.event.contains("shield_gain")) continue;
+                PlayerData.StackEntry s = data.getStack(sdef.stack.key);
+                if (s == null || s.value <= 0) continue;
+                double per = 0;
+                for (String token : sdef.event.split(",")) {
+                    int ci = token.indexOf(':');
+                    if (ci > 0 && token.substring(0, ci).equals("shield_gain")) {
+                        try { per += Double.parseDouble(token.substring(ci + 1)) * e.level; } catch (Exception ignored) { }
+                    }
+                }
+                if (per > 0 && sp.getAbsorptionAmount() < s.value * per) {
+                    sp.setAbsorptionAmount((float) (s.value * per));
+                }
+            }
         }
     }
 
@@ -1211,6 +1449,9 @@ public class HextechEvents {
 
     @SubscribeEvent
     public static void onReload(AddReloadListenerEvent event) {
+        // v0.6.2 DLC 外接包：先扫描 hexworkshop_dlc/packs（启动与数据包重载均触发），
+        // 随后各 loader apply 阶段把启用包的 data/hex、data/equipment、data/world_hex 注册进本体注册表
+        com.hexcraft.dlc.DlcManager.scan();
         event.addListener(new HexDataLoader());
         event.addListener(new com.hexcraft.data.EquipmentDataLoader());
         // v0.6.0 世界海克斯数据包开放：data/hexworkshop/world_hexes/*.json（覆盖/新增世界海克斯）
