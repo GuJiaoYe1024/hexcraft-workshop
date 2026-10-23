@@ -1,0 +1,11 @@
+{
+  "rarity": "SILVER",
+  "weight": 9,
+  "mods": [
+    {
+      "attr": "tough",
+      "perLevel": 1.5
+    }
+  ],
+  "event": "dig_speed:0.3"
+}

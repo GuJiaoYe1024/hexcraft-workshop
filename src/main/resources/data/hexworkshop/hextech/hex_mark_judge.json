@@ -1,0 +1,5 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 3,
+  "event": "mark_target:0.3,mark_execute:0.18,rampage:0.35,crit_damage:0.4"
+}

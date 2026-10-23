@@ -43,6 +43,11 @@ public class HexConfig {
     public static final ForgeConfigSpec.IntValue WORLD_CANCEL_COIN;
     public static final ForgeConfigSpec.IntValue WORLD_MAX_PER_CATEGORY;
 
+    // ---- v0.6.1 锻造档位倍率（服务端生效，防作弊；客户端展示读取同配置，单机/开服同进程一致） ----
+    public static final ForgeConfigSpec.DoubleValue FORGE_MULT_SILVER;
+    public static final ForgeConfigSpec.DoubleValue FORGE_MULT_GOLD;
+    public static final ForgeConfigSpec.DoubleValue FORGE_MULT_PRISMATIC;
+
     // ---- Client ----
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.DoubleValue UI_SCALE;
@@ -110,6 +115,9 @@ public class HexConfig {
         EXTRA_ARMOR_PER_POINT = b.comment("额外护甲减伤：超出阈值的每点护甲提供 X% 减伤（独立乘区，与护甲曲线相乘）").translation("hexcraft.config.v060.extraArmorPerPoint").defineInRange("extraArmorPerPoint", 0.5, 0.0, 5.0);
         EXTRA_ARMOR_CAP = b.comment("额外护甲减伤上限（%）").translation("hexcraft.config.v060.extraArmorCap").defineInRange("extraArmorCap", 25.0, 0.0, 80.0);
         FORGE_DUPLICATE_RULE = b.comment("同词条锻造叠加规则：STACK=无上限叠加（默认）；BEST_ONLY=同名词条仅保留最高档位（低档重复自动回收）").translation("hexcraft.config.v060.forgeDuplicateRule").defineEnum("forgeDuplicateRule", DuplicateRule.STACK);
+        FORGE_MULT_SILVER = b.comment("白银锻造倍率（服务端生效，默认 1.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultSilver").defineInRange("forgeMultiplierSilver", 1.0, 0.1, 20.0);
+        FORGE_MULT_GOLD = b.comment("黄金锻造倍率（服务端生效，默认 2.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultGold").defineInRange("forgeMultiplierGold", 2.0, 0.1, 20.0);
+        FORGE_MULT_PRISMATIC = b.comment("棱彩锻造倍率（服务端生效，默认 3.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultPrismatic").defineInRange("forgeMultiplierPrismatic", 3.0, 0.1, 20.0);
         b.pop();
 
         COMMON_SPEC = b.build();

@@ -1,0 +1,11 @@
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 2.0
+    }
+  ],
+  "event": "fire_resist:0.35,thorns_fire:0.4"
+}

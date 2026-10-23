@@ -1,3 +1,16 @@
+Hexcraft Workshop v0.6.1 - Forge multiplier config + Cloth v060 fix + 12 new hexes
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- FORGE TOOLTIP SHOWS REAL VALUES: hovering a forge trait now appends the actual gain in brackets (base value x tier multiplier, runtime-composed, both languages) - "Strength (+0.5/level) [Silver]", "Strength (+1.0/level) [Gold]", "Strength (+1.5/level) [Prismatic]", "Vitality Surge (+15%/level) [Prismatic]" - instantly verify the multiplier is applied
+- FORGE MULTIPLIERS NOW CONFIGURABLE (3 new v060 configs): forgeMultiplierSilver=1.0 / forgeMultiplierGold=2.0 / forgeMultiplierPrismatic=3.0 shown in the Cloth config screen (e.g. set 1/2/4 for a fun pack); SERVER-AUTHORITATIVE - client-side changes do not apply (anti-cheat); tooltip follows the runtime value
+- PERCENT STATS NOW TIER-SCALED: with the single shared pool, HPPct/ASPDPct now also multiply by tier (+5/10/15% HP per level, +3/6/9% ASPD per level) - a Silver-drawn percent stat no longer equals Prismatic; tooltip = real effect
+- CLOTH v060 GROUP FIXED: the 4 v060 configs (extra armor DR threshold/rate/cap, duplicate rule) existed only in toml without UI nodes; now mounted on the config tree (plus the 3 new multipliers), also visible to third-party config tools; user values kept
+- 12 NEW HEXES (all reuse existing event keys, zero new event code, datapack-overridable): Silver "Flesh Rend / Sluggish Pursuit / Mining Tenacity / Small Shield"; Gold "Burning Rebound / Fatal Wound / Soul Siphon / Rock Body / Hunter's Mark"; Prismatic "Bleed Avatar / Eternal Bulwark / Mark Judgement" - 6 brand-new event keys (bleed_damage/slow_on_hit/thorns_fire/bleed_spread/mark_target/mark_execute) have no handler yet; per design they are reserved JSON only, desc annotated "pending", no effect, no crash
+- Content total: 170 hexes + 44 equipment + 13 forge stats + 36 world hexes (263 items); zh_cn & en_us complete (908 keys)
+- Protocol unchanged (VERSION=16) - v0.6.0 players can update directly; all v0.6.0 confirmed fixes untouched
+
 Hexcraft Workshop v0.6.0 - Full-system refactor: universal stack manager + forge rework + datapack reload
 =============================================================================
 

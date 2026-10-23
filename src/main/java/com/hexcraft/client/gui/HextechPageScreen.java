@@ -648,11 +648,13 @@ public class HextechPageScreen extends HexScaledScreen {
     private static class ForgeGroup {
         final String tierKey;
         final int color;
+        final int tierIdx;
         final java.util.List<Object[]> items = new java.util.ArrayList<>();
 
-        ForgeGroup(String tierKey, int color) {
+        ForgeGroup(String tierKey, int color, int tierIdx) {
             this.tierKey = tierKey;
             this.color = color;
+            this.tierIdx = tierIdx;
         }
     }
 
@@ -707,11 +709,15 @@ public class HextechPageScreen extends HexScaledScreen {
                         g.drawString(this.font, "TACZ", tagX, iy, 0xFF4DE6FF);
                     }
                 }
-                // hover 提示：悬停查看锻造词条具体效果（名称 + 描述 + 来源）
+                // hover 提示：悬停查看锻造词条具体效果（名称 + 实际加成 + 档位 + 描述 + 来源）
+                // v0.6.1：标题后追加括号显示【当前实际加成数值】（基础值×运行时倍率），方便校验倍率是否生效
                 if (hoverX >= colX && hoverX <= colX + 110 && hoverY >= iy - 1 && hoverY <= iy + 12) {
                     java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
-                    tip.add(Component.literal(nameStr).withStyle(c -> c.withColor(grp.color)));
-                    tip.add(Component.translatable("hexcraft.forge." + it[2] + ".desc"));
+                    String stat = (String) it[2];
+                    String real = forgeValueText(stat, grp.tierIdx);
+                    String tierName = Component.translatable("hexcraft.forge.tier." + grp.tierKey).getString();
+                    tip.add(Component.literal(nameStr + "  (" + real + "/级)【" + tierName + "】").withStyle(c -> c.withColor(grp.color)));
+                    tip.add(Component.translatable("hexcraft.forge." + stat + ".desc"));
                     if (Boolean.TRUE.equals(it[1])) {
                         tip.add(Component.translatable("hexcraft.gui.source_tag", "TACZ").withStyle(c -> c.withColor(0xFF4DE6FF)));
                     }
@@ -728,6 +734,21 @@ public class HextechPageScreen extends HexScaledScreen {
 
     private int maxForgeScroll() {
         return Math.max(0, forgeGroupHeight() - (234 - 88));
+    }
+
+    /** v0.6.1 锻造词条实际加成文本：基础值 × 档位倍率（读取运行时配置）；百分比词条(hppct/aspdpct)转百分号展示 */
+    private String forgeValueText(String stat, int tier) {
+        com.hexcraft.hextech.HextechDefinition.ModSpec m = com.hexcraft.hextech.HextechRegistry.forgeMod(stat);
+        if (m == null) return "?";
+        double v = m.perLevel * com.hexcraft.hextech.HextechRegistry.tierMult(tier);
+        if (stat.equals("hppct") || stat.equals("aspdpct")) {
+            String p = String.format(java.util.Locale.ROOT, "%.2f", v * 100.0).replaceFirst("\\.?0+$", "");
+            return "+" + p + "%";
+        }
+        String s = String.format(java.util.Locale.ROOT, "%.4f", v);
+        s = s.replaceFirst("0+$", "");
+        if (s.endsWith(".")) s += "0";
+        return "+" + s;
     }
 
     /** 全部分组总高度（含组间距 6） */
@@ -750,7 +771,7 @@ public class HextechPageScreen extends HexScaledScreen {
             for (PlayerData.ForgeEntry f : ClientDataStore.forges)
                 if (f.tier == t) agg.merge(f.stat, 1, Integer::sum);
             if (agg.isEmpty()) continue;
-            ForgeGroup grp = new ForgeGroup(tierKeys[t], tierColors[t]);
+            ForgeGroup grp = new ForgeGroup(tierKeys[t], tierColors[t], t);
             for (Map.Entry<String, Integer> e : agg.entrySet()) {
                 String name = Component.translatable("hexcraft.forge." + e.getKey() + ".name").getString();
                 boolean tacz = "tacz".equals(com.hexcraft.hextech.HextechRegistry.sourceOf(e.getKey()));

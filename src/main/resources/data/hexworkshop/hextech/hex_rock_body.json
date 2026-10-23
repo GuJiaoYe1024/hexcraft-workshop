@@ -1,0 +1,15 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 3.0
+    },
+    {
+      "attr": "knockback_resistance",
+      "perLevel": 0.18
+    }
+  ],
+  "event": "last_stand:0.12"
+}

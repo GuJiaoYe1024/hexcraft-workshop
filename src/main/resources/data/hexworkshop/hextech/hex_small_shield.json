@@ -1,0 +1,11 @@
+{
+  "rarity": "SILVER",
+  "weight": 10,
+  "mods": [
+    {
+      "attr": "knockback_resistance",
+      "perLevel": 0.1
+    }
+  ],
+  "event": "overshield:0.4"
+}

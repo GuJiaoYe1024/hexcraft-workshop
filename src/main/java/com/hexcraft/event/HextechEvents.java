@@ -123,12 +123,10 @@ public class HextechEvents {
         return v;
     }
 
-    /** v0.5.0 段位强度：锻造词条档位倍率（白银×1 / 黄金×2 / 棱彩×3，钳制非法档位） */
+    /** v0.5.0 段位强度：锻造词条档位倍率（白银×1 / 黄金×2 / 棱彩×3，钳制非法档位；v0.6.1 起读运行时配置） */
     public static double forgeTierMult(PlayerData.ForgeEntry f) {
         if (f == null) return 1;
-        int t = f.tier;
-        if (t < 0 || t >= com.hexcraft.hextech.HextechRegistry.FORGE_TIER_MULT.length) return 1;
-        return com.hexcraft.hextech.HextechRegistry.FORGE_TIER_MULT[t];
+        return com.hexcraft.hextech.HextechRegistry.tierMult(f.tier);
     }
 
     /** v0.5.0 段位加权总等级：Σ 等级×档位倍率（TACZ 枪械/暴击/弹药词条统一按档位加权，配得上棱彩档） */

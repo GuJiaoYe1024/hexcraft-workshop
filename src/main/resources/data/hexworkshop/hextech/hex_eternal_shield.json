@@ -1,0 +1,11 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 4,
+  "mods": [
+    {
+      "attr": "tough",
+      "perLevel": 5.0
+    }
+  ],
+  "event": "overshield:0.7,shield_low:4.5,last_stand:0.18"
+}

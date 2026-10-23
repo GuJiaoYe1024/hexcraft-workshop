@@ -358,11 +358,12 @@ public class PlayerData {
             if (mod == null) continue;
             // v0.5.0 段位强度：属性词条数值按锻造器档位乘倍率（白银×1 / 黄金×2 / 棱彩×3）——
             // 同词条在棱彩锻造器抽出比黄金/白银更强，配得上"棱彩最好"的段位划分
-            double tierMult = (f.tier >= 0 && f.tier < com.hexcraft.hextech.HextechRegistry.FORGE_TIER_MULT.length)
-                    ? com.hexcraft.hextech.HextechRegistry.FORGE_TIER_MULT[f.tier] : 1.0;
-            // 棱彩百分比词条（hppct/aspdpct）走乘法叠加，数值已按棱彩档设计（每级 +2% 生命 / +1.5% 攻速），不乘档位倍率
+            double tierMult = com.hexcraft.hextech.HextechRegistry.tierMult(f.tier);
+            // v0.6.1 单总池下百分比词条（hppct/aspdpct）同样乘档位倍率（5%/10%/15%、3%/6%/9% 每级）：
+            // 旧三档池隔离时代"不乘倍率"的残留会让白银抽到的百分比词条与棱彩等强，档位强度失效；
+            // tooltip 显示值 = 基础×倍率，此处同步保证显示=实际加成
             if (f.stat.equals("hppct") || f.stat.equals("aspdpct")) {
-                applyOneMulti(player, mod.attr, "forge:" + f.stat + "#" + idx++, mod.perLevel * f.level * forgePower);
+                applyOneMulti(player, mod.attr, "forge:" + f.stat + "#" + idx++, mod.perLevel * f.level * tierMult * forgePower);
             } else {
                 applyOne(player, mod.attr, "forge:" + f.stat + "#" + idx++, mod.perLevel * f.level * tierMult * forgePower);
             }

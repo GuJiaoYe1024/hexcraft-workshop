@@ -1,0 +1,11 @@
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 3.0
+    }
+  ],
+  "event": "kill_heal:1.2,regen:0.8"
+}

@@ -50,6 +50,7 @@ public class HexConfigScreen {
         economyCategory(b, eb);
         linkedCategory(b, eb);
         worldCategory(b, eb);
+        v060Category(b, eb);
         clientCategory(b, eb);
         rulesCategory(b, eb);
 
@@ -164,6 +165,26 @@ public class HexConfigScreen {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.client"));
         doubleEntry(eb, cat, "client.uiScale", HexConfig.UI_SCALE, 0.5, 2.0, 1.0);
         boolEntry(eb, cat, "client.particlesEnabled", HexConfig.PARTICLES_ENABLED);
+    }
+
+    /** v0.6.1：Cloth-Config 挂载 v060 分组（v0.6.0 的 4 项此前只存在于 toml、UI 未注册渲染节点）——
+     *  额外护甲减伤阈值/每点减伤/封顶 + 同词条叠加规则 + v0.6.1 锻造档位倍率（服务端生效） */
+    private static void v060Category(ConfigBuilder b, ConfigEntryBuilder eb) {
+        ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.v060"));
+        doubleEntry(eb, cat, "v060.extraArmorThreshold", HexConfig.EXTRA_ARMOR_THRESHOLD, 0.0, 200.0, 25.0);
+        doubleEntry(eb, cat, "v060.extraArmorPerPoint", HexConfig.EXTRA_ARMOR_PER_POINT, 0.0, 5.0, 0.5);
+        doubleEntry(eb, cat, "v060.extraArmorCap", HexConfig.EXTRA_ARMOR_CAP, 0.0, 80.0, 25.0);
+        cat.addEntry(eb.startEnumSelector(name("v060.forgeDuplicateRule"), HexConfig.DuplicateRule.class, HexConfig.FORGE_DUPLICATE_RULE.get())
+                .setSaveConsumer(v -> {
+                    HexConfig.FORGE_DUPLICATE_RULE.set(v);
+                    HexConfig.COMMON_SPEC.save();
+                })
+                .setDefaultValue(HexConfig.DuplicateRule.STACK)
+                .setTooltip(tip("v060.forgeDuplicateRule"))
+                .build());
+        doubleEntry(eb, cat, "v060.forgeMultSilver", HexConfig.FORGE_MULT_SILVER, 0.1, 20.0, 1.0);
+        doubleEntry(eb, cat, "v060.forgeMultGold", HexConfig.FORGE_MULT_GOLD, 0.1, 20.0, 2.0);
+        doubleEntry(eb, cat, "v060.forgeMultPrismatic", HexConfig.FORGE_MULT_PRISMATIC, 0.1, 20.0, 3.0);
     }
 
     private static void rulesCategory(ConfigBuilder b, ConfigEntryBuilder eb) {

@@ -60,6 +60,15 @@ public class HextechRegistry {
     public static final int[] FORGE_TIER_MULT = {1, 2, 3};
     public static final String[] FORGE_TIER_KEYS = {"basic", "gold", "prismatic"};
 
+    /** v0.6.1 锻造档位倍率（配置化，服务端生效；默认 ×1/×2/×3，Cloth 可改——例 1/2/4 爽玩）。
+     *  服务端属性计算与客户端 tooltip 展示统一走这里，保证显示=实际加成。非法档位钳制回 1.0。 */
+    public static double tierMult(int tier) {
+        if (tier == 1) return com.hexcraft.config.HexConfig.FORGE_MULT_GOLD.get();
+        if (tier == 2) return com.hexcraft.config.HexConfig.FORGE_MULT_PRISMATIC.get();
+        if (tier == 0) return com.hexcraft.config.HexConfig.FORGE_MULT_SILVER.get();
+        return 1.0;
+    }
+
     static {
         // ---- 白银（内置兜底，其余由数据包定义；数据包优先覆盖）----
         register("hex_berserk", HextechRarity.SILVER, 10, List.of(mod(Attributes.ATTACK_DAMAGE, 1.5)), null);
