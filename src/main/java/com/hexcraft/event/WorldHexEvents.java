@@ -226,6 +226,16 @@ public class WorldHexEvents {
     /** 驯服生物回血（每 0.8s 一次） */
     public static double tamedRegen(ServerLevel level) { return sumEffect(level, "tamed_regen"); }
 
+    // ---- v0.6.0 叠层乘区新键（世界海克斯 × 玩家叠层管理器联动）----
+    /** 玩家战斗叠层脱战衰减加速（1.00 = 衰减速度 +100%，世界海克斯「攻势易散」） */
+    public static double combatStackDecayBonus(ServerLevel level) { return sumEffect(level, "combat_stack_decay"); }
+
+    /** 玩家战斗叠层基础上限放大（0.50 = 上限 +50%，世界海克斯「厚积战场」） */
+    public static double combatStackCapBonus(ServerLevel level) { return sumEffect(level, "combat_stack_cap"); }
+
+    /** 玩家永久叠层获取速度加成（0.50 = 获取 +50%，世界海克斯「永续成长」） */
+    public static double permStackGainBonus(ServerLevel level) { return sumEffect(level, "perm_stack_gain"); }
+
     // ---- v0.4.0 高机制新键 ----
     /** 玩家受到伤害增幅（0.20 = +20%，独立乘区） */
     public static double playerTakenMult(ServerLevel level) { return sumEffect(level, "player_taken"); }

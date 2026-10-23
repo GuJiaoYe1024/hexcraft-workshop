@@ -49,5 +49,7 @@ public class Hexcraft {
 
     private void commonSetup(FMLCommonSetupEvent event) {
         event.enqueueWork(PacketHandler::register);
+        // v0.6.0 属性上限突破（护甲/生命/攻击距离等 maxValue 放大，无上限锻造不撞天花板）
+        event.enqueueWork(AttributeUnlock::unlock);
     }
 }

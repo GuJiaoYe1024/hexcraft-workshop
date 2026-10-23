@@ -51,6 +51,18 @@ public class HexDataLoader extends SimpleJsonResourceReloadListener {
                 int weight = GsonHelper.getAsInt(obj, "weight", 10);
                 String event = GsonHelper.getAsString(obj, "event", "");
                 String source = GsonHelper.getAsString(obj, "source", ""); // 可选：显式内容来源（缺省按 id 前缀自动归类）
+                // v0.6.0 通用叠层配置（可选；JSON 驱动新增叠层海克斯零代码）
+                HextechDefinition.StackSpec stackSpec = null;
+                if (obj.has("stack")) {
+                    JsonObject so = obj.getAsJsonObject("stack");
+                    String skey = GsonHelper.getAsString(so, "key", "stack_" + id);
+                    double scap = GsonHelper.getAsDouble(so, "cap", 50);
+                    boolean scombat = GsonHelper.getAsBoolean(so, "combat", true);
+                    int sdelay = GsonHelper.getAsInt(so, "decayDelay", -1);
+                    double srate = GsonHelper.getAsDouble(so, "decayRate", 1);
+                    boolean sonKill = GsonHelper.getAsBoolean(so, "onKill", false);
+                    stackSpec = new HextechDefinition.StackSpec(skey, scap, scombat, sdelay, srate, sonKill);
+                }
                 List<HextechDefinition.ModSpec> mods = new ArrayList<>();
                 if (obj.has("mods")) {
                     JsonArray arr = GsonHelper.getAsJsonArray(obj, "mods");
@@ -66,7 +78,7 @@ public class HexDataLoader extends SimpleJsonResourceReloadListener {
                         mods.add(new HextechDefinition.ModSpec(attr, perLevel));
                     }
                 }
-                HextechRegistry.put(id, new HextechDefinition(id, rarity, weight, mods, event, null, 0, source));
+                HextechRegistry.put(id, new HextechDefinition(id, rarity, weight, mods, event, null, 0, source, stackSpec));
                 loaded++;
             } catch (Exception ex) {
                 failed++;

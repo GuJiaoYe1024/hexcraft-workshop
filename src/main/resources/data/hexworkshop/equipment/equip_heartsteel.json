@@ -9,5 +9,5 @@
       "perLevel": 20.0
     }
   ],
-  "event": "stack_attr_onhit:hp:0.0015,thorns:2.0"
+  "event": "stack_attr_onhit:hp:0.0015,thorns:2.0,chance:0.25"
 }

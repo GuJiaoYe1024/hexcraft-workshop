@@ -45,10 +45,71 @@ public class PlayerData {
     private final List<ForgeEntry> forges = new ArrayList<>();
     /** 已装备列表（上限 6 槽位） */
     private final List<EquipEntry> equipment = new ArrayList<>();
+    /** v0.6.0 通用叠层管理器：标签化叠层（key → 叠层状态），JSON 驱动新增叠层零代码 */
+    private final Map<String, StackEntry> stacks = new java.util.LinkedHashMap<>();
     private transient RollOffer pendingRoll;
 
     /** 装备栏位上限 */
     public static final int MAX_EQUIP = 6;
+
+    /** v0.6.0 通用叠层条目（标签体系：combat=战斗叠层 脱战衰减+死亡清空；permanent=永久叠层；timed=计时叠层） */
+    public static class StackEntry {
+        public final String key;
+        public double value;       // 当前层数
+        public double cap;         // 基础上限（品质/迅战之角可乘区放大）
+        public final boolean combat; // 战斗叠层（脱战衰减 + 死亡清空）
+        public final int decayDelay; // 脱战多少 tick 后开始衰减（-1=不衰减）
+        public final double decayRate; // 每 tick 衰减量
+        public int idle;           // 已脱战 tick 计数
+        public StackEntry(String key, double cap, boolean combat, int decayDelay, double decayRate) {
+            this.key = key; this.cap = cap; this.combat = combat;
+            this.decayDelay = decayDelay; this.decayRate = decayRate;
+        }
+    }
+
+    /** 叠层获取（带叠速/上限乘区；v0.6.0 迅战之角等通过 effect 键 stack_gain/stack_cap 放大） */
+    public void addStack(String key, double gainMult, double capMult) {
+        StackEntry s = stacks.get(key);
+        if (s == null) return;
+        double add = 1.0 * gainMult;
+        double c = s.cap * capMult;
+        if (c < 0) c = s.cap;
+        s.value = Math.min(c, s.value + add);
+        s.idle = 0;
+    }
+
+    public StackEntry getStack(String key) { return stacks.get(key); }
+    public void putStack(StackEntry s) { stacks.put(s.key, s); }
+
+    /** 每 tick 叠层衰减（战斗叠层脱战计时；由玩家 tick 调用） */
+    public void tickStacks() { tickStacks(1.0); }
+
+    /** 每 tick 叠层衰减（带衰减速率乘区：世界海克斯「攻势易散」加速脱战衰减） */
+    public void tickStacks(double decayMult) {
+        for (StackEntry s : stacks.values()) {
+            if (!s.combat || s.decayDelay < 0) continue;
+            if (s.idle >= s.decayDelay) {
+                s.value = Math.max(0, s.value - s.decayRate * decayMult);
+            } else {
+                s.idle++;
+            }
+        }
+    }
+
+    /** 暴露叠层集合（供世界海克斯乘区查询） */
+    public java.util.Collection<StackEntry> getStacksForBonus() { return stacks.values(); }
+
+    /** 命中/攻击等活动刷新战斗叠层脱战计时 */
+    public void refreshCombatStacks() {
+        for (StackEntry s : stacks.values()) {
+            if (s.combat) s.idle = 0;
+        }
+    }
+
+    /** 死亡/重生：战斗叠层清空（永久叠层保留） */
+    public void clearCombatStacks() {
+        stacks.values().removeIf(s -> s.combat);
+    }
 
     public static class HexEntry {
         public final String id;
@@ -152,7 +213,7 @@ public class PlayerData {
 
     public void clearAll() {
         coins = 0; forgesUsed = 0; pityGold = 0; pityPrismatic = 0;
-        hexes.clear(); forges.clear(); equipment.clear();
+        hexes.clear(); forges.clear(); equipment.clear(); stacks.clear();
         pendingRoll = null;
         worldDrawOptions = null;
     }
@@ -184,6 +245,38 @@ public class PlayerData {
             case GOLD -> HexConfig.REFUND_GOLD.get();
             case PRISMATIC -> HexConfig.REFUND_PRISMATIC.get();
         };
+    }
+
+    public static int refundForTier(int tier) {
+        return switch (tier) {
+            case 0 -> HexConfig.REFUND_SILVER.get();
+            case 1 -> HexConfig.REFUND_GOLD.get();
+            default -> HexConfig.REFUND_PRISMATIC.get();
+        };
+    }
+
+    /** v0.6.0 同词条叠加规则入队（锻造产出统一入口）：
+     *  STACK=无上限叠加（默认）；BEST_ONLY=同名词条仅保留最高档位——新词条档位更高则顶替旧档并回收旧档 50%，
+     *  已有同档或更高档则回收本次投入（按档位退款）。返回应返还的晶币数。 */
+    public int addForge(String stat, int level, int tier) {
+        if (tier < 0 || tier > 2) tier = 0;
+        if (com.hexcraft.config.HexConfig.FORGE_DUPLICATE_RULE.get() == com.hexcraft.config.HexConfig.DuplicateRule.BEST_ONLY) {
+            for (java.util.Iterator<ForgeEntry> it = forges.iterator(); it.hasNext(); ) {
+                ForgeEntry f = it.next();
+                if (!f.stat.equals(stat)) continue;
+                if (f.tier >= tier) {
+                    // 已有更高档同词条 → 本次投入直接回收
+                    return refundForTier(tier);
+                }
+                // 新词条档位更高 → 顶替旧档（回收旧档一半）
+                int refund = refundForTier(f.tier) / 2;
+                it.remove();
+                forges.add(new ForgeEntry(stat, level, tier));
+                return refund;
+            }
+        }
+        forges.add(new ForgeEntry(stat, level, tier));
+        return 0;
     }
 
     /** v0.4.8 赌博海克斯：移除指定海克斯（一次性转化用） */
@@ -364,6 +457,19 @@ public class PlayerData {
             equipList.add(t);
         }
         tag.put("equipment", equipList);
+        // v0.6.0 通用叠层持久化（只存非空叠层；永久叠层死亡保留，战斗叠层死亡清空后自然消失）
+        ListTag stackList = new ListTag();
+        for (StackEntry s : stacks.values()) {
+            CompoundTag t = new CompoundTag();
+            t.putString("key", s.key);
+            t.putDouble("value", s.value);
+            t.putDouble("cap", s.cap);
+            t.putBoolean("combat", s.combat);
+            t.putInt("decayDelay", s.decayDelay);
+            t.putDouble("decayRate", s.decayRate);
+            stackList.add(t);
+        }
+        tag.put("stacks", stackList);
         return tag;
     }
 
@@ -407,6 +513,16 @@ public class PlayerData {
         if (dropHex + dropForge + dropEquip > 0) {
             com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 存档消毒：清理已删除内容 海克斯={} 锻造={} 装备={}", dropHex, dropForge, dropEquip);
         }
+        stacks.clear();
+        for (Tag t : tag.getList("stacks", 10)) {
+            CompoundTag c = (CompoundTag) t;
+            try {
+                StackEntry s = new StackEntry(c.getString("key"), c.getDouble("cap"), c.getBoolean("combat"),
+                        c.getInt("decayDelay"), c.getDouble("decayRate"));
+                s.value = c.getDouble("value");
+                stacks.put(s.key, s);
+            } catch (Exception ignored) { }
+        }
     }
 
     public void copyFrom(PlayerData old) {
@@ -436,6 +552,12 @@ public class PlayerData {
             EquipEntry ne = new EquipEntry(eq.id, eq.level);
             ne.stacks = eq.stacks;
             this.equipment.add(ne);
+        }
+        this.stacks.clear();
+        for (StackEntry s : old.stacks.values()) {
+            this.stacks.put(s.key, new StackEntry(s.key, s.cap, s.combat, s.decayDelay, s.decayRate) {{
+                value = s.value; idle = s.idle;
+            }});
         }
     }
 }

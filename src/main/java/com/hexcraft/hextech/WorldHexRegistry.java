@@ -96,6 +96,9 @@ public class WorldHexRegistry {
     public static Collection<WorldHexDefinition> all() { return DEFINITIONS.values(); }
     public static boolean exists(String id) { return DEFINITIONS.containsKey(id); }
 
+    /** v0.6.0 数据包开放：data/hexworkshop/world_hexes/*.json 覆盖或新增世界海克斯（WorldHexDataLoader 调用） */
+    public static void put(String id, WorldHexDefinition def) { DEFINITIONS.put(id, def); }
+
     /** 抽取池：全部未激活的世界海克斯（打乱后随机取 3 个；激活后移出池） */
     public static List<String> drawPool(List<String> activeIds) {
         List<String> pool = new ArrayList<>();

@@ -24,6 +24,11 @@ public class ClientDataStore {
     public static final List<PlayerData.ForgeEntry> forges = new ArrayList<>();
     public static final List<PlayerData.EquipEntry> equipment = new ArrayList<>();
     public static final Map<String, Double> attrs = new LinkedHashMap<>();
+    // v0.6.0 通用叠层（战斗叠层/永久叠层）客户端缓存（属性页展示）
+    public static final List<PlayerData.StackEntry> stacks = new ArrayList<>();
+
+    /** v0.6.0 服务端是否已装载本 mod：收到过 S2CSyncData 视为已装载（单机/联机服务端装 mod=true；服务端未装=false，隐藏 H/K 入口） */
+    public static boolean serverPresent;
 
     // ---- 世界海克斯（v0.3.21）：全服列表客户端缓存 ----
     public static final List<String> worldHexes = new ArrayList<>();
@@ -32,6 +37,7 @@ public class ClientDataStore {
     public static int worldCancelCoin;
 
     public static void apply(Packets.S2CSyncData msg) {
+        serverPresent = true;
         coins = msg.coins;
         forgesUsed = msg.forgesUsed;
         maxForges = msg.maxForges;
@@ -49,6 +55,8 @@ public class ClientDataStore {
         equipment.addAll(msg.equipment);
         attrs.clear();
         attrs.putAll(msg.attrs);
+        stacks.clear();
+        stacks.addAll(msg.stacks);
     }
 
     public static void applyWorld(Packets.S2CSyncWorldHexes msg) {

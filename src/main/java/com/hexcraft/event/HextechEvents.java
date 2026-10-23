@@ -51,6 +51,23 @@ public class HextechEvents {
     /** 额外伤害重入锁：echo/splash/fire_chain/frost_bite 的额外 hurt 不再触发本类伤害事件 */
     private static volatile boolean EXTRA_BUSY = false;
 
+    /** v0.6.0 校准：stack_attr_onhit 叠层概率数据化——JSON event 中带 chance:xxx 则读取（0~1），
+     *  缺省回退 0.25f（兼容旧数据包，如心之钢 v0.5.0 前无 chance 字段）。概率不随等级缩放。 */
+    public static float stackOnHitChance(HextechDefinition def) {
+        if (def == null || def.event == null) return 0.25f;
+        for (String token : def.event.split(",")) {
+            int ci = token.indexOf(':');
+            if (ci <= 0) continue;
+            if (token.substring(0, ci).equals("chance")) {
+                try {
+                    float v = Float.parseFloat(token.substring(ci + 1));
+                    if (v > 0 && v <= 1f) return v;
+                } catch (Exception ignored) { }
+            }
+        }
+        return 0.25f;
+    }
+
     // ================= 事件型海克斯效果（event 字段格式：效果名:倍率，逗号分隔）=================
 
     /** 汇总某玩家某种事件效果的倍率×等级之和（支持成长性 stack_growth：层数倍增）；装备 event 并入 */
@@ -150,6 +167,8 @@ public class HextechEvents {
                 if (!keepF) data.getForges().clear();
                 if (!keepE) data.getEquipment().clear();
                 if (!keepC) data.setCoins(0);
+                // v0.6.0 战斗叠层：死亡清空（积聚之刃等战斗叠层不跨死亡保留；永久叠层保留）
+                data.clearCombatStacks();
                 // v0.4.13：死亡瞬间把 PlayerData 备份进 persistentData（随玩家 NBT 保存 & 随重生 copyFrom 复制），
                 // onClone 双通道恢复——capability 在死亡/重生过程中失效也不丢数据；
                 // v0.4.14：同步写全量持久化快照 hexcraft_data（登出/自动保存后重进也可恢复）
@@ -208,9 +227,15 @@ public class HextechEvents {
             double dice = effect(data, "dice_forge");
             if (dice > 0 && killer.getRandom().nextFloat() < (float) dice) {
                 int t = HextechRegistry.randomTier();
-                List<String> pool = HextechRegistry.forgePool(t);
-                String stat = pool.get(killer.getRandom().nextInt(pool.size()));
-                data.getForges().add(new PlayerData.ForgeEntry(stat, 1, t));
+                // v0.6.0 单总池：加权抽取（与锻造三选一同口径）
+                String stat = com.hexcraft.hextech.HextechRoller.rollForgeOne(t);
+                // v0.6.0 同词条叠加规则（STACK 默认 / BEST_ONLY 最高档保留+回收）
+                int refund = data.addForge(stat, 1, t);
+                if (refund > 0) {
+                    data.addCoins(refund);
+                    killer.displayClientMessage(Component.translatable("message.hexcraft.forge_refund",
+                            Component.translatable("hexcraft.forge." + stat + ".name"), refund), true);
+                }
                 killer.displayClientMessage(Component.translatable("message.hexcraft.dice_forge"), true);
                 grew = true;
             }
@@ -218,8 +243,8 @@ public class HextechEvents {
                 data.applyModifiers(killer);
             }
 
-            // TACZ 弹药回复：tacz_ammo 稳定补弹比例 / tacz_ammo_full 几率补满；弹药补给锻造词条（ammo_aspect +20%/档）提升回复量
-            double ammoBoost = 1.0 + forgeLevelMult(data, "ammo_aspect") * 0.20; // v0.5.0 按档位加权（棱彩档×3）
+            // TACZ 弹药回复：tacz_ammo 稳定补弹比例 / tacz_ammo_full 几率补满（v0.6.0 弹药补给锻造词条 ammo_aspect 迁出，回复量由海克斯等级直接驱动）
+            double ammoBoost = 1.0;
             double ammo = effect(data, "tacz_ammo");
             if (ammo > 0 && restoreTaczAmmo(killer, ammo * ammoBoost)) {
                 killer.displayClientMessage(Component.translatable("message.hexcraft.tacz_ammo"), true);
@@ -262,15 +287,7 @@ public class HextechEvents {
                         mob.getX(), mob.getY(), mob.getZ(), (int) Math.floor(xp * xpDrop));
                 mob.level().addFreshEntity(orb);
             }
-            // 锻造机制：击杀回血 / 击杀晶币（v0.5.0 按档位倍率：棱彩抽的再生/聚财之刃效果配得上其段位）
-            for (PlayerData.ForgeEntry f : data.getForges()) {
-                double tm = forgeTierMult(f);
-                switch (f.stat) {
-                    case "regen_aspect" -> killer.heal((float) (1.0f * f.level * tm));
-                    case "gold_aspect" -> data.addCoins((int) (1 * f.level * tm));
-                    default -> { }
-                }
-            }
+            // v0.6.0 机制海克斯化：锻造不再产出击杀回血/击杀晶币（已有 regen/gold_punch 等海克斯覆盖）
 
             // ===== 异想天开机制（v0.3.4）=====
             // 击杀吃食物：恢复饱食度（food_on_kill:量）
@@ -454,9 +471,7 @@ public class HextechEvents {
             if (tc > 0 && sp.getRandom().nextFloat() < (float) tc) dmgMul *= 1.5f;
             double twin = effect(data, "twin_shot"); // 双子射击：几率双倍枪伤
             if (twin > 0 && sp.getRandom().nextFloat() < (float) twin) dmgMul *= 2;
-            // TACZ 联动锻造词条：枪械之刃（枪械伤害 +4%/档）、枪械暴击（+3%/档 1.5x）——v0.5.0 按档位加权（棱彩档×3）
-            dmgMul *= (float) (1 + forgeLevelMult(data, "gun_aspect") * 0.04);
-            if (sp.getRandom().nextFloat() < forgeLevelMult(data, "gun_crit_aspect") * 0.03f) dmgMul *= 1.5f;
+            // v0.6.0 机制海克斯化：枪械之刃/枪械暴击已并入 tacz_power/tacz_crit 海克斯（原 gun_aspect/gun_crit_aspect 锻造词条迁出）
             if (target != null) {
                 double dist = sp.distanceTo(target);
                 if (dist < 5) dmgMul *= (float) (1 + effect(data, "tacz_close_power"));
@@ -508,69 +523,122 @@ public class HextechEvents {
         }
         if (dmgMul != 1.0f) event.setAmount(amount * dmgMul);
 
-        // 锻造机制词条：燃烧固定 2 秒（叠加不延长时间，等级改为加深燃烧伤害）；其余固定时长提升强度
-        // v0.5.0 段位强度：所有机制数值/概率/时长按锻造档位乘倍率（白银×1 / 黄金×2 / 棱彩×3），配得上档位划分
+        // v0.6.0 机制海克斯化：原锻造机制词条（fire/frost/poison/leech/pierce/crit/execute/splash/lightning/
+        // stack/dance/bloodlust/reaper/thorn/gold/regen/TACZ）全部迁入海克斯池（锻造器仅剩静态属性）。
+        // 已有海克斯机制键覆盖的（frost_bite/lifesteal/crit/execute/splash/gold_punch/regen/tacz_power 等）不再保留锻造版本；
+        // 新机制海克斯（fire_blade/poison_blade/pierce_blade/lightning_blade/dance_blade/bloodlust_blade/reaper_blade/crescendo）在本段结算。
         if (target != null && target.isAlive()) {
-            for (PlayerData.ForgeEntry f : data.getForges()) {
-                double tm = forgeTierMult(f);
-                switch (f.stat) {
-                    case "fire_aspect" -> {
-                        target.setSecondsOnFire(2);
-                        if (target.isOnFire()) extraDamage(sp, target, amount * 0.04f * f.level * (float) tm);
+            // 叠角龙在场时命中叠层翻倍（永久属性层与战斗叠层共用，v0.6.0 提前声明供各叠层段使用）
+            boolean onHitDrake = data.getHexes().stream().anyMatch(e -> e.id.equals("hex_stack_drake"));
+            int onHitGain = onHitDrake ? 2 : 1;
+            boolean attrStacked = false;
+            // 火淬之刃：点燃 2 秒 + 燃烧额外伤害（等级加深）
+            double fireBlade = effect(data, "fire_blade");
+            if (fireBlade > 0) {
+                target.setSecondsOnFire(2);
+                if (target.isOnFire()) extraDamage(sp, target, amount * 0.04f * (float) fireBlade);
+            }
+            // 积聚之刃每层伤害倍率（共振彩蛋与通用叠层结算共用）
+            double crescendoMult = effect(data, "crescendo");
+            // 剧毒之刃：中毒（等级加深）
+            double poisonBlade = effect(data, "poison_blade");
+            if (poisonBlade > 0) applyTo(target, MobEffects.POISON, 3 * 20, Math.max(0, (int) poisonBlade - 1));
+            // 破甲之刃：无视护甲真伤（等级加深）
+            double pierceBlade = effect(data, "pierce_blade");
+            if (pierceBlade > 0) extraDamage(sp, target, amount * 0.03f * (float) pierceBlade);
+            // 雷电之刃：15%/级 几率连锁闪电劈击附近敌人（30% 伤害）
+            double lightningBlade = effect(data, "lightning_blade");
+            if (lightningBlade > 0 && sp.getRandom().nextFloat() < Math.min(1f, 0.15f * (float) lightningBlade)) {
+                chainLightning(sp, target, amount * 0.30f, 2.5);
+            }
+            // 刀锋之舞：攻速溢出部分按 8%/级 转化为额外伤害
+            double danceBlade = effect(data, "dance_blade");
+            if (danceBlade > 0) {
+                AttributeInstance asi = sp.getAttribute(Attributes.ATTACK_SPEED);
+                double aspd = asi == null ? 0 : asi.getValue();
+                if (aspd > 1.0) extraDamage(sp, target, amount * 0.08f * (float) danceBlade * (float) (aspd - 1.0));
+            }
+            // 血怒之刃：半血以下吸血 2%/级 并增伤 6%/级
+            double bloodlustBlade = effect(data, "bloodlust_blade");
+            if (bloodlustBlade > 0 && sp.getHealth() < sp.getMaxHealth() * 0.5f) {
+                sp.heal(amount * 0.02f * (float) bloodlustBlade);
+                extraDamage(sp, target, amount * 0.06f * (float) bloodlustBlade);
+            }
+            // 收割之刃：对低于 35% 生命的目标造成 30%/级 额外真实伤害
+            double reaperBlade = effect(data, "reaper_blade");
+            if (reaperBlade > 0) {
+                float tr = target.getHealth() / Math.max(1f, target.getMaxHealth());
+                if (tr < 0.35f) extraDamage(sp, target, amount * 0.3f * (float) reaperBlade);
+            }
+            // v0.6.0 通用叠层管理器（JSON 驱动）：命中叠层海克斯（def.stack，onKill=false）命中即叠 1 层，
+            // 迅战之角（stack_gain 叠速 / stack_cap 上限乘区）与世界海克斯「厚积战场」（叠层上限 +50%）自动生效；
+            // 每层伤害加成 = event 中与 stack.key 同名的键值 × 等级
+            // 积聚之刃（crescendo）：棱彩 200 层上限、脱战 6 秒后每 tick 衰减 2 层、每层额外伤害 +1%×等级
+            boolean hexStacked = false;
+            double whCapBonus = sp.level() instanceof net.minecraft.server.level.ServerLevel whLvl2
+                    ? com.hexcraft.event.WorldHexEvents.combatStackCapBonus(whLvl2) : 0;
+            double whPermGain = sp.level() instanceof net.minecraft.server.level.ServerLevel whLvl3
+                    ? com.hexcraft.event.WorldHexEvents.permStackGainBonus(whLvl3) : 0;
+            for (PlayerData.HexEntry e : data.getHexes()) {
+                HextechDefinition sdef = HextechRegistry.get(e.id);
+                if (sdef == null || sdef.stack == null || sdef.stack.onKill) continue;
+                if (data.getStack(sdef.stack.key) == null) {
+                    data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat, sdef.stack.decayDelay, sdef.stack.decayRate));
+                }
+                data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"), 1 + effect(data, "stack_cap") + whCapBonus);
+                double perStack = 0;
+                for (String token : sdef.event.split(",")) {
+                    int ci = token.indexOf(':');
+                    if (ci > 0 && token.substring(0, ci).equals(sdef.stack.key)) {
+                        try { perStack += Double.parseDouble(token.substring(ci + 1)) * e.level; } catch (Exception ignored) { }
                     }
-                    case "frost_aspect" -> applyTo(target, MobEffects.MOVEMENT_SLOWDOWN, (int) (2 * tm) * 20, f.level - 1);
-                    case "poison_aspect" -> applyTo(target, MobEffects.POISON, (int) (2 * tm) * 20, f.level - 1);
-                    case "leech_aspect" -> sp.heal(amount * 0.025f * f.level * (float) tm);
-                    case "pierce_aspect" -> extraDamage(sp, target, amount * 0.025f * f.level * (float) tm); // v0.5.0 走重入锁防递归
-                    case "crit_aspect" -> {
-                        if (sp.getRandom().nextFloat() < Math.min(1f, 0.07f * f.level * (float) tm)) {
-                            extraDamage(sp, target, amount * 0.5f);
+                }
+                PlayerData.StackEntry s = data.getStack(sdef.stack.key);
+                if (perStack > 0 && s != null && s.value > 0) {
+                    extraDamage(sp, target, amount * (float) perStack * (float) s.value);
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), true);
+                }
+                hexStacked = true;
+            }
+            // v0.6.0 世界海克斯「永续成长」：永久叠层（成长叠层海克斯/装备）获取速度 +50%（命中 概率提升为 chance×(1+gain)）
+            if (whPermGain > 0) {
+                for (PlayerData.HexEntry e : data.getHexes()) {
+                    HextechDefinition pdef = HextechRegistry.get(e.id);
+                    if (pdef != null && pdef.event != null && pdef.event.contains("stack_attr_onhit:")) {
+                        float hitChance = Math.min(1f, stackOnHitChance(pdef) * (float) (1 + whPermGain));
+                        if (sp.getRandom().nextFloat() < hitChance) {
+                            e.stacks += onHitGain;
+                            data.applyModifiers(sp);
+                            attrStacked = true;
                         }
                     }
-                    case "execute_aspect" -> {
-                        float tRatio = target.getHealth() / Math.max(1f, target.getMaxHealth());
-                        if (tRatio < 0.2f) extraDamage(sp, target, amount * 0.2f * f.level * (float) tm);
-                    }
-                    case "splash_aspect" -> {
-                        if (melee) splashAround(sp, target, amount * 0.1f * f.level * (float) tm, 2.0);
-                    }
-                    // ===== 大乱斗/斗魂竞技场风格重做机制（无上限锻造 → 每级数值下调）=====
-                    // 雷电之刃：7%/级 几率连锁闪电劈击附近敌人（30% 伤害）
-                    case "lightning_aspect" -> {
-                        if (sp.getRandom().nextFloat() < Math.min(1f, 0.07f * f.level * (float) tm)) {
-                            chainLightning(sp, target, amount * 0.30f, 2.5);
+                }
+                for (PlayerData.EquipEntry eq : data.getEquipment()) {
+                    HextechDefinition pdef = HextechRegistry.getEquip(eq.id);
+                    if (pdef != null && pdef.event != null && pdef.event.contains("stack_attr_onhit:")) {
+                        float hitChance = Math.min(1f, stackOnHitChance(pdef) * (float) (1 + whPermGain));
+                        if (sp.getRandom().nextFloat() < hitChance) {
+                            eq.stacks += onHitGain;
+                            data.applyModifiers(sp);
+                            attrStacked = true;
                         }
                     }
-                    // 积聚之刃：命中 50% 叠 1 层（上限 50），每层额外伤害 +1%/级（v0.5.0 按档位乘倍率：棱彩叠的层伤害配得上其段位）
-                    case "stack_aspect" -> {
-                        if (f.stacks < 50 && sp.getRandom().nextFloat() < 0.5f) {
-                            f.stacks++;
-                            sp.displayClientMessage(Component.translatable("message.hexcraft.forge_stack", f.stacks), true);
-                            sync(sp);
-                        }
-                        extraDamage(sp, target, amount * 0.01f * f.level * f.stacks * (float) tm);
-                    }
-                    // 刀锋之舞：攻速溢出部分按 8%/级 转化为额外伤害（参考重磅一击）
-                    case "dance_aspect" -> {
-                        AttributeInstance asi = sp.getAttribute(Attributes.ATTACK_SPEED);
-                        double aspd = asi == null ? 0 : asi.getValue();
-                        if (aspd > 1.0) extraDamage(sp, target, amount * 0.08f * f.level * (float) tm * (float) (aspd - 1.0));
-                    }
-                    // 血怒之刃：半血以下吸血 2%/级 并增伤 6%/级
-                    case "bloodlust_aspect" -> {
-                        if (sp.getHealth() < sp.getMaxHealth() * 0.5f) {
-                            sp.heal(amount * 0.02f * f.level * (float) tm);
-                            extraDamage(sp, target, amount * 0.06f * f.level * (float) tm);
-                        }
-                    }
-                    // 收割之刃：对低于 35% 生命的目标造成 30%/级 额外真实伤害（参考收割）
-                    case "reaper_aspect" -> {
-                        float tr = target.getHealth() / Math.max(1f, target.getMaxHealth());
-                        if (tr < 0.35f) extraDamage(sp, target, amount * 0.3f * f.level * (float) tm); // v0.5.0 走重入锁防递归
-                    }
-                    default -> { }
                 }
             }
+            // v0.6.0 共振彩蛋：积聚之刃 + 刀锋之舞 → 奔涌攻势（叠层期间攻速溢出额外伤害，层数越多越强，上限 2 倍）
+            if (crescendoMult > 0 && danceBlade > 0) {
+                AttributeInstance asi2 = sp.getAttribute(Attributes.ATTACK_SPEED);
+                double aspd2 = asi2 == null ? 0 : asi2.getValue();
+                PlayerData.StackEntry cs = data.getStack("crescendo");
+                if (aspd2 > 1.0 && cs != null && cs.value > 0) {
+                    extraDamage(sp, target, amount * 0.08f * (float) crescendoMult * (float) (aspd2 - 1.0)
+                            * (float) Math.min(2.0, cs.value / 100.0));
+                }
+            }
+            // 命中刷新战斗叠层脱战计时
+            data.refreshCombatStacks();
+            if (hexStacked) sync(sp); // 叠层变化实时同步客户端显示
             // —— 附魔系海克斯（enchant_*）——
             // 锋利之刃：攻击附加真实伤害（无视护甲）
             double eSharp = effect(data, "enchant_sharp");
@@ -606,14 +674,11 @@ public class HextechEvents {
             // 心之钢等：攻击命中概率叠永久属性层（stack_attr_onhit:键:倍率，25% 几率）；叠角龙在场时叠层翻倍——提示带海克斯名称
             // v0.4.3 修复：荆棘/反伤伤害不再无脑触发叠层；v0.4.7 起：反伤默认在 onDamageDealt 开头已短路（纯反伤），
             // 持有「万伤皆刃」棱彩海克斯时反伤也触发叠层（到达此处时 thorns 只可能是 all_damage_proc 放行或非反伤来源）
-            boolean onHitDrake = data.getHexes().stream().anyMatch(e -> e.id.equals("hex_stack_drake"));
-            int onHitGain = onHitDrake ? 2 : 1;
-            boolean attrStacked = false;
             for (PlayerData.HexEntry e : data.getHexes()) {
                 if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不被命中叠层
                 HextechDefinition def = HextechRegistry.get(e.id);
                 if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
-                    if (sp.getRandom().nextFloat() < 0.25f) {
+                    if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
                         e.stacks += onHitGain;
                         data.applyModifiers(sp);
                         sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
@@ -622,11 +687,11 @@ public class HextechEvents {
                     }
                 }
             }
-            // 可叠层装备（心之钢等装备的 stack_attr_onhit）：装备层数独立累计，25% 几率叠 1 层（叠角龙在场翻倍）——提示带装备名称
+            // 可叠层装备（心之钢等装备的 stack_attr_onhit）：装备层数独立累计，chance 概率叠 1 层（叠角龙在场翻倍）——提示带装备名称
             for (PlayerData.EquipEntry eq : data.getEquipment()) {
                 HextechDefinition def = HextechRegistry.getEquip(eq.id);
                 if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
-                    if (sp.getRandom().nextFloat() < 0.25f) {
+                    if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
                         eq.stacks += onHitGain;
                         data.applyModifiers(sp);
                         sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
@@ -721,6 +786,20 @@ public class HextechEvents {
         if (fireResist > 0 && event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FIRE)) {
             event.setAmount((float) (event.getAmount() * (1 - Math.min(0.9, fireResist))));
         }
+        // v0.6.0 额外护甲减伤（独立乘区，突破原版护甲减伤天花板）：护甲超过阈值后每点再减 X%（上限 Y%）
+        // 原版 1.20.1 护甲公式在 LivingHurtEvent 之后结算，此处乘区与之相乘 → 高护甲无上限锻造仍有收益
+        if (com.hexcraft.config.HexConfig.EXTRA_ARMOR_CAP.get() > 0) {
+            net.minecraft.world.entity.ai.attributes.AttributeInstance armorAttr = sp.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR);
+            if (armorAttr != null) {
+                double armorVal = armorAttr.getValue();
+                double threshold = com.hexcraft.config.HexConfig.EXTRA_ARMOR_THRESHOLD.get();
+                if (armorVal > threshold) {
+                    double red = Math.min(com.hexcraft.config.HexConfig.EXTRA_ARMOR_CAP.get() * 0.01,
+                            (armorVal - threshold) * com.hexcraft.config.HexConfig.EXTRA_ARMOR_PER_POINT.get() * 0.01);
+                    if (red > 0) event.setAmount((float) (event.getAmount() * (1 - red)));
+                }
+            }
+        }
         double guard = effect(data, "last_stand");
         if (guard > 0 && sp.getHealth() / Math.max(1f, sp.getMaxHealth()) < 0.30f) {
             event.setAmount((float) (event.getAmount() * (1 - guard)));
@@ -745,22 +824,17 @@ public class HextechEvents {
                 && sp.getAbsorptionAmount() < (float) lowShield) {
             sp.setAbsorptionAmount((float) lowShield);
         }
-        // 荆棘反伤 + 反击风暴 + 锻造反伤（v0.5.0 反伤之刃按档位加权：棱彩抽的反伤配得上其段位）
+        // 荆棘反伤 + 反击风暴（v0.6.0 反伤之刃锻造词条迁出，已有 thorns/counter 海克斯覆盖反伤）
         double thorns = effect(data, "thorns");
         double counter = effect(data, "counter");
-        double forgeThorn = 0;
-        for (PlayerData.ForgeEntry f : data.getForges()) {
-            if ("thorn_aspect".equals(f.stat)) forgeThorn += f.level * forgeTierMult(f);
-        }
-        if (thorns <= 0 && counter <= 0 && forgeThorn <= 0) return;
+        if (thorns <= 0 && counter <= 0) return;
         if (event.getSource().getEntity() instanceof LivingEntity attacker
                 && attacker != sp && attacker.isAlive()) {
             if (counter > 0 && sp.getRandom().nextFloat() < (float) counter) {
                 attacker.hurt(sp.damageSources().thorns(sp), event.getAmount());
             }
-            float thornDmg = (float) (thorns + forgeThorn * 1.0);
-            if (thornDmg > 0) {
-                attacker.hurt(sp.damageSources().thorns(sp), thornDmg);
+            if (thorns > 0) {
+                attacker.hurt(sp.damageSources().thorns(sp), (float) thorns);
             }
         }
     }
@@ -981,6 +1055,13 @@ public class HextechEvents {
         if (regen > 0 && sp.tickCount % 100 == 0) {
             sp.heal((float) regen);
         }
+        // v0.6.0 通用叠层管理器：每 tick 结算战斗叠层脱战衰减（每 20 tick 结算一次，降低开销）
+        // 世界海克斯「攻势易散」加速衰减（独立乘区）
+        if (sp.tickCount % 20 == 0) {
+            double decayBonus = sp.level() instanceof net.minecraft.server.level.ServerLevel whLvl
+                    ? com.hexcraft.event.WorldHexEvents.combatStackDecayBonus(whLvl) : 0;
+            data.tickStacks(1 + decayBonus);
+        }
     }
 
     // ================= 晶币掉落 =================
@@ -1134,6 +1215,8 @@ public class HextechEvents {
     public static void onReload(AddReloadListenerEvent event) {
         event.addListener(new HexDataLoader());
         event.addListener(new com.hexcraft.data.EquipmentDataLoader());
+        // v0.6.0 世界海克斯数据包开放：data/hexworkshop/world_hexes/*.json（覆盖/新增世界海克斯）
+        event.addListener(new com.hexcraft.data.WorldHexDataLoader());
     }
 
     /**

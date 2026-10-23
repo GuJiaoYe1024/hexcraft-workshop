@@ -1,0 +1,5 @@
+{
+  "category": "general",
+  "rarity": "gold",
+  "effect": "combat_stack_decay:1.0,player_xp:0.15"
+}

@@ -21,13 +21,23 @@ public class ClientEvents {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
+        // v0.6.0 客户端联机分级兼容：服务端未装本 mod（联网但从未收到 S2CSyncData）时隐藏 H/K 入口并提示
+        boolean serverMissing = mc.getConnection() != null && !ClientDataStore.serverPresent;
         while (ClientKeybinds.OPEN_HEXTECH.consumeClick()) {
+            if (serverMissing) {
+                mc.player.displayClientMessage(Component.translatable("message.hexcraft.server_missing"), true);
+                continue;
+            }
             if (!(mc.screen instanceof HextechPageScreen)) {
                 mc.setScreen(new HextechPageScreen());
             }
         }
         // v0.4.1：K 键直达世界海克斯界面
         while (ClientKeybinds.OPEN_WORLD_HEX.consumeClick()) {
+            if (serverMissing) {
+                mc.player.displayClientMessage(Component.translatable("message.hexcraft.server_missing"), true);
+                continue;
+            }
             if (!(mc.screen instanceof com.hexcraft.client.gui.WorldHexScreen)) {
                 mc.setScreen(new com.hexcraft.client.gui.WorldHexScreen());
             }
@@ -41,6 +51,8 @@ public class ClientEvents {
         boolean isInv = screen instanceof InventoryScreen;
         boolean isCraft = screen instanceof CraftingScreen;
         if (!isInv && !isCraft) return;
+        // v0.6.0 客户端联机分级兼容：服务端未装本 mod 时不在背包/合成界面注入入口（避免空白界面）
+        if (Minecraft.getInstance().getConnection() != null && !ClientDataStore.serverPresent) return;
         // Init.Post 触发时 getGuiLeft()/getGuiTop() 可能尚未赋值（出现过 x=76 y=-28 屏幕外），
         // 因此用屏幕宽高手动计算容器窗口位置（容器 176×166，居中）。
         int guiLeft = (screen.width - 176) / 2;

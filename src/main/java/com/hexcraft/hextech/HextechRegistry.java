@@ -45,12 +45,18 @@ public class HextechRegistry {
         return "vanilla";
     }
     private static final Map<String, HextechDefinition.ModSpec> FORGE_MODS = new LinkedHashMap<>();
-    /** 锻造机制词条（非属性，走事件效果；参考海克斯大乱斗/斗魂竞技场强化机制重做） */
+    /** v0.6.0 锻造机制词条迁出（全部海克斯化）：fire/frost/poison/leech/pierce/crit/execute/splash/
+     *  lightning/stack/dance/bloodlust/reaper/thorn/gold/regen → 对应海克斯（含 TACZ gun/gun_crit/ammo）；
+     *  锻造器仅保留静态属性，强度靠档位倍率区分。以下常量保留供历史/总表统计，不再进入锻造池。 */
+    @Deprecated
     public static final List<String> FORGE_MECHANICS = List.of(
             "fire_aspect", "frost_aspect", "poison_aspect", "leech_aspect", "pierce_aspect",
             "thorn_aspect", "regen_aspect", "gold_aspect",
             "crit_aspect", "execute_aspect", "splash_aspect",
             "lightning_aspect", "stack_aspect", "dance_aspect", "bloodlust_aspect", "reaper_aspect");
+    @Deprecated
+    public static final List<String> FORGE_TACZ_MECHANICS = List.of(
+            "gun_aspect", "gun_crit_aspect", "ammo_aspect");
     public static final int[] FORGE_TIER_MULT = {1, 2, 3};
     public static final String[] FORGE_TIER_KEYS = {"basic", "gold", "prismatic"};
 
@@ -167,52 +173,39 @@ public class HextechRegistry {
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    // ================= 锻造器词条（来源 × 小类：原版词条恒有；TACZ 联动词条按开关/检测启用） =================
-    /** TACZ 联动锻造机制词条（棱彩向强词条；无上限锻造 → 每级数值克制） */
-    public static final List<String> FORGE_TACZ_MECHANICS = List.of(
-            "gun_aspect", "gun_crit_aspect", "ammo_aspect");
+    // ================= 锻造器词条（v0.6.0 重构：仅静态属性，机制全部海克斯化） =================
+    /** v0.6.0 单总词条池：全部静态属性（13 项）。三档共用同一池，强度由档位倍率（×1/×2/×3）区分；
+     *  高段位词条（reach/step/hppct/aspdpct）仅在低档位压低抽取权重（不为 0，理论可抽出），
+     *  黄金/棱彩档位提升其权重。原三档隔离池（白银=纯数值/黄金=数值+机制/棱彩=百分比+强机制）
+     *  因机制词条全部迁入海克斯而取消——机制强度改由海克斯品质档位表达。 */
 
-    /** v0.5.0 锻造词条按档位分池（白银=纯数值属性、黄金=数值+简单机制、棱彩=百分比+强机制），
-     *  解决旧版三档共用同一词条池导致的"白银/黄金/棱彩出现同名同效果词条"问题 */
-    public static final List<String> FORGE_TIER_SILVER = List.of(
-            "atk", "armor", "hp", "spd", "aspd", "luck", "knockback", "resist", "tough");
-    public static final List<String> FORGE_TIER_GOLD = List.of(
-            "atk", "hp", "aspd", "armor",
-            "crit_aspect", "execute_aspect", "splash_aspect", "leech_aspect", "pierce_aspect",
-            "thorn_aspect", "gold_aspect", "fire_aspect", "frost_aspect", "poison_aspect", "regen_aspect");
-    public static final List<String> FORGE_TIER_PRISMATIC = List.of(
-            "lightning_aspect", "stack_aspect", "dance_aspect", "bloodlust_aspect", "reaper_aspect",
-            "hppct", "aspdpct");
-
-    /** 当前环境可锻造词条池（原版 + 已启用的联动词条） */
+    /** 当前环境可锻造词条池（仅静态属性；v0.6.0 机制词条全部迁出） */
     public static List<String> forgeStats() {
         ensureForgeExt();
-        List<String> out = new ArrayList<>(FORGE_MODS.keySet());
-        out.addAll(FORGE_MECHANICS);
-        if (isSourceEnabled("tacz", "forge")) out.addAll(FORGE_TACZ_MECHANICS);
-        return out;
+        return new ArrayList<>(FORGE_MODS.keySet());
     }
 
-    /** v0.5.0：按档位取锻造词条池（0=白银 / 1=黄金 / 2=棱彩），仅当前可用词条（来源启用过滤） */
+    /** v0.6.0 校准版：锻造词条单总池——三档一律返回全量 13 条（无独占词条）；
+     *  档位强度由 FORGE_TIER_MULT 倍率（×1/×2/×3）与 forgeWeight 权重共同区分。 */
     public static List<String> forgePool(int tier) {
         ensureForgeExt();
-        List<String> base = switch (tier) {
-            case 1 -> FORGE_TIER_GOLD;
-            case 2 -> FORGE_TIER_PRISMATIC;
-            default -> FORGE_TIER_SILVER;
-        };
-        List<String> out = new ArrayList<>(base);
-        if (tier == 2 && isSourceEnabled("tacz", "forge")) out.addAll(FORGE_TACZ_MECHANICS);
-        return out;
+        return new ArrayList<>(FORGE_MODS.keySet());
     }
 
-    /** 全量锻造词条（含未启用联动；供界面/总表统计展示，不用于抽取） */
+    /** v0.6.0 校准版：词条抽取权重（按档位；白银档压低高段位词条权重，但全部 >0 理论可出） */
+    public static int forgeWeight(int tier, String stat) {
+        boolean hi = "reach".equals(stat) || "step".equals(stat);
+        boolean pct = "hppct".equals(stat) || "aspdpct".equals(stat);
+        if (!hi && !pct) return 10;                     // 基础 9 条：三档同权
+        if (tier <= 0) return hi ? 1 : 1;               // 白银档：reach/step/hppct/aspdpct 权重压低（>0 可出）
+        if (tier == 1) return hi ? 6 : 3;               // 黄金档：机制型提权，百分比型次之
+        return hi ? 8 : 10;                             // 棱彩档：全部高位权重（百分比词条更契合棱彩）
+    }
+
+    /** 全量锻造词条（仅静态属性；供界面/总表统计展示，不用于抽取） */
     public static List<String> forgeStatsAll() {
         ensureForgeExt();
-        List<String> out = new ArrayList<>(FORGE_MODS.keySet());
-        out.addAll(FORGE_MECHANICS);
-        out.addAll(FORGE_TACZ_MECHANICS);
-        return out;
+        return new ArrayList<>(FORGE_MODS.keySet());
     }
 
     public static HextechDefinition.ModSpec forgeMod(String stat) {

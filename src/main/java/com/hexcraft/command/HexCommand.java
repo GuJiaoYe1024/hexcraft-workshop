@@ -5,6 +5,7 @@ import com.hexcraft.capability.PlayerData;
 import com.hexcraft.event.HextechEvents;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -17,6 +18,13 @@ import java.util.Collections;
 
 /** /hexcraft 管理指令（OP） */
 public class HexCommand {
+
+    /** v0.6.0 数据包热重载：向所有在线玩家广播 S2CDataRefresh（对应模块界面自动刷新） */
+    private static void broadcastRefresh(CommandSourceStack ctx, String module) {
+        for (ServerPlayer p : ctx.getServer().getPlayerList().getPlayers()) {
+            com.hexcraft.network.Packets.S2CDataRefresh.sendTo(p, module);
+        }
+    }
 
     @SubscribeEvent
     public static void onRegister(RegisterCommandsEvent event) {
@@ -62,10 +70,26 @@ public class HexCommand {
                     ctx.getSource().sendSuccess(() -> Component.literal("Hexcraft: cleared " + p.getName().getString()), true);
                     return 1;
                 })))
-                .then(Commands.literal("reload").executes(ctx -> {
-                    ctx.getSource().getServer().reloadResources(Collections.emptyList());
-                    ctx.getSource().sendSuccess(() -> Component.translatable("message.hexcraft.reloaded"), true);
-                    return 1;
-                })));
+                .then(Commands.literal("reload")
+                        // v0.6.0 分模块热重载：all=全量（默认）；hexes/equipment/world=对应数据包模块；
+                        // 服务端统一 reloadResources（SimpleJsonResourceReloadListener 全量监听），客户端按模块刷新对应界面
+                        .executes(ctx -> {
+                            ctx.getSource().getServer().reloadResources(Collections.emptyList());
+                            broadcastRefresh(ctx.getSource(), "all");
+                            ctx.getSource().sendSuccess(() -> Component.translatable("message.hexcraft.reloaded"), true);
+                            return 1;
+                        })
+                        .then(Commands.argument("module", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    String module = StringArgumentType.getString(ctx, "module");
+                                    String mod = switch (module) {
+                                        case "hexes", "forging", "equipment", "world" -> module;
+                                        default -> "all";
+                                    };
+                                    ctx.getSource().getServer().reloadResources(Collections.emptyList());
+                                    broadcastRefresh(ctx.getSource(), mod);
+                                    ctx.getSource().sendSuccess(() -> Component.literal("Hexcraft: reloaded module [" + mod + "]"), true);
+                                    return 1;
+                                }))));
     }
 }

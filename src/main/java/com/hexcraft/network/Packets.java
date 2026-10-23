@@ -134,8 +134,17 @@ public class Packets {
                 PlayerData.RollOffer offer = data.getPendingRoll();
                 if (offer == null || m.index < 0 || m.index >= offer.options.size()) return;
                 String pick = offer.options.get(m.index);
+                // v0.6.0 校准：锻造 hp/hppct 前记录最大生命（回血差额用）
+                double oldMaxHp = -1;
                 if (offer.forge) {
-                    data.getForges().add(new PlayerData.ForgeEntry(pick, 1, offer.tier));
+                    oldMaxHp = sp.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).getValue();
+                    // v0.6.0 同词条叠加规则（STACK 默认 / BEST_ONLY 最高档保留+回收）
+                    int refund = data.addForge(pick, 1, offer.tier);
+                    if (refund > 0) {
+                        data.addCoins(refund);
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.forge_refund",
+                                Component.translatable("hexcraft.forge." + pick + ".name"), refund), true);
+                    }
                 } else if (offer.equip) {
                     int refund = data.equipItem(pick);
                     if (refund > 0) data.addCoins(refund);
@@ -174,6 +183,16 @@ public class Packets {
                 }
                 data.setPendingRoll(null);
                 data.applyModifiers(sp);
+                // v0.6.0 校准（问题3）：锻造 hp/hppct 提升最大生命后回补当前血量——
+                // 钳制为 min(增量, 新上限-当前血)，防止溢出产生额外吸收护盾；满血锻造仅提升上限
+                if (oldMaxHp > 0) {
+                    double newMax = sp.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).getValue();
+                    double delta = newMax - oldMaxHp;
+                    if (delta > 0) {
+                        double healAmt = Math.min(delta, newMax - sp.getHealth());
+                        if (healAmt > 0.0001) sp.heal((float) healAmt);
+                    }
+                }
                 HextechEvents.sync(sp);
             });
             ctx.get().setPacketHandled(true);
@@ -474,6 +493,8 @@ public class Packets {
         public List<PlayerData.ForgeEntry> forges = new ArrayList<>();
         public List<PlayerData.EquipEntry> equipment = new ArrayList<>();
         public Map<String, Double> attrs = new java.util.HashMap<>();
+        // v0.6.0 通用叠层（战斗叠层/永久叠层）客户端展示数据
+        public List<PlayerData.StackEntry> stacks = new ArrayList<>();
 
         public static S2CSyncData of(PlayerData d, ServerPlayer sp) {
             S2CSyncData m = new S2CSyncData();
@@ -504,6 +525,12 @@ public class Packets {
                 return ne;
             }).toList());
             m.attrs.putAll(PlayerData.computeAttrs(sp));
+            m.stacks.clear();
+            for (PlayerData.StackEntry s : d.getStacksForBonus()) {
+                PlayerData.StackEntry ns = new PlayerData.StackEntry(s.key, s.cap, s.combat, s.decayDelay, s.decayRate);
+                ns.value = s.value;
+                m.stacks.add(ns);
+            }
             return m;
         }
 
@@ -525,6 +552,11 @@ public class Packets {
             for (PlayerData.EquipEntry e : m.equipment) { b.writeUtf(e.id); b.writeInt(e.level); b.writeInt(e.stacks); }
             b.writeInt(m.attrs.size());
             for (Map.Entry<String, Double> a : m.attrs.entrySet()) { b.writeUtf(a.getKey()); b.writeDouble(a.getValue()); }
+            b.writeInt(m.stacks.size());
+            for (PlayerData.StackEntry s : m.stacks) {
+                b.writeUtf(s.key); b.writeDouble(s.value); b.writeDouble(s.cap);
+                b.writeBoolean(s.combat); b.writeInt(s.decayDelay); b.writeDouble(s.decayRate);
+            }
         }
         public static S2CSyncData decode(FriendlyByteBuf b) {
             S2CSyncData m = new S2CSyncData();
@@ -558,6 +590,18 @@ public class Packets {
             }
             int an = b.readInt();
             for (int i = 0; i < an; i++) m.attrs.put(b.readUtf(), b.readDouble());
+            int sn = b.readInt();
+            for (int i = 0; i < sn; i++) {
+                String sk = b.readUtf();
+                double sv = b.readDouble();
+                double sc = b.readDouble();
+                boolean cb = b.readBoolean();
+                int dd = b.readInt();
+                double dr = b.readDouble();
+                PlayerData.StackEntry s = new PlayerData.StackEntry(sk, sc, cb, dd, dr);
+                s.value = sv;
+                m.stacks.add(s);
+            }
             return m;
         }
         public static void handle(S2CSyncData m, Supplier<NetworkEvent.Context> ctx) {
@@ -651,8 +695,9 @@ public class Packets {
                 }
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
-                int cost = (int) Math.round(HexConfig.WORLD_DRAW_XP.get()
-                        * (1 + com.hexcraft.event.WorldHexEvents.drawCostMult(sl)));
+                // v0.6.0 校准（备注5）：抽取消耗结果不得小于 0——负 draw_cost 只允许减耗，禁止返还经验/白嫖（下限 1 点）
+                int cost = Math.max(1, (int) Math.round(HexConfig.WORLD_DRAW_XP.get()
+                        * (1 + com.hexcraft.event.WorldHexEvents.drawCostMult(sl))));
                 if (realTotalXp(sp) < cost) {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.xp_not_enough", cost), true);
                     return;
@@ -781,6 +826,30 @@ public class Packets {
         S2CSyncWorldHexes msg = S2CSyncWorldHexes.of(server);
         for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
             PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), msg);
+        }
+    }
+
+    // ================= S2C：数据刷新广播（v0.6.0 热重载——数据包内容变化后客户端界面自动刷新） =================
+    public static class S2CDataRefresh {
+        public String module; // all / hexes / forging / equipment / world
+
+        public static S2CDataRefresh of(String module) {
+            S2CDataRefresh m = new S2CDataRefresh();
+            m.module = module;
+            return m;
+        }
+
+        public static void encode(S2CDataRefresh m, FriendlyByteBuf b) { b.writeUtf(m.module); }
+        public static S2CDataRefresh decode(FriendlyByteBuf b) { return of(b.readUtf()); }
+
+        public static void handle(S2CDataRefresh m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() ->
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientPacketHandler.refreshData(m.module)));
+            ctx.get().setPacketHandled(true);
+        }
+
+        public static void sendTo(ServerPlayer sp, String module) {
+            PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), of(module));
         }
     }
 }

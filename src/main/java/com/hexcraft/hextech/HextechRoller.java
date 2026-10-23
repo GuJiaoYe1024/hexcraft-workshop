@@ -56,13 +56,36 @@ public class HextechRoller {
         return r;
     }
 
-    /** 锻造三选一（按档位分池：0=白银纯数值 / 1=黄金数值+机制 / 2=棱彩百分比+强机制） */
+    /** 锻造三选一（单总池 + 档位权重加权抽取：0=白银 / 1=黄金 / 2=棱彩；倍率仍由 FORGE_TIER_MULT 区分） */
     public static List<String> rollForgeOptions(int tier) {
-        List<String> pool = new ArrayList<>(HextechRegistry.forgePool(tier));
+        List<String> all = new ArrayList<>(HextechRegistry.forgePool(tier));
         List<String> out = new ArrayList<>(3);
-        while (out.size() < 3 && !pool.isEmpty()) {
-            out.add(pool.remove(RANDOM.nextInt(pool.size())));
+        while (out.size() < 3 && !all.isEmpty()) {
+            String pick = weightedForgePick(all, tier);
+            if (pick == null) break;
+            all.remove(pick);
+            out.add(pick);
         }
         return out;
+    }
+
+    /** 加权单抽（供掷骰狂人等随机锻造事件使用，与三选一同权重口径） */
+    public static String rollForgeOne(int tier) {
+        List<String> all = new ArrayList<>(HextechRegistry.forgePool(tier));
+        String pick = weightedForgePick(all, tier);
+        return pick == null ? "atk" : pick;
+    }
+
+    /** 按档位权重抽取一个词条（权重来自 HextechRegistry.forgeWeight） */
+    private static String weightedForgePick(List<String> pool, int tier) {
+        if (pool.isEmpty()) return null;
+        int total = 0;
+        for (String s : pool) total += Math.max(1, HextechRegistry.forgeWeight(tier, s));
+        int roll = RANDOM.nextInt(total);
+        for (String s : pool) {
+            roll -= Math.max(1, HextechRegistry.forgeWeight(tier, s));
+            if (roll < 0) return s;
+        }
+        return pool.get(pool.size() - 1);
     }
 }

@@ -47,6 +47,11 @@ public class HexConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.DoubleValue UI_SCALE;
     public static final ForgeConfigSpec.BooleanValue PARTICLES_ENABLED;
+    // v0.6.0 锻造/叠层规则（服务端生效）
+    public static final ForgeConfigSpec.DoubleValue EXTRA_ARMOR_THRESHOLD;
+    public static final ForgeConfigSpec.DoubleValue EXTRA_ARMOR_PER_POINT;
+    public static final ForgeConfigSpec.DoubleValue EXTRA_ARMOR_CAP;
+    public static final ForgeConfigSpec.EnumValue<DuplicateRule> FORGE_DUPLICATE_RULE;
     // ---- 死亡保留（以客户端配置为主，v0.4.11）：主菜单即可设置并保存，进世界即生效 ----
     public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_HEXES;
     public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_FORGES;
@@ -100,6 +105,13 @@ public class HexConfig {
         WORLD_MAX_PER_CATEGORY = b.comment("每个分类（通用/友好/中立/敌对）同时最多激活的世界海克斯数量（0=无限制；v0.4.0 起默认 8）").translation("hexcraft.config.world.maxPerCategory").defineInRange("maxPerCategory", 8, 0, 32);
         b.pop();
 
+        b.comment("v0.6.0 锻造与叠层规则（服务端生效）").translation("hexcraft.config.cat.v060").push("v060");
+        EXTRA_ARMOR_THRESHOLD = b.comment("额外护甲减伤阈值：护甲超过该值（原版满减伤约 25 点）的部分才享受额外减伤").translation("hexcraft.config.v060.extraArmorThreshold").defineInRange("extraArmorThreshold", 25.0, 0.0, 200.0);
+        EXTRA_ARMOR_PER_POINT = b.comment("额外护甲减伤：超出阈值的每点护甲提供 X% 减伤（独立乘区，与护甲曲线相乘）").translation("hexcraft.config.v060.extraArmorPerPoint").defineInRange("extraArmorPerPoint", 0.5, 0.0, 5.0);
+        EXTRA_ARMOR_CAP = b.comment("额外护甲减伤上限（%）").translation("hexcraft.config.v060.extraArmorCap").defineInRange("extraArmorCap", 25.0, 0.0, 80.0);
+        FORGE_DUPLICATE_RULE = b.comment("同词条锻造叠加规则：STACK=无上限叠加（默认）；BEST_ONLY=同名词条仅保留最高档位（低档重复自动回收）").translation("hexcraft.config.v060.forgeDuplicateRule").defineEnum("forgeDuplicateRule", DuplicateRule.STACK);
+        b.pop();
+
         COMMON_SPEC = b.build();
     }
 
@@ -115,4 +127,8 @@ public class HexConfig {
         b.pop();
         CLIENT_SPEC = b.build();
     }
+
+    /** v0.6.0 同词条叠加规则（服务端）：STACK=无上限叠加（默认，延续无上限锻造）；
+     *  BEST_ONLY=同名词条仅保留最高档位/最高等级（低档重复锻造自动回收为晶币） */
+    public enum DuplicateRule { STACK, BEST_ONLY }
 }

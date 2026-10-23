@@ -9,7 +9,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.Optional;
 
 public class PacketHandler {
-    public static final String VERSION = "15";
+    public static final String VERSION = "16";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Hexcraft.MODID, "main"),
             () -> VERSION,
@@ -67,5 +67,9 @@ public class PacketHandler {
         CHANNEL.registerMessage(id++, Packets.C2SCancelWorldHex.class,
                 Packets.C2SCancelWorldHex::encode, Packets.C2SCancelWorldHex::decode, Packets.C2SCancelWorldHex::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        // ---- v0.6.0 数据刷新广播（热重载/内容变更 → 客户端界面自动刷新）；协议 VERSION bump 15→16（新增包类型，双端必须同版本）----
+        CHANNEL.registerMessage(id++, Packets.S2CDataRefresh.class,
+                Packets.S2CDataRefresh::encode, Packets.S2CDataRefresh::decode, Packets.S2CDataRefresh::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
     }
 }

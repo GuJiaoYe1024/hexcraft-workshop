@@ -85,6 +85,12 @@ public class HextechPageScreen extends HexScaledScreen {
         super(Component.translatable("hexcraft.gui.page_title"));
     }
 
+    /** v0.6.0 数据热刷新：重建界面时保持当前页签 */
+    public int currentTab() { return tab; }
+
+    /** v0.6.0 数据热刷新：重建界面时恢复原页签（init 前设置） */
+    public void setInitialTab(int t) { tab = t; }
+
     @Override
     protected void init() {
         int x = (this.guiW() - W) / 2;
@@ -335,10 +341,15 @@ public class HextechPageScreen extends HexScaledScreen {
         // ===== 框3 成长叠层：所有可叠层海克斯与装备全部展示（含 0 层）=====
         List<PlayerData.HexEntry> stkHexes = stackableHexes();
         List<PlayerData.EquipEntry> stkEqs = stackableEquips();
-        if (!stkHexes.isEmpty() || !stkEqs.isEmpty()) {
+        // v0.6.0 战斗叠层（积聚之刃等通用叠层管理器）：combat 叠层脱战衰减/死亡清空，单独小节展示
+        List<PlayerData.StackEntry> battleStacks = new java.util.ArrayList<>();
+        for (PlayerData.StackEntry bs : ClientDataStore.stacks) if (bs.combat) battleStacks.add(bs);
+        boolean hasBattle = !battleStacks.isEmpty();
+        if (!stkHexes.isEmpty() || !stkEqs.isEmpty() || hasBattle) {
             int hexRows = stkHexes.isEmpty() ? 0 : 1 + (stkHexes.size() + 1) / 2;
             int eqRows = stkEqs.isEmpty() ? 0 : 1 + (stkEqs.size() + 1) / 2;
-            int box3H = 14 + (hexRows + eqRows) * ROW_H + 4;
+            int bRows = hasBattle ? 1 + (battleStacks.size() + 1) / 2 : 0;
+            int box3H = 14 + (hexRows + eqRows + bRows) * ROW_H + 4;
             drawGroupBox(g, top, box3H);
             drawSectionTitle(g, top + 2, 0, Component.translatable("hexcraft.gui.group_stack"));
             idx = 2;
@@ -358,6 +369,15 @@ public class HextechPageScreen extends HexScaledScreen {
                 for (PlayerData.EquipEntry e : stkEqs) {
                     drawAttrRow(g, inner, idx++, Component.translatable("hexcraft.equip." + e.id + ".name"),
                             "×" + e.stacks + "层");
+                }
+            }
+            if (hasBattle) {
+                if (idx % 2 == 1) idx++; // 补到整行
+                drawSectionTitle(g, inner, idx, Component.translatable("hexcraft.gui.stack_battle_title"));
+                idx += 2;
+                for (PlayerData.StackEntry bs : battleStacks) {
+                    Component bname = Component.literal(stackNameOf(bs.key));
+                    drawAttrRow(g, inner, idx++, bname, (int) bs.value + "/" + (int) bs.cap + "层");
                 }
             }
         }
@@ -387,6 +407,19 @@ public class HextechPageScreen extends HexScaledScreen {
             }
         }
         return rows;
+    }
+
+    /** v0.6.0 战斗叠层显示名：优先取对应海克斯名（crescendo → hex_crescendo_blade），无则用键名 */
+    private static String stackNameOf(String key) {
+        String candidate = "hex_" + key + "_blade";
+        if (HextechRegistry.get(candidate) != null) {
+            return Component.translatable("hexcraft.hextech." + candidate + ".name").getString();
+        }
+        String probe = "hex_" + key;
+        if (HextechRegistry.get(probe) != null) {
+            return Component.translatable("hexcraft.hextech." + probe + ".name").getString();
+        }
+        return key;
     }
 
     /** 可叠层海克斯：event 含 stack_growth / stack_attr: / stack_attr_onhit:（全部展示，含 0 层）；叠角龙自身不叠层，不出现在成长叠层栏 */
@@ -720,7 +753,7 @@ public class HextechPageScreen extends HexScaledScreen {
             ForgeGroup grp = new ForgeGroup(tierKeys[t], tierColors[t]);
             for (Map.Entry<String, Integer> e : agg.entrySet()) {
                 String name = Component.translatable("hexcraft.forge." + e.getKey() + ".name").getString();
-                boolean tacz = com.hexcraft.hextech.HextechRegistry.FORGE_TACZ_MECHANICS.contains(e.getKey());
+                boolean tacz = "tacz".equals(com.hexcraft.hextech.HextechRegistry.sourceOf(e.getKey()));
                 grp.items.add(new Object[]{name + "  ×" + e.getValue(), tacz, e.getKey()});
             }
             groups.add(grp);
