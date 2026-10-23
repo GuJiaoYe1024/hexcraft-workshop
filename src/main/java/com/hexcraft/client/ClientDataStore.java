@@ -27,8 +27,20 @@ public class ClientDataStore {
     // v0.6.0 通用叠层（战斗叠层/永久叠层）客户端缓存（属性页展示）
     public static final List<PlayerData.StackEntry> stacks = new ArrayList<>();
 
+    // v0.6.3 服务端权威费用快照（界面显示与实扣一致；折扣/世界乘区变化后服务端推送新快照）
+    public static int rerollCost;
+    public static final int[] forgeCosts = new int[3];
+    public static int equipGoldCost;
+    public static int equipPrismaticCost;
+    public static int worldDrawCost;
+    /** 费用快照版本号：每次 apply 递增，打开中的界面 tick 检测到变化即重建按钮（刷新显示） */
+    public static int costVersion;
+
     /** v0.6.0 服务端是否已装载本 mod：收到过 S2CSyncData 视为已装载（单机/联机服务端装 mod=true；服务端未装=false，隐藏 H/K 入口） */
     public static boolean serverPresent;
+
+    /** v0.6.3 打开海克斯工坊主界面时置 true：收到下一条 S2CSyncData 后用最新数据重建界面一次（联机抽取后界面为空的兜底修复） */
+    public static boolean requestPendingSync;
 
     // ---- 世界海克斯（v0.3.21）：全服列表客户端缓存 ----
     public static final List<String> worldHexes = new ArrayList<>();
@@ -57,6 +69,13 @@ public class ClientDataStore {
         attrs.putAll(msg.attrs);
         stacks.clear();
         stacks.addAll(msg.stacks);
+        // v0.6.3 费用快照 + 版本递增（打开中的界面据此重建费用显示）
+        rerollCost = msg.rerollCost;
+        for (int i = 0; i < 3; i++) forgeCosts[i] = msg.forgeCosts[i];
+        equipGoldCost = msg.equipGoldCost;
+        equipPrismaticCost = msg.equipPrismaticCost;
+        worldDrawCost = msg.worldDrawCost;
+        costVersion++;
     }
 
     public static void applyWorld(Packets.S2CSyncWorldHexes msg) {
@@ -65,5 +84,6 @@ public class ClientDataStore {
         worldMaxPerCategory = msg.maxPerCategory;
         worldDrawXp = msg.drawXp;
         worldCancelCoin = msg.cancelCoin;
+        costVersion++;
     }
 }

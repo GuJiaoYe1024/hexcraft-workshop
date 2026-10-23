@@ -204,6 +204,10 @@ public class HexConfigScreen {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.client"));
         doubleEntry(eb, cat, "client.uiScale", HexConfig.UI_SCALE, 0.5, 2.0, 1.0);
         boolEntry(eb, cat, "client.particlesEnabled", HexConfig.PARTICLES_ENABLED);
+        // v0.6.3 抽取/锻造完成后返回工坊界面（玩家可选：继续连抽 or 直接关闭）
+        boolEntry(eb, cat, "client.keepWorkshopOpen", HexConfig.KEEP_WORKSHOP_OPEN);
+        // v0.6.3 三选一「选中→确认」（防手滑）
+        boolEntry(eb, cat, "client.confirmSelect", HexConfig.CONFIRM_SELECT);
     }
 
     /** v0.6.1：Cloth-Config 挂载 v060 分组（v0.6.0 的 4 项此前只存在于 toml、UI 未注册渲染节点）——

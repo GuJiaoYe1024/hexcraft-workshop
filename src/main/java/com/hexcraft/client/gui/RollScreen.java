@@ -25,6 +25,11 @@ public class RollScreen extends HexScaledScreen {
     private final List<float[]> parts = new ArrayList<>();
     private int cardY;
     private boolean closed;
+    /** v0.6.3 三选一「选中→确认」：CONFIRM_SELECT 开启时点卡片仅选中，点确认按钮才生效（防手滑） */
+    private int selectedIdx = -1;
+    /** v0.6.3 界面停留：确认抽取后不关闭，展示结果直到玩家点「完成」 */
+    private String chosenId;
+    private Component chosenName;
     private float anim;
     private int pTick;
     private boolean partsInit;
@@ -46,7 +51,7 @@ public class RollScreen extends HexScaledScreen {
             String label = msg.forge
                     ? Component.translatable("hexcraft.forge.tier." + (msg.tier == 0 ? "basic" : msg.tier == 1 ? "gold" : "prismatic")).getString()
                     : Component.translatable("hexcraft.rarity." + msg.rarities.get(idx)).getString();
-            cards[idx] = new CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> choose(idx));
+            cards[idx] = new CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> onCardClick(idx));
             this.addRenderableWidget(cards[idx]);
         }
         int btnY = cardY + CARD_H + 18;
@@ -54,10 +59,10 @@ public class RollScreen extends HexScaledScreen {
             btns.add(new AccentButton(centerX - 112, btnY, 106, 22,
                     Component.translatable("hexcraft.gui.reroll", msg.rerollCost), 0xFF6FB1FF, b -> reroll()));
             btns.add(new AccentButton(centerX + 6, btnY, 106, 22,
-                    Component.translatable("gui.cancel"), 0xFF8A93A8, b -> onClose()));
+                    Component.translatable("gui.cancel"), 0xFF8A93A8, b -> cancelRoll()));
         } else {
             btns.add(new AccentButton(centerX - 53, btnY, 106, 22,
-                    Component.translatable("gui.cancel"), 0xFF8A93A8, b -> onClose()));
+                    Component.translatable("gui.cancel"), 0xFF8A93A8, b -> cancelRoll()));
         }
         for (AccentButton b : btns) this.addRenderableWidget(b);
     }
@@ -83,13 +88,75 @@ public class RollScreen extends HexScaledScreen {
         }
     }
 
+    /** v0.6.3 卡片点击：CONFIRM_SELECT 开启=仅选中待确认；关闭=直接选择生效 */
+    private void onCardClick(int index) {
+        if (closed) return;
+        if (HexConfig.CONFIRM_SELECT.get()) select(index);
+        else choose(index);
+    }
+
+    private void select(int index) {
+        selectedIdx = index;
+        for (int i = 0; i < 3; i++) cards[i].selected = (i == index);
+        rebuildConfirmButtons();
+    }
+
+    /** 选中态底部按钮：确认选择 + 取消（替换刷新/取消） */
+    private void rebuildConfirmButtons() {
+        int centerX = this.guiW() / 2;
+        int btnY = cardY + CARD_H + 18;
+        for (AccentButton b : btns) this.removeWidget(b);
+        btns.clear();
+        btns.add(new AccentButton(centerX - 112, btnY, 106, 22,
+                Component.translatable("hexcraft.gui.confirm_choose"), 0xFF6FB1FF, b -> choose(selectedIdx)));
+        btns.add(new AccentButton(centerX + 6, btnY, 106, 22,
+                Component.translatable("gui.cancel"), 0xFF8A93A8, b -> cancelRoll()));
+        for (AccentButton b : btns) this.addRenderableWidget(b);
+    }
+
     private void choose(int index) {
         if (closed) return;
         closed = true;
+        chosenId = msg.options.get(index);
+        chosenName = Component.translatable(msg.forge
+                ? "hexcraft.forge." + chosenId + ".name" : "hexcraft.hextech." + chosenId + ".name");
         Packets.C2SChooseRoll p = new Packets.C2SChooseRoll();
         p.index = index;
         PacketHandler.CHANNEL.sendToServer(p);
-        this.onClose();
+        // v0.6.3 确认选择后立即离开（不再停留展示结果 + 完成按钮；返回/关闭按 KEEP_WORKSHOP_OPEN 配置）
+        done();
+    }
+
+    /** v0.6.3 取消本轮三选一：通知服务端清理待选状态（防「请完成当前三选一」死锁），
+     *  并按配置返回抽取入口页（KEEP_WORKSHOP_OPEN=true）或直接关闭界面 */
+    private void cancelRoll() {
+        if (closed) return;
+        closed = true;
+        PacketHandler.CHANNEL.sendToServer(new Packets.C2SCancelRoll());
+        if (HexConfig.KEEP_WORKSHOP_OPEN.get()) {
+            HextechPageScreen fresh = new HextechPageScreen();
+            fresh.setInitialTab(msg.forge ? 2 : 1);
+            net.minecraft.client.Minecraft.getInstance().setScreen(fresh);
+        } else {
+            net.minecraft.client.Minecraft.getInstance().setScreen(null);
+        }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == 256 && !closed) { // Esc = 取消本轮（与服务端取消包同步，防死锁）
+            cancelRoll();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /** v0.6.3 完成：KEEP_WORKSHOP_OPEN=true 返回工坊对应页面继续抽取（锻造→锻造页/海克斯→海克斯页）；false 直接关闭 */
+    private void done() {
+        if (!HexConfig.KEEP_WORKSHOP_OPEN.get()) { net.minecraft.client.Minecraft.getInstance().setScreen(null); return; }
+        HextechPageScreen fresh = new HextechPageScreen();
+        fresh.setInitialTab(msg.forge ? 2 : 1);
+        net.minecraft.client.Minecraft.getInstance().setScreen(fresh);
     }
 
     private void reroll() {
@@ -116,13 +183,18 @@ public class RollScreen extends HexScaledScreen {
         g.fillGradient(0, cardY - 30, this.guiW(), cardY + CARD_H + 6, 0x2A123056, 0x00000000);
         g.fillGradient(0, cardY + CARD_H - 20, this.guiW(), cardY + CARD_H + 30, 0x00000000, 0x2A123056);
 
-        // 标题与装饰条
+        // 标题与装饰条（v0.6.3 界面停留：确认后标题切换为「已获得：名称」）
         String tierKey = msg.forge
                 ? "hexcraft.forge.tier." + (msg.tier == 0 ? "basic" : msg.tier == 1 ? "gold" : "prismatic")
                 : null;
-        Component title = msg.forge
-                ? Component.translatable("hexcraft.gui.forge_title", Component.translatable(tierKey))
-                : Component.translatable("hexcraft.gui.hex_title");
+        Component title;
+        if (chosenId != null) {
+            title = Component.translatable("hexcraft.gui.got", chosenName);
+        } else if (msg.forge) {
+            title = Component.translatable("hexcraft.gui.forge_title", Component.translatable(tierKey));
+        } else {
+            title = Component.translatable("hexcraft.gui.hex_title");
+        }
         g.drawCenteredString(this.font, title, centerX, cardY - 34, 0xFFFFFF);
         int barW = this.font.width(title) + 40;
         g.fillGradient(centerX - barW / 2, cardY - 20, centerX + barW / 2, cardY - 19, 0xFF6FB1FF, 0xFF1E6FE8);
@@ -202,6 +274,12 @@ public class RollScreen extends HexScaledScreen {
             }
             g.drawCenteredString(this.font, line, centerX, cardY + CARD_H + 5, 0xFFC8D0E8);
         }
+        // v0.6.3 选中提示（确认模式）：选中卡底部显示提示条
+        if (selectedIdx >= 0 && HexConfig.CONFIRM_SELECT.get()) {
+            int cx = cardX[selectedIdx] + CARD_W / 2;
+            g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.selected_hint"),
+                    cx, cardY + cards[selectedIdx].dy + CARD_H - 14, 0xFFFFFFFF);
+        }
     }
 
     private static int rarityColor(String key) {
@@ -225,6 +303,7 @@ public class RollScreen extends HexScaledScreen {
     static class CardButton extends Button {
         private final int color;
         private final String label;
+        boolean selected;
         float alpha = 1f;
         int dy;
         float scale = 1f;
@@ -240,7 +319,7 @@ public class RollScreen extends HexScaledScreen {
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
             int yy = getY() + dy;
             int a = (int) (alpha * 255);
-            int border = isHover(mx, my, this) ? 0xFFFFFFFF : color;
+            int border = selected ? 0xFFFFFFFF : (isHover(mx, my, this) ? 0xFFFFFFFF : color);
             int cx = getX() + width / 2;
             int cy = yy + height / 2;
             int w2 = (int) (width * scale);
@@ -260,6 +339,10 @@ public class RollScreen extends HexScaledScreen {
             // 图标（菱形晶核）
             g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font, "◆", cx, y1 + 22,
                     (a << 24) | (color & 0x00FFFFFF));
+            // v0.6.3 选中态：底部白色选中条
+            if (selected) {
+                g.fill(x1 + 20, y1 + h2 - 4, x1 + w2 - 20, y1 + h2 - 2, 0xFFFFFFFF);
+            }
         }
     }
 

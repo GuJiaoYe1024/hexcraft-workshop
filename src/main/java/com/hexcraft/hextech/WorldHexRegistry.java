@@ -46,7 +46,7 @@ public class WorldHexRegistry {
         // 棱彩：百分比 / 倍数数值 + 机制
         register("whx_ancient_weakness", CAT_GENERAL, "prismatic", "player_dmg:-0.30,player_hp_pct:-0.15,death_xp:0.50"); // 远古衰弱：输出 -30%、最大生命 -15%、死亡经验惩罚 +50%
         register("whx_death_harvest", CAT_GENERAL, "prismatic", "player_dmg:-0.30,death_xp:2.00");       // 死亡收割：输出 -30% + 死亡经验惩罚 ×3
-        register("whx_genesis_pact", CAT_GENERAL, "prismatic", "player_xp:0.75,draw_cost:0.45");        // 创世契约：经验 +75%，抽取消耗 -55%
+        register("whx_genesis_pact", CAT_GENERAL, "prismatic", "player_xp:0.75,draw_cost:-0.55");       // 创世契约：经验 +75%，抽取消耗 -55%
 
         // ============ 友好生物（被动/驯养）============
         // 白银：纯数字数值
@@ -71,7 +71,7 @@ public class WorldHexRegistry {
         register("whx_wild_instinct", CAT_NEUTRAL, "gold", "neutral_berserk:0.75,neutral_speed:0.10"); // 野性本能：75% 反扑 + 移速 +10%
         // 棱彩：百分比数值 + 机制
         register("whx_apex_presence", CAT_NEUTRAL, "prismatic", "neutral_hp_pct:0.35,neutral_atk_pct:0.25,neutral_berserk:0.30"); // 终焉威压：生命 +35%、攻击 +25% + 受击 30% 反扑
-        register("whx_peace_vision", CAT_NEUTRAL, "prismatic", "player_dmg_vs_neutral:0.60,draw_cost:0.45"); // 和平愿景：对中立伤害 +60%，抽取消耗 -55%
+        register("whx_peace_vision", CAT_NEUTRAL, "prismatic", "player_dmg_vs_neutral:0.60,draw_cost:-0.55"); // 和平愿景：对中立伤害 +60%，抽取消耗 -55%
         register("whx_neutral_dominion", CAT_NEUTRAL, "prismatic", "neutral_hp_pct:0.30,neutral_atk_pct:0.25,player_dmg_vs_neutral:-0.45,neutral_berserk:0.20"); // 中立统御：生命 +30%、攻击 +25% + 玩家对其 -45% + 受击反扑
 
         // ============ 敌对生物（怪物）============

@@ -9,7 +9,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.Optional;
 
 public class PacketHandler {
-    public static final String VERSION = "16";
+    public static final String VERSION = "19";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Hexcraft.MODID, "main"),
             () -> VERSION,
@@ -21,6 +21,9 @@ public class PacketHandler {
         CHANNEL.registerMessage(id++, Packets.C2SRequestDraw.class,
                 Packets.C2SRequestDraw::encode, Packets.C2SRequestDraw::decode, Packets.C2SRequestDraw::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(id++, Packets.C2SRequestSync.class,
+                Packets.C2SRequestSync::encode, Packets.C2SRequestSync::decode, Packets.C2SRequestSync::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(id++, Packets.S2COpenRoll.class,
                 Packets.S2COpenRoll::encode, Packets.S2COpenRoll::decode, Packets.S2COpenRoll::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
@@ -29,6 +32,10 @@ public class PacketHandler {
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(id++, Packets.C2SReroll.class,
                 Packets.C2SReroll::encode, Packets.C2SReroll::decode, Packets.C2SReroll::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        // ---- v0.6.3 追加：取消本轮三选一（清 pendingRoll/worldDrawOptions，防取消后死锁）；协议 VERSION bump 18→19 ----
+        CHANNEL.registerMessage(id++, Packets.C2SCancelRoll.class,
+                Packets.C2SCancelRoll::encode, Packets.C2SCancelRoll::decode, Packets.C2SCancelRoll::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(id++, Packets.S2CSyncData.class,
                 Packets.S2CSyncData::encode, Packets.S2CSyncData::decode, Packets.S2CSyncData::handle,

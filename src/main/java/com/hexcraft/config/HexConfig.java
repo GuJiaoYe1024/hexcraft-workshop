@@ -54,6 +54,10 @@ public class HexConfig {
     // ---- Client ----
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.DoubleValue UI_SCALE;
+    // v0.6.3 抽取/锻造/购买完成后返回工坊界面（玩家可选：继续连抽 or 直接关闭）
+    public static final ForgeConfigSpec.BooleanValue KEEP_WORKSHOP_OPEN;
+    // v0.6.3 三选一「选中→确认」：true=点卡片仅选中，点「确认选择」才真正生效（防手滑）；false=点卡片直接选择
+    public static final ForgeConfigSpec.BooleanValue CONFIRM_SELECT;
     public static final ForgeConfigSpec.BooleanValue PARTICLES_ENABLED;
     // v0.6.0 锻造/叠层规则（服务端生效）
     public static final ForgeConfigSpec.DoubleValue EXTRA_ARMOR_THRESHOLD;
@@ -133,6 +137,9 @@ public class HexConfig {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
         UI_SCALE = b.comment("UI缩放倍率").translation("hexcraft.config.client.uiScale").defineInRange("uiScale", 1.0, 0.5, 2.0);
         PARTICLES_ENABLED = b.comment("抽取/入账特效开关").translation("hexcraft.config.client.particlesEnabled").define("particlesEnabled", true);
+        // v0.6.3 抽取/锻造/购买完成后：true=返回工坊对应页面继续抽取（连抽方便）；false=直接关闭整个界面
+        KEEP_WORKSHOP_OPEN = b.comment("抽取/锻造完成后返回工坊界面（默认开启，方便连续抽取；关闭则完成后直接关闭界面）").translation("hexcraft.config.client.keepWorkshopOpen").define("keepWorkshopOpen", true);
+        CONFIRM_SELECT = b.comment("三选一需确认选择（默认开启，防手滑：点卡片仅选中，点确认选择才生效；关闭=点卡片直接选择）").translation("hexcraft.config.client.confirmSelect").define("confirmSelect", true);
         b.comment("死亡保留（客户端配置为主：主菜单即可设置并保存，进世界即生效；服务端 gamerule 任一开启即保留）").translation("hexcraft.config.cat.keepOnDeath").push("keepOnDeath");
         KEEP_DEATH_HEXES = b.comment("死亡保留海克斯").translation("hexcraft.config.client.keepDeathHexes").define("keepDeathHexes", false);
         KEEP_DEATH_FORGES = b.comment("死亡保留锻造属性").translation("hexcraft.config.client.keepDeathForges").define("keepDeathForges", false);

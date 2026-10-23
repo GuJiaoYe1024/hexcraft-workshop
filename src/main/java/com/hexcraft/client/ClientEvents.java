@@ -29,6 +29,11 @@ public class ClientEvents {
                 continue;
             }
             if (!(mc.screen instanceof HextechPageScreen)) {
+                // v0.6.3 打开主界面即向服务端请求完整同步（联机玩家抽取/变更后界面为空的兜底）
+                com.hexcraft.client.ClientDataStore.requestPendingSync = true;
+                if (mc.getConnection() != null) {
+                    com.hexcraft.network.PacketHandler.CHANNEL.sendToServer(new com.hexcraft.network.Packets.C2SRequestSync());
+                }
                 mc.setScreen(new HextechPageScreen());
             }
         }
@@ -39,6 +44,10 @@ public class ClientEvents {
                 continue;
             }
             if (!(mc.screen instanceof com.hexcraft.client.gui.WorldHexScreen)) {
+                // v0.6.3 打开世界海克斯界面即请求完整同步（费用快照 + 世界海克斯列表广播，联机不落后）
+                if (mc.getConnection() != null) {
+                    com.hexcraft.network.PacketHandler.CHANNEL.sendToServer(new com.hexcraft.network.Packets.C2SRequestSync());
+                }
                 mc.setScreen(new com.hexcraft.client.gui.WorldHexScreen());
             }
         }
@@ -60,7 +69,14 @@ public class ClientEvents {
         // x=+50 与原版"合成"页签(guiLeft+97)错开，避免重叠
         TabButton btn = new TabButton(
                 guiLeft + 50, guiTop - 27,
-                b -> Minecraft.getInstance().setScreen(new HextechPageScreen()));
+                b -> {
+                    // v0.6.3 打开主界面即向服务端请求完整同步（联机玩家抽取/变更后界面为空的兜底）
+                    com.hexcraft.client.ClientDataStore.requestPendingSync = true;
+                    if (Minecraft.getInstance().getConnection() != null) {
+                        com.hexcraft.network.PacketHandler.CHANNEL.sendToServer(new com.hexcraft.network.Packets.C2SRequestSync());
+                    }
+                    Minecraft.getInstance().setScreen(new HextechPageScreen());
+                });
         // 使用 Forge ScreenEvent.Init.Post 提供的 addListener（内部绑定到 screen::addRenderableWidget，
         // 生产/开发环境均有效；替代旧反射方案——反射硬编码 official 方法名在生产环境（SRG）找不到导致页签失效）
         event.addListener(btn);
@@ -68,7 +84,13 @@ public class ClientEvents {
         TabButton worldBtn = new TabButton(
                 guiLeft + 78, guiTop - 27,
                 Component.translatable("hexcraft.gui.world_tab"),
-                b -> Minecraft.getInstance().setScreen(new com.hexcraft.client.gui.WorldHexScreen()));
+                b -> {
+                    // v0.6.3 打开世界海克斯界面即请求完整同步（费用快照 + 世界海克斯列表广播）
+                    if (Minecraft.getInstance().getConnection() != null) {
+                        com.hexcraft.network.PacketHandler.CHANNEL.sendToServer(new com.hexcraft.network.Packets.C2SRequestSync());
+                    }
+                    Minecraft.getInstance().setScreen(new com.hexcraft.client.gui.WorldHexScreen());
+                });
         event.addListener(worldBtn);
         Hexcraft.LOGGER.info("[Hexcraft] 背包/合成页签注入成功 x={} y={} screen={}",
                 btn.getX(), btn.getY(), screen.getClass().getSimpleName());

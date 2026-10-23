@@ -407,31 +407,47 @@ public class HextechEvents {
                     killer.displayClientMessage(Component.translatable("message.hexcraft.cleanse"), true);
                 }
             }
-            // 随机馈赠：random_loot 击杀随机获得 1 件随机物品（跳出固定掉落，随机性拉满）
+            // 随机馈赠：random_loot 击杀随机获得 1 件随机物品（全物品池：原版+全部模组物品，过滤空气与技术物品）
             double rl = effect(data, "random_loot");
             if (rl > 0 && killer.getRandom().nextFloat() < (float) Math.min(1.0, rl)) {
-                net.minecraft.world.item.Item item = switch (killer.getRandom().nextInt(8)) {
-                    case 0 -> net.minecraft.world.item.Items.IRON_INGOT;
-                    case 1 -> net.minecraft.world.item.Items.BREAD;
-                    case 2 -> net.minecraft.world.item.Items.ARROW;
-                    case 3 -> net.minecraft.world.item.Items.GUNPOWDER;
-                    case 4 -> net.minecraft.world.item.Items.PAPER;
-                    case 5 -> net.minecraft.world.item.Items.BOOK;
-                    case 6 -> net.minecraft.world.item.Items.EXPERIENCE_BOTTLE;
-                    default -> net.minecraft.world.item.Items.EMERALD;
-                };
-                int n = 1 + killer.getRandom().nextInt(1 + (int) Math.round(rl));
-                net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(item, n);
-                if (!killer.getInventory().add(st)) {
-                    killer.drop(st, false);
+                java.util.List<net.minecraft.world.item.Item> pool = randomGiftPool();
+                if (!pool.isEmpty()) {
+                    net.minecraft.world.item.Item item = pool.get(killer.getRandom().nextInt(pool.size()));
+                    int n = 1 + killer.getRandom().nextInt(1 + (int) Math.round(rl));
+                    net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(item, n);
+                    if (!killer.getInventory().add(st)) {
+                        killer.drop(st, false);
+                    }
+                    killer.displayClientMessage(Component.translatable("message.hexcraft.random_loot",
+                            st.getHoverName(), n), true);
                 }
-                killer.displayClientMessage(Component.translatable("message.hexcraft.random_loot",
-                        st.getHoverName(), n), true);
             }
 
             LAST_KILL_STREAK.put(killer.getUUID(), System.currentTimeMillis());
             sync(killer);
         }
+    }
+
+    /** 随机馈赠全物品池：ForgeRegistries.ITEMS 全量（原版+全部模组物品），过滤空气与技术物品，懒加载缓存 */
+    private static java.util.List<net.minecraft.world.item.Item> GIFT_POOL;
+
+    private static java.util.List<net.minecraft.world.item.Item> randomGiftPool() {
+        if (GIFT_POOL == null) {
+            java.util.List<net.minecraft.world.item.Item> pool = new java.util.ArrayList<>();
+            for (net.minecraft.world.item.Item it : net.minecraftforge.registries.ForgeRegistries.ITEMS.getValues()) {
+                if (it == null || it == net.minecraft.world.item.Items.AIR) continue;
+                net.minecraft.resources.ResourceLocation key = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(it);
+                if (key == null) continue;
+                String p = key.getPath();
+                // 过滤技术/调试类物品：屏障、命令方块、结构方块/虚空、拼图方块、调试棒、知识书、刷怪笼等
+                if (p.contains("barrier") || p.contains("command_block") || p.contains("structure_block")
+                        || p.contains("structure_void") || p.contains("jigsaw") || p.contains("debug_stick")
+                        || p.contains("knowledge_book") || p.contains("spawner")) continue;
+                pool.add(it);
+            }
+            GIFT_POOL = pool;
+        }
+        return GIFT_POOL;
     }
 
     /** 击杀者识别：直接玩家；或 TACZ 等模组弹射物（软联动，反射读取持有者） */
@@ -1234,13 +1250,13 @@ public class HextechEvents {
                         continue;
                     }
                     float total = 0;
-                    java.util.Iterator<double[]> inst = e.getValue().iterator();
-                    while (inst.hasNext()) {
-                        double[] d = inst.next();
+                    for (double[] d : e.getValue()) {
                         total += d[0];
                         d[1] -= 20;
-                        if (d[1] <= 0) inst.remove();
                     }
+                    // P0 修复：BLEEDS 值为 CopyOnWriteArrayList，其迭代器不支持 remove()（抛 UnsupportedOperationException），
+                    // 改为遍历后 removeIf 清理到期实例（语义不变：到期这次仍结算伤害）
+                    e.getValue().removeIf(d -> d[1] <= 0);
                     if (total > 0) {
                         target.hurt(sp.damageSources().magic(), total);
                     }

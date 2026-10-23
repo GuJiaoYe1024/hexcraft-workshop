@@ -78,6 +78,8 @@ public class HextechPageScreen extends HexScaledScreen {
     private int[] navY = new int[5];
     private final java.util.List<float[]> parts = new java.util.ArrayList<>();
     private int pTick;
+    /** v0.6.3 上次渲染的费用快照版本（tick 检测变化重建按钮） */
+    private int lastCostVersion = -1;
     private boolean partsInit;
     private static final java.util.Random P_RAND = new java.util.Random();
 
@@ -182,7 +184,11 @@ public class HextechPageScreen extends HexScaledScreen {
 
     private void initForge() {
         int bw = 72;
-        int[] prices = {HexConfig.FORGE_BASIC_PRICE.get(), HexConfig.FORGE_GOLD_PRICE.get(), HexConfig.FORGE_PRISMATIC_PRICE.get()};
+        // v0.6.3 费用实时刷新：读服务端权威费用快照（未收到前用配置兜底）
+        int[] prices = {
+                ClientDataStore.forgeCosts[0] > 0 ? ClientDataStore.forgeCosts[0] : HexConfig.FORGE_BASIC_PRICE.get(),
+                ClientDataStore.forgeCosts[1] > 0 ? ClientDataStore.forgeCosts[1] : HexConfig.FORGE_GOLD_PRICE.get(),
+                ClientDataStore.forgeCosts[2] > 0 ? ClientDataStore.forgeCosts[2] : HexConfig.FORGE_PRISMATIC_PRICE.get()};
         // 三档按钮颜色：白银 / 黄金 / 棱彩，从低到高易区分
         int[] tierColors = {0xFFD8D8D8, 0xFFFFC94A, 0xFFC77DFF};
         for (int i = 0; i < 3; i++) {
@@ -203,12 +209,15 @@ public class HextechPageScreen extends HexScaledScreen {
     }
 
     private void initEquip() {
+        // v0.6.3 费用实时刷新：读服务端权威费用快照（未收到前用原价兜底；发送仍用原始价让服务端打折）
+        int goldPrice = ClientDataStore.equipGoldCost > 0 ? ClientDataStore.equipGoldCost : 2500;
+        int prismPrice = ClientDataStore.equipPrismaticCost > 0 ? ClientDataStore.equipPrismaticCost : 4000;
         // 购买按钮：2500 随机装备池 / 4000 随机棱彩装备池（都是三选一）
         this.addRenderableWidget(new HexButton(cx() + 4, cy() + 48, 111, 15,
-                Component.translatable("hexcraft.gui.buy_equip", 2500), 0xFFFFC94A,
+                Component.translatable("hexcraft.gui.buy_equip", goldPrice), 0xFFFFC94A,
                 b -> { Packets.C2SBuyEquip p = new Packets.C2SBuyEquip(); p.price = 2500; PacketHandler.CHANNEL.sendToServer(p); }));
         this.addRenderableWidget(new HexButton(cx() + 119, cy() + 48, 111, 15,
-                Component.translatable("hexcraft.gui.buy_equip_prismatic", 4000), 0xFFC77DFF,
+                Component.translatable("hexcraft.gui.buy_equip_prismatic", prismPrice), 0xFFC77DFF,
                 b -> { Packets.C2SBuyEquip p = new Packets.C2SBuyEquip(); p.price = 4000; PacketHandler.CHANNEL.sendToServer(p); }));
         // 6 槽位卖出按钮（无装备时置灰不生效）
         for (int i = 0; i < PlayerData.MAX_EQUIP; i++) {
@@ -226,6 +235,11 @@ public class HextechPageScreen extends HexScaledScreen {
         for (float[] p : parts) {
             p[1] -= p[2];
             if (p[1] < -6f) { p[1] = H + 6f; p[0] = P_RAND.nextFloat() * W; }
+        }
+        // v0.6.3 费用实时刷新：服务端推送的费用快照变化 → 重建按钮（折扣/世界乘区变更即时生效，不闪屏）
+        if (ClientDataStore.costVersion != lastCostVersion) {
+            lastCostVersion = ClientDataStore.costVersion;
+            this.rebuildWidgets();
         }
     }
 

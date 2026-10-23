@@ -43,6 +43,13 @@ public class WorldRollScreen extends HexScaledScreen {
     private final CardButton[] cards = new CardButton[3];
     private int cardY;
     private boolean closed;
+    /** v0.6.3 三选一「选中→确认」：CONFIRM_SELECT 开启时点卡片仅选中，点确认按钮才生效（防手滑） */
+    private int selectedIdx = -1;
+    /** v0.6.3 界面停留：确认抽取后不关闭，展示结果直到玩家点「完成」 */
+    private String chosenId;
+    private Component chosenName;
+    private net.minecraft.client.gui.components.Button cancelBtn;
+    private net.minecraft.client.gui.components.Button confirmBtn;
 
     /** v0.4.9 抽取动画：三张候选卡错峰上浮淡入 + 光柱扫过（总时长） */
     private static final int ANIM_MS = 1100;
@@ -64,35 +71,93 @@ public class WorldRollScreen extends HexScaledScreen {
             WorldHexDefinition def = WorldHexRegistry.get(msg.options.get(idx));
             String label = def == null ? "" : Component.translatable("hexcraft.worldhex.category." + def.category).getString();
             int color = def == null ? 0xFFD0D8E8 : rarityColor(def.rarity);
-            cards[idx] = new CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> choose(idx));
+            cards[idx] = new CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> onCardClick(idx));
             this.addRenderableWidget(cards[idx]);
         }
-        this.addRenderableWidget(new WBtn(centerX - 53, cardY + CARD_H + 18, 106, 22,
-                Component.translatable("gui.cancel"), b -> onClose()));
+        cancelBtn = new WBtn(centerX - 53, cardY + CARD_H + 18, 106, 22,
+                Component.translatable("gui.cancel"), b -> cancelRoll());
+        this.addRenderableWidget(cancelBtn);
+    }
+
+    /** v0.6.3 卡片点击：CONFIRM_SELECT 开启=仅选中待确认；关闭=直接选择生效 */
+    private void onCardClick(int index) {
+        if (closed) return;
+        if (com.hexcraft.config.HexConfig.CONFIRM_SELECT.get()) select(index);
+        else choose(index);
+    }
+
+    private void select(int index) {
+        selectedIdx = index;
+        for (int i = 0; i < 3 && i < msg.options.size(); i++) cards[i].selected = (i == index);
+        int centerX = this.guiW() / 2;
+        this.removeWidget(cancelBtn);
+        if (confirmBtn != null) this.removeWidget(confirmBtn);
+        confirmBtn = new WBtn(centerX - 112, cardY + CARD_H + 18, 106, 22,
+                Component.translatable("hexcraft.gui.confirm_choose"), b -> choose(selectedIdx));
+        cancelBtn = new WBtn(centerX + 6, cardY + CARD_H + 18, 106, 22,
+                Component.translatable("gui.cancel"), b -> cancelRoll());
+        this.addRenderableWidget(confirmBtn);
+        this.addRenderableWidget(cancelBtn);
     }
 
     private void choose(int index) {
         if (closed) return;
         closed = true;
+        chosenId = msg.options.get(index);
+        WorldHexDefinition def = WorldHexRegistry.get(chosenId);
+        chosenName = def == null ? Component.literal(chosenId)
+                : Component.translatable("hexcraft.worldhex." + chosenId + ".name");
         Packets.C2SConfirmWorldHex p = new Packets.C2SConfirmWorldHex();
         p.index = index;
         PacketHandler.CHANNEL.sendToServer(p);
-        this.onClose();
+        // v0.6.3 确认选择后立即离开（不再停留展示结果 + 完成按钮；返回/关闭按 KEEP_WORKSHOP_OPEN 配置）
+        done();
+    }
+
+    /** v0.6.3 取消本轮世界海克斯三选一：通知服务端清理待选状态（防死锁），
+     *  并按配置返回世界海克斯界面（KEEP_WORKSHOP_OPEN=true）或直接关闭界面 */
+    private void cancelRoll() {
+        if (closed) return;
+        closed = true;
+        PacketHandler.CHANNEL.sendToServer(new Packets.C2SCancelRoll());
+        if (com.hexcraft.config.HexConfig.KEEP_WORKSHOP_OPEN.get()) {
+            net.minecraft.client.Minecraft.getInstance().setScreen(new com.hexcraft.client.gui.WorldHexScreen());
+        } else {
+            net.minecraft.client.Minecraft.getInstance().setScreen(null);
+        }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == 256 && !closed) { // Esc = 取消本轮（与服务端取消包同步，防死锁）
+            cancelRoll();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /** v0.6.3 完成：KEEP_WORKSHOP_OPEN=true 返回世界海克斯界面继续抽取；false 直接关闭 */
+    private void done() {
+        if (!com.hexcraft.config.HexConfig.KEEP_WORKSHOP_OPEN.get()) { net.minecraft.client.Minecraft.getInstance().setScreen(null); return; }
+        net.minecraft.client.Minecraft.getInstance().setScreen(new com.hexcraft.client.gui.WorldHexScreen());
     }
 
     @Override
     protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
         int centerX = this.guiW() / 2;
 
-        // 标题与装饰条
-        Component title = Component.translatable("hexcraft.gui.world_hex_title");
+        // 标题与装饰条（v0.6.3 界面停留：确认后标题切换为「已获得：名称」）
+        Component title = chosenId != null
+                ? Component.translatable("hexcraft.gui.got", chosenName)
+                : Component.translatable("hexcraft.gui.world_hex_title");
         g.drawCenteredString(this.font, title, centerX, cardY - 34, 0xFFFFFF);
         int barW = this.font.width(title) + 40;
         g.fillGradient(centerX - barW / 2, cardY - 20, centerX + barW / 2, cardY - 19, 0xFFFFC94A, 0xFFC77DFF);
 
         // v0.4.9 抽取动画：动画期间隐藏按钮（避免半成品可点），手绘卡片；结束后恢复正常渲染
+        // v0.6.3 已确认抽取时跳过动画直接渲染结果
         float t = Math.min(1f, (System.currentTimeMillis() - openAt) / (float) ANIM_MS);
-        if (t < 1f) {
+        if (chosenId == null && t < 1f) {
             // 光柱从左向右扫过
             int sweep = (int) (t * (this.guiW() + 320)) - 160;
             g.fill(sweep, 0, sweep + 60, this.guiH(), 0x18FFFFFF);
@@ -116,6 +181,11 @@ public class WorldRollScreen extends HexScaledScreen {
                 if (def == null) continue;
                 int color = rarityColor(def.rarity);
                 drawCardText(g, i, def, color, cardX[i] + CARD_W / 2, cardY);
+            }
+            // v0.6.3 选中提示（确认模式）：选中卡底部显示提示条
+            if (selectedIdx >= 0 && com.hexcraft.config.HexConfig.CONFIRM_SELECT.get()) {
+                g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.selected_hint"),
+                        cardX[selectedIdx] + CARD_W / 2, cardY + CARD_H - 14, 0xFFFFFFFF);
             }
         }
     }
@@ -170,6 +240,7 @@ public class WorldRollScreen extends HexScaledScreen {
     static class CardButton extends Button {
         private final int color;
         private final String label;
+        boolean selected;
 
         CardButton(int x, int y, int w, int h, int color, String label, OnPress onPress) {
             super(x, y, w, h, Component.empty(), onPress, DEFAULT_NARRATION);
@@ -179,7 +250,7 @@ public class WorldRollScreen extends HexScaledScreen {
 
         @Override
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
-            int border = isHover(mx, my, this) ? 0xFFFFFFFF : color;
+            int border = selected ? 0xFFFFFFFF : (isHover(mx, my, this) ? 0xFFFFFFFF : color);
             g.fill(getX() - 3, getY() - 3, getX() + width + 3, getY() + height + 3, 0x66 << 24 | (color & 0x00FFFFFF));
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, 0xFF << 24 | (border & 0x00FFFFFF));
             g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xF02C2E58, 0xF00D1220);
@@ -187,6 +258,10 @@ public class WorldRollScreen extends HexScaledScreen {
             g.drawCenteredString(Minecraft.getInstance().font, label, getX() + width / 2, getY() + 4, 0xFF101018);
             g.drawCenteredString(Minecraft.getInstance().font, "◆", getX() + width / 2, getY() + 22,
                     0xFF << 24 | (color & 0x00FFFFFF));
+            // v0.6.3 选中态：底部白色选中条
+            if (selected) {
+                g.fill(getX() + 20, getY() + height - 4, getX() + width - 20, getY() + height - 2, 0xFFFFFFFF);
+            }
         }
     }
 }

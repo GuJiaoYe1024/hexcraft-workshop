@@ -26,9 +26,15 @@ import java.util.function.Supplier;
 public class Packets {
 
     /** 精明商人（v0.3.18）：工坊晶币消费折扣（每级 8%，最高 9 折；经验消费不折扣） */
-    private static int discounted(PlayerData data, int price) {
+    public static int discounted(PlayerData data, int price) {
         double disc = HextechEvents.effect(data, "trade_discount");
         return (int) Math.floor(price * Math.max(0.1, 1 - disc));
+    }
+
+    /** v0.6.3 世界海克斯抽取消耗（服务端权威，含 draw_cost 独立乘区；下限 1，禁止返还经验/白嫖） */
+    public static int worldDrawCost(ServerPlayer sp) {
+        return Math.max(1, (int) Math.round(HexConfig.WORLD_DRAW_XP.get()
+                * (1 + com.hexcraft.event.WorldHexEvents.drawCostMult(sp.serverLevel()))));
     }
 
     /** v0.4.8 赌博海克斯：解析 event 中的 transform:目标（gold / prismatic / double），非赌博返回 null */
@@ -42,6 +48,24 @@ public class Packets {
         return null;
     }
 
+    // ================= C2S：打开海克斯工坊主界面时请求完整同步（客户端缓存兜底） =================
+    // 解决联机玩家抽取/变更后打开界面读到旧缓存（空）的问题：界面打开即向服务端拉取最新数据，
+    // 服务端回 S2CSyncData（含费用快照）并广播世界海克斯列表
+    public static class C2SRequestSync {
+        public static void encode(C2SRequestSync m, FriendlyByteBuf b) { }
+        public static C2SRequestSync decode(FriendlyByteBuf b) { return new C2SRequestSync(); }
+        public static void handle(C2SRequestSync m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                ServerPlayer sp = ctx.get().getSender();
+                if (sp == null) return;
+                HextechEvents.sync(sp);
+                // v0.6.3 顺带刷新世界海克斯列表缓存（打开任意工坊界面都拉到最新，界面侧收到后重建）
+                broadcastWorldHexes(sp.server);
+            });
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
     // ================= C2S：请求抽取海克斯 =================
     public static class C2SRequestDraw {
         public static void encode(C2SRequestDraw m, FriendlyByteBuf b) { }
@@ -52,6 +76,11 @@ public class Packets {
                 if (sp == null) return;
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
+                // v0.6.3 防重入：已有待选三选一未完成时禁止再开，避免重复扣经验
+                if (data.getPendingRoll() != null) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.roll_pending"), true);
+                    return;
+                }
                 int cost = HexConfig.XP_COST_PER_DRAW.get();
                 if (realTotalXp(sp) < cost) {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.xp_not_enough", cost), true);
@@ -88,6 +117,29 @@ public class Packets {
         if (level >= 30) return 112 + (level - 30) * 9;
         if (level >= 15) return 37 + (level - 15) * 5;
         return 7 + level * 2;
+    }
+
+    // ================= C2S：取消本轮三选一（放弃抽取/锻造/装备/世界海克斯，清理服务端待选状态）=================
+    public static class C2SCancelRoll {
+        public static void encode(C2SCancelRoll m, FriendlyByteBuf b) { }
+        public static C2SCancelRoll decode(FriendlyByteBuf b) { return new C2SCancelRoll(); }
+        public static void handle(C2SCancelRoll m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                ServerPlayer sp = ctx.get().getSender();
+                if (sp == null) return;
+                PlayerData data = ModCapabilities.get(sp);
+                if (data == null) return;
+                // 放弃本轮：清理待选状态（玩家海克斯/锻造/装备 pendingRoll + 世界海克斯 worldDrawOptions）
+                // 费用不退（取消=放弃本轮，防止零成本无限预览白嫖刷新）
+                boolean hadRoll = data.getPendingRoll() != null || data.getWorldDrawOptions() != null;
+                data.setPendingRoll(null);
+                data.setWorldDrawOptions(null);
+                if (hadRoll) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.roll_cancelled"), true);
+                }
+            });
+            ctx.get().setPacketHandled(true);
+        }
     }
 
     // ================= C2S：三选一刷新 =================
@@ -210,6 +262,10 @@ public class Packets {
                 if (sp == null || m.tier < 0 || m.tier > 2) return;
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
+                if (data.getPendingRoll() != null) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.roll_pending"), true);
+                    return;
+                }
                 int price = discounted(data, switch (m.tier) {
                     case 0 -> HexConfig.FORGE_BASIC_PRICE.get();
                     case 1 -> HexConfig.FORGE_GOLD_PRICE.get();
@@ -244,6 +300,10 @@ public class Packets {
                 if (sp == null) return;
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
+                if (data.getPendingRoll() != null) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.roll_pending"), true);
+                    return;
+                }
                 int tier = HextechRegistry.randomTier();
                 int price = discounted(data, switch (tier) {
                     case 0 -> HexConfig.FORGE_BASIC_PRICE.get();
@@ -280,6 +340,10 @@ public class Packets {
                 if (sp == null) return;
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
+                if (data.getPendingRoll() != null) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.roll_pending"), true);
+                    return;
+                }
                 if (m.price != 2500 && m.price != 4000) return;
                 int finalPrice = discounted(data, m.price);
                 if (!data.deductCoins(finalPrice)) {
@@ -495,6 +559,12 @@ public class Packets {
         public Map<String, Double> attrs = new java.util.HashMap<>();
         // v0.6.0 通用叠层（战斗叠层/永久叠层）客户端展示数据
         public List<PlayerData.StackEntry> stacks = new ArrayList<>();
+        // v0.6.3 服务端权威费用快照（界面显示与实扣一致；折扣/世界乘区实时计算）
+        public int rerollCost;
+        public int[] forgeCosts = new int[3];
+        public int equipGoldCost;
+        public int equipPrismaticCost;
+        public int worldDrawCost;
 
         public static S2CSyncData of(PlayerData d, ServerPlayer sp) {
             S2CSyncData m = new S2CSyncData();
@@ -531,6 +601,14 @@ public class Packets {
                 ns.value = s.value;
                 m.stacks.add(ns);
             }
+            // v0.6.3 费用快照：与实扣完全同源（discounted / draw_cost 乘区）
+            m.rerollCost = discounted(d, HexConfig.REROLL_COST.get());
+            m.forgeCosts[0] = discounted(d, HexConfig.FORGE_BASIC_PRICE.get());
+            m.forgeCosts[1] = discounted(d, HexConfig.FORGE_GOLD_PRICE.get());
+            m.forgeCosts[2] = discounted(d, HexConfig.FORGE_PRISMATIC_PRICE.get());
+            m.equipGoldCost = discounted(d, 2500);
+            m.equipPrismaticCost = discounted(d, 4000);
+            m.worldDrawCost = worldDrawCost(sp);
             return m;
         }
 
@@ -557,6 +635,11 @@ public class Packets {
                 b.writeUtf(s.key); b.writeDouble(s.value); b.writeDouble(s.cap);
                 b.writeBoolean(s.combat); b.writeInt(s.decayDelay); b.writeDouble(s.decayRate);
             }
+            b.writeInt(m.rerollCost);
+            for (int i = 0; i < 3; i++) b.writeInt(m.forgeCosts[i]);
+            b.writeInt(m.equipGoldCost);
+            b.writeInt(m.equipPrismaticCost);
+            b.writeInt(m.worldDrawCost);
         }
         public static S2CSyncData decode(FriendlyByteBuf b) {
             S2CSyncData m = new S2CSyncData();
@@ -602,6 +685,11 @@ public class Packets {
                 s.value = sv;
                 m.stacks.add(s);
             }
+            m.rerollCost = b.readInt();
+            for (int i = 0; i < 3; i++) m.forgeCosts[i] = b.readInt();
+            m.equipGoldCost = b.readInt();
+            m.equipPrismaticCost = b.readInt();
+            m.worldDrawCost = b.readInt();
             return m;
         }
         public static void handle(S2CSyncData m, Supplier<NetworkEvent.Context> ctx) {
@@ -616,9 +704,10 @@ public class Packets {
         msg.forge = offer.forge;
         msg.equip = offer.equip;
         msg.tier = offer.tier;
-        msg.rerollCost = HexConfig.REROLL_COST.get();
         msg.canReroll = !offer.rerolled;
         PlayerData d = ModCapabilities.get(sp);
+        // v0.6.3 刷新价打折（与 C2SReroll 实扣同源，界面显示=实扣）
+        msg.rerollCost = d != null ? discounted(d, HexConfig.REROLL_COST.get()) : HexConfig.REROLL_COST.get();
         if (d != null) {
             msg.pityGold = d.getPityGold();
             msg.pityPrismatic = d.getPityPrismatic();
@@ -652,8 +741,10 @@ public class Packets {
             com.hexcraft.hextech.WorldHexData wh = com.hexcraft.hextech.WorldHexData.get(server.overworld());
             m.active.addAll(wh.active);
             m.maxPerCategory = HexConfig.WORLD_MAX_PER_CATEGORY.get();
-            m.drawXp = HexConfig.WORLD_DRAW_XP.get();
             m.cancelCoin = HexConfig.WORLD_CANCEL_COIN.get();
+            // v0.6.3 消耗含 draw_cost 独立乘区（与实扣同源；下限 1）
+            m.drawXp = Math.max(1, (int) Math.round(HexConfig.WORLD_DRAW_XP.get()
+                    * (1 + com.hexcraft.event.WorldHexEvents.drawCostMult(server.overworld()))));
             return m;
         }
 
@@ -817,7 +908,8 @@ public class Packets {
     private static void sendWorldDrawOptions(ServerPlayer sp, List<String> opts) {
         S2CWorldDrawOptions msg = new S2CWorldDrawOptions();
         msg.options = new ArrayList<>(opts);
-        msg.drawXp = HexConfig.WORLD_DRAW_XP.get();
+        // v0.6.3 消耗含 draw_cost 乘区（与 C2SRequestWorldDraw 实扣同源）
+        msg.drawXp = worldDrawCost(sp);
         PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), msg);
     }
 

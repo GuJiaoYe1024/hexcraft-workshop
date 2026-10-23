@@ -17,10 +17,34 @@ public class ClientPacketHandler {
 
     public static void syncData(Packets.S2CSyncData msg) {
         ClientDataStore.apply(msg);
+        // v0.6.3 打开界面时请求同步：回包到达后用最新数据重建主界面一次（保留当前页签），
+        // 避免联机玩家抽取/变更后打开界面读到旧缓存（显示为空）的问题
+        if (ClientDataStore.requestPendingSync) {
+            ClientDataStore.requestPendingSync = false;
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.screen instanceof com.hexcraft.client.gui.HextechPageScreen) {
+                com.hexcraft.client.gui.HextechPageScreen old = (com.hexcraft.client.gui.HextechPageScreen) mc.screen;
+                int t = old.currentTab();
+                com.hexcraft.client.gui.HextechPageScreen fresh = new com.hexcraft.client.gui.HextechPageScreen();
+                fresh.setInitialTab(t);
+                mc.setScreen(fresh);
+            }
+        }
     }
 
     public static void syncWorldHexes(Packets.S2CSyncWorldHexes msg) {
         ClientDataStore.applyWorld(msg);
+        // v0.6.3 世界海克斯列表/费用变更：已打开的世界海克斯界面立即重建（不再依赖重开）
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen instanceof com.hexcraft.client.gui.WorldHexScreen) {
+            mc.setScreen(new com.hexcraft.client.gui.WorldHexScreen());
+        } else if (mc.screen instanceof com.hexcraft.client.gui.HextechPageScreen) {
+            com.hexcraft.client.gui.HextechPageScreen old = (com.hexcraft.client.gui.HextechPageScreen) mc.screen;
+            int t = old.currentTab();
+            com.hexcraft.client.gui.HextechPageScreen fresh = new com.hexcraft.client.gui.HextechPageScreen();
+            fresh.setInitialTab(t);
+            mc.setScreen(fresh);
+        }
     }
 
     public static void worldDrawOptions(Packets.S2CWorldDrawOptions msg) {

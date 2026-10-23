@@ -24,6 +24,11 @@ public class EquipRollScreen extends HexScaledScreen {
     private final List<float[]> parts = new ArrayList<>();
     private int cardY;
     private boolean closed;
+    /** v0.6.3 三选一「选中→确认」：CONFIRM_SELECT 开启时点卡片仅选中，点确认按钮才生效（防手滑） */
+    private int selectedIdx = -1;
+    /** v0.6.3 界面停留：确认抽取后不关闭，展示结果直到玩家点「完成」 */
+    private String chosenId;
+    private Component chosenName;
     private float anim;
     private int pTick;
     private boolean partsInit;
@@ -43,7 +48,7 @@ public class EquipRollScreen extends HexScaledScreen {
             final int idx = i;
             int color = rarityColor(msg.rarities.get(idx));
             String label = Component.translatable("hexcraft.rarity." + msg.rarities.get(idx)).getString();
-            cards[idx] = new RollScreen.CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> choose(idx));
+            cards[idx] = new RollScreen.CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> onCardClick(idx));
             this.addRenderableWidget(cards[idx]);
         }
         int btnY = cardY + CARD_H + 18;
@@ -51,10 +56,10 @@ public class EquipRollScreen extends HexScaledScreen {
             btns.add(new RollScreen.AccentButton(centerX - 112, btnY, 106, 22,
                     Component.translatable("hexcraft.gui.reroll", msg.rerollCost), 0xFF6FB1FF, b -> reroll()));
             btns.add(new RollScreen.AccentButton(centerX + 6, btnY, 106, 22,
-                    Component.translatable("gui.cancel"), 0xFF8A93A8, b -> onClose()));
+                    Component.translatable("gui.cancel"), 0xFF8A93A8, b -> cancelRoll()));
         } else {
             btns.add(new RollScreen.AccentButton(centerX - 53, btnY, 106, 22,
-                    Component.translatable("gui.cancel"), 0xFF8A93A8, b -> onClose()));
+                    Component.translatable("gui.cancel"), 0xFF8A93A8, b -> cancelRoll()));
         }
         for (RollScreen.AccentButton b : btns) this.addRenderableWidget(b);
     }
@@ -80,13 +85,74 @@ public class EquipRollScreen extends HexScaledScreen {
         }
     }
 
+    /** v0.6.3 卡片点击：CONFIRM_SELECT 开启=仅选中待确认；关闭=直接选择生效 */
+    private void onCardClick(int index) {
+        if (closed) return;
+        if (com.hexcraft.config.HexConfig.CONFIRM_SELECT.get()) select(index);
+        else choose(index);
+    }
+
+    private void select(int index) {
+        selectedIdx = index;
+        for (int i = 0; i < 3; i++) cards[i].selected = (i == index);
+        rebuildConfirmButtons();
+    }
+
+    /** 选中态底部按钮：确认选择 + 取消（替换刷新/取消） */
+    private void rebuildConfirmButtons() {
+        int centerX = this.guiW() / 2;
+        int btnY = cardY + CARD_H + 18;
+        for (RollScreen.AccentButton b : btns) this.removeWidget(b);
+        btns.clear();
+        btns.add(new RollScreen.AccentButton(centerX - 112, btnY, 106, 22,
+                Component.translatable("hexcraft.gui.confirm_choose"), 0xFF6FB1FF, b -> choose(selectedIdx)));
+        btns.add(new RollScreen.AccentButton(centerX + 6, btnY, 106, 22,
+                Component.translatable("gui.cancel"), 0xFF8A93A8, b -> cancelRoll()));
+        for (RollScreen.AccentButton b : btns) this.addRenderableWidget(b);
+    }
+
     private void choose(int index) {
         if (closed) return;
         closed = true;
+        chosenId = msg.options.get(index);
+        chosenName = Component.translatable("hexcraft.equip." + chosenId + ".name");
         Packets.C2SChooseRoll p = new Packets.C2SChooseRoll();
         p.index = index;
         PacketHandler.CHANNEL.sendToServer(p);
-        this.onClose();
+        // v0.6.3 确认选择后立即离开（不再停留展示结果 + 完成按钮；返回/关闭按 KEEP_WORKSHOP_OPEN 配置）
+        done();
+    }
+
+    /** v0.6.3 取消本轮三选一：通知服务端清理待选状态（防「请完成当前三选一」死锁），
+     *  并按配置返回装备抽取入口页（KEEP_WORKSHOP_OPEN=true）或直接关闭界面 */
+    private void cancelRoll() {
+        if (closed) return;
+        closed = true;
+        PacketHandler.CHANNEL.sendToServer(new Packets.C2SCancelRoll());
+        if (com.hexcraft.config.HexConfig.KEEP_WORKSHOP_OPEN.get()) {
+            HextechPageScreen fresh = new HextechPageScreen();
+            fresh.setInitialTab(3);
+            net.minecraft.client.Minecraft.getInstance().setScreen(fresh);
+        } else {
+            net.minecraft.client.Minecraft.getInstance().setScreen(null);
+        }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == 256 && !closed) { // Esc = 取消本轮（与服务端取消包同步，防死锁）
+            cancelRoll();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /** v0.6.3 完成：KEEP_WORKSHOP_OPEN=true 返回工坊装备页继续抽取；false 直接关闭 */
+    private void done() {
+        if (!com.hexcraft.config.HexConfig.KEEP_WORKSHOP_OPEN.get()) { net.minecraft.client.Minecraft.getInstance().setScreen(null); return; }
+        HextechPageScreen fresh = new HextechPageScreen();
+        fresh.setInitialTab(3);
+        net.minecraft.client.Minecraft.getInstance().setScreen(fresh);
     }
 
     private void reroll() {
@@ -111,7 +177,12 @@ public class EquipRollScreen extends HexScaledScreen {
         g.fillGradient(0, cardY - 30, this.guiW(), cardY + CARD_H + 6, 0x2A123056, 0x00000000);
         g.fillGradient(0, cardY + CARD_H - 20, this.guiW(), cardY + CARD_H + 30, 0x00000000, 0x2A123056);
 
-        Component title = Component.translatable("hexcraft.gui.equip_title");
+        Component title;
+        if (chosenId != null) {
+            title = Component.translatable("hexcraft.gui.got", chosenName);
+        } else {
+            title = Component.translatable("hexcraft.gui.equip_title");
+        }
         g.drawCenteredString(this.font, title, centerX, cardY - 34, 0xFFFFFF);
         int barW = this.font.width(title) + 40;
         g.fillGradient(centerX - barW / 2, cardY - 20, centerX + barW / 2, cardY - 19, 0xFFC77DFF, 0xFF7A6BFF);
@@ -161,6 +232,11 @@ public class EquipRollScreen extends HexScaledScreen {
             // 卖出价标签
             g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.equip_sell_tag"),
                     cx, cy + CARD_H - 12, (a << 24) | 0x00FFD28C);
+        }
+        // v0.6.3 选中提示（确认模式）
+        if (selectedIdx >= 0 && com.hexcraft.config.HexConfig.CONFIRM_SELECT.get()) {
+            g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.selected_hint"),
+                    cardX[selectedIdx] + CARD_W / 2, cardY + cards[selectedIdx].dy + CARD_H + 5, 0xFFFFFFFF);
         }
     }
 

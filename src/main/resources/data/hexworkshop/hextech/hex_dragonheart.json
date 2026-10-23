@@ -4,8 +4,8 @@
   "mods": [
     {
       "attr": "max_health",
-      "perLevel": 3.0
+      "perLevel": 6.0
     }
   ],
-  "event": "regen:1.5,lifesteal:0.05,thorns:1.0"
+  "event": "regen:1.5,lifesteal:0.05,thorns:2.0"
 }
