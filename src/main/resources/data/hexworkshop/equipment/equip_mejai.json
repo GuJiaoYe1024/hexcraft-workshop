@@ -3,15 +3,15 @@
   "weight": 9,
   "icon": "✦",
   "sell": 1000,
-  "event": "stack_attr:atk:0.002",
+  "event": "stack_attr:atk:0.0025",
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 1.0
+      "perLevel": 2.0
     },
     {
       "attr": "max_health",
-      "perLevel": 6.0
+      "perLevel": 10.0
     }
   ]
 }

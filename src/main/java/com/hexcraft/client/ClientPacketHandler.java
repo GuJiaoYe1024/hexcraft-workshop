@@ -32,6 +32,20 @@ public class ClientPacketHandler {
         }
     }
 
+    /** v0.6.4 服务端 Registry 定义同步：填充客户端定义缓存（联机客户端海克斯页/属性页依赖） */
+    public static void syncRegistry(Packets.S2CSyncRegistry msg) {
+        ClientDataStore.applyRegistry(msg);
+        // 已打开的海克斯主界面依赖 def（稀有度/分类/effect），收到定义后重建一次（保留当前页签）
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen instanceof com.hexcraft.client.gui.HextechPageScreen) {
+            com.hexcraft.client.gui.HextechPageScreen old = (com.hexcraft.client.gui.HextechPageScreen) mc.screen;
+            int t = old.currentTab();
+            com.hexcraft.client.gui.HextechPageScreen fresh = new com.hexcraft.client.gui.HextechPageScreen();
+            fresh.setInitialTab(t);
+            mc.setScreen(fresh);
+        }
+    }
+
     public static void syncWorldHexes(Packets.S2CSyncWorldHexes msg) {
         ClientDataStore.applyWorld(msg);
         // v0.6.3 世界海克斯列表/费用变更：已打开的世界海克斯界面立即重建（不再依赖重开）

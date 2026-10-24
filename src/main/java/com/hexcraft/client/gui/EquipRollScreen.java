@@ -215,6 +215,13 @@ public class EquipRollScreen extends HexScaledScreen {
             // 大图标（装备图标字符，稀有度色辉光）
             String icon = i < msg.icons.size() ? msg.icons.get(i) : "◆";
             int iconY = cy + 26;
+            // v0.6.5 已拥有角标：重复装备折算卖出价/叠层，提前提示避免困惑
+            com.hexcraft.capability.PlayerData.EquipEntry owned = ownedEquip(id);
+            if (owned != null) {
+                g.drawCenteredString(this.font,
+                        Component.translatable("hexcraft.gui.owned_tag", owned.level),
+                        cx, cy + 14, (a << 24) | 0x00FFD28C);
+            }
             g.drawCenteredString(this.font, icon, cx, iconY,
                     (a << 24) | (color & 0x00FFFFFF));
             g.drawCenteredString(this.font, icon, cx, iconY,
@@ -245,5 +252,13 @@ public class EquipRollScreen extends HexScaledScreen {
             case "prismatic" -> 0xFFC77DFF;
             default -> 0xFFFFC94A;
         };
+    }
+
+    /** v0.6.5 已拥有装备查询（客户端缓存，仅显示用） */
+    private static com.hexcraft.capability.PlayerData.EquipEntry ownedEquip(String id) {
+        for (com.hexcraft.capability.PlayerData.EquipEntry e : com.hexcraft.client.ClientDataStore.equipment) {
+            if (e.id.equals(id)) return e;
+        }
+        return null;
     }
 }

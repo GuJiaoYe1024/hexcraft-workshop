@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "max_health",
-      "perLevel": 8.0
+      "perLevel": 16.0
     }
   ],
-  "event": "death_defy:0.5"
+  "event": "death_defy:0.6"
 }

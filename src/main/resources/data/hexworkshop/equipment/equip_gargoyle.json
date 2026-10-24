@@ -6,12 +6,12 @@
   "mods": [
     {
       "attr": "armor",
-      "perLevel": 7.5
+      "perLevel": 12.0
     },
     {
       "attr": "max_health",
-      "perLevel": 15.0
+      "perLevel": 20.0
     }
   ],
-  "event": "thorns:3.0"
+  "event": "thorns:4.0"
 }

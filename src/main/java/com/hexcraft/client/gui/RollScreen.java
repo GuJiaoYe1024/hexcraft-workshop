@@ -237,6 +237,14 @@ public class RollScreen extends HexScaledScreen {
             int a = (int) (cards[i].alpha * 255);
             int cy = cardY + cards[i].dy;
 
+            // v0.6.5 已拥有角标：重复抽取=叠等级（MAX_HEXTECH_LEVEL 上限），提前提示避免困惑
+            com.hexcraft.capability.PlayerData.HexEntry owned = ownedHex(id);
+            if (owned != null && !msg.forge) {
+                g.drawCenteredString(this.font,
+                        Component.translatable("hexcraft.gui.owned_tag", owned.level),
+                        cx, cy + 20, (a << 24) | 0x00FFD28C);
+            }
+
             g.drawCenteredString(this.font, name, cx, cy + 42, (a << 24) | (color & 0x00FFFFFF));
             g.drawCenteredString(this.font, name, cx + 1, cy + 43, (a / 3) << 24 | (color & 0x00FFFFFF)); // 名称柔光
             g.fill(cardX[i] + 14, cy + 56, cardX[i] + CARD_W - 14, cy + 57, 0x33505F88);
@@ -250,7 +258,7 @@ public class RollScreen extends HexScaledScreen {
             // v0.6.2 海克斯卡叠层标签后缀（运行时拼接【叠层：xxx｜xxx｜xxx】）
             if (!msg.forge) {
                 String tagSuffix = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(
-                        com.hexcraft.hextech.HextechRegistry.get(id),
+                        com.hexcraft.client.ClientDataStore.hexDef(id),
                         net.minecraft.client.Minecraft.getInstance().options.languageCode.startsWith("zh"));
                 if (tagSuffix != null) {
                     g.drawCenteredString(this.font, tagSuffix, cx, dy + 2, (a << 24) | 0x008FA6C8);
@@ -289,6 +297,14 @@ public class RollScreen extends HexScaledScreen {
             case "forge" -> 0xFF6FB1FF;
             default -> 0xFFD0D8E8;
         };
+    }
+
+    /** v0.6.5 已拥有海克斯查询（客户端缓存，仅显示用） */
+    private static com.hexcraft.capability.PlayerData.HexEntry ownedHex(String id) {
+        for (com.hexcraft.capability.PlayerData.HexEntry h : com.hexcraft.client.ClientDataStore.hexes) {
+            if (h.id.equals(id)) return h;
+        }
+        return null;
     }
 
     private static int forgeTierColor(int tier) {

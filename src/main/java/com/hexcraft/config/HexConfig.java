@@ -64,6 +64,8 @@ public class HexConfig {
     public static final ForgeConfigSpec.DoubleValue EXTRA_ARMOR_PER_POINT;
     public static final ForgeConfigSpec.DoubleValue EXTRA_ARMOR_CAP;
     public static final ForgeConfigSpec.EnumValue<DuplicateRule> FORGE_DUPLICATE_RULE;
+    // v0.6.5 随机馈赠低价值过滤（服务端生效；默认关闭=保持全物品池）
+    public static final ForgeConfigSpec.BooleanValue RANDOM_GIFT_FILTER_LOW;
     // ---- 死亡保留（以客户端配置为主，v0.4.11）：主菜单即可设置并保存，进世界即生效 ----
     public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_HEXES;
     public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_FORGES;
@@ -122,6 +124,8 @@ public class HexConfig {
         EXTRA_ARMOR_PER_POINT = b.comment("额外护甲减伤：超出阈值的每点护甲提供 X% 减伤（独立乘区，与护甲曲线相乘）").translation("hexcraft.config.v060.extraArmorPerPoint").defineInRange("extraArmorPerPoint", 0.5, 0.0, 5.0);
         EXTRA_ARMOR_CAP = b.comment("额外护甲减伤上限（%）").translation("hexcraft.config.v060.extraArmorCap").defineInRange("extraArmorCap", 25.0, 0.0, 80.0);
         FORGE_DUPLICATE_RULE = b.comment("同词条锻造叠加规则：STACK=无上限叠加（默认）；BEST_ONLY=同名词条仅保留最高档位（低档重复自动回收）").translation("hexcraft.config.v060.forgeDuplicateRule").defineEnum("forgeDuplicateRule", DuplicateRule.STACK);
+        // v0.6.5 随机馈赠低价值过滤（服务端生效；默认关闭保持全物品池）
+        RANDOM_GIFT_FILTER_LOW = b.comment("随机馈赠过滤低价值物品（服务端生效，默认关闭=保持原版+全部模组全物品池；开启后过滤泥土/圆石/原木/羊毛/陶瓦等建材装饰类原版低价值物品，模组物品不判定）").translation("hexcraft.config.v060.randomGiftFilterLow").define("randomGiftFilterLow", false);
         FORGE_MULT_SILVER = b.comment("白银锻造倍率（服务端生效，默认 1.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultSilver").defineInRange("forgeMultiplierSilver", 1.0, 0.1, 20.0);
         FORGE_MULT_GOLD = b.comment("黄金锻造倍率（服务端生效，默认 2.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultGold").defineInRange("forgeMultiplierGold", 2.0, 0.1, 20.0);
         FORGE_MULT_PRISMATIC = b.comment("棱彩锻造倍率（服务端生效，默认 3.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultPrismatic").defineInRange("forgeMultiplierPrismatic", 3.0, 0.1, 20.0);

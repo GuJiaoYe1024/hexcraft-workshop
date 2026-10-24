@@ -1,6 +1,8 @@
 package com.hexcraft.client;
 
 import com.hexcraft.capability.PlayerData;
+import com.hexcraft.hextech.HextechDefinition;
+import com.hexcraft.hextech.HextechRegistry;
 import com.hexcraft.network.Packets;
 
 import java.util.ArrayList;
@@ -41,6 +43,34 @@ public class ClientDataStore {
 
     /** v0.6.3 打开海克斯工坊主界面时置 true：收到下一条 S2CSyncData 后用最新数据重建界面一次（联机抽取后界面为空的兜底修复） */
     public static boolean requestPendingSync;
+
+    // ---- v0.6.4 服务端 Registry 定义同步缓存（联机客户端修复）----
+    // 根因：HexDataLoader/EquipmentDataLoader 注册在服务端 AddReloadListenerEvent，纯客户端进程不触发，
+    // 客户端 HextechRegistry 只有 static 兜底（13 个海克斯），其余 171 海克斯 + 44 装备定义缺失，
+    // 导致联机玩家海克斯页/属性页全部为空（抽取界面用服务端 msg 数据所以正常）。
+    // 方案：服务端把全部定义（渲染所需字段）随 S2CSyncRegistry 下发，客户端存这里；界面与
+    // effect() 统一从 hexDef()/equipDef() 读取（优先内置 Registry，其次本缓存）。
+    public static final Map<String, HextechDefinition> hexRegistryCache = new LinkedHashMap<>();
+    public static final Map<String, HextechDefinition> equipRegistryCache = new LinkedHashMap<>();
+
+    /** 读取海克斯定义：内置 Registry 优先（单机同进程已由数据包加载），缺失回退服务端同步缓存（联机） */
+    public static HextechDefinition hexDef(String id) {
+        HextechDefinition d = HextechRegistry.get(id);
+        return d != null ? d : hexRegistryCache.get(id);
+    }
+
+    /** 读取装备定义：同 hexDef 策略 */
+    public static HextechDefinition equipDef(String id) {
+        HextechDefinition d = HextechRegistry.getEquip(id);
+        return d != null ? d : equipRegistryCache.get(id);
+    }
+
+    public static void applyRegistry(Packets.S2CSyncRegistry msg) {
+        hexRegistryCache.clear();
+        hexRegistryCache.putAll(msg.hexes);
+        equipRegistryCache.clear();
+        equipRegistryCache.putAll(msg.equips);
+    }
 
     // ---- 世界海克斯（v0.3.21）：全服列表客户端缓存 ----
     public static final List<String> worldHexes = new ArrayList<>();

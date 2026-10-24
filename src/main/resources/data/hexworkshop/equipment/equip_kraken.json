@@ -6,12 +6,12 @@
   "mods": [
     {
       "attr": "attack_speed",
-      "perLevel": 0.24
+      "perLevel": 0.3
     },
     {
       "attr": "attack_damage",
-      "perLevel": 1.2
+      "perLevel": 2.0
     }
   ],
-  "event": "splash:0.2"
+  "event": "splash:0.3"
 }

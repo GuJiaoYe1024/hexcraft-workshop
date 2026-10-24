@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "armor",
-      "perLevel": 6.0
+      "perLevel": 12.0
     }
   ],
-  "event": "frost_bite:0.3"
+  "event": "frost_bite:0.4"
 }

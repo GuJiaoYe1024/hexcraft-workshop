@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "attack_speed",
-      "perLevel": 0.3
+      "perLevel": 0.36
     }
   ],
-  "event": "echo:0.1"
+  "event": "echo:0.15"
 }

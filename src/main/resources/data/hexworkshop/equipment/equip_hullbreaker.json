@@ -6,12 +6,12 @@
   "mods": [
     {
       "attr": "armor",
-      "perLevel": 10.0
+      "perLevel": 14.0
     },
     {
       "attr": "tough",
-      "perLevel": 7.5
+      "perLevel": 10.0
     }
   ],
-  "event": "melee_power:0.25"
+  "event": "melee_power:0.3"
 }

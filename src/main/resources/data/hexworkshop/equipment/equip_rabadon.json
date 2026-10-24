@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 3.0
+      "perLevel": 5.0
     }
   ],
-  "event": "arcane_shield:0.1"
+  "event": "arcane_shield:0.15"
 }

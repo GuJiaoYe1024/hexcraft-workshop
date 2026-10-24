@@ -1,3 +1,62 @@
+Hexcraft Workshop v0.6.6 - Equipment rebalance (all 44 items buffed) + full hex system audit
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated. (This release note also covers the v0.6.5 update, since only v0.6.6 is being published.)
+
+- EQUIPMENT REBALANCE (44 items, all buffed): previously a 2500/4000 crystal roll often gave stats weaker than forging. New target: Gold-tier items ≈ 4 forge-roll strength, Prismatic-tier ≈ 6
+  - Pure-mechanic items now grant base stats too (Hextech Gunblade +4 ATK, Liandry's +3 ATK, Mortal Reminder +4 ATK, TACZ Barrel +3 ATK, etc.)
+  - Attack items raised to +4~+5 (many were +1~+2), armor +8~+16, HP +16~+30, attack speed +20%~+45%
+  - Shield / lifesteal / splash / thorns / execute / crit mechanics scaled up together
+  - Fixed Gold/Prismatic inversion (Gold Randuin used to out-stat Prismatic Gargoyle)
+  - Draw prices and 25% sell-back unchanged; all 44 item descriptions rewritten (EN/CN)
+- HEX SYSTEM FULL AUDIT PASSED: all 184 hexes + 44 items + 40 world hexes - JSON fields OK, event keys match code consumption, translations complete, no numeric anomalies; no hex bugs needed fixing this round (v0.6.3~0.6.5 known issues all fixed)
+- SELF-CHECK: 976 bilingual keys aligned, 0 leftover design labels, protocol VERSION 20 unchanged (same as v0.6.4/v0.6.5 - everyone just updates to v0.6.6)
+
+Included from v0.6.5:
+- FIXED (major bug): world hex draw no longer charges 2000 XP before saying "you own all" - pool is checked first, no charge when empty or when XP is insufficient
+- NEW: "Owned Lv.X" golden badge on hex/equipment 3-choice cards (forge rolls and world hex draws excluded)
+- NEW: Equipment Codex button on the equipment page - browse all 44 items, scroll, hover for full details; owned items flagged
+- NEW: Forge tier multiplier hint (x1/x2/x3) shown next to each tier title, updates with config changes
+- NEW: Random Gift low-value filter config (server-side, default OFF = original full item pool; ON filters vanilla building/decor items like dirt/cobblestone/wood/wool)
+
+Also included from v0.6.4 (previously unpublished): multiplayer hex screen showing empty on clients fixed, ammo count capped at 9999 (no more -1.6B overflow), random gift text calibration.
+
+Install: replace the jar in the mods folder with hexworkshop-1.20.1-0.6.6.jar. Multiplayer: everyone on v0.6.6 (protocol VERSION 20). Old saves work fine - item stats apply instantly, no new world needed.
+
+Hexcraft Workshop v0.6.3 - Stay-open toggle + live cost refresh + multiplayer sync + content review fixes
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- NEW CLIENT CONFIG keepWorkshopOpen (default ON): after a roll (hex draw / forge / equip / world hex), return to the workshop entry page to keep drawing, or close the UI entirely
+- NEW CLIENT CONFIG confirmSelect (default ON): click a card to select it, then press "Confirm" to actually take it (prevents misclicks); turn it OFF for instant select (old behavior)
+- LIVE COST REFRESH: draw/forge/equip/world costs refresh in the UI as discounts change (server-authoritative; min 10% price floor, world draw cost floor of 1 XP)
+- MULTIPLAYER SYNC HARDENING: opening the world hex screen requests fresh data, every roll/buy/cancel pushes a sync packet; re-entrance guard prevents duplicate charges; protocol VERSION 19
+- FIXED (major bug): cancelling a 3-choice roll no longer deadlocks with "please finish the current choice" - new C2SCancelRoll packet clears pendingRoll / worldDrawOptions on the server; the cancel button and Esc both apply the keepWorkshopOpen rule. Fees are NOT refunded: cancel = abandon the roll, which prevents free infinite re-roll previews
+- FIXED: world hex draw cost sign bug - Genesis Contract & Peaceful Vision stored draw_cost as +0.45 (treated as +45% increase) while the formula is cost x (1+sum); changed to -0.55 so cost is REDUCED as described (Genesis Contract alone: 2000 -> 900 XP); stacking reductions have a floor of 1 XP (no refunds / no exploitation)
+- FIXED: 30 tooltip/stat mismatches (percentages scaled wrongly, missing numbers, outdated leftovers), 22 mechanic/stat conflicts (Dragonhorn 100%->75%, Void Shipment bleed etc), 14 unit inconsistencies (regen unified as "per 5 seconds", kill_heal in HP points, arcane_shield x100%, TACZ ammo/gun damage normalized)
+- CLEANED: 10 hex descriptions no longer show design annotations like "Gold: value+mechanism"
+- REMOVED: the redundant "Complete" button after a roll - selecting/confirming now leaves the screen immediately
+- OPTIMIZATIONS: Zeal ASPD 80%->40%, Night Digger / Dig Master mining speed 120%->60%, Dragon Heart +3HP->+6 & thorns 1->2, War Cry / Frost Crown / Field Medic prismatic weight 8->6
+- Content total: 184 hexes + 44 equipment + 13 forge stats + 40 world hexes (281 items); zh_cn & en_us 972 keys aligned
+- Protocol VERSION 19: v0.6.2 and earlier clients must update to match
+
+Hexcraft Workshop v0.6.2 - Forge template tooltips + 6 events live + stacking tag system + DLC pack system
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- FORGE TOOLTIP TEMPLATES: the 13 static forge traits now render real values x tier multiplier in-game via {tierName} {displayValue} templates - "Silver: +1.0 armor/level", "Gold: +2.0", "Prismatic: +15% HP/level"; tooltip follows Cloth multiplier changes instantly
+- 6 RESERVED EVENTS NOW LIVE: bleed (damage over time, independent timers, stackable), hit slow (4s, 15% strength/level, max 3), thorns fire (ignite attacker 4s), bleed spread (2.5 blocks on death), mark target (3.5s, damage taken up), execute (below 20% HP threshold -> 35% max-HP magic damage)
+- STACKING TAG SYSTEM (stackTag): 12 unified tag labels (permanent/combat/timed/on_hit/on_kill/on_hurt/on_tick + damage/armor/speed/leech/shield), tooltip auto-shows 【Stack: xxx｜xxx】 - new hexes only need the stackTag array in JSON
+- 14 NEW STACKING HEXES (Silver 4 / Gold 6 / Prismatic 4): Charge Dash, Bulwark, Bloodied Armor, Pain-Heal Quick, Blood Pact Inheritance, Battle Shield, War Soul, Time-Burning Blade, Wound Leech, Run to Eternity, Eternal Campaign, Undying Shell, Life-Death Interweave, Instant Vastness; 8 old stacking hexes got their tags
+- DLC PACK SYSTEM: drop third-party content packs into hexworkshop_dlc/packs (folder or zip, must contain dlc_meta.json); enable via Cloth config page or /hexcraft reload dlc; zip loads in memory (nothing extracted to disk); data dirs data/hex, data/equipment, data/world_hex
+- CLOTH CONFIG: v060 group retitled; 2 new server configs - permanent stack global multiplier (0.1~10, default 1.0) and global cap (10~10000, default 200); server-authoritative (client changes ignored)
+- TEXT POLISH: 40 world hexes + TACZ hexes clarified (negative effects marked, close/long range gun damage, gun crit); Heartsteel calibrated to hit-stack wording (25% chance, +0.15% max HP per stack, 2 thorns)
+- 4 NEW WORLD HEXES: Eternal Multiplication (prismatic, permanent stacks +50%), War Wane (gold, combat decay +50%), Long War (gold, combat decay -30%), Twinkle (gold, timed stack duration -50%)
+- Content total: 184 hexes + 44 equipment + 13 forge stats + 40 world hexes (281 items); zh_cn & en_us 960 keys
+- Protocol unchanged (VERSION=16) - v0.6.0/v0.6.1 players can update directly
+
 Hexcraft Workshop v0.6.1 - Forge multiplier config + Cloth v060 fix + 12 new hexes
 =============================================================================
 

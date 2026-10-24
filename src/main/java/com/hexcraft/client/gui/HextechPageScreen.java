@@ -65,6 +65,9 @@ public class HextechPageScreen extends HexScaledScreen {
     private int hexScroll;
     private int attrScroll;
     private int forgeScroll;
+    // v0.6.5 装备页图鉴模式：equipGallery=true 时装备页显示全部装备图鉴（可滚动浏览未拥有装备）
+    private boolean equipGallery;
+    private int galleryScroll;
     /** 自绘列表 hover 提示：鼠标位置与当前命中行的提示内容（render 每帧重置，末尾绘制） */
     private int hoverX;
     private int hoverY;
@@ -219,12 +222,18 @@ public class HextechPageScreen extends HexScaledScreen {
         this.addRenderableWidget(new HexButton(cx() + 119, cy() + 48, 111, 15,
                 Component.translatable("hexcraft.gui.buy_equip_prismatic", prismPrice), 0xFFC77DFF,
                 b -> { Packets.C2SBuyEquip p = new Packets.C2SBuyEquip(); p.price = 4000; PacketHandler.CHANNEL.sendToServer(p); }));
-        // 6 槽位卖出按钮（无装备时置灰不生效）
-        for (int i = 0; i < PlayerData.MAX_EQUIP; i++) {
-            final int idx = i;
-            this.addRenderableWidget(new HexButton(cx() + 152, cy() + 91 + i * 16, 58, 12,
-                    Component.translatable("hexcraft.gui.equip_sell"), 0xFF8A93A8,
-                    b -> { Packets.C2SSellEquip p = new Packets.C2SSellEquip(); p.index = idx; PacketHandler.CHANNEL.sendToServer(p); }));
+        // v0.6.5 装备图鉴切换按钮（文案=点击后进入的模式；图鉴模式隐藏卖出按钮防误操作）
+        this.addRenderableWidget(new HexButton(cx() + 4, cy() + 70, 112, 13,
+                Component.translatable(equipGallery ? "hexcraft.gui.equip_view_equipped" : "hexcraft.gui.equip_gallery"), 0xFF4DE6FF,
+                b -> { equipGallery = !equipGallery; galleryScroll = 0; this.rebuildWidgets(); }));
+        // 6 槽位卖出按钮（无装备时置灰不生效；图鉴模式不显示）
+        if (!equipGallery) {
+            for (int i = 0; i < PlayerData.MAX_EQUIP; i++) {
+                final int idx = i;
+                this.addRenderableWidget(new HexButton(cx() + 152, cy() + 91 + i * 16, 58, 12,
+                        Component.translatable("hexcraft.gui.equip_sell"), 0xFF8A93A8,
+                        b -> { Packets.C2SSellEquip p = new Packets.C2SSellEquip(); p.index = idx; PacketHandler.CHANNEL.sendToServer(p); }));
+            }
         }
     }
 
@@ -426,11 +435,11 @@ public class HextechPageScreen extends HexScaledScreen {
     /** v0.6.0 战斗叠层显示名：优先取对应海克斯名（crescendo → hex_crescendo_blade），无则用键名 */
     private static String stackNameOf(String key) {
         String candidate = "hex_" + key + "_blade";
-        if (HextechRegistry.get(candidate) != null) {
+        if (ClientDataStore.hexDef(candidate) != null) {
             return Component.translatable("hexcraft.hextech." + candidate + ".name").getString();
         }
         String probe = "hex_" + key;
-        if (HextechRegistry.get(probe) != null) {
+        if (ClientDataStore.hexDef(probe) != null) {
             return Component.translatable("hexcraft.hextech." + probe + ".name").getString();
         }
         return key;
@@ -441,7 +450,7 @@ public class HextechPageScreen extends HexScaledScreen {
         List<PlayerData.HexEntry> out = new java.util.ArrayList<>();
         for (PlayerData.HexEntry h : ClientDataStore.hexes) {
             if (h.id.equals("hex_stack_drake")) continue; // v0.5.0：叠角龙自身不叠层，不显示
-            HextechDefinition def = HextechRegistry.get(h.id);
+            HextechDefinition def = ClientDataStore.hexDef(h.id); // v0.6.4 联机缓存兜底
             if (def != null && def.event != null
                     && (def.event.contains("stack_growth") || def.event.contains("stack_attr:")
                     || def.event.contains("stack_attr_onhit:"))) {
@@ -455,7 +464,7 @@ public class HextechPageScreen extends HexScaledScreen {
     private static List<PlayerData.EquipEntry> stackableEquips() {
         List<PlayerData.EquipEntry> out = new java.util.ArrayList<>();
         for (PlayerData.EquipEntry e : ClientDataStore.equipment) {
-            HextechDefinition def = HextechRegistry.getEquip(e.id);
+            HextechDefinition def = ClientDataStore.equipDef(e.id); // v0.6.4 联机缓存兜底
             if (def != null && def.event != null
                     && (def.event.contains("stack_attr:") || def.event.contains("stack_attr_onhit:"))) {
                 out.add(e);
@@ -544,7 +553,7 @@ public class HextechPageScreen extends HexScaledScreen {
         java.util.List<PlayerData.HexEntry> list = visibleHexes();
         int ly = top - hexScroll;
         for (var h : list) {
-            HextechDefinition def = HextechRegistry.get(h.id);
+            HextechDefinition def = ClientDataStore.hexDef(h.id); // v0.6.4 联机缓存兜底
             if (def == null) { ly += HEX_ROW_H; continue; } // 旧档残留（已删除海克斯）不显示
             if (ly + 8 < top) { ly += HEX_ROW_H; continue; }
             if (ly > bottom) break;
@@ -566,7 +575,7 @@ public class HextechPageScreen extends HexScaledScreen {
                 tip.add(Component.translatable("hexcraft.hextech." + h.id + ".desc"));
                 // v0.6.2 叠层标签后缀：tooltip 运行时自动拼接【叠层：xxx｜xxx｜xxx】（新增海克斯仅改 JSON stackTag 数组）
                 String tagSuffix = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(
-                        com.hexcraft.hextech.HextechRegistry.get(h.id), net.minecraft.client.Minecraft.getInstance().options.languageCode.startsWith("zh"));
+                        ClientDataStore.hexDef(h.id), net.minecraft.client.Minecraft.getInstance().options.languageCode.startsWith("zh"));
                 if (tagSuffix != null) {
                     tip.add(Component.literal(tagSuffix).withStyle(c -> c.withColor(0xFF8FA6C8)));
                 }
@@ -591,7 +600,7 @@ public class HextechPageScreen extends HexScaledScreen {
         if (hexCat == 0) return ClientDataStore.hexes;
         java.util.List<PlayerData.HexEntry> out = new java.util.ArrayList<>();
         for (var h : ClientDataStore.hexes) {
-            com.hexcraft.hextech.HextechDefinition def = HextechRegistry.get(h.id);
+            com.hexcraft.hextech.HextechDefinition def = ClientDataStore.hexDef(h.id); // v0.6.4 联机缓存兜底
             if (def == null) continue;
             if (hexCategoryOf(h.id, def) == hexCat) out.add(h);
         }
@@ -661,6 +670,11 @@ public class HextechPageScreen extends HexScaledScreen {
             attrScroll = Math.max(0, Math.min(maxAttrScroll(), attrScroll - (int) Math.round(delta * ROW_H)));
             return true;
         }
+        // v0.6.5 装备图鉴滚动（仅图鉴模式）
+        if (tab == 3 && equipGallery) {
+            galleryScroll = Math.max(0, Math.min(maxGalleryScroll(), galleryScroll - (int) Math.round(delta * 13)));
+            return true;
+        }
         return super.mouseScrolled(mouseX / uiScale(), mouseY / uiScale(), delta);
     }
 
@@ -709,9 +723,15 @@ public class HextechPageScreen extends HexScaledScreen {
             g.fill(cx() + 2, ly + groupH - 1, cx() + 230, ly + groupH, 0xFF30466B);
             g.fill(cx() + 2, ly, cx() + 3, ly + groupH, 0xFF30466B);
             g.fill(cx() + 229, ly, cx() + 230, ly + groupH, 0xFF30466B);
-            // 标题条：左侧档位色条 + 组名（档位色）+ 右侧词条计数
+            // 标题条：左侧档位色条 + 组名（档位色）+ v0.6.5 档位倍率提示 + 右侧词条计数
             g.fill(cx() + 3, ly + 3, cx() + 5, ly + 13, grp.color);
-            g.drawString(this.font, Component.translatable("hexcraft.forge.tier." + grp.tierKey), cx() + 8, ly + 3, grp.color);
+            Component tierNameC = Component.translatable("hexcraft.forge.tier." + grp.tierKey);
+            g.drawString(this.font, tierNameC, cx() + 8, ly + 3, grp.color);
+            // v0.6.5 档位倍率：组名右侧显示实际加成倍率（读运行时配置，与 tooltip 数值一致）
+            double tierMultV = com.hexcraft.hextech.HextechRegistry.tierMult(grp.tierIdx);
+            String multStr = "×" + fmt(tierMultV);
+            g.drawString(this.font, Component.literal(multStr),
+                    cx() + 8 + this.font.width(tierNameC) + 5, ly + 3, 0xFF7FD8FF);
             g.drawString(this.font, Component.literal(grp.items.size() + " 条"), cx() + 178, ly + 3, 0xFF6A7B96);
             // 组内词条两列（组内索引分列，不跨组，标题不再挤占列位）；v0.4.4 行距 12→13 防文字挤压
             for (int i = 0; i < grp.items.size(); i++) {
@@ -814,13 +834,14 @@ public class HextechPageScreen extends HexScaledScreen {
     }
 
     private void renderEquip(GuiGraphics g, int y) {
-        g.drawString(this.font, Component.translatable("hexcraft.gui.equipped"), cx() + 4, y + 70, 0xFF9FE4FF);
+        // v0.6.5 图鉴模式：标题由切换按钮承担，此处直接分流
+        if (equipGallery) { renderEquipGallery(g, y); return; }
         int ly = y + 91;
         for (int i = 0; i < PlayerData.MAX_EQUIP; i++) {
             g.fill(cx() + 3, ly - 1, cx() + 228, ly + 11, 0x22305080);
             if (i < ClientDataStore.equipment.size()) {
                 PlayerData.EquipEntry eq = ClientDataStore.equipment.get(i);
-                com.hexcraft.hextech.HextechDefinition def = HextechRegistry.getEquip(eq.id);
+                com.hexcraft.hextech.HextechDefinition def = ClientDataStore.equipDef(eq.id); // v0.6.4 联机缓存兜底
                 String rk = def != null ? def.rarity.key : "gold";
                 String icon = def != null && def.icon != null ? def.icon : "◆";
                 String nm = Component.translatable("hexcraft.equip." + eq.id + ".name").getString();
@@ -857,6 +878,85 @@ public class HextechPageScreen extends HexScaledScreen {
             ly += 16;
         }
         g.drawString(this.font, Component.translatable("hexcraft.gui.equip_hint"), cx() + 4, y + 200, 0xFF5A6A90);
+    }
+
+    /** v0.6.5 装备图鉴：全部装备（含未拥有）列表，可滚动；列=名称/已拥有 Lv/卖价，来源在悬停提示 */
+    private void renderEquipGallery(GuiGraphics g, int y) {
+        java.util.List<String> ids = allEquipIds();
+        int top = y + 91;
+        int bottom = y + 234;
+        double s = uiScale();
+        g.enableScissor((int) ((cx() + 1) * s), (int) ((top - 2) * s), (int) ((cx() + 230) * s), (int) ((bottom + 1) * s));
+        int ly = top - galleryScroll;
+        for (String id : ids) {
+            if (ly + 12 < top) { ly += 13; continue; }
+            if (ly > bottom) break;
+            com.hexcraft.hextech.HextechDefinition def = ClientDataStore.equipDef(id);
+            String rk = def != null ? def.rarity.key : "gold";
+            String icon = def != null && def.icon != null ? def.icon : "◆";
+            String nm = Component.translatable("hexcraft.equip." + id + ".name").getString();
+            g.fill(cx() + 3, ly - 1, cx() + 228, ly + 11, 0x18305080);
+            g.drawString(this.font, icon + " " + nm, cx() + 6, ly, rarityColor(rk));
+            // 已拥有 Lv 标识
+            PlayerData.EquipEntry owned = ownedEquip(id);
+            if (owned != null) {
+                g.drawString(this.font, Component.translatable("hexcraft.gui.owned_tag", owned.level).getString(),
+                        cx() + 96, ly, 0xFFFFD28C);
+            }
+            // 卖价
+            if (def != null && def.sell > 0) {
+                g.drawString(this.font, def.sell + "◆", cx() + 190, ly, 0xFF8FA6C8);
+            }
+            // hover 提示：名称 + 描述 + 来源 + 卖价 + 叠层标签
+            if (def != null && hoverX >= cx() + 3 && hoverX <= cx() + 228 && hoverY >= ly - 1 && hoverY <= ly + 13) {
+                net.minecraft.network.chat.MutableComponent eqName = Component.translatable("hexcraft.equip." + id + ".name").copy();
+                if (owned != null) {
+                    if (owned.level > 0) eqName = eqName.append("  Lv." + owned.level);
+                    if (owned.stacks > 0) eqName = eqName.append("  ×" + owned.stacks + "层");
+                }
+                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                tip.add(eqName.withStyle(c -> c.withColor(rarityColor(rk))));
+                tip.add(Component.translatable("hexcraft.equip." + id + ".desc"));
+                String eqTag = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(def,
+                        net.minecraft.client.Minecraft.getInstance().options.languageCode.startsWith("zh"));
+                if (eqTag != null) {
+                    tip.add(Component.literal(eqTag).withStyle(c -> c.withColor(0xFF8FA6C8)));
+                }
+                if (def.sell > 0) tip.add(Component.translatable("hexcraft.gui.sell_hint", def.sell));
+                String src = HextechRegistry.sourceOf(id);
+                if (!"vanilla".equals(src)) {
+                    tip.add(Component.translatable("hexcraft.gui.source_tag",
+                            src.toUpperCase(java.util.Locale.ROOT)).withStyle(c -> c.withColor(0xFF4DE6FF)));
+                }
+                hoverTip = tip;
+            }
+            ly += 13;
+        }
+        g.disableScissor();
+        // 滚动提示（仅内容超高时）
+        if (ids.size() * 13 > bottom - top) {
+            g.drawString(this.font, "▽", cx() + 218, bottom - 10, 0xFF5A6A90);
+        }
+    }
+
+    /** v0.6.5 图鉴数据源：内置 44 装备定义 + 联机同步缓存（去重保序，联机可用） */
+    private static java.util.List<String> allEquipIds() {
+        java.util.LinkedHashSet<String> ids = new java.util.LinkedHashSet<>();
+        for (com.hexcraft.hextech.HextechDefinition d : com.hexcraft.hextech.HextechRegistry.allEquips()) ids.add(d.id);
+        ids.addAll(ClientDataStore.equipRegistryCache.keySet());
+        return new java.util.ArrayList<>(ids);
+    }
+
+    /** v0.6.5 已拥有装备查询（客户端缓存，仅显示用） */
+    private static PlayerData.EquipEntry ownedEquip(String id) {
+        for (PlayerData.EquipEntry e : ClientDataStore.equipment) {
+            if (e.id.equals(id)) return e;
+        }
+        return null;
+    }
+
+    private int maxGalleryScroll() {
+        return Math.max(0, allEquipIds().size() * 13 - (234 - 91));
     }
 
     // ================= 工具 =================

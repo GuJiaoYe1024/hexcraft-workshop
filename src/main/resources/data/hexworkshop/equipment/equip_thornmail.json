@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "armor",
-      "perLevel": 8.0
+      "perLevel": 12.0
     }
   ],
-  "event": "thorns:2.0,counter:0.1"
+  "event": "thorns:3.0,counter:0.15"
 }

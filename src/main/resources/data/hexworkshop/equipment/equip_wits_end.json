@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "attack_speed",
-      "perLevel": 0.375
+      "perLevel": 0.45
     }
   ],
-  "event": "arcane_shield:0.25,ranged_power:0.15"
+  "event": "arcane_shield:0.3,ranged_power:0.2"
 }

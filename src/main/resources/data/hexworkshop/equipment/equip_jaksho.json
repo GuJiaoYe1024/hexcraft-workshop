@@ -6,12 +6,12 @@
   "mods": [
     {
       "attr": "armor",
-      "perLevel": 7.5
+      "perLevel": 10.0
     },
     {
       "attr": "tough",
-      "perLevel": 7.5
+      "perLevel": 10.0
     }
   ],
-  "event": "stack_growth:0.02"
+  "event": "stack_growth:0.025"
 }

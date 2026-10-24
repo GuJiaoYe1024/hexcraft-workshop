@@ -61,6 +61,8 @@ public class Packets {
                 HextechEvents.sync(sp);
                 // v0.6.3 顺带刷新世界海克斯列表缓存（打开任意工坊界面都拉到最新，界面侧收到后重建）
                 broadcastWorldHexes(sp.server);
+                // v0.6.4 顺带同步全量 Registry 定义（联机客户端 HextechRegistry 无数据包加载，界面靠这份缓存渲染）
+                S2CSyncRegistry.sendTo(sp);
             });
             ctx.get().setPacketHandled(true);
         }
@@ -786,6 +788,13 @@ public class Packets {
                 }
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
+                // v0.6.5 先检查抽取池是否还有可选（全部已拥有时不扣经验，防白亏）
+                com.hexcraft.hextech.WorldHexData wh0 = com.hexcraft.hextech.WorldHexData.get(sl);
+                java.util.List<String> preCheck = com.hexcraft.hextech.WorldHexRegistry.rollOptions(wh0.active);
+                if (preCheck.isEmpty()) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.world_all_owned"), true);
+                    return;
+                }
                 // v0.6.0 校准（备注5）：抽取消耗结果不得小于 0——负 draw_cost 只允许减耗，禁止返还经验/白嫖（下限 1 点）
                 int cost = Math.max(1, (int) Math.round(HexConfig.WORLD_DRAW_XP.get()
                         * (1 + com.hexcraft.event.WorldHexEvents.drawCostMult(sl))));
@@ -796,10 +805,6 @@ public class Packets {
                 sp.giveExperiencePoints(-cost);
                 com.hexcraft.hextech.WorldHexData wh = com.hexcraft.hextech.WorldHexData.get(sl);
                 List<String> opts = com.hexcraft.hextech.WorldHexRegistry.rollOptions(wh.active);
-                if (opts.isEmpty()) {
-                    sp.displayClientMessage(Component.translatable("message.hexcraft.world_all_owned"), true);
-                    return;
-                }
                 data.setWorldDrawOptions(opts);
                 sendWorldDrawOptions(sp, opts);
             });
@@ -942,6 +947,98 @@ public class Packets {
 
         public static void sendTo(ServerPlayer sp, String module) {
             PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), of(module));
+        }
+    }
+
+    // ================= v0.6.4 S2C：服务端 Registry 定义同步（联机客户端修复）=================
+    // 根因：海克斯/装备定义由数据包加载（AddReloadListenerEvent 服务端），纯客户端进程 HextechRegistry
+    // 只有 13 个 static 兜底，联机玩家界面读不到 def → 海克斯页/属性页全空。本包把服务端已加载的
+    // 全部海克斯+装备定义（客户端渲染所需字段）下发给玩家，客户端存 ClientDataStore 缓存。
+    // 发送时机：登录 + C2SRequestSync 回包（打开界面即拉最新，含 DLC 外接包定义）。
+    public static class S2CSyncRegistry {
+        public Map<String, HextechDefinition> hexes = new java.util.LinkedHashMap<>();
+        public Map<String, HextechDefinition> equips = new java.util.LinkedHashMap<>();
+
+        public static S2CSyncRegistry of() {
+            S2CSyncRegistry m = new S2CSyncRegistry();
+            for (com.hexcraft.hextech.HextechDefinition d : com.hexcraft.hextech.HextechRegistry.all()) {
+                m.hexes.put(d.id, d);
+            }
+            for (com.hexcraft.hextech.HextechDefinition d : com.hexcraft.hextech.HextechRegistry.allEquips()) {
+                m.equips.put(d.id, d);
+            }
+            return m;
+        }
+
+        public static void encode(S2CSyncRegistry m, FriendlyByteBuf b) {
+            b.writeInt(m.hexes.size());
+            for (Map.Entry<String, HextechDefinition> e : m.hexes.entrySet()) {
+                writeDef(b, e.getKey(), e.getValue());
+            }
+            b.writeInt(m.equips.size());
+            for (Map.Entry<String, HextechDefinition> e : m.equips.entrySet()) {
+                writeDef(b, e.getKey(), e.getValue());
+            }
+        }
+
+        private static void writeDef(FriendlyByteBuf b, String id, HextechDefinition d) {
+            b.writeUtf(id);
+            b.writeUtf(d.rarity.key);
+            b.writeUtf(d.event == null ? "" : d.event);
+            b.writeUtf(d.source == null ? "" : d.source);
+            b.writeUtf(d.icon == null ? "" : d.icon);
+            b.writeInt(d.sell);
+            if (d.stackTags == null) { b.writeInt(0); return; }
+            b.writeInt(d.stackTags.size());
+            for (String t : d.stackTags) b.writeUtf(t);
+        }
+
+        public static S2CSyncRegistry decode(FriendlyByteBuf b) {
+            S2CSyncRegistry m = new S2CSyncRegistry();
+            int hn = b.readInt();
+            for (int i = 0; i < hn; i++) {
+                HextechDefinition d = readDef(b);
+                if (d != null) m.hexes.put(d.id, d);
+            }
+            int en = b.readInt();
+            for (int i = 0; i < en; i++) {
+                HextechDefinition d = readDef(b);
+                if (d != null) m.equips.put(d.id, d);
+            }
+            return m;
+        }
+
+        private static HextechDefinition readDef(FriendlyByteBuf b) {
+            try {
+                String id = b.readUtf();
+                com.hexcraft.hextech.HextechRarity rarity = com.hexcraft.hextech.HextechRarity.byKey(b.readUtf());
+                String event = b.readUtf();
+                String source = b.readUtf();
+                String icon = b.readUtf();
+                int sell = b.readInt();
+                int tn = b.readInt();
+                java.util.List<String> tags = null;
+                if (tn > 0) {
+                    tags = new java.util.ArrayList<>(tn);
+                    for (int i = 0; i < tn; i++) tags.add(b.readUtf());
+                }
+                if (rarity == null) return null;
+                return new com.hexcraft.hextech.HextechDefinition(
+                        id, rarity, 1, null, event.isEmpty() ? null : event,
+                        icon.isEmpty() ? null : icon, sell, source.isEmpty() ? null : source, null, tags);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        public static void handle(S2CSyncRegistry m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() ->
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.hexcraft.client.ClientPacketHandler.syncRegistry(m)));
+            ctx.get().setPacketHandled(true);
+        }
+
+        public static void sendTo(ServerPlayer sp) {
+            PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), of());
         }
     }
 }

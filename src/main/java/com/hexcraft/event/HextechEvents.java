@@ -112,6 +112,10 @@ public class HextechEvents {
         double sum = 0;
         for (PlayerData.HexEntry e : hexes) {
             HextechDefinition def = HextechRegistry.get(e.id);
+            // v0.6.4 联机客户端兜底：客户端 Registry 只有 static 内置（数据包仅服务端加载），缺失时读服务端同步缓存
+            if (def == null) {
+                try { def = com.hexcraft.client.ClientDataStore.hexDef(e.id); } catch (Throwable ignored) { }
+            }
             if (def == null || def.event == null || def.event.isEmpty()) continue;
             for (String token : def.event.split(",")) {
                 int ci = token.indexOf(':');
@@ -428,11 +432,38 @@ public class HextechEvents {
         }
     }
 
-    /** 随机馈赠全物品池：ForgeRegistries.ITEMS 全量（原版+全部模组物品），过滤空气与技术物品，懒加载缓存 */
+    /** 随机馈赠全物品池：ForgeRegistries.ITEMS 全量（原版+全部模组物品），过滤空气与技术物品，懒加载缓存。
+     *  v0.6.5 低价值过滤开关（服务端配置 randomGiftFilterLow）：开启后额外过滤原版建材装饰类低价值物品；
+     *  池缓存带配置状态，改配置后下次击杀自动重建（不重启生效）。 */
     private static java.util.List<net.minecraft.world.item.Item> GIFT_POOL;
+    private static boolean GIFT_POOL_LOW_FILTER;
+
+    /** v0.6.5 原版低价值建材/装饰类 id 集合（仅判定 minecraft 命名空间；模组物品价值无法判定，一律不主动过滤） */
+    private static final java.util.Set<String> LOW_VALUE_IDS = new java.util.HashSet<>();
+
+    static {
+        LOW_VALUE_IDS.addAll(java.util.List.of(
+                "dirt", "grass_block", "sand", "red_sand", "gravel", "cobblestone", "stone", "granite", "diorite", "andesite",
+                "deepslate", "tuff", "cobbled_deepslate", "sandstone", "red_sandstone", "clay", "terracotta", "glass", "glass_pane",
+                "grass", "tall_grass", "fern", "large_fern", "dead_bush", "vine", "cobweb", "snow_block", "mud", "dripstone_block",
+                "poppy", "dandelion", "azure_bluet", "allium", "oxeye_daisy", "cornflower", "lily_of_the_valley", "wither_rose",
+                "blue_orchid", "sunflower", "lilac", "rose_bush", "peony", "smooth_stone", "smooth_sandstone", "smooth_quartz",
+                "bone_block", "calcite", "end_stone", "purpur_block", "prismarine", "dark_prismarine", "prismarine_bricks",
+                "sea_lantern", "glowstone", "sea_grass", "kelp", "bamboo", "bamboo_block", "sugar_cane"
+        ));
+        for (String w : new String[]{"oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "crimson", "warped"}) {
+            LOW_VALUE_IDS.add(w + "_planks"); LOW_VALUE_IDS.add(w + "_log"); LOW_VALUE_IDS.add(w + "_leaves"); LOW_VALUE_IDS.add(w + "_sapling");
+        }
+        for (String c : new String[]{"white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"}) {
+            LOW_VALUE_IDS.add(c + "_wool"); LOW_VALUE_IDS.add(c + "_carpet"); LOW_VALUE_IDS.add(c + "_terracotta");
+            LOW_VALUE_IDS.add(c + "_glazed_terracotta"); LOW_VALUE_IDS.add(c + "_concrete"); LOW_VALUE_IDS.add(c + "_concrete_powder");
+            LOW_VALUE_IDS.add(c + "_glass"); LOW_VALUE_IDS.add(c + "_glass_pane"); LOW_VALUE_IDS.add(c + "_stained_glass");
+        }
+    }
 
     private static java.util.List<net.minecraft.world.item.Item> randomGiftPool() {
-        if (GIFT_POOL == null) {
+        boolean lowFilter = com.hexcraft.config.HexConfig.RANDOM_GIFT_FILTER_LOW.get();
+        if (GIFT_POOL == null || GIFT_POOL_LOW_FILTER != lowFilter) {
             java.util.List<net.minecraft.world.item.Item> pool = new java.util.ArrayList<>();
             for (net.minecraft.world.item.Item it : net.minecraftforge.registries.ForgeRegistries.ITEMS.getValues()) {
                 if (it == null || it == net.minecraft.world.item.Items.AIR) continue;
@@ -443,9 +474,12 @@ public class HextechEvents {
                 if (p.contains("barrier") || p.contains("command_block") || p.contains("structure_block")
                         || p.contains("structure_void") || p.contains("jigsaw") || p.contains("debug_stick")
                         || p.contains("knowledge_book") || p.contains("spawner")) continue;
+                // v0.6.5 低价值过滤开关：仅判定原版建材装饰类（模组物品不过滤）
+                if (lowFilter && "minecraft".equals(key.getNamespace()) && LOW_VALUE_IDS.contains(p)) continue;
                 pool.add(it);
             }
             GIFT_POOL = pool;
+            GIFT_POOL_LOW_FILTER = lowFilter;
         }
         return GIFT_POOL;
     }
@@ -1363,6 +1397,8 @@ public class HextechEvents {
             }
             data.applyModifiers(sp);
             sync(sp);
+            // v0.6.4 登录同步全量 Registry 定义（联机客户端 HextechRegistry 无数据包加载，海克斯页/属性页依赖此缓存）
+            com.hexcraft.network.Packets.S2CSyncRegistry.sendTo(sp);
             // 世界海克斯（v0.3.21）：登录时同步全服列表（所有玩家都能看到已生效的世界海克斯）
             com.hexcraft.network.Packets.broadcastWorldHexes(sp.server);
         }
@@ -1485,6 +1521,24 @@ public class HextechEvents {
             "MagazineAmmoCount", "CurrentAmmo", "BulletCount", "AmmoAmount", "ammo_amount"
     };
 
+    /** v0.6.4 主弹夹弹药硬上限（用户要求）：任何通道回填钳制 ≤9999，
+     *  并全程 long 运算——此前 hit[1]+restored 在叠高 tacz_ammo 后整数溢出（实测 -16 亿）。 */
+    private static final int AMMO_CAP = 9999;
+
+    /** 计算回填后弹量：long 运算防溢出；上限取 min(枪械弹容, 9999)（读不到弹容则直接用 9999） */
+    private static int ammoTarget(long current, double ratio, int maxAmmo) {
+        long restored = Math.max(1L, (long) Math.floor((double) current * ratio));
+        long target = current + restored;
+        long cap = maxAmmo > 0 ? Math.min(maxAmmo, (long) AMMO_CAP) : (long) AMMO_CAP;
+        return (int) Math.min(target, cap);
+    }
+
+    /** v0.6.4 损坏弹药值钳制：NBT 中弹量为负数（溢出残留）或超上限时先归位（负数归 0，超限归上限） */
+    private static int sanitizeAmmo(int value) {
+        if (value < 0) return 0;
+        return Math.min(value, AMMO_CAP);
+    }
+
     private static boolean restoreTaczAmmo(ServerPlayer player, double ratio) {
         boolean any = false;
         // 通道①：主/副手 TACZ 枪械（NBT 弹药键回填）
@@ -1498,18 +1552,19 @@ public class HextechEvents {
             if (stack.hasTag()) {
                 int[] hit = findAmmoInt(stack.getTag(), 0);
                 if (hit != null && hit[1] > 0) {
+                    int cur = sanitizeAmmo(hit[1]); // v0.6.4 损坏弹药值（负数/超上限残留）先归位
+                    if (cur != hit[1]) stack.getTag().putInt(hit[0] >= 0 ? AMMO_KEYS[hit[0]] : "GunCurrentAmmoCount", cur);
                     int maxAmmo = taczMaxAmmo(player, stack.getTag());
-                    if (maxAmmo > 0 && hit[1] >= maxAmmo) {
+                    if (maxAmmo > 0 && cur >= maxAmmo) {
                         fromNbt = true; // 满弹：本次枪械不补（背包通道仍可补弹药盒）
                     } else {
-                        int restored = Math.max(1, (int) Math.floor(hit[1] * ratio));
+                        int target = ammoTarget(cur, ratio, maxAmmo); // v0.6.4 long 运算 + 9999 上限
                         String key = hit[0] >= 0 ? AMMO_KEYS[hit[0]] : "GunCurrentAmmoCount";
-                        int target = maxAmmo > 0 ? Math.min(hit[1] + restored, maxAmmo) : hit[1] + restored;
                         stack.getTag().putInt(key, target);
                         any = true;
                         fromNbt = true;
                         LOGGER.debug("Hexcraft TACZ ammo channel-1: {} key={} +{} ({} -> {}/{})",
-                                stack.getItem(), key, restored, hit[1], target, maxAmmo > 0 ? maxAmmo : "?");
+                                stack.getItem(), key, target - cur, cur, target, maxAmmo > 0 ? maxAmmo : "?");
                     }
                 }
             }
@@ -1532,14 +1587,15 @@ public class HextechEvents {
             if (stack.hasTag()) {
                 int[] hit = findAmmoInt(stack.getTag(), 0);
                 if (hit != null && hit[1] > 0) {
+                    int cur = sanitizeAmmo(hit[1]); // v0.6.4 损坏弹药值先归位（弹匣同理）
+                    if (cur != hit[1]) stack.getTag().putInt(hit[0] >= 0 ? AMMO_KEYS[hit[0]] : "GunCurrentAmmoCount", cur);
                     int maxAmmo = taczMaxAmmo(player, stack.getTag());
-                    if (!(maxAmmo > 0 && hit[1] >= maxAmmo)) {
-                        int restored = Math.max(1, (int) Math.floor(hit[1] * ratio));
+                    if (!(maxAmmo > 0 && cur >= maxAmmo)) {
+                        int target = ammoTarget(cur, ratio, maxAmmo); // v0.6.4 long 运算 + 9999 上限
                         String key = hit[0] >= 0 ? AMMO_KEYS[hit[0]] : "GunCurrentAmmoCount";
-                        int target = maxAmmo > 0 ? Math.min(hit[1] + restored, maxAmmo) : hit[1] + restored;
                         stack.getTag().putInt(key, target);
                         any = true;
-                        LOGGER.debug("Hexcraft TACZ ammo channel-3 mag: {} key={} +{}", stack.getItem(), key, restored);
+                        LOGGER.debug("Hexcraft TACZ ammo channel-3 mag: {} key={} +{}", stack.getItem(), key, target - cur);
                     }
                     continue;
                 }
