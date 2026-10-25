@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.05
+      "perLevel": 0.08
     }
   ],
-  "event": "melee_power:0.25,crit:0.12"
+  "event": "melee_power:0.6,crit:0.3"
 }

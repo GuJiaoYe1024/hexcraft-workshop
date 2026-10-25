@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "max_health",
-      "perLevel": 18.0
+      "perLevel": 120.0
     }
   ],
-  "event": "shield_low:8.0"
+  "event": "shield_low:14"
 }

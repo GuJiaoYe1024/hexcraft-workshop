@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 5.0
+      "perLevel": 30.0
     }
   ],
-  "event": "frost_bite:0.5"
+  "event": "frost_bite:0.6"
 }

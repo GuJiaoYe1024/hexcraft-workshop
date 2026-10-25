@@ -3,11 +3,11 @@
   "weight": 9,
   "icon": "➶",
   "sell": 1000,
-  "event": "tacz_far_power:0.4,tacz_crit:0.15",
+  "event": "tacz_far_power:0.6,tacz_crit:0.15",
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 3.0
+      "perLevel": 28.0
     }
   ]
 }

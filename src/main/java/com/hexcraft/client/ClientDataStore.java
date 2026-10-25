@@ -37,6 +37,9 @@ public class ClientDataStore {
     public static int worldDrawCost;
     /** 费用快照版本号：每次 apply 递增，打开中的界面 tick 检测到变化即重建按钮（刷新显示） */
     public static int costVersion;
+    // v0.6.11 海克斯栏位占用/有效上限（服务端权威，海克斯页显示「占用/上限」）
+    public static int occSlots;
+    public static int hexLimit;
 
     /** v0.6.0 服务端是否已装载本 mod：收到过 S2CSyncData 视为已装载（单机/联机服务端装 mod=true；服务端未装=false，隐藏 H/K 入口） */
     public static boolean serverPresent;
@@ -105,6 +108,8 @@ public class ClientDataStore {
         equipGoldCost = msg.equipGoldCost;
         equipPrismaticCost = msg.equipPrismaticCost;
         worldDrawCost = msg.worldDrawCost;
+        occSlots = msg.occSlots;
+        hexLimit = msg.hexLimit;
         costVersion++;
     }
 

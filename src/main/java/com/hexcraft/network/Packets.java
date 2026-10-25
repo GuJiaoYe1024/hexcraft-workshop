@@ -83,6 +83,13 @@ public class Packets {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.roll_pending"), true);
                     return;
                 }
+                // v0.6.9 栏位满员拦截：占用数恰好等于有效上限时禁止开启抽取（存量超限玩家宽容放行）
+                int occ = data.occupiedSlots();
+                int lim = data.hexSlotLimit();
+                if (lim < Integer.MAX_VALUE && occ == lim) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.slot_full", occ, lim), true);
+                    return;
+                }
                 int cost = HexConfig.XP_COST_PER_DRAW.get();
                 if (realTotalXp(sp) < cost) {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.xp_not_enough", cost), true);
@@ -139,6 +146,8 @@ public class Packets {
                 if (hadRoll) {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.roll_cancelled"), true);
                 }
+                // v0.6.12 界面自动更新：购买三选一时费用已扣，取消后客户端余额/次数必须同步（否则主界面显示旧值）
+                if (hadRoll) HextechEvents.sync(sp);
             });
             ctx.get().setPacketHandled(true);
         }
@@ -192,18 +201,30 @@ public class Packets {
                 double oldMaxHp = -1;
                 if (offer.forge) {
                     oldMaxHp = sp.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).getValue();
-                    // v0.6.0 同词条叠加规则（STACK 默认 / BEST_ONLY 最高档保留+回收）
-                    int refund = data.addForge(pick, 1, offer.tier);
-                    if (refund > 0) {
-                        data.addCoins(refund);
-                        sp.displayClientMessage(Component.translatable("message.hexcraft.forge_refund",
-                                Component.translatable("hexcraft.forge." + pick + ".name"), refund), true);
+                    // v0.6.9 棱彩锻造器「栏位扩展」特殊词条：非属性，直接解锁 1 个海克斯栏位
+                    if (pick.equals(PlayerData.SLOT_BOOST_HEX)) {
+                        data.addForgeSlot();
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.slot_boost_forge"), true);
+                    } else {
+                        // v0.6.0 同词条叠加规则（STACK 默认 / BEST_ONLY 最高档保留+回收）
+                        int refund = data.addForge(pick, 1, offer.tier);
+                        if (refund > 0) {
+                            data.addCoins(refund);
+                            sp.displayClientMessage(Component.translatable("message.hexcraft.forge_refund",
+                                    Component.translatable("hexcraft.forge." + pick + ".name"), refund), true);
+                        }
                     }
                 } else if (offer.equip) {
                     int refund = data.equipItem(pick);
                     if (refund > 0) data.addCoins(refund);
                 } else {
                     int refund = data.applyHex(pick);
+                    // v0.6.9 栏位已满：拒绝添加，保留待选（玩家可改选其它或取消），不扣任何额外费用
+                    if (refund < 0) {
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.slot_full",
+                                data.occupiedSlots(), data.hexSlotLimit()), true);
+                        return;
+                    }
                     if (refund > 0) data.addCoins(refund);
                     // v0.4.8 赌博海克斯（transform:*）：选中即一次性兑现——白银赌随机黄金 / 黄金赌随机棱彩 / 棱彩赌随机两个海克斯
                     String tx = transformOf(pick);
@@ -287,6 +308,8 @@ public class Packets {
                 offer.options.addAll(HextechRoller.rollForgeOptions(m.tier)); // v0.5.0 按档位分池
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
+                // v0.6.12 界面自动更新：购买已扣晶币+锻造次数，立即同步客户端缓存（取消三选一时主界面余额/次数显示正确）
+                HextechEvents.sync(sp);
             });
             ctx.get().setPacketHandled(true);
         }
@@ -326,6 +349,8 @@ public class Packets {
                 offer.options.addAll(HextechRoller.rollForgeOptions(tier)); // v0.5.0 按档位分池
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
+                // v0.6.12 界面自动更新：随机锻造扣费后同步（同上）
+                HextechEvents.sync(sp);
             });
             ctx.get().setPacketHandled(true);
         }
@@ -358,6 +383,8 @@ public class Packets {
                         prismatic ? com.hexcraft.hextech.HextechRarity.PRISMATIC : com.hexcraft.hextech.HextechRarity.GOLD));
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
+                // v0.6.12 界面自动更新：购买装备三选一扣费后同步（同上）
+                HextechEvents.sync(sp);
             });
             ctx.get().setPacketHandled(true);
         }
@@ -567,6 +594,9 @@ public class Packets {
         public int equipGoldCost;
         public int equipPrismaticCost;
         public int worldDrawCost;
+        // v0.6.11 栏位占用/有效上限（服务端权威，客户端海克斯页显示「占用/上限」；占用=occupiedSlots，上限=hexSlotLimit）
+        public int occSlots;
+        public int hexLimit;
 
         public static S2CSyncData of(PlayerData d, ServerPlayer sp) {
             S2CSyncData m = new S2CSyncData();
@@ -611,6 +641,8 @@ public class Packets {
             m.equipGoldCost = discounted(d, 2500);
             m.equipPrismaticCost = discounted(d, 4000);
             m.worldDrawCost = worldDrawCost(sp);
+            m.occSlots = d.occupiedSlots();
+            m.hexLimit = d.hexSlotLimit();
             return m;
         }
 
@@ -642,6 +674,8 @@ public class Packets {
             b.writeInt(m.equipGoldCost);
             b.writeInt(m.equipPrismaticCost);
             b.writeInt(m.worldDrawCost);
+            b.writeInt(m.occSlots);
+            b.writeInt(m.hexLimit);
         }
         public static S2CSyncData decode(FriendlyByteBuf b) {
             S2CSyncData m = new S2CSyncData();
@@ -692,6 +726,8 @@ public class Packets {
             m.equipGoldCost = b.readInt();
             m.equipPrismaticCost = b.readInt();
             m.worldDrawCost = b.readInt();
+            m.occSlots = b.readInt();
+            m.hexLimit = b.readInt();
             return m;
         }
         public static void handle(S2CSyncData m, Supplier<NetworkEvent.Context> ctx) {
@@ -905,6 +941,8 @@ public class Packets {
                 broadcastWorldHexes(sp.server);
                 sp.displayClientMessage(Component.translatable("message.hexcraft.world_cancelled",
                         Component.translatable("hexcraft.worldhex." + m.id + ".name"), cost), true);
+                // v0.6.12 界面自动更新：取消世界海克斯扣晶币后同步客户端余额
+                HextechEvents.sync(sp);
             });
             ctx.get().setPacketHandled(true);
         }

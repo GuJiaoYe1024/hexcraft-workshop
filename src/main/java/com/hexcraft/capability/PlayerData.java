@@ -41,6 +41,8 @@ public class PlayerData {
     private int forgesUsed;
     private int pityGold;
     private int pityPrismatic;
+    /** v0.6.9 棱彩锻造器解锁的海克斯栏位数（slot_boost 特殊词条，不计入属性词条列表） */
+    private int slotBoost;
     private final List<HexEntry> hexes = new ArrayList<>();
     private final List<ForgeEntry> forges = new ArrayList<>();
     /** 已装备列表（上限 6 槽位） */
@@ -168,6 +170,33 @@ public class PlayerData {
     public int getPityPrismatic() { return pityPrismatic; }
     public void setPityPrismatic(int n) { pityPrismatic = Math.max(0, n); }
 
+    // ================= v0.6.9 海克斯栏位体系 =================
+    /** 栏位扩展海克斯 id（持有每级 +1 栏位，不占用普通栏位额度） */
+    public static final String SLOT_BOOST_HEX = "hex_slot_boost";
+
+    /** 当前占用栏位数（排除栏位扩展海克斯本身） */
+    public int occupiedSlots() {
+        int n = 0;
+        for (HexEntry e : hexes) if (!e.id.equals(SLOT_BOOST_HEX)) n++;
+        return n;
+    }
+
+    /** 有效栏位上限：配置基础上限 + 栏位扩展海克斯等级和 + 棱彩锻造器解锁数；配置 0=无限制 */
+    public int hexSlotLimit() {
+        int base = com.hexcraft.config.HexConfig.HEX_SLOT_COUNT.get();
+        if (base <= 0) return Integer.MAX_VALUE;
+        int extra = slotBoost;
+        for (HexEntry e : hexes) if (e.id.equals(SLOT_BOOST_HEX)) extra += e.level;
+        return base + extra;
+    }
+
+    /** 棱彩锻造器「栏位扩展」词条：+1 栏位（防御上限 99） */
+    public void addForgeSlot() {
+        if (slotBoost < 99) slotBoost++;
+    }
+
+    public int getSlotBoost() { return slotBoost; }
+
     public List<HexEntry> getHexes() { return hexes; }
     public List<ForgeEntry> getForges() { return forges; }
     public List<EquipEntry> getEquipment() { return equipment; }
@@ -218,13 +247,13 @@ public class PlayerData {
     public void setWorldDrawOptions(java.util.List<String> opts) { worldDrawOptions = opts; }
 
     public void clearAll() {
-        coins = 0; forgesUsed = 0; pityGold = 0; pityPrismatic = 0;
+        coins = 0; forgesUsed = 0; pityGold = 0; pityPrismatic = 0; slotBoost = 0;
         hexes.clear(); forges.clear(); equipment.clear(); stacks.clear();
         pendingRoll = null;
         worldDrawOptions = null;
     }
 
-    /** 升级或新增海克斯；返回晶币补偿（满级重复时 >0） */
+    /** 升级或新增海克斯；返回晶币补偿（满级重复时 >0）；返回 -1 = 栏位已满拒绝（不添加） */
     public int applyHex(String id) {
         HextechDefinition def = HextechRegistry.get(id);
         if (def == null) return 0;
@@ -235,13 +264,16 @@ public class PlayerData {
                 return refundFor(def.rarity);
             }
         }
-        int limit = HexConfig.HEX_SLOT_COUNT.get();
-        if (limit <= 0 || hexes.size() < limit) {
+        // v0.6.9 栏位体系：栏位扩展海克斯不占用普通栏位（抽到即解锁，可叠级）
+        if (id.equals(SLOT_BOOST_HEX)) {
             hexes.add(new HexEntry(id, 1));
-        } else {
-            hexes.remove(0);
-            hexes.add(new HexEntry(id, 1));
+            return 0;
         }
+        // v0.6.9 满员判定：占用数恰好等于有效上限时拒绝（存量超限玩家宽容放行，避免老存档被卡死）
+        int occ = occupiedSlots();
+        int lim = hexSlotLimit();
+        if (lim < Integer.MAX_VALUE && occ == lim) return -1;
+        hexes.add(new HexEntry(id, 1));
         return 0;
     }
 
@@ -319,9 +351,12 @@ public class PlayerData {
             toRemove.forEach(inst::removeModifier);
         }
         // ===== 联动乘区（v0.3.18）：海克斯增幅 / 锻造宗师 / 织装大师 分别放大 海克斯/锻造/装备 属性效果 =====
-        double hexPower = 1 + HextechEvents.effect(this, "hex_power");
-        double forgePower = 1 + HextechEvents.effect(this, "forge_power");
-        double equipPower = 1 + HextechEvents.effect(this, "equip_power");
+        // v0.6.7 增幅封顶：三个增幅海克斯每级 +35% 且等级无上限，乘区随等级线性膨胀是后期属性爆炸的温床
+        // （护甲 = 词条数 × 档位倍率 × 增幅乘区，三者相乘可轻松上千）。
+        // 现统一封顶 ×3.0（+200%），默认低等级不受影响，仅截断疯狂叠级后的指数增长。
+        double hexPower = 1 + Math.min(HextechEvents.effect(this, "hex_power"), 2.0);
+        double forgePower = 1 + Math.min(HextechEvents.effect(this, "forge_power"), 2.0);
+        double equipPower = 1 + Math.min(HextechEvents.effect(this, "equip_power"), 2.0);
         int idx = 0;
         for (HexEntry e : hexes) {
             HextechDefinition def = HextechRegistry.get(e.id);
@@ -341,7 +376,10 @@ public class PlayerData {
                 applyOne(player, mod.attr, "hex:" + e.id + "#" + idx++, mod.perLevel * e.level * hexPower);
             }
             // 成长属性：stack_attr:键:倍率 / stack_attr_onhit:键:倍率 / stack_attr_onhurt:键:倍率 → 乘法叠加（每层 × 等级）
-            if (e.stacks > 0 && def.event != null) {
+            // v0.6.8 追溯钳制：应用时按全局叠层上限（permanentStackGlobalCap，默认 200）截断——
+            // 旧版本（0.6.2 之前无上限）积累的存量叠层（实测 290/886/1292 层）此前不受限，是护甲/生命/攻击上千的根因
+            long cappedStacks = Math.min(e.stacks, com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get());
+            if (cappedStacks > 0 && def.event != null) {
                 for (String token : def.event.split(",")) {
                     String[] parts = token.split(":");
                     if (parts.length == 3) {
@@ -352,7 +390,7 @@ public class PlayerData {
                                 try {
                                     double rate = Double.parseDouble(parts[2]);
                                     applyOneMulti(player, a, "hex:" + e.id + "#stk" + idx++,
-                                            rate * e.level * e.stacks);
+                                            rate * e.level * cappedStacks);
                                 } catch (Exception ignored) { }
                             }
                         }
@@ -382,7 +420,9 @@ public class PlayerData {
             for (HextechDefinition.ModSpec mod : def.mods) {
                 applyOne(player, mod.attr, "equip:" + eq.id + "#" + idx++, mod.perLevel * eq.level * equipPower);
             }
-            if (eq.stacks > 0 && def.event != null) {
+            // v0.6.8 追溯钳制（同上）：装备成长叠层同样按全局上限截断
+            long cappedEqStacks = Math.min(eq.stacks, com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get());
+            if (cappedEqStacks > 0 && def.event != null) {
                 for (String token : def.event.split(",")) {
                     String[] parts = token.split(":");
                     if (parts.length == 3) {
@@ -393,7 +433,7 @@ public class PlayerData {
                                 try {
                                     double rate = Double.parseDouble(parts[2]);
                                     applyOneMulti(player, a, "equipstk:" + eq.id + "#" + idx++,
-                                            rate * eq.level * eq.stacks);
+                                            rate * eq.level * cappedEqStacks);
                                 } catch (Exception ignored) { }
                             }
                         }
@@ -438,6 +478,7 @@ public class PlayerData {
         tag.putInt("forgesUsed", forgesUsed);
         tag.putInt("pityGold", pityGold);
         tag.putInt("pityPrismatic", pityPrismatic);
+        tag.putInt("slotBoost", slotBoost); // v0.6.9 棱彩锻造解锁栏位数
         ListTag hexList = new ListTag();
         for (HexEntry e : hexes) {
             CompoundTag t = new CompoundTag();
@@ -488,6 +529,7 @@ public class PlayerData {
         forgesUsed = tag.getInt("forgesUsed");
         pityGold = tag.getInt("pityGold");
         pityPrismatic = tag.getInt("pityPrismatic");
+        slotBoost = tag.getInt("slotBoost"); // v0.6.9 旧档缺省 0
         hexes.clear();
         int dropHex = 0, dropForge = 0, dropEquip = 0;
         for (Tag t : tag.getList("hexes", 10)) {

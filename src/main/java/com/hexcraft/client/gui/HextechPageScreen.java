@@ -345,6 +345,14 @@ public class HextechPageScreen extends HexScaledScreen {
             Double val = ClientDataStore.attrs.get(key);
             drawAttrRow(g, inner, idx, Component.translatable("hexcraft.stat." + key),
                     val == null ? "--" : fmt(val));
+            // v0.6.11 基础属性 hover 说明（名称 + 具体效果说明）
+            int rowY = inner + (idx / 2) * ROW_H;
+            if (hoverX >= cx() + 4 && hoverX <= cx() + 226 && hoverY >= rowY - 1 && hoverY <= rowY + 13) {
+                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                tip.add(Component.translatable("hexcraft.stat." + key).withStyle(c -> c.withColor(0xFF9FE4FF)));
+                tip.add(Component.translatable("hexcraft.stat.hint." + key).withStyle(c -> c.withColor(0xFFAAB6D8)));
+                hoverTip = tip;
+            }
         }
         top += box1H + 4;
         // ===== 框2 隐藏属性 =====
@@ -537,17 +545,32 @@ public class HextechPageScreen extends HexScaledScreen {
         }
         List<PlayerData.HexEntry> stkHexes = stackableHexes();
         List<PlayerData.EquipEntry> stkEqs = stackableEquips();
-        if (!stkHexes.isEmpty() || !stkEqs.isEmpty()) {
+        // v0.6.9 战斗叠层（combat stacks）也占高度——修复 maxAttrScroll 漏算导致「滚不到底、底部叠层被裁剪」
+        boolean hasBattle = false;
+        for (PlayerData.StackEntry bs : ClientDataStore.stacks) if (bs.combat) { hasBattle = true; break; }
+        if (!stkHexes.isEmpty() || !stkEqs.isEmpty() || hasBattle) {
             int hexRows = stkHexes.isEmpty() ? 0 : 1 + (stkHexes.size() + 1) / 2;
             int eqRows = stkEqs.isEmpty() ? 0 : 1 + (stkEqs.size() + 1) / 2;
-            scrollH += 14 + (hexRows + eqRows) * ROW_H + 4;
+            int bRows = hasBattle ? 1 + (battleStackCount() + 1) / 2 : 0;
+            scrollH += 14 + (hexRows + eqRows + bRows) * ROW_H + 4;
         }
         int viewH = H - 34 - 46 - 4;
         return Math.max(0, scrollH - viewH);
     }
 
+    private int battleStackCount() {
+        int n = 0;
+        for (PlayerData.StackEntry bs : ClientDataStore.stacks) if (bs.combat) n++;
+        return n;
+    }
+
     private void renderHexes(GuiGraphics g, int y) {
-        g.drawString(this.font, Component.translatable("hexcraft.gui.owned"), cx() + 4, y + 68, 0xFF9FE4FF);
+        // v0.6.11 已拥有数量 + 栏位占用/上限（服务端权威 occSlots/hexLimit；满员红色提示）
+        g.drawString(this.font, Component.translatable("hexcraft.gui.owned_count", ClientDataStore.hexes.size()), cx() + 4, y + 68, 0xFF9FE4FF);
+        String limStr = ClientDataStore.hexLimit >= Integer.MAX_VALUE ? "\u221E" : String.valueOf(ClientDataStore.hexLimit);
+        Component slotText = Component.translatable("hexcraft.gui.hex_slot_bar", ClientDataStore.occSlots, limStr);
+        boolean full = ClientDataStore.hexLimit < Integer.MAX_VALUE && ClientDataStore.occSlots == ClientDataStore.hexLimit;
+        g.drawString(this.font, slotText, cx() + 226 - this.font.width(slotText), y + 68, full ? 0xFFFF6B6B : 0xFFFFD28C);
         int top = y + 78;
         int bottom = y + 256;
         java.util.List<PlayerData.HexEntry> list = visibleHexes();

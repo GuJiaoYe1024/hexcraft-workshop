@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "attack_speed",
-      "perLevel": 0.45
+      "perLevel": 1.2
     }
   ],
-  "event": "twin_shot:0.3"
+  "event": "twin_shot:0.4"
 }

@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "max_health",
-      "perLevel": 25.0
+      "perLevel": 110.0
     }
   ],
-  "event": "stack_attr_onhit:hp:0.002,thorns:2.0,chance:0.25"
+  "event": "stack_attr_onhit:hp:0.002,thorns:8,chance:0.25"
 }

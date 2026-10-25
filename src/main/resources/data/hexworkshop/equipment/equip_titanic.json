@@ -6,12 +6,12 @@
   "mods": [
     {
       "attr": "max_health",
-      "perLevel": 20.0
+      "perLevel": 78.0
     },
     {
       "attr": "attack_damage",
-      "perLevel": 2.0
+      "perLevel": 13.5
     }
   ],
-  "event": "splash:0.4"
+  "event": "splash:0.5"
 }

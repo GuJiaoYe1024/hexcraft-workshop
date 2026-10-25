@@ -69,9 +69,10 @@ public class HextechRoller {
         return out;
     }
 
-    /** 加权单抽（供掷骰狂人等随机锻造事件使用，与三选一同权重口径） */
+    /** 加权单抽（供掷骰狂人等随机锻造事件使用，与三选一同权重口径；v0.6.9 剔除 slot_boost，随机免费锻造不解锁栏位） */
     public static String rollForgeOne(int tier) {
         List<String> all = new ArrayList<>(HextechRegistry.forgePool(tier));
+        all.remove("slot_boost");
         String pick = weightedForgePick(all, tier);
         return pick == null ? "atk" : pick;
     }

@@ -195,14 +195,19 @@ public class HextechRegistry {
     }
 
     /** v0.6.0 校准版：锻造词条单总池——三档一律返回全量 13 条（无独占词条）；
-     *  档位强度由 FORGE_TIER_MULT 倍率（×1/×2/×3）与 forgeWeight 权重共同区分。 */
+     *  档位强度由 FORGE_TIER_MULT 倍率（×1/×2/×3）与 forgeWeight 权重共同区分。
+     *  v0.6.9 棱彩档额外加入「栏位扩展」特殊词条（slot_boost，非属性，选中解锁 1 个海克斯栏位）。 */
     public static List<String> forgePool(int tier) {
         ensureForgeExt();
-        return new ArrayList<>(FORGE_MODS.keySet());
+        List<String> pool = new ArrayList<>(FORGE_MODS.keySet());
+        if (tier == 2) pool.add("slot_boost"); // 棱彩锻造器专属解锁词条
+        return pool;
     }
 
-    /** v0.6.0 校准版：词条抽取权重（按档位；白银档压低高段位词条权重，但全部 >0 理论可出） */
+    /** v0.6.0 校准版：词条抽取权重（按档位；白银档压低高段位词条权重，但全部 >0 理论可出）
+     *  v0.6.9 slot_boost 仅棱彩档可出（权重 3，低概率稀有解锁） */
     public static int forgeWeight(int tier, String stat) {
+        if ("slot_boost".equals(stat)) return tier == 2 ? 3 : 0; // 棱彩专属
         boolean hi = "reach".equals(stat) || "step".equals(stat);
         boolean pct = "hppct".equals(stat) || "aspdpct".equals(stat);
         if (!hi && !pct) return 10;                     // 基础 9 条：三档同权

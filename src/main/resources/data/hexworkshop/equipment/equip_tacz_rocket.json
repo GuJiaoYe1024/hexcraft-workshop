@@ -3,6 +3,11 @@
   "weight": 9,
   "icon": "⚙",
   "sell": 1000,
-  "event": "tacz_ammo:0.2,tacz_power:0.3,splash:0.2",
-  "mods": []
+  "event": "tacz_ammo:0.4,tacz_power:0.3,splash:0.5",
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 28.0
+    }
+  ]
 }

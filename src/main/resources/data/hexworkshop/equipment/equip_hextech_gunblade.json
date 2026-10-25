@@ -3,11 +3,11 @@
   "weight": 9,
   "icon": "⚙",
   "sell": 1000,
-  "event": "lifesteal:0.1,splash:0.35",
+  "event": "lifesteal:0.35,splash:0.5",
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 4.0
+      "perLevel": 28.0
     }
   ]
 }

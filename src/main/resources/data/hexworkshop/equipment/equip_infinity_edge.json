@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 5.0
+      "perLevel": 30.0
     }
   ],
-  "event": "crit:0.12,crit_damage:0.2"
+  "event": "crit:0.3,crit_damage:0.5"
 }

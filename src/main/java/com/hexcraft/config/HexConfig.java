@@ -78,7 +78,9 @@ public class HexConfig {
         b.comment("海克斯抽取").translation("hexcraft.config.cat.draw").push("draw");
         XP_COST_PER_DRAW = b.comment("每次海克斯抽取消耗的经验点数（≈19级为500xp）").translation("hexcraft.config.draw.xpCostPerDraw").defineInRange("xpCostPerDraw", 500, 10, 1000000);
         REROLL_COST = b.comment("三选一刷新一次消耗的晶币").translation("hexcraft.config.draw.rerollCost").defineInRange("rerollCost", 20, 0, 10000);
-        HEX_SLOT_COUNT = b.comment("海克斯槽位上限（0=无限制，默认无限制）").translation("hexcraft.config.draw.hexLimit").defineInRange("hexLimit", 0, 0, 30);
+        // v0.6.9 海克斯栏位上限默认 8（原 0=无限制）：满员后需通过『栏位扩展』海克斯或棱彩锻造器解锁栏位
+        // 兼容：存量已超上限的玩家不受限（宽容放行），恰好抽满的玩家需要解锁
+        HEX_SLOT_COUNT = b.comment("海克斯槽位基础上限（0=无限制；默认 8；满员后通过『栏位扩展』海克斯或棱彩锻造器解锁栏位；已超上限的存量玩家不受限）").translation("hexcraft.config.draw.hexLimit").defineInRange("hexLimit", 8, 0, 30);
         WEIGHT_SILVER = b.comment("白银稀有度权重").translation("hexcraft.config.draw.silverWeight").defineInRange("silverWeight", 40, 0, 1000);
         WEIGHT_GOLD = b.comment("黄金稀有度权重").translation("hexcraft.config.draw.goldWeight").defineInRange("goldWeight", 35, 0, 1000);
         WEIGHT_PRISMATIC = b.comment("棱彩稀有度权重").translation("hexcraft.config.draw.prismWeight").defineInRange("prismWeight", 25, 0, 1000);
@@ -126,9 +128,11 @@ public class HexConfig {
         FORGE_DUPLICATE_RULE = b.comment("同词条锻造叠加规则：STACK=无上限叠加（默认）；BEST_ONLY=同名词条仅保留最高档位（低档重复自动回收）").translation("hexcraft.config.v060.forgeDuplicateRule").defineEnum("forgeDuplicateRule", DuplicateRule.STACK);
         // v0.6.5 随机馈赠低价值过滤（服务端生效；默认关闭保持全物品池）
         RANDOM_GIFT_FILTER_LOW = b.comment("随机馈赠过滤低价值物品（服务端生效，默认关闭=保持原版+全部模组全物品池；开启后过滤泥土/圆石/原木/羊毛/陶瓦等建材装饰类原版低价值物品，模组物品不判定）").translation("hexcraft.config.v060.randomGiftFilterLow").define("randomGiftFilterLow", false);
-        FORGE_MULT_SILVER = b.comment("白银锻造倍率（服务端生效，默认 1.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultSilver").defineInRange("forgeMultiplierSilver", 1.0, 0.1, 20.0);
-        FORGE_MULT_GOLD = b.comment("黄金锻造倍率（服务端生效，默认 2.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultGold").defineInRange("forgeMultiplierGold", 2.0, 0.1, 20.0);
-        FORGE_MULT_PRISMATIC = b.comment("棱彩锻造倍率（服务端生效，默认 3.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultPrismatic").defineInRange("forgeMultiplierPrismatic", 3.0, 0.1, 20.0);
+        // v0.6.7 倍率上限收紧：原上限 20 倍会让「锻造条数 × 档位倍率 × 增幅乘区」相乘轻松上千，属数值爆炸源；
+        // 收紧到 5 倍（已改超限配置会被 Forge 自动钳制到新上限），默认值 1/2/3 不变
+        FORGE_MULT_SILVER = b.comment("白银锻造倍率（服务端生效，默认 1.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultSilver").defineInRange("forgeMultiplierSilver", 1.0, 0.1, 5.0);
+        FORGE_MULT_GOLD = b.comment("黄金锻造倍率（服务端生效，默认 2.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultGold").defineInRange("forgeMultiplierGold", 2.0, 0.1, 5.0);
+        FORGE_MULT_PRISMATIC = b.comment("棱彩锻造倍率（服务端生效，默认 3.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultPrismatic").defineInRange("forgeMultiplierPrismatic", 3.0, 0.1, 5.0);
         // v0.6.2 永久叠层全局倍率/上限（服务端权威，客户端修改不生效防作弊）
         PERMANENT_STACK_MULT = b.comment("永久叠层全局获取倍率（服务端生效，默认 1.0；叠角龙/世界海克斯等永久叠层海克斯击杀获取层数 × 该倍率）").translation("hexcraft.config.v060.permanentStackMult").defineInRange("permanentStackGlobalMultiplier", 1.0, 0.1, 10.0);
         PERMANENT_STACK_CAP = b.comment("永久叠层全局最大上限（服务端生效，默认 200；超过该值的永久叠层被钳制，防无上限叠层失控）").translation("hexcraft.config.v060.permanentStackCap").defineInRange("permanentStackGlobalCap", 200, 10, 10000);

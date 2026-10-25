@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "max_health",
-      "perLevel": 20.0
+      "perLevel": 110.0
     }
   ],
-  "event": "fire_chain:1.0"
+  "event": "fire_chain:1"
 }

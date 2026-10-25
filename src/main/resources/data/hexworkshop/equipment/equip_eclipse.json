@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 5.0
+      "perLevel": 30.0
     }
   ],
-  "event": "shield_low:0.3,execute:0.15"
+  "event": "shield_low:4.8,execute:0.55"
 }

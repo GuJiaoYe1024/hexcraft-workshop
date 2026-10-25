@@ -3,11 +3,11 @@
   "weight": 10,
   "icon": "♨",
   "sell": 625,
-  "event": "frost_bite:0.3,fire_chain:0.8,melee_power:0.3",
+  "event": "frost_bite:0.6,fire_chain:1,melee_power:0.6",
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 3.0
+      "perLevel": 30.0
     }
   ]
 }

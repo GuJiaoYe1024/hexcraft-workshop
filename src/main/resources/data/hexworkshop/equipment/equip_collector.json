@@ -6,8 +6,8 @@
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 4.0
+      "perLevel": 30.0
     }
   ],
-  "event": "execute:0.25,coin_bonus:0.25"
+  "event": "execute:0.45,coin_bonus:0.25"
 }

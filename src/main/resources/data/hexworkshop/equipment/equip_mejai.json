@@ -7,11 +7,11 @@
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 2.0
+      "perLevel": 18.2
     },
     {
       "attr": "max_health",
-      "perLevel": 10.0
+      "perLevel": 49.5
     }
   ]
 }
