@@ -50,6 +50,31 @@ public class HexConfig {
     // ---- v0.6.2 永久叠层全局倍率/上限（服务端生效） ----
     public static final ForgeConfigSpec.DoubleValue PERMANENT_STACK_MULT;
     public static final ForgeConfigSpec.IntValue PERMANENT_STACK_CAP;
+    // ---- v0.6.16 配置表扩展：装备费用 / 叠角龙倍率 / 栏位扩展上限 / 六神装加成（服务端生效，防作弊） ----
+    public static final ForgeConfigSpec.IntValue EQUIP_GOLD_COST;
+    public static final ForgeConfigSpec.IntValue EQUIP_PRISMATIC_COST;
+    public static final ForgeConfigSpec.DoubleValue STACK_DRAKE_MULT;
+    public static final ForgeConfigSpec.IntValue FORGE_SLOT_MAX;
+    public static final ForgeConfigSpec.DoubleValue EQUIP_COUNT_MULT;
+    /** v0.6.16 玩家属性显示安全钳（默认 0=关闭）：高数值整合包中玩家 MAX_HEALTH/护甲/韧性被本 mod
+     *  加成堆到极大时，部分血量 HUD mod 渲染会溢出（画面中央黄/红异常竖条）。开启后把玩家自身
+     *  这三项属性最终值钳到该上限（不改变伤害/减伤公式，仅防显示溢出）；默认关闭=与其它 mod 零冲突。 */
+    public static final ForgeConfigSpec.IntValue ATTR_DISPLAY_CAP;
+    // ---- HUD 优化（客户端）----
+    /** v0.6.16 滚动提示总开关 */
+    public static final ForgeConfigSpec.BooleanValue TIP_ENABLED;
+    /** v0.6.16 滚动提示拖动调整模式：开启后在游戏内拖动提示位置，松开自动保存 */
+    public static final ForgeConfigSpec.BooleanValue TIP_ADJUST_MODE;
+    /** v0.6.16 滚动提示左上角 X 偏移（屏幕像素） */
+    public static final ForgeConfigSpec.IntValue TIP_X;
+    /** v0.6.16 滚动提示左上角 Y 偏移（屏幕像素） */
+    public static final ForgeConfigSpec.IntValue TIP_Y;
+    /** v0.6.19 海克斯风简易血条开关（默认关闭：取代原版生命条，开启后原版不再显示；关闭=与其它 mod 零冲突） */
+    public static final ForgeConfigSpec.BooleanValue HP_ENABLED;
+    /** v0.6.19 海克斯风血条 X 偏移（0=固定原版血条位置；>0 用配置值手动定位） */
+    public static final ForgeConfigSpec.IntValue HP_X;
+    /** v0.6.19 海克斯风血条 Y 偏移（0=固定原版血条位置；>0 用配置值手动定位） */
+    public static final ForgeConfigSpec.IntValue HP_Y;
 
     // ---- Client ----
     public static final ForgeConfigSpec CLIENT_SPEC;
@@ -78,9 +103,8 @@ public class HexConfig {
         b.comment("海克斯抽取").translation("hexcraft.config.cat.draw").push("draw");
         XP_COST_PER_DRAW = b.comment("每次海克斯抽取消耗的经验点数（≈19级为500xp）").translation("hexcraft.config.draw.xpCostPerDraw").defineInRange("xpCostPerDraw", 500, 10, 1000000);
         REROLL_COST = b.comment("三选一刷新一次消耗的晶币").translation("hexcraft.config.draw.rerollCost").defineInRange("rerollCost", 20, 0, 10000);
-        // v0.6.9 海克斯栏位上限默认 8（原 0=无限制）：满员后需通过『栏位扩展』海克斯或棱彩锻造器解锁栏位
-        // 兼容：存量已超上限的玩家不受限（宽容放行），恰好抽满的玩家需要解锁
-        HEX_SLOT_COUNT = b.comment("海克斯槽位基础上限（0=无限制；默认 8；满员后通过『栏位扩展』海克斯或棱彩锻造器解锁栏位；已超上限的存量玩家不受限）").translation("hexcraft.config.draw.hexLimit").defineInRange("hexLimit", 8, 0, 30);
+        // v0.6.16 海克斯基础上限拉高+范围放宽：默认 16（原 8），范围 0~9999（0=无限制）
+        HEX_SLOT_COUNT = b.comment("海克斯槽位基础上限（0=无限制；默认 16；满员后通过『栏位扩展』海克斯或棱彩锻造器解锁栏位；已超上限的存量玩家不受限）").translation("hexcraft.config.draw.hexLimit").defineInRange("hexLimit", 16, 0, 9999);
         WEIGHT_SILVER = b.comment("白银稀有度权重").translation("hexcraft.config.draw.silverWeight").defineInRange("silverWeight", 40, 0, 1000);
         WEIGHT_GOLD = b.comment("黄金稀有度权重").translation("hexcraft.config.draw.goldWeight").defineInRange("goldWeight", 35, 0, 1000);
         WEIGHT_PRISMATIC = b.comment("棱彩稀有度权重").translation("hexcraft.config.draw.prismWeight").defineInRange("prismWeight", 25, 0, 1000);
@@ -118,7 +142,7 @@ public class HexConfig {
         WORLD_ENABLED = b.comment("世界海克斯总开关（关闭后无法抽取/取消，已生效的保留）").translation("hexcraft.config.world.enabled").define("enabled", true);
         WORLD_DRAW_XP = b.comment("世界海克斯抽取一次消耗的经验点数（创世契约等 draw_cost 效果可再打折）").translation("hexcraft.config.world.drawXp").defineInRange("drawXp", 2000, 10, 1000000);
         WORLD_CANCEL_COIN = b.comment("取消一个世界海克斯消耗的晶币代价").translation("hexcraft.config.world.cancelCoin").defineInRange("cancelCoin", 800, 0, 100000);
-        WORLD_MAX_PER_CATEGORY = b.comment("每个分类（通用/友好/中立/敌对）同时最多激活的世界海克斯数量（0=无限制；v0.4.0 起默认 8）").translation("hexcraft.config.world.maxPerCategory").defineInRange("maxPerCategory", 8, 0, 32);
+        WORLD_MAX_PER_CATEGORY = b.comment("每个分类（通用/友好/中立/敌对）同时最多激活的世界海克斯数量（0=无限制；v0.6.16 起默认 16，范围放宽 0~9999）").translation("hexcraft.config.world.maxPerCategory").defineInRange("maxPerCategory", 16, 0, 9999);
         b.pop();
 
         b.comment("v0.6.0 锻造与叠层规则（服务端生效）").translation("hexcraft.config.cat.v060").push("v060");
@@ -135,7 +159,16 @@ public class HexConfig {
         FORGE_MULT_PRISMATIC = b.comment("棱彩锻造倍率（服务端生效，默认 3.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultPrismatic").defineInRange("forgeMultiplierPrismatic", 3.0, 0.1, 5.0);
         // v0.6.2 永久叠层全局倍率/上限（服务端权威，客户端修改不生效防作弊）
         PERMANENT_STACK_MULT = b.comment("永久叠层全局获取倍率（服务端生效，默认 1.0；叠角龙/世界海克斯等永久叠层海克斯击杀获取层数 × 该倍率）").translation("hexcraft.config.v060.permanentStackMult").defineInRange("permanentStackGlobalMultiplier", 1.0, 0.1, 10.0);
-        PERMANENT_STACK_CAP = b.comment("永久叠层全局最大上限（服务端生效，默认 200；超过该值的永久叠层被钳制，防无上限叠层失控）").translation("hexcraft.config.v060.permanentStackCap").defineInRange("permanentStackGlobalCap", 200, 10, 10000);
+        PERMANENT_STACK_CAP = b.comment("永久叠层全局最大上限（服务端生效，默认 200；0=无限制；超过该值的永久叠层被钳制，防无上限叠层失控）").translation("hexcraft.config.v060.permanentStackCap").defineInRange("permanentStackGlobalCap", 200, 0, 9999);
+        // v0.6.16 配置表扩展（服务端生效防作弊）
+        EQUIP_GOLD_COST = b.comment("黄金装备购买费用（晶币；原硬编码 2500，现可配置）").translation("hexcraft.config.v060.equipGoldCost").defineInRange("equipGoldCost", 2500, 0, 1000000);
+        EQUIP_PRISMATIC_COST = b.comment("棱彩装备购买费用（晶币；原硬编码 4000，现可配置）").translation("hexcraft.config.v060.equipPrismaticCost").defineInRange("equipPrismaticCost", 4000, 0, 1000000);
+        STACK_DRAKE_MULT = b.comment("叠角龙每级永久叠层加成（默认 0.75 = 每级 +75%，1 级 1.75×/2 级 2.5×/3 级 3.25×；原硬编码 0.75，现可配置）").translation("hexcraft.config.v060.stackDrakeMult").defineInRange("stackDrakeMult", 0.75, 0.0, 3.0);
+        FORGE_SLOT_MAX = b.comment("棱彩锻造器『栏位扩展』词条可叠加上限（默认 99，范围 0~9999；原硬编码 99，现可配置）").translation("hexcraft.config.v060.forgeSlotMax").defineInRange("forgeSlotMax", 99, 0, 9999);
+        EQUIP_COUNT_MULT = b.comment("六神装加成倍率：装备海克斯按已装备件数给予的全局攻击/护甲/生命加成系数（默认 1.0；原硬编码，现可配置）").translation("hexcraft.config.v060.equipCountMult").defineInRange("equipCountMult", 1.0, 0.0, 10.0);
+        // v0.6.16 玩家属性显示安全钳（默认 0=关闭）：高数值整合包中玩家属性被堆到极大时部分血量 HUD mod
+        // 渲染溢出（屏幕中央黄/红异常竖条），开启后钳玩家自身 MAX_HEALTH/护甲/韧性到该值；0=完全关闭
+        ATTR_DISPLAY_CAP = b.comment("玩家属性显示安全钳（默认 0=关闭；开启后钳玩家自身最大生命/护甲/韧性到该值，防整合包血量 HUD 渲染溢出；仅防显示问题，不影响减伤公式）").translation("hexcraft.config.v060.attrDisplayCap").defineInRange("attrDisplayCap", 0, 0, 100000000);
         b.pop();
 
         COMMON_SPEC = b.build();
@@ -153,6 +186,17 @@ public class HexConfig {
         KEEP_DEATH_FORGES = b.comment("死亡保留锻造属性").translation("hexcraft.config.client.keepDeathForges").define("keepDeathForges", false);
         KEEP_DEATH_EQUIPS = b.comment("死亡保留装备").translation("hexcraft.config.client.keepDeathEquips").define("keepDeathEquips", false);
         KEEP_DEATH_COINS = b.comment("死亡保留晶币").translation("hexcraft.config.client.keepDeathCoins").define("keepDeathCoins", false);
+        b.pop();
+        // v0.6.16 HUD 优化：滚动提示开关 / 位置 / 拖动调整模式（客户端生效，保存后进世界即用）
+        b.comment("HUD 优化：滚动提示显示与位置（客户端生效；可在配置界面的 HUD 优化分组调整）").translation("hexcraft.config.cat.v060hud").push("v060hud");
+        TIP_ENABLED = b.comment("滚动提示总开关（默认开启：随机馈赠/入账等滚动消息；关闭后不再显示）").translation("hexcraft.config.v060.tipEnabled").define("tipEnabled", true);
+        TIP_ADJUST_MODE = b.comment("提示拖动调整模式（默认关闭：开启后回到游戏，鼠标按住提示区域即可拖动位置，松开自动保存；调好后再关闭本项）").translation("hexcraft.config.v060.tipAdjustMode").define("tipAdjustMode", false);
+        TIP_X = b.comment("滚动提示左上角 X 偏移（屏幕像素，默认 8；也可用拖动调整模式修改）").translation("hexcraft.config.v060.tipX").defineInRange("tipX", 8, 0, 4000);
+        TIP_Y = b.comment("滚动提示左上角 Y 偏移（屏幕像素，默认 34；也可用拖动调整模式修改）").translation("hexcraft.config.v060.tipY").defineInRange("tipY", 34, 0, 4000);
+        // v0.6.16 海克斯风简易血条：方框内显示「当前生命/生命上限」（取代原版血条；默认关闭）
+        HP_ENABLED = b.comment("海克斯风简易血条（默认关闭；开启后取代原版血条——原版生命条不再显示，屏幕显示「当前生命/生命上限」方框）").translation("hexcraft.config.v060.hpEnabled").define("hpEnabled", false);
+        HP_X = b.comment("血条 X 偏移（默认 0=自动右上角；填正数用自定义值）").translation("hexcraft.config.v060.hpX").defineInRange("hpX", 0, 0, 4000);
+        HP_Y = b.comment("血条 Y 偏移（默认 0=自动；填正数用自定义值）").translation("hexcraft.config.v060.hpY").defineInRange("hpY", 0, 0, 4000);
         b.pop();
         CLIENT_SPEC = b.build();
     }

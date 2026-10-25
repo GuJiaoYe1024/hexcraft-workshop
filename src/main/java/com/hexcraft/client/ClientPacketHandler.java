@@ -65,6 +65,16 @@ public class ClientPacketHandler {
         Minecraft.getInstance().setScreen(new com.hexcraft.client.gui.WorldRollScreen(msg));
     }
 
+    /** v0.6.16 滚动提示：解析 Component JSON 入客户端提示队列（HexTipOverlay 渲染） */
+    public static void tip(Packets.S2CTipMessage msg) {
+        try {
+            net.minecraft.network.chat.Component c =
+                    net.minecraft.network.chat.Component.Serializer.fromJson(msg.json);
+            if (c != null) com.hexcraft.client.gui.HexTipOverlay.push(c.getString(), msg.type);
+        } catch (Exception ignored) {
+        }
+    }
+
     /** v0.6.0 数据刷新广播：数据包热重载后打开的界面自动重建（重新 init，列表/池/属性即时反映新内容） */
     public static void refreshData(String module) {
         Minecraft mc = Minecraft.getInstance();

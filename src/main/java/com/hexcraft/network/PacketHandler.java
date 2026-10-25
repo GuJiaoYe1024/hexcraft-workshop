@@ -9,7 +9,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.Optional;
 
 public class PacketHandler {
-    public static final String VERSION = "21";
+    public static final String VERSION = "23";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Hexcraft.MODID, "main"),
             () -> VERSION,
@@ -81,6 +81,10 @@ public class PacketHandler {
         // ---- v0.6.4 服务端 Registry 定义同步（联机客户端 HextechRegistry 无数据包加载，界面靠此缓存）；VERSION bump 19→20 ----
         CHANNEL.registerMessage(id++, Packets.S2CSyncRegistry.class,
                 Packets.S2CSyncRegistry::encode, Packets.S2CSyncRegistry::decode, Packets.S2CSyncRegistry::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // ---- v0.6.16 滚动提示（随机馈赠等提示走客户端队列渲染）；协议 VERSION bump 22→23 ----
+        CHANNEL.registerMessage(id++, Packets.S2CTipMessage.class,
+                Packets.S2CTipMessage::encode, Packets.S2CTipMessage::decode, Packets.S2CTipMessage::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
     }
 }

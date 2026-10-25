@@ -9,6 +9,9 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 public class ClientSetup {
     public static void init() {
         MinecraftForge.EVENT_BUS.register(ClientEvents.class);
+        // v0.6.16 滚动提示 HUD（随机馈赠等提示队列渲染）
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.client.gui.HexTipOverlay.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.client.gui.HexHealthOverlay.class);
         // 按键绑定：显式注册到 mod 总线（不依赖注解扫描，生产环境更可靠）
         FMLJavaModLoadingContext.get().getModEventBus().register(ClientKeybinds.class);
         // 配置界面双通道（可选依赖模式）：

@@ -89,7 +89,7 @@ public class WorldHexScreen extends HexScaledScreen {
     private int scrollY;
     private Button drawBtn;
     private final List<Button> cancelBtns = new ArrayList<>();
-    private int lastSize = -1;
+    private int lastCostVer = -1;
 
     public WorldHexScreen() {
         super(Component.translatable("hexcraft.gui.world_hex_title"));
@@ -105,7 +105,13 @@ public class WorldHexScreen extends HexScaledScreen {
         // 顶部抽取按钮（内容区居中，科技风；v0.4.3：随滚动偏移，不再固定遮挡下方内容）
         drawBtn = new WBtn(centerX - 160, 34 - this.scrollY, 320, 22,
                 Component.translatable("hexcraft.gui.world_draw", ClientDataStore.worldDrawXp),
-                b -> PacketHandler.CHANNEL.sendToServer(new Packets.C2SRequestWorldDraw()));
+                b -> {
+                    // v0.6.16 防连点：抽取请求间隔内禁用按钮（服务端三选一期间重复点击会刷请求）
+                    b.active = false;
+                    PacketHandler.CHANNEL.sendToServer(new Packets.C2SRequestWorldDraw());
+                    java.util.Timer t = new java.util.Timer();
+                    t.schedule(new java.util.TimerTask() { public void run() { b.active = true; } }, 800);
+                });
         this.addRenderableWidget(drawBtn);
 
         // 左侧按钮栏：第一位"生物"（当前页，高亮）
@@ -168,9 +174,9 @@ public class WorldHexScreen extends HexScaledScreen {
 
     @Override
     protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
-        // 服务端广播后列表变化 → 重建按钮（即时反映全局生效）
-        if (ClientDataStore.worldHexes.size() != lastSize) {
-            lastSize = ClientDataStore.worldHexes.size();
+        // v0.6.16 数据变化（列表/费用/上限任意一项）→ 重建按钮（即时反映，含费用实时刷新）
+        if (ClientDataStore.costVersion != lastCostVer) {
+            lastCostVer = ClientDataStore.costVersion;
             this.scrollY = 0;
             buildWidgets();
         }
@@ -181,6 +187,13 @@ public class WorldHexScreen extends HexScaledScreen {
         Component title = Component.translatable("hexcraft.gui.world_hex_title");
         g.drawCenteredString(this.font, title, centerX, 12, 0xFFFFFF);
         g.fillGradient(centerX - 120, 24, centerX + 120, 25, 0xFFFFC94A, 0xFFC77DFF);
+
+        // v0.6.16 顶部状态行：右上角显示已激活总数/每类上限（抽取/取消后即时刷新）
+        int actTotal = ClientDataStore.worldHexes.size();
+        int wMax = ClientDataStore.worldMaxPerCategory;
+        Component actText = Component.translatable("hexcraft.gui.world_active_count",
+                actTotal, wMax > 0 ? wMax : "\u221E");
+        g.drawString(this.font, actText, this.guiW() - 30 - this.font.width(actText), 16, 0xFF9FB6FF);
 
         // 左侧栏装饰
         g.fill(SIDEBAR_X - 8, top + 2, SIDEBAR_X + SIDEBAR_W + 8, top + 70, 0xAA0B1530);

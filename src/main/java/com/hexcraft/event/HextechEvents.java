@@ -38,6 +38,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,6 +56,24 @@ public class HextechEvents {
     private static final Map<UUID, List<double[]>> BLEEDS = new ConcurrentHashMap<>();
     /** v0.6.2 猎手标记（3.5 秒）：目标UUID → 标记来源玩家UUID */
     private static final Map<UUID, UUID> MARKS = new ConcurrentHashMap<>();
+    // v0.6.16 新增机制状态：风暴专注连击计数 / 以血还血受击窗口 / 稳定握持命中窗口
+    private static final Map<UUID, Integer> COMBO_COUNT = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> VENGE_UNTIL = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> STEADY_UNTIL = new ConcurrentHashMap<>();
+    // v0.6.16 架枪射击：玩家位置跟踪（持有 tacz_bipod 时才记录，登出/失去自动清理）
+    private static final Map<UUID, double[]> LAST_POS = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> LAST_MOVE = new ConcurrentHashMap<>();
+    // v0.6.16 快速装填（弹量 0→正=换弹完成）/ 切枪强化（主手物品变化）状态
+    private static final Map<UUID, Integer> LAST_TACZ_AMMO = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> RELOAD_UNTIL = new ConcurrentHashMap<>();
+    private static final Map<UUID, net.minecraft.world.item.Item> LAST_MAIN_HAND = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> SWAP_UNTIL = new ConcurrentHashMap<>();
+    // v0.6.16 持续射击（命中链）/ 棱彩追踪（同目标印记）/ 暴击链 / 多重射击（防递归）状态
+    private static final Map<UUID, Integer> BAR_HITS = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> BAR_LAST_HIT = new ConcurrentHashMap<>();
+    private static final Map<UUID, Map<UUID, long[]>> TACZ_TRACK = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> CRIT_CHAIN_UNTIL = new ConcurrentHashMap<>();
+    private static final Set<UUID> MULTI_BUSY = ConcurrentHashMap.newKeySet();
 
     /** 施加流血实例（每 tick 伤害 / 存活 tick）；独立计时，多次命中叠加多个实例 */
     private static void applyBleed(LivingEntity target, float dmgPerTick, int ticks) {
@@ -84,6 +103,33 @@ public class HextechEvents {
             }
         }
         return 0.25f;
+    }
+
+    /** v0.6.16 叠角龙统一倍率：每级 +75%（对齐 lang 描述"多获得 75%"），无叠角龙 = 1。
+     *  应用范围：击杀叠层(stack_growth)、命中叠层(stack_attr_onhit)、受击叠层(stack_attr_onhurt)、
+     *  onKill 触发器叠层(StackSpec)——此前受击叠层完全不吃叠角龙、且叠角龙固定 ×2 不看等级，已统一。 */
+    public static double drakeMult(PlayerData data) {
+        if (data == null) return 1;
+        for (PlayerData.HexEntry e : data.getHexes()) {
+            if (e.id.equals("hex_stack_drake")) return 1 + com.hexcraft.config.HexConfig.STACK_DRAKE_MULT.get() * e.level;
+        }
+        return 1;
+    }
+
+    /** 按叠层倍率生成整数层数增量：整数部分固定 + 小数部分按概率进位（长期期望 = 倍率），叠层字段为 int 时的精确表达 */
+    private static int gainWithMult(double mult, net.minecraft.util.RandomSource rng) {
+        if (mult <= 0) return 0;
+        int base = (int) Math.floor(mult);
+        double frac = mult - base;
+        return base + (rng.nextFloat() < frac ? 1 : 0);
+    }
+
+    /** v0.6.16 叠层安全累加：int 防溢出（无上限配置 + 高数值整合包长期累积可能溢出成负数 → 属性异常）；
+     *  钳到 Integer.MAX_VALUE 保持数值只增不减的语义 */
+    private static int safeStackAdd(int cur, int add) {
+        if (cur >= Integer.MAX_VALUE) return Integer.MAX_VALUE;
+        long v = (long) cur + add;
+        return (int) Math.min(v, Integer.MAX_VALUE);
     }
 
     // ================= 事件型海克斯效果（event 字段格式：效果名:倍率，逗号分隔）=================
@@ -227,16 +273,17 @@ public class HextechEvents {
             double tHeal = effect(data, "tacz_heal");
             if (tHeal > 0 && isTaczSource(source)) killer.heal((float) tHeal);
 
-            // 成长性海克斯：击杀获得层数（stack_growth / stack_attr）；叠角龙自身不叠层，只让其它叠层效果翻倍（100% 加成）
+            // 成长性海克斯：击杀获得层数（stack_growth / stack_attr）；叠角龙自身不叠层，只让其它叠层效果翻倍（每级 +75%）
             boolean drake = data.getHexes().stream().anyMatch(e -> e.id.equals("hex_stack_drake"));
-            int gain = drake ? 2 : 1;
+            double dMult = drakeMult(data);
+            int gain = drake ? gainWithMult(dMult, killer.getRandom()) : 1;
             boolean grew = false;
             for (PlayerData.HexEntry e : data.getHexes()) {
                 if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不叠层
                 HextechDefinition def = HextechRegistry.get(e.id);
                 if (def != null && def.event != null
                         && (def.event.contains("stack_growth") || def.event.contains("stack_attr:"))) {
-                    e.stacks += gain;
+                    e.stacks = safeStackAdd(e.stacks, gain);
                     grew = true;
                     // 提示说清楚叠的是哪个海克斯
                     killer.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
@@ -274,7 +321,7 @@ public class HextechEvents {
                             sdef.stack.decayDelay, sdef.stack.decayRate));
                 }
                 double g = 1.0;
-                if (drake) g *= 2;
+                if (drake) g *= dMult;
                 if (killer.level() instanceof net.minecraft.server.level.ServerLevel whKL) {
                     g *= (1 + com.hexcraft.event.WorldHexEvents.permStackGainBonus(whKL));
                 }
@@ -283,9 +330,10 @@ public class HextechEvents {
                 }
                 data.addStack(sdef.stack.key, g, 1);
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
-                // 永久叠层全局上限钳制（防无上限叠层失控）
-                if (!sdef.stack.combat && s != null && s.value > com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get()) {
-                    s.value = com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get();
+                // 永久叠层全局上限钳制（v0.6.16 配置 0=无限制时跳过）
+                int pCap = com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get();
+                if (pCap > 0 && !sdef.stack.combat && s != null && s.value > pCap) {
+                    s.value = pCap;
                 }
                 if (s != null) {
                     killer.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
@@ -416,14 +464,40 @@ public class HextechEvents {
             if (rl > 0 && killer.getRandom().nextFloat() < (float) Math.min(1.0, rl)) {
                 java.util.List<net.minecraft.world.item.Item> pool = randomGiftPool();
                 if (!pool.isEmpty()) {
-                    net.minecraft.world.item.Item item = pool.get(killer.getRandom().nextInt(pool.size()));
-                    int n = 1 + killer.getRandom().nextInt(1 + (int) Math.round(rl));
-                    net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(item, n);
-                    if (!killer.getInventory().add(st)) {
-                        killer.drop(st, false);
+                    // v0.6.19 防御性重 roll：池内偶发空气/占位条目时重抽（最多 8 次），实例 + 注册路径 + hoverName 三重检查
+                    net.minecraft.world.item.Item item = null;
+                    for (int tries = 0; tries < 8; tries++) {
+                        net.minecraft.world.item.Item cand = pool.get(killer.getRandom().nextInt(pool.size()));
+                        if (cand == null || isAirLike(cand)) continue;
+                        item = cand;
+                        break;
                     }
-                    killer.displayClientMessage(Component.translatable("message.hexcraft.random_loot",
-                            st.getHoverName(), n), true);
+                    if (item != null) {
+                        // v0.6.19 终极兜底：送物品/发提示前再核一次，任何"空气类"条目一律跳过该次馈赠——
+                        // 宁可少送一次也绝不让"空气"字样进入任何提示文本
+                        if (isAirLike(item)) {
+                            LOGGER.warn("[Hexcraft][Gift] skipped air-like item {}", net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item));
+                        } else {
+                            int n = 1 + killer.getRandom().nextInt(1 + (int) Math.round(rl));
+                            net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(item, n);
+                            boolean dropped = !killer.getInventory().add(st);
+                            if (dropped) {
+                                killer.drop(st, false);
+                            }
+                            // v0.6.16 取证日志：记录实际物品注册 id 与 hoverName（再遇"空气"可从日志精确定位）
+                            try {
+                                net.minecraft.resources.ResourceLocation rl2 = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item);
+                                LOGGER.info("[Hexcraft][Gift] gave {} x{} to {} (hoverName='{}', dropped={})",
+                                        rl2 == null ? "?" : rl2.toString(), n, killer.getName().getString(),
+                                        st.getHoverName().getString(), dropped);
+                            } catch (Exception ignored) { }
+                            // v0.6.16 提示走滚动通道（gift 蓝），带实际物品名与数量；背包已满时注明掉落
+                            net.minecraft.network.chat.MutableComponent tipMsg = net.minecraft.network.chat.Component.translatable(
+                                    "message.hexcraft.random_loot", st.getHoverName(), n);
+                            if (dropped) tipMsg.append(net.minecraft.network.chat.Component.translatable("message.hexcraft.random_loot_dropped"));
+                            com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, tipMsg, 2); // 2=馈赠(gift)蓝
+                        }
+                    }
                 }
             }
 
@@ -474,6 +548,16 @@ public class HextechEvents {
                 if (p.contains("barrier") || p.contains("command_block") || p.contains("structure_block")
                         || p.contains("structure_void") || p.contains("jigsaw") || p.contains("debug_stick")
                         || p.contains("knowledge_book") || p.contains("spawner")) continue;
+                // v0.6.16 空气根因修复：部分 mod 会注册自己的占位空气物品（如 xxx:air），其注册路径
+                // 是 "air" 但实例 ≠ Items.AIR，引用相等过滤不掉 → 玩家抽到后显示/掉落"空气"。
+                // v0.6.19 收紧：注册路径中任意位置含 "air" 的一律过滤（覆盖 xxx:air / flowing_air / empty 等全部占位变体）
+                if (p.contains("air") || p.contains("empty")) continue;
+                // v0.6.16 双保险：个别 mod 占位物品注册路径不含 air 但 hoverName 写死"空气/Air"，
+                // 服务端 getString()（英文环境）等于 Air 的一并过滤
+                try {
+                    String hover = new net.minecraft.world.item.ItemStack(it).getHoverName().getString();
+                    if (hover != null && (hover.equalsIgnoreCase("air") || hover.equals("空气"))) continue;
+                } catch (Exception ignored) { }
                 // v0.6.5 低价值过滤开关：仅判定原版建材装饰类（模组物品不过滤）
                 if (lowFilter && "minecraft".equals(key.getNamespace()) && LOW_VALUE_IDS.contains(p)) continue;
                 pool.add(it);
@@ -482,6 +566,22 @@ public class HextechEvents {
             GIFT_POOL_LOW_FILTER = lowFilter;
         }
         return GIFT_POOL;
+    }
+
+    /** v0.6.19 空气类判定（随机馈赠专用）：实例为 AIR、注册路径含 air/empty、hoverName 含 air（不区分大小写）
+     *  任一命中即视为空气占位（v0.6.19 加宽：hoverName 从精确等于"Air"放宽为包含，覆盖 "xx air" 等变体） */
+    private static boolean isAirLike(net.minecraft.world.item.Item it) {
+        if (it == null || it == net.minecraft.world.item.Items.AIR) return true;
+        try {
+            net.minecraft.resources.ResourceLocation k = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(it);
+            if (k != null) {
+                String p = k.getPath();
+                if (p.contains("air") || p.contains("empty")) return true;
+            }
+            String hn = new net.minecraft.world.item.ItemStack(it).getHoverName().getString();
+            if (hn != null && hn.toLowerCase(java.util.Locale.ROOT).contains("air")) return true;
+        } catch (Exception ignored) { }
+        return false;
     }
 
     /** 击杀者识别：直接玩家；或 TACZ 等模组弹射物（软联动，反射读取持有者） */
@@ -544,6 +644,7 @@ public class HextechEvents {
         if (!(event.getSource().getEntity() instanceof Player p)) return;
         if (!(p instanceof ServerPlayer sp)) return;
         if (EXTRA_BUSY) return; // 额外伤害不再递归
+        if (MULTI_BUSY.contains(sp.getUUID())) return; // v0.6.16 多重射击的额外伤害不再递归结算机制
         PlayerData data = ModCapabilities.get(sp);
         if (data == null) return;
         LivingEntity target = event.getEntity();
@@ -572,6 +673,17 @@ public class HextechEvents {
         if (crit > 0 && sp.getRandom().nextFloat() < (float) crit) {
             dmgMul *= 1.5f * (float) (1 + effect(data, "crit_damage")); // 重磅一击：暴击伤害提升
         }
+        // v0.6.16 风暴专注：连续命中 4 击后第 4 击必定暴击（确定性连击，区别于概率暴击）
+        double comboCrit = effect(data, "combo_crit");
+        if (comboCrit > 0) {
+            int cc = COMBO_COUNT.merge(sp.getUUID(), 1, Integer::sum);
+            if (cc >= 4) {
+                COMBO_COUNT.put(sp.getUUID(), 0);
+                dmgMul *= 1.5f * (float) (1 + effect(data, "crit_damage"));
+            }
+        } else {
+            COMBO_COUNT.remove(sp.getUUID());
+        }
 
         // 攻击方式分类：近战 / TACZ 弹射物 / 其它弹射物
         net.minecraft.world.entity.Entity direct = event.getSource().getDirectEntity();
@@ -583,7 +695,31 @@ public class HextechEvents {
         if (tacz) {
             dmgMul *= (float) (1 + effect(data, "tacz_power"));
             double tc = effect(data, "tacz_crit");
-            if (tc > 0 && sp.getRandom().nextFloat() < (float) tc) dmgMul *= 1.5f;
+            // v0.6.16 暴击链：暴击后 3 秒窗内暴击率提升（连续暴击窗口，区别于命中窗/操作窗）
+            double critChain = effect(data, "tacz_crit_chain");
+            double chainBonus = 0;
+            if (critChain > 0 && System.currentTimeMillis() < CRIT_CHAIN_UNTIL.getOrDefault(sp.getUUID(), 0L)) {
+                chainBonus = critChain;
+            }
+            boolean isCrit = (tc + chainBonus) > 0 && sp.getRandom().nextFloat() < (float) (tc + chainBonus);
+            // v0.6.16 末弹必暴：弹匣剩 1 发时命中必定暴击（与绝地弹匣 +40% 叠加成"最后一发必暴爆发"）
+            double lastCrit = effect(data, "tacz_last_crit");
+            if (lastCrit > 0 && currentTaczAmmo(sp) == 1) isCrit = true;
+            if (isCrit) {
+                dmgMul *= 1.5f;
+                if (critChain > 0) CRIT_CHAIN_UNTIL.put(sp.getUUID(), System.currentTimeMillis() + 3000);
+            }
+            // v0.6.16 棱彩双发射击：暴击时必定额外造成一次同额伤害（棱彩级双段爆发；与白银多重射击的
+            // 几率双段区分——本机制是暴击联动，防递归同 MULTI_BUSY；v0.6.16 修正传实际同额伤害 amount*dmgMul）
+            double doubleShot = effect(data, "tacz_double_shot");
+            if (isCrit && doubleShot > 0 && target != null && target.isAlive()
+                    && !MULTI_BUSY.contains(sp.getUUID())) {
+                MULTI_BUSY.add(sp.getUUID());
+                try {
+                    if (target.isAlive()) target.hurt(event.getSource(), amount * dmgMul);
+                } catch (Exception ignored) { }
+                MULTI_BUSY.remove(sp.getUUID());
+            }
             double twin = effect(data, "twin_shot"); // 双子射击：几率双倍枪伤
             if (twin > 0 && sp.getRandom().nextFloat() < (float) twin) dmgMul *= 2;
             // v0.6.0 机制海克斯化：枪械之刃/枪械暴击已并入 tacz_power/tacz_crit 海克斯（原 gun_aspect/gun_crit_aspect 锻造词条迁出）
@@ -591,6 +727,121 @@ public class HextechEvents {
                 double dist = sp.distanceTo(target);
                 if (dist < 5) dmgMul *= (float) (1 + effect(data, "tacz_close_power"));
                 else if (dist > 15) dmgMul *= (float) (1 + effect(data, "tacz_far_power"));
+            }
+            // v0.6.16 绝地弹匣：弹匣剩余 1 发时该发伤害大增（读主手枪械当前弹药）
+            double lastShot = effect(data, "tacz_last_shot");
+            if (lastShot > 0 && currentTaczAmmo(sp) == 1) dmgMul *= (float) (1 + lastShot);
+            // v0.6.16 稳定握持：TACZ 命中后 4 秒窗内枪伤加成（持续命中刷新；窗从首次命中起算）
+            double steady = effect(data, "tacz_steady");
+            if (steady > 0) {
+                long now = System.currentTimeMillis();
+                Long su = STEADY_UNTIL.get(sp.getUUID());
+                if (su != null && now < su) dmgMul *= (float) (1 + steady);
+                STEADY_UNTIL.put(sp.getUUID(), now + 4000);
+            } else {
+                STEADY_UNTIL.remove(sp.getUUID());
+            }
+            // v0.6.16 卧姿射击：蹲伏时枪伤（姿态条件，区别于距离/击杀/命中类机制）
+            double crouch = effect(data, "tacz_crouch");
+            if (crouch > 0 && sp.isCrouching()) dmgMul *= (float) (1 + crouch);
+            // v0.6.16 凌空射击：未落地时枪伤
+            double airborne = effect(data, "tacz_airborne");
+            if (airborne > 0 && !sp.onGround()) dmgMul *= (float) (1 + airborne);
+            // v0.6.16 架枪射击：原地不动 ≥1 秒后枪伤大增（移动即重置）
+            double bipod = effect(data, "tacz_bipod");
+            if (bipod > 0 && System.currentTimeMillis() - LAST_MOVE.getOrDefault(sp.getUUID(), 0L) >= 1000L) {
+                dmgMul *= (float) (1 + bipod);
+            }
+            // v0.6.16 低弹增压：当前弹药 ≤ 弹容 30% 时枪伤大增（弹药压力型，区别于绝地弹匣的仅剩 1 发）
+            double lowAmmo = effect(data, "tacz_low_ammo");
+            if (lowAmmo > 0) {
+                ItemStack gun = sp.getMainHandItem();
+                if (!gun.isEmpty() && gun.hasTag()) {
+                    int[] ammo = findAmmoInt(gun.getTag(), 0);
+                    if (ammo != null && ammo[1] > 0) {
+                        int cur = sanitizeAmmo(ammo[1]);
+                        int max = taczMaxAmmo(sp, gun.getTag());
+                        if (max > 0 && cur * 10 <= max * 3) dmgMul *= (float) (1 + lowAmmo);
+                    }
+                }
+            }
+            // v0.6.16 弹匣虹吸：命中时有几率回复 1 发弹药（命中回弹，区别于击杀回弹；单发少量不破坏弹药平衡）
+            double siphon = effect(data, "tacz_siphon");
+            if (siphon > 0 && sp.getRandom().nextFloat() < (float) siphon) {
+                addOneTaczAmmo(sp);
+            }
+            // v0.6.16 快速装填：换弹完成后 4 秒窗内枪伤大增（操作窗，区别于命中/击杀窗）
+            double reloadHaste = effect(data, "tacz_reload_haste");
+            if (reloadHaste > 0 && System.currentTimeMillis() < RELOAD_UNTIL.getOrDefault(sp.getUUID(), 0L)) {
+                dmgMul *= (float) (1 + reloadHaste);
+            }
+            // v0.6.16 切枪强化：切换主手武器后 3 秒窗内枪伤大增
+            double swapStrike = effect(data, "tacz_swap_strike");
+            if (swapStrike > 0 && System.currentTimeMillis() < SWAP_UNTIL.getOrDefault(sp.getUUID(), 0L)) {
+                dmgMul *= (float) (1 + swapStrike);
+            }
+            // v0.6.16 满弹增压：弹匣全满时枪伤大增（与低弹增压形成弹药经济两极）
+            double fullAmmo = effect(data, "tacz_full_ammo");
+            if (fullAmmo > 0) {
+                ItemStack gun = sp.getMainHandItem();
+                if (!gun.isEmpty() && gun.hasTag()) {
+                    int[] ammo = findAmmoInt(gun.getTag(), 0);
+                    if (ammo != null && ammo[1] > 0) {
+                        int cur = sanitizeAmmo(ammo[1]);
+                        int max = taczMaxAmmo(sp, gun.getTag());
+                        if (max > 0 && cur >= max) dmgMul *= (float) (1 + fullAmmo);
+                    }
+                }
+            }
+            // v0.6.16 走射专精：1 秒内移动过时枪伤大增（与架枪站桩形成姿态两极，共用位置跟踪）
+            double strafe = effect(data, "tacz_strafe");
+            if (strafe > 0 && System.currentTimeMillis() - LAST_MOVE.getOrDefault(sp.getUUID(), 0L) < 1000L) {
+                dmgMul *= (float) (1 + strafe);
+            }
+            // v0.6.16 双枪大师：主副手都持 TACZ 枪械时主手枪伤大增
+            double dual = effect(data, "tacz_dual_wield");
+            if (dual > 0) {
+                ItemStack off = sp.getOffhandItem();
+                if (!off.isEmpty()) {
+                    ResourceLocation offRl = ForgeRegistries.ITEMS.getKey(off.getItem());
+                    if (offRl != null && "tacz".equals(offRl.getNamespace())) dmgMul *= (float) (1 + dual);
+                }
+            }
+            // v0.6.16 致盲弹：命中时几率使目标失明 3 秒（Debuff 维度，区别于减速/点燃/流血）
+            double blind = effect(data, "tacz_blind");
+            if (blind > 0 && target != null && sp.getRandom().nextFloat() < (float) blind) {
+                target.addEffect(new MobEffectInstance(net.minecraft.world.effect.MobEffects.BLINDNESS, 60, 0));
+            }
+            // v0.6.16 持续射击：持续射击（连续命中）期间每命中一枪叠 1 层，每层枪伤递增（叠的是"连续射击层数"，
+            // 停止射击 1.5 秒后清零重来；上限 15 层）
+            double barrage = effect(data, "tacz_barrage");
+            if (barrage > 0) {
+                long nowB = System.currentTimeMillis();
+                Integer hits = BAR_HITS.get(sp.getUUID());
+                long lastHit = BAR_LAST_HIT.getOrDefault(sp.getUUID(), 0L);
+                hits = (nowB - lastHit < 1500) ? (hits == null ? 1 : Math.min(hits + 1, 15)) : 1;
+                BAR_HITS.put(sp.getUUID(), hits);
+                BAR_LAST_HIT.put(sp.getUUID(), nowB);
+                dmgMul *= (float) (1 + barrage * hits);
+            }
+            // v0.6.16 棱彩追踪：命中同一目标叠加印记（每层该目标枪伤 +10%/级，上限 5 层；换目标或 5 秒未命中重置）
+            double tracking = effect(data, "tacz_tracking");
+            if (tracking > 0 && target != null) {
+                long nowT = System.currentTimeMillis();
+                Map<UUID, long[]> tr = TACZ_TRACK.computeIfAbsent(sp.getUUID(), k -> new ConcurrentHashMap<>());
+                long[] st = tr.get(target.getUUID());
+                int tkHits = 1;
+                if (st != null && nowT - st[1] < 5000) tkHits = Math.min((int) st[0] + 1, 5);
+                tr.put(target.getUUID(), new long[]{tkHits, nowT});
+                dmgMul *= (float) (1 + tracking * tkHits);
+            }
+            // v0.6.16 穿甲弹：目标护甲越高枪伤越高（护甲 50 点达满额 +30%/级，护甲 0 无加成）
+            double pierce = effect(data, "tacz_pierce");
+            if (pierce > 0 && target != null) {
+                double armor = 0;
+                net.minecraft.world.entity.ai.attributes.AttributeInstance ai = target.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR);
+                if (ai != null) armor = Math.max(0, ai.getValue());
+                dmgMul *= (float) (1 + Math.min(armor / 50.0, 1.0) * pierce);
             }
         }
         // 成长性全伤害加成
@@ -636,16 +887,37 @@ public class HextechEvents {
                 if (whVsNeutral != 0) dmgMul *= (float) (1 + whVsNeutral);
             }
         }
+        // v0.6.16 以血还血：受击后 5 秒内下一次攻击伤害大增（触发一次即消耗）
+        double vg = effect(data, "vengeance");
+        if (vg > 0) {
+            Long until = VENGE_UNTIL.get(sp.getUUID());
+            if (until != null && System.currentTimeMillis() < until) {
+                dmgMul *= (float) (1 + vg);
+                VENGE_UNTIL.remove(sp.getUUID());
+            }
+        }
         if (dmgMul != 1.0f) event.setAmount(amount * dmgMul);
+
+        // v0.6.16 多重射击：命中时几率额外造成一次同额伤害（多段打击；防递归：额外伤害事件入口直接短路，
+        // 不再套整套机制倍率；v0.6.16 修正传 event.getAmount() 实际伤害而非倍率）
+        double multi = effect(data, "tacz_multi_shot");
+        if (multi > 0 && target != null && target.isAlive() && !MULTI_BUSY.contains(sp.getUUID())
+                && sp.getRandom().nextFloat() < (float) multi) {
+            MULTI_BUSY.add(sp.getUUID());
+            try {
+                if (target.isAlive()) target.hurt(event.getSource(), event.getAmount());
+            } catch (Exception ignored) { }
+            MULTI_BUSY.remove(sp.getUUID());
+        }
 
         // v0.6.0 机制海克斯化：原锻造机制词条（fire/frost/poison/leech/pierce/crit/execute/splash/lightning/
         // stack/dance/bloodlust/reaper/thorn/gold/regen/TACZ）全部迁入海克斯池（锻造器仅剩静态属性）。
         // 已有海克斯机制键覆盖的（frost_bite/lifesteal/crit/execute/splash/gold_punch/regen/tacz_power 等）不再保留锻造版本；
         // 新机制海克斯（fire_blade/poison_blade/pierce_blade/lightning_blade/dance_blade/bloodlust_blade/reaper_blade/crescendo）在本段结算。
         if (target != null && target.isAlive()) {
-            // 叠角龙在场时命中叠层翻倍（永久属性层与战斗叠层共用，v0.6.0 提前声明供各叠层段使用）
+            // 叠角龙在场时命中叠层翻倍（每级 +75%，v0.6.16 统一倍率；受击叠层同样生效）
             boolean onHitDrake = data.getHexes().stream().anyMatch(e -> e.id.equals("hex_stack_drake"));
-            int onHitGain = onHitDrake ? 2 : 1;
+            double onHitMult = drakeMult(data);
             boolean attrStacked = false;
             // 火淬之刃：点燃 2 秒 + 燃烧额外伤害（等级加深）
             double fireBlade = effect(data, "fire_blade");
@@ -720,32 +992,10 @@ public class HextechEvents {
                 }
                 hexStacked = true;
             }
-            // v0.6.0 世界海克斯「永续成长」：永久叠层（成长叠层海克斯/装备）获取速度 +50%（命中 概率提升为 chance×(1+gain)）
-            if (whPermGain > 0) {
-                for (PlayerData.HexEntry e : data.getHexes()) {
-                    HextechDefinition pdef = HextechRegistry.get(e.id);
-                    if (pdef != null && pdef.event != null && pdef.event.contains("stack_attr_onhit:")) {
-                        float hitChance = Math.min(1f, stackOnHitChance(pdef) * (float) (1 + whPermGain));
-                        if (sp.getRandom().nextFloat() < hitChance) {
-                            e.stacks += onHitGain;
-                            data.applyModifiers(sp);
-                            attrStacked = true;
-                        }
-                    }
-                }
-                for (PlayerData.EquipEntry eq : data.getEquipment()) {
-                    HextechDefinition pdef = HextechRegistry.getEquip(eq.id);
-                    if (pdef != null && pdef.event != null && pdef.event.contains("stack_attr_onhit:")) {
-                        float hitChance = Math.min(1f, stackOnHitChance(pdef) * (float) (1 + whPermGain));
-                        if (sp.getRandom().nextFloat() < hitChance) {
-                            eq.stacks += onHitGain;
-                            data.applyModifiers(sp);
-                            attrStacked = true;
-                        }
-                    }
-                }
-            }
-            // v0.6.0 共振彩蛋：积聚之刃 + 刀锋之舞 → 奔涌攻势（叠层期间攻速溢出额外伤害，层数越多越强，上限 2 倍）
+            // v0.6.0 世界海克斯「永续成长」：永久叠层获取速度 +50%（命中叠层概率提升 chance×(1+gain)）。
+            // v0.6.16 修复：此前 whPermGain>0 时本段与下方命中叠层段重复执行（一次命中两次独立判定、可叠 2 层），
+            // 已合并——本段不再单独叠层，概率加成统一并入下方 stack_attr_onhit 循环的 hitChance。
+            // 共振彩蛋：积聚之刃 + 刀锋之舞 → 奔涌攻势（叠层期间攻速溢出额外伤害，层数越多越强，上限 2 倍）
             if (crescendoMult > 0 && danceBlade > 0) {
                 AttributeInstance asi2 = sp.getAttribute(Attributes.ATTACK_SPEED);
                 double aspd2 = asi2 == null ? 0 : asi2.getValue();
@@ -830,8 +1080,10 @@ public class HextechEvents {
                 if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不被命中叠层
                 HextechDefinition def = HextechRegistry.get(e.id);
                 if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
-                    if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
-                        e.stacks += onHitGain;
+                    // v0.6.16 永续成长概率加成并入此处（原独立循环已删除，杜绝双重判定）
+                    float hitChance = Math.min(1f, stackOnHitChance(def) * (float) (1 + whPermGain));
+                    if (sp.getRandom().nextFloat() < hitChance) {
+                        e.stacks = safeStackAdd(e.stacks, gainWithMult(onHitMult, sp.getRandom()));
                         data.applyModifiers(sp);
                         sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
                                 Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
@@ -843,8 +1095,9 @@ public class HextechEvents {
             for (PlayerData.EquipEntry eq : data.getEquipment()) {
                 HextechDefinition def = HextechRegistry.getEquip(eq.id);
                 if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
-                    if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
-                        eq.stacks += onHitGain;
+                    float hitChance = Math.min(1f, stackOnHitChance(def) * (float) (1 + whPermGain));
+                    if (sp.getRandom().nextFloat() < hitChance) {
+                        eq.stacks = safeStackAdd(eq.stacks, gainWithMult(onHitMult, sp.getRandom()));
                         data.applyModifiers(sp);
                         sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
                                 Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), true);
@@ -923,6 +1176,10 @@ public class HextechEvents {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
         PlayerData data = ModCapabilities.get(sp);
         if (data == null) return;
+        // v0.6.16 以血还血：持有者受击开启 5 秒复仇窗口（下一次攻击结算时消费）
+        if (effect(data, "vengeance") > 0) {
+            VENGE_UNTIL.put(sp.getUUID(), System.currentTimeMillis() + 5000);
+        }
         // 火免/耐火：火焰伤害先结算（免疫直接取消，防后续减伤穿透）
         double fireWard = effect(data, "fire_warden");
         if (fireWard > 0 && event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FIRE)) {
@@ -997,16 +1254,18 @@ public class HextechEvents {
             hurtStacked = true;
         }
         // ===== v0.6.2 受击永久属性层（stack_attr_onhurt：受击概率叠永久属性层，死亡保留）=====
+        // v0.6.16 双叠层修复：受击叠层写入独立 hurtStacks（不再与命中叠层共层）；叠角龙在场按每级 +75% 加成
         boolean attrHurtStacked = false;
+        double hurtMult = drakeMult(data);
         for (PlayerData.HexEntry e : data.getHexes()) {
             if (e.id.equals("hex_stack_drake")) continue;
             HextechDefinition def = HextechRegistry.get(e.id);
             if (def != null && def.event != null && def.event.contains("stack_attr_onhurt:")) {
                 if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
-                    e.stacks += 1;
+                    e.hurtStacks = safeStackAdd(e.hurtStacks, gainWithMult(hurtMult, sp.getRandom()));
                     data.applyModifiers(sp);
                     sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                            Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), e.hurtStacks), true);
                     attrHurtStacked = true;
                 }
             }
@@ -1015,7 +1274,7 @@ public class HextechEvents {
             HextechDefinition def = HextechRegistry.getEquip(eq.id);
             if (def != null && def.event != null && def.event.contains("stack_attr_onhurt:")) {
                 if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
-                    eq.stacks += 1;
+                    eq.stacks = safeStackAdd(eq.stacks, 1);
                     data.applyModifiers(sp);
                     sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
                             Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), true);
@@ -1261,6 +1520,53 @@ public class HextechEvents {
         if (!(event.player instanceof ServerPlayer sp)) return;
         PlayerData data = ModCapabilities.get(sp);
         if (data == null) return;
+        // v0.6.16 TACZ 状态跟踪（仅持有对应海克斯的玩家记录，失去即清理，无界增长免疫）：
+        // 架枪射击/走射专精共用位置跟踪；快速装填检测弹量 0→正（换弹完成）；切枪强化检测主手物品变化
+        UUID uid = sp.getUUID();
+        double bipodEff = effect(data, "tacz_bipod");
+        double strafeEff = effect(data, "tacz_strafe");
+        double reloadEff = effect(data, "tacz_reload_haste");
+        double swapEff = effect(data, "tacz_swap_strike");
+        long now = System.currentTimeMillis();
+        if (bipodEff > 0 || strafeEff > 0) {
+            net.minecraft.world.phys.Vec3 pos = sp.position();
+            double[] last = LAST_POS.get(uid);
+            if (last == null) {
+                LAST_POS.put(uid, new double[]{pos.x, pos.y, pos.z});
+                LAST_MOVE.put(uid, now);
+            } else {
+                double dx = pos.x - last[0], dy = pos.y - last[1], dz = pos.z - last[2];
+                if (dx * dx + dy * dy + dz * dz > 0.0009) {
+                    LAST_POS.put(uid, new double[]{pos.x, pos.y, pos.z});
+                    LAST_MOVE.put(uid, now);
+                }
+            }
+        } else {
+            LAST_POS.remove(uid);
+            LAST_MOVE.remove(uid);
+        }
+        if (reloadEff > 0) {
+            int cur = currentTaczAmmo(sp);
+            int lastAmmo = LAST_TACZ_AMMO.getOrDefault(uid, -1);
+            if (cur > 0 && lastAmmo == 0) RELOAD_UNTIL.put(uid, now + 4000); // 换弹完成（弹量 0→正）
+            LAST_TACZ_AMMO.put(uid, cur);
+        } else {
+            LAST_TACZ_AMMO.remove(uid);
+            RELOAD_UNTIL.remove(uid);
+        }
+        if (swapEff > 0) {
+            net.minecraft.world.item.Item main = sp.getMainHandItem().getItem();
+            net.minecraft.world.item.Item lastItem = LAST_MAIN_HAND.get(uid);
+            if (lastItem != null && lastItem != main) SWAP_UNTIL.put(uid, now + 3000); // 切主手武器
+            LAST_MAIN_HAND.put(uid, main);
+        } else {
+            LAST_MAIN_HAND.remove(uid);
+            SWAP_UNTIL.remove(uid);
+        }
+        // v0.6.16 持续射击 / 棱彩追踪 / 暴击链状态清理（仅持有者保留，失去即清，无界增长免疫）
+        if (effect(data, "tacz_barrage") <= 0) { BAR_HITS.remove(uid); BAR_LAST_HIT.remove(uid); }
+        if (effect(data, "tacz_tracking") <= 0) TACZ_TRACK.remove(uid);
+        if (effect(data, "tacz_crit_chain") <= 0) CRIT_CHAIN_UNTIL.remove(uid);
         double regen = effect(data, "regen");
         if (regen > 0 && sp.tickCount % 100 == 0) {
             sp.heal((float) regen);
@@ -1520,6 +1826,34 @@ public class HextechEvents {
             "GunCurrentAmmoCount", "AmmoCount", "ammoCount", "Ammo", "ammo", "MagAmmoCount",
             "MagazineAmmoCount", "CurrentAmmo", "BulletCount", "AmmoAmount", "ammo_amount"
     };
+
+    /** v0.6.16 读取主手枪械当前弹药（供「绝地弹匣」条件；读不到/非 TACZ 返回 -1，未命中条件） */
+    private static int currentTaczAmmo(ServerPlayer player) {
+        ItemStack stack = player.getMainHandItem();
+        if (stack.isEmpty() || !stack.hasTag()) return -1;
+        ResourceLocation rl = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        if (rl == null || !"tacz".equals(rl.getNamespace())) return -1;
+        int[] hit = findAmmoInt(stack.getTag(), 0);
+        return (hit != null && hit[1] > 0) ? hit[1] : -1;
+    }
+
+    /** v0.6.16 弹匣虹吸：主手枪械回复 1 发弹药（long+钳制，满弹/非 TACZ 无操作） */
+    private static void addOneTaczAmmo(ServerPlayer player) {
+        ItemStack stack = player.getMainHandItem();
+        if (stack.isEmpty() || !stack.hasTag()) return;
+        ResourceLocation rl = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        if (rl == null || !"tacz".equals(rl.getNamespace())) return;
+        int[] hit = findAmmoInt(stack.getTag(), 0);
+        if (hit == null || hit[1] <= 0) return;
+        int cur = sanitizeAmmo(hit[1]);
+        int maxAmmo = taczMaxAmmo(player, stack.getTag());
+        if (maxAmmo > 0 && cur >= maxAmmo) return; // 满弹不补
+        int cap = maxAmmo > 0 ? Math.min(maxAmmo, AMMO_CAP) : AMMO_CAP;
+        int target = (int) Math.min((long) cur + 1, cap);
+        String key = hit[0] >= 0 ? AMMO_KEYS[hit[0]] : "GunCurrentAmmoCount";
+        stack.getTag().putInt(key, target);
+        LOGGER.debug("Hexcraft TACZ siphon +1 ({} -> {}/{})", cur, target, maxAmmo > 0 ? maxAmmo : "?");
+    }
 
     /** v0.6.4 主弹夹弹药硬上限（用户要求）：任何通道回填钳制 ≤9999，
      *  并全程 long 运算——此前 hit[1]+restored 在叠高 tacz_ammo 后整数溢出（实测 -16 亿）。 */

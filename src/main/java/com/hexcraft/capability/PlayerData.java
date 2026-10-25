@@ -122,7 +122,8 @@ public class PlayerData {
     public static class HexEntry {
         public final String id;
         public int level;
-        public int stacks; // 成长性海克斯的层数（击杀获得）
+        public int stacks; // 命中/击杀获得的层数（攻击向叠层）
+        public int hurtStacks; // v0.6.16 受击独立叠层（防御向叠层，生死交织「双叠层」实现；旧档缺省 0 重新积累）
         public HexEntry(String id, int level) { this.id = id; this.level = level; }
     }
 
@@ -156,7 +157,11 @@ public class PlayerData {
 
     public int getCoins() { return coins; }
     public void setCoins(int n) { coins = Math.max(0, n); }
-    public void addCoins(int n) { coins = Math.max(0, coins + n); }
+    /** v0.6.16 晶币累加防溢出：int 溢出会变成负数（Math.max(0,负)=0 → 玩家晶币莫名清零）；钳到 Integer.MAX_VALUE */
+    public void addCoins(int n) {
+        if (n > 0 && coins > Integer.MAX_VALUE - n) { coins = Integer.MAX_VALUE; return; }
+        coins = Math.max(0, coins + n);
+    }
     public boolean deductCoins(int n) {
         if (coins < n) return false;
         coins -= n;
@@ -190,9 +195,10 @@ public class PlayerData {
         return base + extra;
     }
 
-    /** 棱彩锻造器「栏位扩展」词条：+1 栏位（防御上限 99） */
+    /** 棱彩锻造器「栏位扩展」词条：+1 栏位（上限由配置 FORGE_SLOT_MAX 控制，默认 99） */
     public void addForgeSlot() {
-        if (slotBoost < 99) slotBoost++;
+        int cap = com.hexcraft.config.HexConfig.FORGE_SLOT_MAX.get();
+        if (slotBoost < cap) slotBoost++;
     }
 
     public int getSlotBoost() { return slotBoost; }
@@ -361,14 +367,15 @@ public class PlayerData {
         for (HexEntry e : hexes) {
             HextechDefinition def = HextechRegistry.get(e.id);
             if (def == null) continue;
-            // 六神装：每装备 1 件装备提供属性（黄金，数值克制；与装备联动）
+            // 六神装：每装备 1 件装备提供属性（黄金，数值克制；与装备联动；加成系数由配置 EQUIP_COUNT_MULT 控制，默认 1.0）
             if (e.id.equals("hex_equip_count")) {
                 int n = equipment.size();
                 if (n > 0) {
+                    double cm = com.hexcraft.config.HexConfig.EQUIP_COUNT_MULT.get();
                     double rate = e.level;
-                    applyOne(player, Attributes.ATTACK_DAMAGE, "hex:equip_count#atk" + idx++, 0.5 * rate * n);
-                    applyOne(player, Attributes.ARMOR, "hex:equip_count#armor" + idx++, 0.5 * rate * n);
-                    applyOne(player, Attributes.MAX_HEALTH, "hex:equip_count#hp" + idx++, 2.0 * rate * n);
+                    applyOne(player, Attributes.ATTACK_DAMAGE, "hex:equip_count#atk" + idx++, 0.5 * rate * n * cm);
+                    applyOne(player, Attributes.ARMOR, "hex:equip_count#armor" + idx++, 0.5 * rate * n * cm);
+                    applyOne(player, Attributes.MAX_HEALTH, "hex:equip_count#hp" + idx++, 2.0 * rate * n * cm);
                 }
                 continue;
             }
@@ -378,19 +385,31 @@ public class PlayerData {
             // 成长属性：stack_attr:键:倍率 / stack_attr_onhit:键:倍率 / stack_attr_onhurt:键:倍率 → 乘法叠加（每层 × 等级）
             // v0.6.8 追溯钳制：应用时按全局叠层上限（permanentStackGlobalCap，默认 200）截断——
             // 旧版本（0.6.2 之前无上限）积累的存量叠层（实测 290/886/1292 层）此前不受限，是护甲/生命/攻击上千的根因
-            long cappedStacks = Math.min(e.stacks, com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get());
-            if (cappedStacks > 0 && def.event != null) {
+            // v0.6.16 双叠层拆分：stack_attr_onhurt 读受击独立层 hurtStacks，stack_attr/stack_attr_onhit 读 stacks
+            // v0.6.16 叠层上限配置化：0=无限制（玩家配 0 时跳过钳制，否则 min 会把层数截成 0）
+            int pCap = com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get();
+            long cappedStacks = pCap > 0 ? Math.min(e.stacks, pCap) : e.stacks;
+            long cappedHurtStacks = pCap > 0 ? Math.min(e.hurtStacks, pCap) : e.hurtStacks;
+            if ((cappedStacks > 0 || cappedHurtStacks > 0) && def.event != null) {
                 for (String token : def.event.split(",")) {
                     String[] parts = token.split(":");
                     if (parts.length == 3) {
-                        if (token.startsWith("stack_attr:") || token.startsWith("stack_attr_onhit:")
-                                || token.startsWith("stack_attr_onhurt:")) {
+                        if (token.startsWith("stack_attr:") || token.startsWith("stack_attr_onhit:")) {
                             Attribute a = STACK_ATTRS.get(parts[1]);
-                            if (a != null) {
+                            if (a != null && cappedStacks > 0) {
                                 try {
                                     double rate = Double.parseDouble(parts[2]);
                                     applyOneMulti(player, a, "hex:" + e.id + "#stk" + idx++,
                                             rate * e.level * cappedStacks);
+                                } catch (Exception ignored) { }
+                            }
+                        } else if (token.startsWith("stack_attr_onhurt:")) {
+                            Attribute a = STACK_ATTRS.get(parts[1]);
+                            if (a != null && cappedHurtStacks > 0) {
+                                try {
+                                    double rate = Double.parseDouble(parts[2]);
+                                    applyOneMulti(player, a, "hex:" + e.id + "#hrstk" + idx++,
+                                            rate * e.level * cappedHurtStacks);
                                 } catch (Exception ignored) { }
                             }
                         }
@@ -420,8 +439,9 @@ public class PlayerData {
             for (HextechDefinition.ModSpec mod : def.mods) {
                 applyOne(player, mod.attr, "equip:" + eq.id + "#" + idx++, mod.perLevel * eq.level * equipPower);
             }
-            // v0.6.8 追溯钳制（同上）：装备成长叠层同样按全局上限截断
-            long cappedEqStacks = Math.min(eq.stacks, com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get());
+            // v0.6.8 追溯钳制（同上）：装备成长叠层同样按全局上限截断；v0.6.16 配置 0=无限制时跳过
+            int pCap = com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get();
+            long cappedEqStacks = pCap > 0 ? Math.min(eq.stacks, pCap) : eq.stacks;
             if (cappedEqStacks > 0 && def.event != null) {
                 for (String token : def.event.split(",")) {
                     String[] parts = token.split(":");
@@ -441,7 +461,29 @@ public class PlayerData {
                 }
             }
         }
+        // v0.6.16 玩家属性显示安全钳（默认 0=关闭）：高数值整合包中玩家属性被堆到极大时，
+        // 部分血量 HUD mod 渲染溢出（屏幕中央黄/红异常竖条）。开启后把玩家自身
+        // MAX_HEALTH/护甲/韧性最终值钳到配置上限（补偿 modifier；下次全量重算自动清除，无残留）。
+        // 仅防显示问题，不影响减伤/伤害公式；默认关闭 = 与其它 mod 零冲突。
+        int cap = com.hexcraft.config.HexConfig.ATTR_DISPLAY_CAP.get();
+        if (cap > 0) {
+            capDisplay(player, Attributes.MAX_HEALTH, cap, "hex:cap#hp");
+            capDisplay(player, Attributes.ARMOR, cap, "hex:cap#armor");
+            capDisplay(player, Attributes.ARMOR_TOUGHNESS, cap, "hex:cap#tough");
+        }
         player.refreshDimensions();
+    }
+
+    /** 属性显示钳制：最终值超过 cap 时追加一个负补偿 modifier 拉回（命名 hexcraft 会被下轮全量重算清除） */
+    private void capDisplay(ServerPlayer player, Attribute attr, double cap, String key) {
+        AttributeInstance inst = player.getAttribute(attr);
+        if (inst == null) return;
+        double v = inst.getValue();
+        if (v > cap) {
+            UUID uuid = UUID.nameUUIDFromBytes(("hexcraft:" + key).getBytes(StandardCharsets.UTF_8));
+            if (inst.getModifier(uuid) != null) inst.removeModifier(uuid);
+            inst.addPermanentModifier(new AttributeModifier(uuid, "hexcraft", -(v - cap), AttributeModifier.Operation.ADDITION));
+        }
     }
 
     private void applyOne(ServerPlayer player, Attribute attr, String key, double amount) {
@@ -485,6 +527,7 @@ public class PlayerData {
             t.putString("id", e.id);
             t.putInt("level", e.level);
             t.putInt("stacks", e.stacks);
+            t.putInt("hurtStacks", e.hurtStacks); // v0.6.16 受击独立叠层
             hexList.add(t);
         }
         tag.put("hexes", hexList);
@@ -539,6 +582,7 @@ public class PlayerData {
             if (com.hexcraft.hextech.HextechRegistry.get(hid) == null) { dropHex++; continue; }
             HexEntry e = new HexEntry(hid, c.getInt("level"));
             e.stacks = c.getInt("stacks");
+            e.hurtStacks = c.getInt("hurtStacks"); // v0.6.16 旧档缺省 0
             if (e.id.equals("hex_stack_drake")) e.stacks = 0; // 叠角龙自身不叠层（旧档残留层数一次性清零）
             hexes.add(e);
         }
@@ -588,6 +632,7 @@ public class PlayerData {
             if (com.hexcraft.hextech.HextechRegistry.get(e.id) == null) continue;
             HexEntry ne = new HexEntry(e.id, e.level);
             ne.stacks = e.id.equals("hex_stack_drake") ? 0 : e.stacks; // 叠角龙自身不叠层
+            ne.hurtStacks = e.hurtStacks; // v0.6.16 受击独立叠层随重生保留（永久叠层性质）
             this.hexes.add(ne);
         }
         this.forges.clear();

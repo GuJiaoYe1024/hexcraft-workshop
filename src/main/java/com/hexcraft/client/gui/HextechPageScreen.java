@@ -212,16 +212,19 @@ public class HextechPageScreen extends HexScaledScreen {
     }
 
     private void initEquip() {
-        // v0.6.3 费用实时刷新：读服务端权威费用快照（未收到前用原价兜底；发送仍用原始价让服务端打折）
-        int goldPrice = ClientDataStore.equipGoldCost > 0 ? ClientDataStore.equipGoldCost : 2500;
-        int prismPrice = ClientDataStore.equipPrismaticCost > 0 ? ClientDataStore.equipPrismaticCost : 4000;
-        // 购买按钮：2500 随机装备池 / 4000 随机棱彩装备池（都是三选一）
+        // v0.6.3 费用实时刷新：读服务端权威费用快照（未收到前用配置原价兜底）
+        // v0.6.16 装备费用配置化：兜底与发送价都改读 HexConfig（服务端同配置校验）
+        int cfgGold = com.hexcraft.config.HexConfig.EQUIP_GOLD_COST.get();
+        int cfgPrism = com.hexcraft.config.HexConfig.EQUIP_PRISMATIC_COST.get();
+        int goldPrice = ClientDataStore.equipGoldCost > 0 ? ClientDataStore.equipGoldCost : cfgGold;
+        int prismPrice = ClientDataStore.equipPrismaticCost > 0 ? ClientDataStore.equipPrismaticCost : cfgPrism;
+        // 购买按钮：黄金装备费用随机装备池 / 棱彩装备费用随机棱彩装备池（都是三选一）
         this.addRenderableWidget(new HexButton(cx() + 4, cy() + 48, 111, 15,
                 Component.translatable("hexcraft.gui.buy_equip", goldPrice), 0xFFFFC94A,
-                b -> { Packets.C2SBuyEquip p = new Packets.C2SBuyEquip(); p.price = 2500; PacketHandler.CHANNEL.sendToServer(p); }));
+                b -> { Packets.C2SBuyEquip p = new Packets.C2SBuyEquip(); p.price = cfgGold; PacketHandler.CHANNEL.sendToServer(p); }));
         this.addRenderableWidget(new HexButton(cx() + 119, cy() + 48, 111, 15,
                 Component.translatable("hexcraft.gui.buy_equip_prismatic", prismPrice), 0xFFC77DFF,
-                b -> { Packets.C2SBuyEquip p = new Packets.C2SBuyEquip(); p.price = 4000; PacketHandler.CHANNEL.sendToServer(p); }));
+                b -> { Packets.C2SBuyEquip p = new Packets.C2SBuyEquip(); p.price = cfgPrism; PacketHandler.CHANNEL.sendToServer(p); }));
         // v0.6.5 装备图鉴切换按钮（文案=点击后进入的模式；图鉴模式隐藏卖出按钮防误操作）
         this.addRenderableWidget(new HexButton(cx() + 4, cy() + 70, 112, 13,
                 Component.translatable(equipGallery ? "hexcraft.gui.equip_view_equipped" : "hexcraft.gui.equip_gallery"), 0xFF4DE6FF,
@@ -346,8 +349,15 @@ public class HextechPageScreen extends HexScaledScreen {
             drawAttrRow(g, inner, idx, Component.translatable("hexcraft.stat." + key),
                     val == null ? "--" : fmt(val));
             // v0.6.11 基础属性 hover 说明（名称 + 具体效果说明）
+            // v0.6.15 修复：原判定用整行宽度 [cx+4, cx+226]，两列属性共用同一判定区，
+            // 循环中后一个属性覆盖前一个 → 无论鼠标在哪一列都只显示该行第二个属性的说明。
+            // 现按左右两列拆分：左列 idx 偶数（colX=cx+6）、右列 idx 奇数（colX=cx+118），分割点 cx+115。
             int rowY = inner + (idx / 2) * ROW_H;
-            if (hoverX >= cx() + 4 && hoverX <= cx() + 226 && hoverY >= rowY - 1 && hoverY <= rowY + 13) {
+            boolean inHoverRow = hoverY >= rowY - 1 && hoverY <= rowY + 13;
+            boolean inLeftCol = hoverX >= cx() + 4 && hoverX < cx() + 115;
+            boolean inRightCol = hoverX >= cx() + 115 && hoverX <= cx() + 226;
+            boolean hitOwnCol = (idx % 2 == 0) ? inLeftCol : inRightCol;
+            if (inHoverRow && hitOwnCol) {
                 java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
                 tip.add(Component.translatable("hexcraft.stat." + key).withStyle(c -> c.withColor(0xFF9FE4FF)));
                 tip.add(Component.translatable("hexcraft.stat.hint." + key).withStyle(c -> c.withColor(0xFFAAB6D8)));
@@ -583,7 +593,20 @@ public class HextechPageScreen extends HexScaledScreen {
             String rk = def.rarity.key;
             Component name = Component.translatable("hexcraft.hextech." + h.id + ".name")
                     .copy().append("  Lv." + h.level);
-            if (h.stacks > 0) name = name.copy().append("  ×" + h.stacks + "层");
+            // v0.6.16 双叠层显示：命中层 ×N + 受击层（独立 hurtStacks）；超出服务端叠层上限时标注「生效层数」，
+            // 避免"显示 764 层但加成只按上限算"造成的层数/属性对不上困惑
+            if (h.stacks > 0 || h.hurtStacks > 0) {
+                StringBuilder st = new StringBuilder();
+                if (h.stacks > 0) {
+                    st.append("  ×").append(h.stacks).append("层");
+                    if (ClientDataStore.permStackCap < h.stacks) st.append("(生效").append(ClientDataStore.permStackCap).append(")");
+                }
+                if (h.hurtStacks > 0) {
+                    st.append("  受击×").append(h.hurtStacks).append("层");
+                    if (ClientDataStore.permStackCap < h.hurtStacks) st.append("(生效").append(ClientDataStore.permStackCap).append(")");
+                }
+                name = name.copy().append(st.toString());
+            }
             g.drawString(this.font, name, cx() + 6, ly, rarityColor(rk));
             // 来源角标：联动 mod 内容（原版不标）——TACZ 青色 / 未来联动金色，一眼区分内容来源
             String src = HextechRegistry.sourceOf(h.id);
@@ -878,7 +901,10 @@ public class HextechPageScreen extends HexScaledScreen {
                 if (def != null && hoverX >= cx() + 3 && hoverX <= cx() + 228 && hoverY >= ly - 1 && hoverY <= ly + 13) {
                     net.minecraft.network.chat.MutableComponent eqName = Component.translatable("hexcraft.equip." + eq.id + ".name").copy();
                     if (eq.level > 0) eqName = eqName.append("  Lv." + eq.level);
-                    if (eq.stacks > 0) eqName = eqName.append("  ×" + eq.stacks + "层");
+                    if (eq.stacks > 0) {
+                        eqName = eqName.append("  ×" + eq.stacks + "层");
+                        if (ClientDataStore.permStackCap < eq.stacks) eqName = eqName.append("(生效" + ClientDataStore.permStackCap + ")");
+                    }
                     java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
                     tip.add(eqName.withStyle(c -> c.withColor(rarityColor(rk))));
                     tip.add(Component.translatable("hexcraft.equip." + eq.id + ".desc"));

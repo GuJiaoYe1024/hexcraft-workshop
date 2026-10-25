@@ -66,9 +66,12 @@ public class ClientEvents {
         // 因此用屏幕宽高手动计算容器窗口位置（容器 176×166，居中）。
         int guiLeft = (screen.width - 176) / 2;
         int guiTop = (screen.height - 166) / 2;
-        // x=+50 与原版"合成"页签(guiLeft+97)错开，避免重叠
+        // v0.6.16 重新设计（最终版）：入口横排（左右）放在容器框【上方】、右对齐——
+        // 海克斯工坊「海」在左、世界海克斯「世」在最右；按钮右缘对齐容器右缘（guiLeft+174 ≈ 容器右缘 176），
+        // y=guiTop-28 在背包框上方（不占容器内部、不挡合成栏/物品格/附魔书/网格）。
         TabButton btn = new TabButton(
-                guiLeft + 50, guiTop - 27,
+                guiLeft + 124, guiTop - 28,
+                Component.translatable("hexcraft.gui.main_tab"),
                 b -> {
                     // v0.6.3 打开主界面即向服务端请求完整同步（联机玩家抽取/变更后界面为空的兜底）
                     com.hexcraft.client.ClientDataStore.requestPendingSync = true;
@@ -80,9 +83,9 @@ public class ClientEvents {
         // 使用 Forge ScreenEvent.Init.Post 提供的 addListener（内部绑定到 screen::addRenderableWidget，
         // 生产/开发环境均有效；替代旧反射方案——反射硬编码 official 方法名在生产环境（SRG）找不到导致页签失效）
         event.addListener(btn);
-        // 世界海克斯页签（v0.3.21）：紧挨海克斯工坊页签右侧错开
+        // 世界海克斯入口（v0.3.21）：最右上方
         TabButton worldBtn = new TabButton(
-                guiLeft + 78, guiTop - 27,
+                guiLeft + 150, guiTop - 28,
                 Component.translatable("hexcraft.gui.world_tab"),
                 b -> {
                     // v0.6.3 打开世界海克斯界面即请求完整同步（费用快照 + 世界海克斯列表广播）
@@ -104,7 +107,7 @@ public class ClientEvents {
         }
 
         TabButton(int x, int y, Component glyph, OnPress onPress) {
-            super(x, y, 24, 28, glyph, onPress, DEFAULT_NARRATION);
+            super(x, y, 24, 24, glyph, onPress, DEFAULT_NARRATION);
             this.glyph = glyph;
         }
 
@@ -114,7 +117,7 @@ public class ClientEvents {
             g.fill(getX(), getY(), getX() + width, getY() + height, bg);
             g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF1E6FE8);
             g.drawCenteredString(Minecraft.getInstance().font, glyph,
-                    getX() + width / 2, getY() + 7, 0xFF9FB6FF);
+                    getX() + width / 2, getY() + 6, 0xFF9FB6FF);
         }
     }
 }

@@ -1,5 +1,16 @@
-Hexcraft Workshop v0.6.6 - Equipment rebalance (all 44 items buffed) + full hex system audit
+Hexcraft Workshop v0.6.19 - Hex health bar (replaces vanilla, off by default) + random gift "air" fully purged + config UI translation fix
 =============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated. (This release note covers everything from v0.6.15 through v0.6.19, published together as v0.6.19.)
+
+- HEALTH BAR (v0.6.19): Hex-style box health bar showing "current HP / max HP" (cyan tech frame + translucent panel + HP ratio color strip). When enabled it REPLACES the vanilla health bar via the native 1.20.1 RenderGuiOverlayEvent (PLAYER_HEALTH overlay canceled - no more hundreds of hearts overflowing the screen at huge HP values). Pinned to the vanilla health bar position by default; hpX/hpY non-zero for manual placement. Default OFF = zero conflict with other mods.
+- RANDOM GIFT "AIR" FULLY REMOVED (v0.6.19): triple air detection (instance == AIR / registry path containing "air" or "empty" anywhere / hover name containing "air" case-insensitive); the final guard skips the entire gift if any air-like item is drawn; NEW hard filter stripAir() removes the words "空气" and "air" from ALL scrolling tip text at render time - the word "air" can no longer appear in any message; 8 defensive re-rolls; forensic logging kept ([Hexcraft][Gift]).
+- CONFIG UI TRANSLATION FIX (v0.6.19): 7 missing tooltip keys in the HUD optimization group (tipEnabled / tipAdjustMode / tipX / tipY / hpEnabled / hpX / hpY) added in both EN and CN - the config screen no longer shows raw key names like hexcraft.config.tip.v060.tipX.
+- EARLIER WORK IN THIS RELEASE (v0.6.15~v0.6.18): backpack hex/world tabs redesigned (top-right outside the container, no more blocking the crafting grid); attribute display safety clamp (default OFF, for huge-value modpacks); hex slot cap and stack cap configs widened to 0~9999 (0 = unlimited); scrolling tip HUD (draggable, toggleable, position configurable); TACZ hex set massively expanded (sustained fire stacking damage / prismatic tracking marks / last-bullet guaranteed crit / double shot on crit / multi-shot / armor-piercing / crit chain / ammo siphon / bipod stance / low-ammo boost / reload haste window / swap-strike window / full-ammo boost / strafe specialization / dual-wield / blinding rounds / crouch shot / airborne shot / barrage).
+- SELF-CHECK: no duplicate lang keys (EN/CN), all 207 hex JSONs clean, build success, deployed to all three copies with matching SHA-256.
+- NOTE: network protocol VERSION = 23 - server and clients must all update to the same build.
+
+
 
 Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated. (This release note also covers the v0.6.5 update, since only v0.6.6 is being published.)
 

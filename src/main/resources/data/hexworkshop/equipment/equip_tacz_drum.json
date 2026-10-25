@@ -3,7 +3,7 @@
   "weight": 10,
   "icon": "⚙",
   "sell": 625,
-  "event": "tacz_ammo:0.4,tacz_power:0.15",
+  "event": "tacz_ammo:0.2,tacz_power:0.15",
   "mods": [
     {
       "attr": "attack_damage",

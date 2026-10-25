@@ -51,6 +51,7 @@ public class HexConfigScreen {
         linkedCategory(b, eb);
         worldCategory(b, eb);
         v060Category(b, eb);
+        hudCategory(b, eb); // v0.6.16 HUD 优化：生命值显示安全钳 + 滚动提示开关/位置/拖动
         dlcCategory(b, eb); // v0.6.2 DLC 外接内容包顶层页面
         clientCategory(b, eb);
         rulesCategory(b, eb);
@@ -118,7 +119,7 @@ public class HexConfigScreen {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.draw"));
         intEntry(eb, cat, "draw.xpCostPerDraw", HexConfig.XP_COST_PER_DRAW, 10, 1000000, 500);
         intEntry(eb, cat, "draw.rerollCost", HexConfig.REROLL_COST, 0, 10000, 20);
-        intEntry(eb, cat, "draw.hexLimit", HexConfig.HEX_SLOT_COUNT, 0, 30, 0);
+        intEntry(eb, cat, "draw.hexLimit", HexConfig.HEX_SLOT_COUNT, 0, 9999, 16);
         intEntry(eb, cat, "draw.silverWeight", HexConfig.WEIGHT_SILVER, 0, 1000, 40);
         intEntry(eb, cat, "draw.goldWeight", HexConfig.WEIGHT_GOLD, 0, 1000, 35);
         intEntry(eb, cat, "draw.prismWeight", HexConfig.WEIGHT_PRISMATIC, 0, 1000, 25);
@@ -159,7 +160,7 @@ public class HexConfigScreen {
         boolEntry(eb, cat, "world.enabled", HexConfig.WORLD_ENABLED);
         intEntry(eb, cat, "world.drawXp", HexConfig.WORLD_DRAW_XP, 10, 1000000, 2000);
         intEntry(eb, cat, "world.cancelCoin", HexConfig.WORLD_CANCEL_COIN, 0, 100000, 800);
-        intEntry(eb, cat, "world.maxPerCategory", HexConfig.WORLD_MAX_PER_CATEGORY, 0, 24, 4);
+        intEntry(eb, cat, "world.maxPerCategory", HexConfig.WORLD_MAX_PER_CATEGORY, 0, 9999, 16);
     }
 
     /** v0.6.2 DLC 外接内容包顶层页面：扫描 hexworkshop_dlc/packs 展示包名/简介/版本/依赖/启用开关；
@@ -230,7 +231,30 @@ public class HexConfigScreen {
         doubleEntry(eb, cat, "v060.forgeMultPrismatic", HexConfig.FORGE_MULT_PRISMATIC, 0.1, 20.0, 3.0);
         // v0.6.2 永久叠层全局倍率/上限（服务端生效，防作弊）
         doubleEntry(eb, cat, "v060.permanentStackMult", HexConfig.PERMANENT_STACK_MULT, 0.1, 10.0, 1.0);
-        intEntry(eb, cat, "v060.permanentStackCap", HexConfig.PERMANENT_STACK_CAP, 10, 10000, 200);
+        intEntry(eb, cat, "v060.permanentStackCap", HexConfig.PERMANENT_STACK_CAP, 0, 9999, 200);
+        // v0.6.16 配置表扩展：装备费用 / 叠角龙倍率 / 栏位扩展上限 / 六神装加成（服务端生效防作弊）
+        intEntry(eb, cat, "v060.equipGoldCost", HexConfig.EQUIP_GOLD_COST, 0, 1000000, 2500);
+        intEntry(eb, cat, "v060.equipPrismaticCost", HexConfig.EQUIP_PRISMATIC_COST, 0, 1000000, 4000);
+        doubleEntry(eb, cat, "v060.stackDrakeMult", HexConfig.STACK_DRAKE_MULT, 0.0, 3.0, 0.75);
+        intEntry(eb, cat, "v060.forgeSlotMax", HexConfig.FORGE_SLOT_MAX, 0, 9999, 99);
+        doubleEntry(eb, cat, "v060.equipCountMult", HexConfig.EQUIP_COUNT_MULT, 0.0, 10.0, 1.0);
+    }
+
+    /** v0.6.16 HUD 优化分组：生命值显示安全钳（服务端，防血量 HUD 渲染溢出）+ 滚动提示开关/位置/拖动（客户端） */
+    private static void hudCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
+        ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.v060hud"));
+        // 生命值显示优化（默认 0=关闭，与其它 mod 零冲突；开启后钳玩家自身最大生命/护甲/韧性到该值，
+        // 防高数值整合包血量 HUD 渲染溢出——屏幕中央黄/红异常竖条）
+        intEntry(eb, cat, "v060.attrDisplayCap", HexConfig.ATTR_DISPLAY_CAP, 0, 100000000, 0);
+        // 滚动提示（随机馈赠/入账等滚动消息）：总开关 + 拖动调整模式 + 位置偏移
+        boolEntry(eb, cat, "v060.tipEnabled", HexConfig.TIP_ENABLED);
+        boolEntry(eb, cat, "v060.tipAdjustMode", HexConfig.TIP_ADJUST_MODE);
+        intEntry(eb, cat, "v060.tipX", HexConfig.TIP_X, 0, 4000, 8);
+        intEntry(eb, cat, "v060.tipY", HexConfig.TIP_Y, 0, 4000, 34);
+        // 海克斯风简易血条：方框内显示「当前生命/生命上限」（替代异常血量 HUD 竖条）
+        boolEntry(eb, cat, "v060.hpEnabled", HexConfig.HP_ENABLED);
+        intEntry(eb, cat, "v060.hpX", HexConfig.HP_X, 0, 4000, 0);
+        intEntry(eb, cat, "v060.hpY", HexConfig.HP_Y, 0, 4000, 0);
     }
 
     private static void rulesCategory(ConfigBuilder b, ConfigEntryBuilder eb) {

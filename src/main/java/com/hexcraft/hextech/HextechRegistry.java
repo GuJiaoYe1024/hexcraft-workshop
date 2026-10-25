@@ -92,6 +92,12 @@ public class HextechRegistry {
         register("hex_warden", HextechRarity.PRISMATIC, 5, List.of(
                 mod(Attributes.ARMOR, 8.0), mod(Attributes.KNOCKBACK_RESISTANCE, 0.2), mod(Attributes.MAX_HEALTH, 8.0)), null);
 
+        // ---- v0.6.15 栏位扩展海克斯（此前 lang 文案已备好但注册表漏注册，玩家永远抽不到）----
+        // 棱彩专属、低权重（权重 3，与棱彩锻造器 slot_boost 词条权重一致）：抽到即解锁 1 个海克斯栏位，
+        // 不占普通栏位（occupiedSlots 排除）、可叠级（每级 +1，hexSlotLimit 计入等级）；
+        // 无属性 mods、无事件，纯解锁用途。
+        register("hex_slot_boost", HextechRarity.PRISMATIC, 3, List.of(), null);
+
         // ---- 锻造属性池（倍率 1/2/3 对应基础/黄金/棱彩锻造器；无上限锻造 → 数值全部下调防崩坏）----
         // v0.5.0 数值上调：基础生命/攻击/防御多给一点，配得上三档价格
         FORGE_MODS.put("atk", mod(Attributes.ATTACK_DAMAGE, 0.5));

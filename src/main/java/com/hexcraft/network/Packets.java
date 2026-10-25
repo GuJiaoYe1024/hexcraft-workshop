@@ -113,12 +113,26 @@ public class Packets {
      */
     private static int realTotalXp(ServerPlayer sp) {
         int lvl = sp.experienceLevel;
-        long total = 0;
-        for (int i = 0; i < lvl; i++) {
-            total += xpNeededForLevel(i);
-        }
+        long total = xpTotalForLevel(lvl);
         total += (long) (sp.experienceProgress * xpNeededForLevel(lvl));
         return (int) Math.min(total, Integer.MAX_VALUE);
+    }
+
+    /** O(1) 计算到达某等级累计经验（原实现逐级 for 循环，极高经验等级下每次抽取都会卡顿） */
+    private static long xpTotalForLevel(int level) {
+        if (level <= 0) return 0;
+        if (level <= 15) return (long) level * (2L * 7 + 2L * (level - 1)) / 2; // 等差 7,9,...,7+2(level-1)
+        // 0~14 段：15 项等差 7..35，和 = 15*(7+35)/2 = 315
+        long total = 315;
+        // 15~29 段：等差 37,42,...（首 37 公差 5）
+        int n15 = Math.min(level, 30) - 15;
+        if (n15 > 0) total += (long) n15 * (2L * 37 + 5L * (n15 - 1)) / 2;
+        // 30+ 段：等差 112,121,...（首 112 公差 9）
+        if (level > 30) {
+            int n30 = level - 30;
+            total += (long) n30 * (2L * 112 + 9L * (n30 - 1)) / 2;
+        }
+        return total;
     }
 
     /** Minecraft 1.20 标准经验公式：某等级升到下一级所需经验点数 */
@@ -202,7 +216,10 @@ public class Packets {
                 if (offer.forge) {
                     oldMaxHp = sp.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).getValue();
                     // v0.6.9 棱彩锻造器「栏位扩展」特殊词条：非属性，直接解锁 1 个海克斯栏位
-                    if (pick.equals(PlayerData.SLOT_BOOST_HEX)) {
+                    // v0.6.15 修复：锻造池词条 id 是 "slot_boost"（HextechRegistry.forgePool），
+                    // 原代码误与海克斯 id "hex_slot_boost" 比较，永不匹配 → addForgeSlot 从未执行、栏位扩展不生效。
+                    // 现两种标识都接受（海克斯版与锻造版通用）。
+                    if (pick.equals("slot_boost") || pick.equals(PlayerData.SLOT_BOOST_HEX)) {
                         data.addForgeSlot();
                         sp.displayClientMessage(Component.translatable("message.hexcraft.slot_boost_forge"), true);
                     } else {
@@ -356,7 +373,7 @@ public class Packets {
         }
     }
 
-    // ================= C2S：购买装备三选一（price=2500 随机装备池 / 4000 随机棱彩装备池）=================
+    // ================= C2S：购买装备三选一（price=配置黄金装备费用随机装备池 / 配置棱彩费用随机棱彩装备池）=================
     public static class C2SBuyEquip {
         public int price;
         public static void encode(C2SBuyEquip m, FriendlyByteBuf b) { b.writeInt(m.price); }
@@ -371,13 +388,16 @@ public class Packets {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.roll_pending"), true);
                     return;
                 }
-                if (m.price != 2500 && m.price != 4000) return;
+                // v0.6.16 装备费用配置化：校验改为与配置值比对（服务端权威）
+                int goldCost = com.hexcraft.config.HexConfig.EQUIP_GOLD_COST.get();
+                int prismCost = com.hexcraft.config.HexConfig.EQUIP_PRISMATIC_COST.get();
+                if (m.price != goldCost && m.price != prismCost) return;
                 int finalPrice = discounted(data, m.price);
                 if (!data.deductCoins(finalPrice)) {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.coins_not_enough", finalPrice), true);
                     return;
                 }
-                boolean prismatic = m.price == 4000;
+                boolean prismatic = m.price == prismCost;
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(false, true, prismatic ? 1 : 0);
                 offer.options.addAll(HextechRegistry.rollEquipOptions(
                         prismatic ? com.hexcraft.hextech.HextechRarity.PRISMATIC : com.hexcraft.hextech.HextechRarity.GOLD));
@@ -597,6 +617,8 @@ public class Packets {
         // v0.6.11 栏位占用/有效上限（服务端权威，客户端海克斯页显示「占用/上限」；占用=occupiedSlots，上限=hexSlotLimit）
         public int occSlots;
         public int hexLimit;
+        // v0.6.16 服务端权威永久叠层上限（默认 200；客户端属性页叠层显示"生效层数"用，防"显示层数 vs 实际加成对不上"）
+        public int permStackCap;
 
         public static S2CSyncData of(PlayerData d, ServerPlayer sp) {
             S2CSyncData m = new S2CSyncData();
@@ -613,6 +635,7 @@ public class Packets {
             m.hexes.addAll(d.getHexes().stream().map(h -> {
                 PlayerData.HexEntry ne = new PlayerData.HexEntry(h.id, h.level);
                 ne.stacks = h.stacks;
+                ne.hurtStacks = h.hurtStacks; // v0.6.16 受击独立叠层随同步包下发
                 return ne;
             }).toList());
             m.forges.addAll(d.getForges().stream().map(f -> {
@@ -638,11 +661,14 @@ public class Packets {
             m.forgeCosts[0] = discounted(d, HexConfig.FORGE_BASIC_PRICE.get());
             m.forgeCosts[1] = discounted(d, HexConfig.FORGE_GOLD_PRICE.get());
             m.forgeCosts[2] = discounted(d, HexConfig.FORGE_PRISMATIC_PRICE.get());
-            m.equipGoldCost = discounted(d, 2500);
-            m.equipPrismaticCost = discounted(d, 4000);
+            m.equipGoldCost = discounted(d, com.hexcraft.config.HexConfig.EQUIP_GOLD_COST.get());
+            m.equipPrismaticCost = discounted(d, com.hexcraft.config.HexConfig.EQUIP_PRISMATIC_COST.get());
             m.worldDrawCost = worldDrawCost(sp);
             m.occSlots = d.occupiedSlots();
             m.hexLimit = d.hexSlotLimit();
+            // v0.6.16 服务端权威叠层上限：配置 0=无限制时下发 MAX_VALUE（客户端不显示"生效N"标注）
+            int pCap = HexConfig.PERMANENT_STACK_CAP.get();
+            m.permStackCap = pCap > 0 ? pCap : Integer.MAX_VALUE;
             return m;
         }
 
@@ -657,7 +683,7 @@ public class Packets {
             b.writeBoolean(m.keepEquips);
             b.writeBoolean(m.keepCoins);
             b.writeInt(m.hexes.size());
-            for (PlayerData.HexEntry h : m.hexes) { b.writeUtf(h.id); b.writeInt(h.level); b.writeInt(h.stacks); }
+            for (PlayerData.HexEntry h : m.hexes) { b.writeUtf(h.id); b.writeInt(h.level); b.writeInt(h.stacks); b.writeInt(h.hurtStacks); }
             b.writeInt(m.forges.size());
             for (PlayerData.ForgeEntry f : m.forges) { b.writeUtf(f.stat); b.writeInt(f.level); b.writeInt(f.stacks); b.writeInt(f.tier); }
             b.writeInt(m.equipment.size());
@@ -676,6 +702,7 @@ public class Packets {
             b.writeInt(m.worldDrawCost);
             b.writeInt(m.occSlots);
             b.writeInt(m.hexLimit);
+            b.writeInt(m.permStackCap); // v0.6.16 服务端权威永久叠层上限（客户端显示"生效层数"用）
         }
         public static S2CSyncData decode(FriendlyByteBuf b) {
             S2CSyncData m = new S2CSyncData();
@@ -692,6 +719,7 @@ public class Packets {
             for (int i = 0; i < hn; i++) {
                 PlayerData.HexEntry h = new PlayerData.HexEntry(b.readUtf(), b.readInt());
                 h.stacks = b.readInt();
+                h.hurtStacks = b.readInt();
                 m.hexes.add(h);
             }
             int fn = b.readInt();
@@ -728,6 +756,7 @@ public class Packets {
             m.worldDrawCost = b.readInt();
             m.occSlots = b.readInt();
             m.hexLimit = b.readInt();
+            m.permStackCap = b.readInt(); // v0.6.16
             return m;
         }
         public static void handle(S2CSyncData m, Supplier<NetworkEvent.Context> ctx) {
@@ -1077,6 +1106,42 @@ public class Packets {
 
         public static void sendTo(ServerPlayer sp) {
             PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), of());
+        }
+    }
+
+    // ================= v0.6.16 S2C：滚动提示（服务端→客户端队列渲染） =================
+    // 解决：随机馈赠/获取提示用 action bar 单条覆盖，多条提示互相顶掉且无队列；改为发完整
+    // Component JSON（客户端按玩家语言翻译），客户端 HexTipOverlay 滚动队列渲染（最多同屏 3 条）。
+    public static class S2CTipMessage {
+        public String json; // Component.Serializer.toJson(component)
+        public int type;    // 0=info 1=warn 2=gift
+
+        public static S2CTipMessage of(net.minecraft.network.chat.Component c, int type) {
+            S2CTipMessage m = new S2CTipMessage();
+            m.json = net.minecraft.network.chat.Component.Serializer.toJson(c);
+            m.type = type;
+            return m;
+        }
+
+        public static void encode(S2CTipMessage m, FriendlyByteBuf b) {
+            b.writeUtf(m.json);
+            b.writeInt(m.type);
+        }
+        public static S2CTipMessage decode(FriendlyByteBuf b) {
+            S2CTipMessage m = new S2CTipMessage();
+            m.json = b.readUtf();
+            m.type = b.readInt();
+            return m;
+        }
+
+        public static void handle(S2CTipMessage m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() ->
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.hexcraft.client.ClientPacketHandler.tip(m)));
+            ctx.get().setPacketHandled(true);
+        }
+
+        public static void sendTo(ServerPlayer sp, net.minecraft.network.chat.Component c, int type) {
+            PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), of(c, type));
         }
     }
 }
