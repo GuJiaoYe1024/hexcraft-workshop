@@ -1,0 +1,18 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "⚔",
+  "sell": 625,
+  "source": "artifacts",
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 2.0
+    },
+    {
+      "attr": "attack_speed",
+      "perLevel": 0.4
+    }
+  ],
+  "event": "artifact_rage:0.30,artifact_vamp:2"
+}

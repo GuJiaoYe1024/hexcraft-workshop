@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "source": "cataclysm",
+  "event": "cataclysm_damage:0.45,cataclysm_drop:0.30"
+}

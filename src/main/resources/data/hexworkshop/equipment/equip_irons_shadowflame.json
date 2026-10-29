@@ -1,0 +1,13 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "☠",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 80.0
+    }
+  ],
+  "event": "spell_crit:0.15,spell_execute:0.10"
+}

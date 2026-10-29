@@ -1,0 +1,6 @@
+{
+    "rarity": "PRISMATIC",
+    "weight": 4,
+    "source": "ftbquests",
+    "event": "goldmine:0.70,random_loot:0.30"
+}

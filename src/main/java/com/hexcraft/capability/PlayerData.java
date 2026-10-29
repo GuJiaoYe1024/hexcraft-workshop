@@ -418,6 +418,9 @@ public class PlayerData {
             }
         }
         for (ForgeEntry f : forges) {
+            // v0.6.21 事件型锻造词条（dragon_bane 等）：属性层跳过（attr 为 null 无属性可加），
+            // 实际效果由 HextechEvents.effect() 按事件键 × 等级 × 档位倍率汇总
+            if (com.hexcraft.hextech.HextechRegistry.forgeEventKey(f.stat) != null) continue;
             HextechDefinition.ModSpec mod = HextechRegistry.forgeMod(f.stat);
             if (mod == null) continue;
             // v0.5.0 段位强度：属性词条数值按锻造器档位乘倍率（白银×1 / 黄金×2 / 棱彩×3）——

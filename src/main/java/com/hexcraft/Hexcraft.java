@@ -43,6 +43,40 @@ public class Hexcraft {
         MinecraftForge.EVENT_BUS.register(HextechEvents.class);
         MinecraftForge.EVENT_BUS.register(com.hexcraft.event.WorldHexEvents.class);
         MinecraftForge.EVENT_BUS.register(HexCommand.class);
+        // v0.6.20 Iron's Spells 'n Spellbooks 法术联动：仅安装时挂载（未安装零副作用，联动内容自动隐藏）
+        if (net.minecraftforge.fml.ModList.get().isLoaded("irons_spellbooks")) {
+            com.hexcraft.link.IronsSpellLink.init();
+        }
+        // v0.6.21 冰与火之歌 / Alex's Caves / 暮色森林 三联动：各自仅安装时挂载（未安装零副作用）
+        if (net.minecraftforge.fml.ModList.get().isLoaded("iceandfire")) {
+            com.hexcraft.link.IceAndFireLink.init();
+        }
+        if (net.minecraftforge.fml.ModList.get().isLoaded("alexscaves")) {
+            com.hexcraft.link.AlexCavesLink.init();
+        }
+        if (net.minecraftforge.fml.ModList.get().isLoaded("twilightforest")) {
+            com.hexcraft.link.TwilightLink.init();
+        }
+        // v0.6.22 Alex's Mobs 联动：仅安装时挂载（未安装零副作用）
+        if (net.minecraftforge.fml.ModList.get().isLoaded("alexsmobs")) {
+            com.hexcraft.link.AlexMobsLink.init();
+        }
+        // v0.8.3 第二批联动（末地灾变/巫术/Mowzie's Mobs/神器/遗物/拔刀剑/农夫乐事/FTB Quests）：
+        // 8 组任一安装即挂载（未装的组事件判定自动不命中、抽取池自动隐藏，零副作用）
+        if (net.minecraftforge.fml.ModList.get().isLoaded("cataclysm")
+                || net.minecraftforge.fml.ModList.get().isLoaded("goety")
+                || net.minecraftforge.fml.ModList.get().isLoaded("mowziesmobs")
+                || net.minecraftforge.fml.ModList.get().isLoaded("artifacts")
+                || net.minecraftforge.fml.ModList.get().isLoaded("relics")
+                || net.minecraftforge.fml.ModList.get().isLoaded("slashblade")
+                || net.minecraftforge.fml.ModList.get().isLoaded("farmersdelight")
+                || net.minecraftforge.fml.ModList.get().isLoaded("ftbquests")) {
+            com.hexcraft.link.MoreLink.init();
+        }
+        // v0.8.3 ProjectE 等价交换联动（EMC A：充值页 EMC⇄晶币；EMC C：等价交换海克斯）：仅安装时挂载
+        if (net.minecraftforge.fml.ModList.get().isLoaded("projecte")) {
+            com.hexcraft.link.EmcLink.init();
+        }
 
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.hexcraft.client.ClientSetup.init());
     }

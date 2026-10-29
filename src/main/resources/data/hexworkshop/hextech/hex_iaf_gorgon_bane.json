@@ -1,0 +1,7 @@
+
+{
+    "rarity":  "GOLD",
+    "weight":  8,
+    "source":  "iceandfire",
+    "event":  "iaf_gorgon_damage:0.25,iaf_gorgon_resist:0.5"
+}

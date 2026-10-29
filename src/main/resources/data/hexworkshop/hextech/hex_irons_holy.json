@@ -1,0 +1,7 @@
+
+{
+  "rarity":  "PRISMATIC",
+  "weight":  5,
+  "source":  "irons_spellbooks",
+  "event":  "spell_holy:0.30,spell_heal_power:0.25"
+}

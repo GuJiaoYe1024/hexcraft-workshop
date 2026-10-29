@@ -1,0 +1,18 @@
+{
+    "rarity":  "GOLD",
+    "weight":  10,
+    "icon":  "☢",
+    "sell":  625,
+    "source":  "alexscaves",
+    "mods":  [
+                 {
+                     "perLevel":  5,
+                     "attr":  "armor"
+                 },
+                 {
+                     "perLevel":  40,
+                     "attr":  "max_health"
+                 }
+             ],
+    "event":  "ac_radiation_resist:0.5,ac_toxic_resist:0.5"
+}

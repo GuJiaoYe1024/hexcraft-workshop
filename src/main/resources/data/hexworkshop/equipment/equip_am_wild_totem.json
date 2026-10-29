@@ -1,0 +1,18 @@
+{
+    "rarity": "GOLD",
+    "weight": 10,
+    "icon": "☥",
+    "sell": 700,
+    "source": "alexsmobs",
+    "mods": [
+        {
+            "perLevel": 4,
+            "attr": "armor"
+        },
+        {
+            "perLevel": 2,
+            "attr": "attack_damage"
+        }
+    ],
+    "event": "am_mob_damage:0.15,am_totem:0.08"
+}

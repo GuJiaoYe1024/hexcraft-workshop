@@ -1,0 +1,18 @@
+{
+    "rarity":  "GOLD",
+    "weight":  10,
+    "icon":  "☾",
+    "sell":  625,
+    "source":  "twilightforest",
+    "mods":  [
+                 {
+                     "perLevel":  2,
+                     "attr":  "attack_damage"
+                 },
+                 {
+                     "perLevel":  40,
+                     "attr":  "max_health"
+                 }
+             ],
+    "event":  "tf_boss_damage:0.15,tf_dimension_resist:0.15"
+}

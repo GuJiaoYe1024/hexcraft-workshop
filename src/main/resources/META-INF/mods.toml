@@ -9,12 +9,31 @@ displayName="Hexcraft Workshop 海克斯工坊"
 logoFile="hexworkshop_icon.png"
 description='''Hexcraft Workshop (海克斯工坊)
 以「双资源 → 三选一构筑」为核心的玩法强化模组，灵感来自英雄联盟海克斯大乱斗与斗魂竞技场。
-- 131 种海克斯增幅（白银/黄金/棱彩）：复合机制、永续成长、附魔与矿物联动、7 个海克斯×装备×锻造×交易联动
-- 属性锻造器：9 属性 + 16 机制词条，锻造无上限、数值消毒防崩坏
-- 44 件词条装备：无尽之刃、饮血剑、心之钢等 LOL 风格机制移植
-- 完整经济系统：击杀掉落晶币，6 种金属锭双向兑换（批量至 ×256）
+- 339 种海克斯增幅（白银/黄金/棱彩）：复合机制、永续成长、附魔与矿物联动，原版池精炼去重、联动池持续扩充
+- 属性锻造器：13 属性 + 5 法术属性（联动）+ 5 事件锻造词条，锻造无上限、数值消毒防崩坏
+- 61 件词条装备：无尽之刃、饮血剑、心之钢等 LOL 风格机制移植，法强系装备法术联动，各联动模组均有专属装备
+- 世界海克斯 44 个：全服进度级构筑，生物/进度两种抽取途径
+- 完整经济系统：击杀掉落晶币，绿宝石双向兑换
 - TACZ 自动联动：安装永恒枪械工坊即解锁枪械海克斯/装备/锻造词条，弹药回复直通枪内子弹；未安装自动剔除
-- Cloth Config 标准配置界面：抽取/经济/联动/客户端/游戏规则五分类
+- Iron's Spells 自动联动：安装法术与魔法书即解锁 29 个法术海克斯（施法/魔力/法术伤害/九大学校流派）、法术锻造词条、卢登/影焰/巫妖之祸法术联动；未安装自动剔除
+- 冰与火之歌 自动联动：屠龙者/抗性/龙族克制海克斯与锻造词条
+- Alex's Caves 自动联动：辐射防护/洞穴生物克制海克斯与锻造词条
+- 暮色森林 自动联动：BOSS 进度/维度专属海克斯与锻造词条
+- Alex's Mobs 自动联动：野兽/异兽克制海克斯与锻造词条
+- Cataclysm 自动联动：末地灾变生物克制海克斯与专属装备
+- Goety 自动联动：亡灵/巫术灵魂体系海克斯与专属装备
+- Mowzie's Mobs 自动联动：巨兽/冰霜克制海克斯与专属装备
+- Artifacts 自动联动：神器狂暴/汲血海克斯与专属装备
+- Relics 自动联动：遗物力量/守护海克斯与专属装备
+- SlashBlade 自动联动：拔刀斩击/爆发海克斯与专属装备
+- Farmer's Delight 自动联动：农夫料理/丰收海克斯与专属装备
+- FTB Quests 自动联动：任务/战利品海克斯与专属装备
+- ProjectE 自动联动：EMC 折算/转化海克斯与专属装备，充值页支持 EMC⇄晶币
+- 存储模组联动：超越维度 / 精妙背包 / 精致存储 解锁存取与远程取物海克斯
+- 所有联动内容均自动检测：未安装对应模组时自动剔除，配置界面可按模组独立开关
+- HUD 布局编辑器（默认 L 键）：三合一状态栏/滚动提示/页签位置全屏拖拽校准，坐标可配置
+- 三合一状态栏：生命+护甲+饱食合并显示，提示防卡顿队列
+- Cloth Config 标准配置界面：抽取/经济/联动/客户端/游戏规则/布局六大分类，联动分类按模组独立分组
 - 适配大型整合包：属性全走原版 API + 数值消毒，兼容 AttributeFix 等属性修复 MOD
 作者：GuJiaoYe、豆包'''
 authors="GuJiaoYe, 豆包"
@@ -39,3 +58,138 @@ mandatory=false
 versionRange="[10,)"
 ordering="NONE"
 side="CLIENT"
+
+# v0.3.x TACZ 永恒枪械工坊联动（可选依赖：不装不影响本体，装了解锁枪械内容）
+[[dependencies.hexworkshop]]
+modId="tacz"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+# v0.6.20 Iron's Spells 'n Spellbooks 法术联动（可选依赖：不装不影响本体，装了解锁法术内容）
+[[dependencies.hexworkshop]]
+modId="irons_spellbooks"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+# v0.6.21 冰与火之歌（Ice and Fire CE）联动（可选依赖：装了解锁屠龙/各族克制内容；依赖 Citadel）
+[[dependencies.hexworkshop]]
+modId="iceandfire"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+# v0.6.21 Alex's Caves 联动（可选依赖：装了解锁洞穴克制内容；依赖 Citadel）
+[[dependencies.hexworkshop]]
+modId="alexscaves"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+# v0.6.21 暮色森林联动（可选依赖：装了解锁 BOSS 进度/维度内容）
+[[dependencies.hexworkshop]]
+modId="twilightforest"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+# v0.6.22 Alex's Mobs 联动（可选依赖：装了解锁野兽克制内容；依赖 Citadel）
+[[dependencies.hexworkshop]]
+modId="alexsmobs"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+# v0.8.4 第二批联动（可选依赖：Cataclysm / Goety / Mowzie's Mobs / Artifacts / Relics / SlashBlade / Farmer's Delight / FTB Quests）
+[[dependencies.hexworkshop]]
+modId="cataclysm"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="goety"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="mowziesmobs"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="artifacts"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="relics"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="slashblade"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="farmersdelight"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="ftbquests"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+# v0.8.x ProjectE 等价交换联动（可选依赖：EMC 折算/转化海克斯、专属装备、充值页 EMC⇄晶币）
+[[dependencies.hexworkshop]]
+modId="projecte"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+# v0.8.x 存储模组联动（可选依赖：超越维度 / 精妙背包 / 精致存储）
+[[dependencies.hexworkshop]]
+modId="beyonddimensions"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="sophisticatedbackpacks"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hexworkshop]]
+modId="refinedstorage"
+mandatory=false
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"

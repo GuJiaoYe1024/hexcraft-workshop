@@ -20,6 +20,7 @@ import net.minecraftforge.network.PacketDistributor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /** 全部网络包（C2S 服务端结算；S2C 客户端渲染） */
@@ -449,6 +450,31 @@ public class Packets {
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
                 int[] rates = {30, 1, 2, 4, 8, 64}; // 绿宝石/铜/铁/金/钻石/下界合金
+                // v0.8.3 EMC 通道：material=6（ProjectE 已装时，主手物品按 EMC 折算晶币；dir 必须 0）
+                if (m.material == 6) {
+                    if (m.dir != 0) return;
+                    if (!net.minecraftforge.fml.ModList.get().isLoaded("projecte")) return;
+                    net.minecraft.world.item.ItemStack held = sp.getMainHandItem();
+                    if (held.isEmpty()) {
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.emc_no_item"), true);
+                        return;
+                    }
+                    long emc = com.hexcraft.link.EmcLink.getEMCValue(held);
+                    if (emc <= 0) {
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.emc_no_value"), true);
+                        return;
+                    }
+                    int gained = com.hexcraft.link.EmcLink.coinsForEMC(sp, emc * held.getCount());
+                    if (gained <= 0) {
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.emc_no_value"), true);
+                        return;
+                    }
+                    data.addCoins(gained);
+                    held.setCount(0);
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.emc_exchanged", gained), true);
+                    HextechEvents.sync(sp);
+                    return;
+                }
                 if (m.material < 0 || m.material >= rates.length) return;
                 int rate = rates[m.material];
                 net.minecraft.world.item.Item item = switch (m.material) {
@@ -1141,7 +1167,27 @@ public class Packets {
         }
 
         public static void sendTo(ServerPlayer sp, net.minecraft.network.chat.Component c, int type) {
+            // v0.6.22 防卡顿：服务端广播节流（默认开启）——同一玩家同一文本 500ms 内只广播 1 次，
+            // 狂刷的击杀/入账提示自动去重合并，降低联机网络与客户端渲染压力
+            // v0.7.5 馈赠提示（type=2）跳过节流：馈赠文本含随机物品名本就不同，且属重要提示不可丢弃
+            try {
+                if (com.hexcraft.config.HexConfig.PERF_TIP_THROTTLE.get() && type != 2) {
+                    UUID uid = sp.getUUID();
+                    String text = c.getString();
+                    long now = System.currentTimeMillis();
+                    Long last = LAST_SEND.get(uid);
+                    if (last != null && now - last < 500L && text.equals(LAST_TEXT.get(uid))) {
+                        return; // 同文本节流窗口内丢弃
+                    }
+                    LAST_SEND.put(uid, now);
+                    LAST_TEXT.put(uid, text);
+                }
+            } catch (Throwable ignored) { }
             PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), of(c, type));
         }
+
+        /** v0.6.22 提示广播节流状态（玩家 UUID → 上次发送时间 / 上次文本） */
+        private static final java.util.Map<UUID, Long> LAST_SEND = new java.util.concurrent.ConcurrentHashMap<>();
+        private static final java.util.Map<UUID, String> LAST_TEXT = new java.util.concurrent.ConcurrentHashMap<>();
     }
 }

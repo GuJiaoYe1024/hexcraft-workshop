@@ -1,0 +1,18 @@
+{
+    "rarity":  "GOLD",
+    "weight":  10,
+    "icon":  "⛨",
+    "sell":  700,
+    "source":  "iceandfire",
+    "mods":  [
+                 {
+                     "perLevel":  80,
+                     "attr":  "max_health"
+                 },
+                 {
+                     "perLevel":  6,
+                     "attr":  "armor"
+                 }
+             ],
+    "event":  "iaf_dragon_damage:0.25,iaf_dragon_resist:0.25"
+}

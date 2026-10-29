@@ -1,0 +1,18 @@
+{
+    "rarity":  "GOLD",
+    "weight":  10,
+    "icon":  "〰",
+    "sell":  700,
+    "source":  "alexscaves",
+    "mods":  [
+                 {
+                     "perLevel":  60,
+                     "attr":  "max_health"
+                 },
+                 {
+                     "perLevel":  2,
+                     "attr":  "attack_damage"
+                 }
+             ],
+    "event":  "ac_deep_breath:1,ac_deep_damage:0.3"
+}

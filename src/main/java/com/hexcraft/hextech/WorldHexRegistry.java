@@ -93,6 +93,13 @@ public class WorldHexRegistry {
         register("whx_world_combat_decay_fast", CAT_GENERAL, "gold", "combat_stack_decay:0.50");              // 战消：战斗叠层脱战衰减速度 +50%（更早清零）
         register("whx_world_combat_decay_slow", CAT_GENERAL, "gold", "combat_stack_decay:-0.30");             // 久战：战斗叠层脱战衰减速度 -30%（叠层留存更久）
         register("whx_world_timed_stack_short", CAT_GENERAL, "gold", "timed_stack_short:-0.50");              // 转瞬：计时叠层时长减半（到期更快消失）
+
+        // ============ v0.8.4 联动主题世界海克斯（全部复用现有事件键，不引入新机制）============
+        // 黄金：数值 + 少量百分比（对齐 v0.4.7 分层规范）
+        register("whx_link_emc_tax", CAT_GENERAL, "gold", "mob_coin_bonus:0.25,player_dmg:-0.10");            // 等价交换税：全服击杀晶币 +25%，输出 -10%（EMC 联动主题）
+        register("whx_link_farm_bounty", CAT_FRIENDLY, "gold", "passive_hp:8.0,tamed_regen:1.0");            // 丰收祝福：友好生物生命 +8，驯服生物回血 1（农夫乐事联动主题）
+        register("whx_link_soul_harvest", CAT_NEUTRAL, "gold", "neutral_atk:3.5,neutral_berserk:0.30");      // 灵魂收割：中立攻击 +3.5，受击 30% 反扑（巫术联动主题）
+        register("whx_link_cataclysm_omen", CAT_HOSTILE, "gold", "hostile_hp:8.0,hostile_debuff:0.25");      // 灾变前兆：敌对生命 +8，攻击 25% 施虚弱/缓慢（末地灾变联动主题）
     }
 
     private static void register(String id, String category, String rarity, String effect) {

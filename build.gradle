@@ -60,6 +60,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 repositories {
     maven { url = 'https://maven.minecraftforge.net/' }
     maven { url = 'https://maven.shedaniel.me/' }   // Cloth Config
+    maven { url = 'https://code.redspace.io/releases' } // Iron's Spells 'n Spellbooks 官方 maven
     mavenCentral()
 }
 
@@ -67,6 +68,11 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     // Cloth Config API（运行时由正式客户端的 Cloth Config v10 提供；此处仅编译期引用）
     implementation fg.deobf("me.shedaniel.cloth:cloth-config-forge:11.1.136")
+    // v0.6.20 Iron's Spells 'n Spellbooks 法术联动（compileOnly：仅编译期 API，不打包进产物；
+    // 运行时按 ModList.isLoaded 守卫，未安装该 mod 时联动代码不加载、联动内容自动隐藏）
+    compileOnly fg.deobf(files("H:/MC1314/.minecraft/versions/逆转未来2.3.2/mods/[Iron的法术与魔法书] irons_spellbooks-1.20.1-3.16.2.jar"))
+    // v0.6.21 冰与火之歌（Ice and Fire CE）联动（compileOnly：仅引用实体/伤害注册常量；未安装时联动内容自动隐藏）
+    compileOnly fg.deobf(files("H:/MC1314/.minecraft/versions/Create-Delight-Remake/mods/iceandfire-2.1.13-1.20.1-beta-5.jar"))
 }
 
 jar {

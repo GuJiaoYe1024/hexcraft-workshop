@@ -160,6 +160,14 @@ public class HextechPageScreen extends HexScaledScreen {
                     Component.translatable("hexcraft.gui.recharge_coin", c), 0xFFFFD700,
                     b -> sendExchange(1, 0, c)));
         }
+        // v0.8.3 EMC 通道（ProjectE 已装时显示）：主手物品按 EMC 折算晶币（一次整组；服务端按 4 EMC=1 晶币 × 汇率加成结算）
+        if (net.minecraftforge.fml.ModList.get().isLoaded("projecte")) {
+            int ey = cy2 + 22;
+            long emc = com.hexcraft.link.EmcLink.getEMCValue(this.minecraft.player.getMainHandItem());
+            this.addRenderableWidget(new HexButton(cx() + 4, ey + 12, 150, 12,
+                    Component.translatable("hexcraft.gui.emc_exchange", emc > 0 ? emc : 0), 0xFF7F7FFF,
+                    b -> sendExchange(0, 6, 1)));
+        }
     }
 
     private void sendExchange(int dir, int material, int count) {
@@ -273,7 +281,7 @@ public class HextechPageScreen extends HexScaledScreen {
         int y = (this.guiH() - H) / 2;
 
         // 深蓝紫渐变底板
-        g.fillGradient(x, y, x + W, y + H, 0xF40D1224, 0xE8241836);
+        g.fillGradient(x, y, x + W, y + H, 0xE80D1224, 0xD8241836);
         // 顶部霓虹光条（双色渐变 + 柔光层）
         g.fillGradient(x, y, x + W, y + 2, 0xFF4FD8FF, 0xFF7A6BFF);
         g.fill(x, y + 2, x + W, y + 3, 0x557A6BFF);
@@ -375,7 +383,20 @@ public class HextechPageScreen extends HexScaledScreen {
             idx = 2;
             inner = top + 4;
             for (String[] r : hiddenRows) {
-                drawAttrRow(g, inner, idx++, Component.translatable("hexcraft.effect." + r[0]), r[1]);
+                drawAttrRow(g, inner, idx, Component.translatable("hexcraft.effect." + r[0]), r[1]);
+                // v0.8.5 隐藏属性 hover 说明：来源 + 随构筑变化提示（与基础属性同款列拆分，避免两列覆盖）
+                int rowY = inner + (idx / 2) * ROW_H;
+                boolean inHoverRow = hoverY >= rowY - 1 && hoverY <= rowY + 13;
+                boolean inLeftCol = hoverX >= cx() + 4 && hoverX < cx() + 115;
+                boolean inRightCol = hoverX >= cx() + 115 && hoverX <= cx() + 226;
+                boolean hitOwnCol = (idx % 2 == 0) ? inLeftCol : inRightCol;
+                if (inHoverRow && hitOwnCol) {
+                    java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                    tip.add(Component.translatable("hexcraft.effect." + r[0]).withStyle(c -> c.withColor(0xFF9FE4FF)));
+                    tip.add(Component.translatable("hexcraft.gui.effect_hint").withStyle(c -> c.withColor(0xFFAAB6D8)));
+                    hoverTip = tip;
+                }
+                idx++;
             }
             top += box2H + 4;
         }
@@ -399,8 +420,22 @@ public class HextechPageScreen extends HexScaledScreen {
                 drawSectionTitle(g, inner, idx, Component.translatable("hexcraft.gui.stack_hex_title"));
                 idx += 2;
                 for (PlayerData.HexEntry h : stkHexes) {
-                    drawAttrRow(g, inner, idx++, Component.translatable("hexcraft.hextech." + h.id + ".name"),
+                    drawAttrRow(g, inner, idx, Component.translatable("hexcraft.hextech." + h.id + ".name"),
                             "×" + h.stacks + "层");
+                    // v0.8.5 成长叠层 hover：显示该海克斯完整机制说明 + 当前层数
+                    int rowY = inner + (idx / 2) * ROW_H;
+                    boolean inHoverRow = hoverY >= rowY - 1 && hoverY <= rowY + 13;
+                    boolean inLeftCol = hoverX >= cx() + 4 && hoverX < cx() + 115;
+                    boolean inRightCol = hoverX >= cx() + 115 && hoverX <= cx() + 226;
+                    boolean hitOwnCol = (idx % 2 == 0) ? inLeftCol : inRightCol;
+                    if (inHoverRow && hitOwnCol) {
+                        java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                        tip.add(Component.translatable("hexcraft.hextech." + h.id + ".name").withStyle(c -> c.withColor(0xFF9FE4FF)));
+                        tip.add(Component.translatable("hexcraft.hextech." + h.id + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
+                        tip.add(Component.literal("当前 " + h.stacks + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
+                        hoverTip = tip;
+                    }
+                    idx++;
                 }
             }
             if (!stkEqs.isEmpty()) {
@@ -408,8 +443,22 @@ public class HextechPageScreen extends HexScaledScreen {
                 drawSectionTitle(g, inner, idx, Component.translatable("hexcraft.gui.stack_equip_title"));
                 idx += 2;
                 for (PlayerData.EquipEntry e : stkEqs) {
-                    drawAttrRow(g, inner, idx++, Component.translatable("hexcraft.equip." + e.id + ".name"),
+                    drawAttrRow(g, inner, idx, Component.translatable("hexcraft.equip." + e.id + ".name"),
                             "×" + e.stacks + "层");
+                    // v0.8.5 装备叠层 hover：显示装备机制说明 + 当前层数
+                    int rowY = inner + (idx / 2) * ROW_H;
+                    boolean inHoverRow = hoverY >= rowY - 1 && hoverY <= rowY + 13;
+                    boolean inLeftCol = hoverX >= cx() + 4 && hoverX < cx() + 115;
+                    boolean inRightCol = hoverX >= cx() + 115 && hoverX <= cx() + 226;
+                    boolean hitOwnCol = (idx % 2 == 0) ? inLeftCol : inRightCol;
+                    if (inHoverRow && hitOwnCol) {
+                        java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                        tip.add(Component.translatable("hexcraft.equip." + e.id + ".name").withStyle(c -> c.withColor(0xFF9FE4FF)));
+                        tip.add(Component.translatable("hexcraft.equip." + e.id + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
+                        tip.add(Component.literal("当前 " + e.stacks + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
+                        hoverTip = tip;
+                    }
+                    idx++;
                 }
             }
             if (hasBattle) {
@@ -576,7 +625,8 @@ public class HextechPageScreen extends HexScaledScreen {
 
     private void renderHexes(GuiGraphics g, int y) {
         // v0.6.11 已拥有数量 + 栏位占用/上限（服务端权威 occSlots/hexLimit；满员红色提示）
-        g.drawString(this.font, Component.translatable("hexcraft.gui.owned_count", ClientDataStore.hexes.size()), cx() + 4, y + 68, 0xFF9FE4FF);
+        // v0.8.0 图鉴统计条：已拥有 / 当前分类可获取总数
+        g.drawString(this.font, Component.translatable("hexcraft.gui.hex_count", ClientDataStore.hexes.size(), totalHexCount()), cx() + 4, y + 68, 0xFF9FE4FF);
         String limStr = ClientDataStore.hexLimit >= Integer.MAX_VALUE ? "\u221E" : String.valueOf(ClientDataStore.hexLimit);
         Component slotText = Component.translatable("hexcraft.gui.hex_slot_bar", ClientDataStore.occSlots, limStr);
         boolean full = ClientDataStore.hexLimit < Integer.MAX_VALUE && ClientDataStore.occSlots == ClientDataStore.hexLimit;
@@ -608,16 +658,23 @@ public class HextechPageScreen extends HexScaledScreen {
                 name = name.copy().append(st.toString());
             }
             g.drawString(this.font, name, cx() + 6, ly, rarityColor(rk));
-            // 来源角标：联动 mod 内容（原版不标）——TACZ 青色 / 未来联动金色，一眼区分内容来源
+            // 来源角标：联动 mod 内容（原版不标）——TACZ 青色 / 其它联动金色，一眼区分内容来源
+            // v0.8.4：角标动态定位（名字后 4px），超右缘则不显示——第二批联动 modid 较长（CATACLYSM/FARMERSDELIGHT 等）固定 x 会溢出
             String src = HextechRegistry.sourceOf(h.id);
             if (!"vanilla".equals(src)) {
-                g.drawString(this.font, src.toUpperCase(java.util.Locale.ROOT), cx() + 186, ly,
-                        "tacz".equals(src) ? 0xFF4DE6FF : 0xFFFFD700);
+                int tagX = cx() + 6 + this.font.width(name) + 4;
+                String tag = src.toUpperCase(java.util.Locale.ROOT);
+                if (tagX + this.font.width(tag) <= cx() + 226) {
+                    g.drawString(this.font, tag, tagX, ly,
+                            "tacz".equals(src) ? 0xFF4DE6FF : 0xFFFFD700);
+                }
             }
-            // hover 提示：悬停查看海克斯具体效果（名称 + 描述 + 来源）
+            // hover 提示：悬停查看海克斯具体效果（名称 + 稀有度 + 描述 + 来源）
             if (hoverX >= cx() + 4 && hoverX <= cx() + 210 && hoverY >= ly - 1 && hoverY <= ly + HEX_ROW_H - 2) {
                 java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
                 tip.add(name.copy().withStyle(c -> c.withColor(rarityColor(rk))));
+                // v0.8.5 稀有度行（白银/黄金/棱彩），一眼看出品质档位
+                tip.add(Component.translatable("hexcraft.rarity." + rk).withStyle(c -> c.withColor(rarityColor(rk))));
                 tip.add(Component.translatable("hexcraft.hextech." + h.id + ".desc"));
                 // v0.6.2 叠层标签后缀：tooltip 运行时自动拼接【叠层：xxx｜xxx｜xxx】（新增海克斯仅改 JSON stackTag 数组）
                 String tagSuffix = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(
@@ -651,6 +708,16 @@ public class HextechPageScreen extends HexScaledScreen {
             if (hexCategoryOf(h.id, def) == hexCat) out.add(h);
         }
         return out;
+    }
+
+    /** v0.8.0 图鉴统计条：当前分类可获取海克斯总数（注册表同步缓存） */
+    private int totalHexCount() {
+        if (hexCat == 0) return ClientDataStore.hexRegistryCache.size();
+        int n = 0;
+        for (com.hexcraft.hextech.HextechDefinition d : ClientDataStore.hexRegistryCache.values()) {
+            if (hexCategoryOf(d.id, d) == hexCat) n++;
+        }
+        return n;
     }
 
     /** 海克斯分类判定：优先按 ID 关键词（tacz→枪械、enchant→附魔、mining/miner→矿物、firework→趣味），
@@ -892,10 +959,14 @@ public class HextechPageScreen extends HexScaledScreen {
                 String icon = def != null && def.icon != null ? def.icon : "◆";
                 String nm = Component.translatable("hexcraft.equip." + eq.id + ".name").getString();
                 g.drawString(this.font, icon + " " + nm, cx() + 6, ly, rarityColor(rk));
-                // 来源角标：TACZ 联动装备行尾青色「TACZ」（原版不标）
+                // 来源角标：联动装备行尾角标（原版不标）；v0.8.4 动态定位防长 modid 溢出
                 String src = HextechRegistry.sourceOf(eq.id);
                 if (!"vanilla".equals(src)) {
-                    g.drawString(this.font, src.toUpperCase(java.util.Locale.ROOT), cx() + 182, ly, 0xFF4DE6FF);
+                    int tagX = cx() + 6 + this.font.width(icon + " " + nm) + 4;
+                    String tag = src.toUpperCase(java.util.Locale.ROOT);
+                    if (tagX + this.font.width(tag) <= cx() + 228) {
+                        g.drawString(this.font, tag, tagX, ly, 0xFF4DE6FF);
+                    }
                 }
                 // hover 提示：悬停查看装备具体效果（名称 + 描述 + 卖价 + 来源）
                 if (def != null && hoverX >= cx() + 3 && hoverX <= cx() + 228 && hoverY >= ly - 1 && hoverY <= ly + 13) {
@@ -932,6 +1003,11 @@ public class HextechPageScreen extends HexScaledScreen {
     /** v0.6.5 装备图鉴：全部装备（含未拥有）列表，可滚动；列=名称/已拥有 Lv/卖价，来源在悬停提示 */
     private void renderEquipGallery(GuiGraphics g, int y) {
         java.util.List<String> ids = allEquipIds();
+        // v0.8.0 图鉴统计条：已拥有 / 总数（右对齐与图鉴按钮同行，不占列表空间）
+        int ownedCnt = 0;
+        for (String id : ids) if (ownedEquip(id) != null) ownedCnt++;
+        Component gs = Component.translatable("hexcraft.gui.gallery_stat", ownedCnt, ids.size());
+        g.drawString(this.font, gs, cx() + 226 - this.font.width(gs), y + 72, 0xFF9FE4FF);
         int top = y + 91;
         int bottom = y + 234;
         double s = uiScale();

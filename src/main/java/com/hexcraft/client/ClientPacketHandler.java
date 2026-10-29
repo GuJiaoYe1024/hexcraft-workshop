@@ -65,13 +65,24 @@ public class ClientPacketHandler {
         Minecraft.getInstance().setScreen(new com.hexcraft.client.gui.WorldRollScreen(msg));
     }
 
-    /** v0.6.16 滚动提示：解析 Component JSON 入客户端提示队列（HexTipOverlay 渲染） */
+    /** v0.6.16 滚动提示：解析 Component JSON 入客户端提示队列（HexTipOverlay 渲染）
+     *  v0.7.5 解析失败不再静默——记录日志便于定位"馈赠文本丢失"；成功推送也记录馈赠类型 */
     public static void tip(Packets.S2CTipMessage msg) {
         try {
             net.minecraft.network.chat.Component c =
                     net.minecraft.network.chat.Component.Serializer.fromJson(msg.json);
-            if (c != null) com.hexcraft.client.gui.HexTipOverlay.push(c.getString(), msg.type);
-        } catch (Exception ignored) {
+            if (c != null) {
+                String txt = c.getString();
+                com.hexcraft.client.gui.HexTipOverlay.push(txt, msg.type);
+                if (msg.type == 2) {
+                    com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft][Tip] gift tip pushed: {}", txt);
+                }
+            } else {
+                com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft][Tip] null component json: {}", msg.json);
+            }
+        } catch (Exception e) {
+            com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft][Tip] parse failed, tip dropped: {} err={}",
+                    msg.json, e.toString());
         }
     }
 

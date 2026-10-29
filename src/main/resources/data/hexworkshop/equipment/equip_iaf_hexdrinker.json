@@ -1,0 +1,18 @@
+{
+    "rarity":  "GOLD",
+    "weight":  10,
+    "icon":  "✦",
+    "sell":  625,
+    "source":  "iceandfire",
+    "mods":  [
+                 {
+                     "perLevel":  3,
+                     "attr":  "attack_damage"
+                 },
+                 {
+                     "perLevel":  4,
+                     "attr":  "armor"
+                 }
+             ],
+    "event":  "iaf_dragon_damage:0.15,iaf_dragon_resist:0.35"
+}

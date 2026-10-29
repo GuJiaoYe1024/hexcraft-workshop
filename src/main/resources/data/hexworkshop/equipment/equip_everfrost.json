@@ -9,5 +9,5 @@
       "perLevel": 30.0
     }
   ],
-  "event": "frost_bite:0.6"
+  "event": "frost_bite:0.6,spell_ice:0.25"
 }

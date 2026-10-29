@@ -151,6 +151,16 @@ public class HextechEvents {
                 }
             }
         }
+        // v0.6.21 事件型锻造词条：效果键匹配时按 等级×档位倍率 汇总（属性词条不在此列）
+        for (PlayerData.ForgeEntry f : data.getForges()) {
+            String ev = HextechRegistry.forgeEventKey(f.stat);
+            if (ev != null && ev.equals(effect)) {
+                try {
+                    double per = HextechRegistry.forgeMod(f.stat).perLevel;
+                    sum += per * f.level * forgeTierMult(f);
+                } catch (Exception ignored) { }
+            }
+        }
         return sum;
     }
 
@@ -257,6 +267,8 @@ public class HextechEvents {
             if (data == null) return;
             int coins = rollCoins(mob, killer);
             coins += (int) Math.floor(coins * effect(data, "coin_bonus"));
+            // v0.8.0 维度专属海克斯：下界贪欲（仅下界击杀生效）
+            if (inNether(killer)) coins += (int) Math.floor(coins * effect(data, "nether_coin"));
             // 世界海克斯独立乘区：全体玩家晶币获取倍率 + 击杀敌对生物晶币加成 + 固定晶币税（独立于玩家海克斯，不与其它 mod 冲突）
             if (mob.level() instanceof net.minecraft.server.level.ServerLevel whLevel) {
                 double whCoin = com.hexcraft.event.WorldHexEvents.coinMult(whLevel);
@@ -286,8 +298,8 @@ public class HextechEvents {
                     e.stacks = safeStackAdd(e.stacks, gain);
                     grew = true;
                     // 提示说清楚叠的是哪个海克斯
-                    killer.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                            Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.stack_named",
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), 0);
                 }
             }
             // 掷骰狂人：击杀几率免费获得一次随机锻造（档位与词条同步随机；tier 记录实际档位 → 强度倍率配档）
@@ -300,10 +312,10 @@ public class HextechEvents {
                 int refund = data.addForge(stat, 1, t);
                 if (refund > 0) {
                     data.addCoins(refund);
-                    killer.displayClientMessage(Component.translatable("message.hexcraft.forge_refund",
-                            Component.translatable("hexcraft.forge." + stat + ".name"), refund), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.forge_refund",
+                            Component.translatable("hexcraft.forge." + stat + ".name"), refund), 0);
                 }
-                killer.displayClientMessage(Component.translatable("message.hexcraft.dice_forge"), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.dice_forge"), 0);
                 grew = true;
             }
             if (grew) {
@@ -336,8 +348,8 @@ public class HextechEvents {
                     s.value = pCap;
                 }
                 if (s != null) {
-                    killer.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.stack_named",
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), 0);
                 }
                 killStacked = true;
             }
@@ -354,7 +366,7 @@ public class HextechEvents {
                                 o -> o != killer && o != mob && o.isAlive() && o instanceof net.minecraft.world.entity.monster.Monster)) {
                             applyBleed(other, (float) (maxDmg * (1 + spread)), 100);
                         }
-                        killer.displayClientMessage(Component.translatable("message.hexcraft.bleed_spread"), true);
+                        com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.bleed_spread"), 0);
                     }
                 }
             }
@@ -364,11 +376,11 @@ public class HextechEvents {
             double ammoBoost = 1.0;
             double ammo = effect(data, "tacz_ammo");
             if (ammo > 0 && restoreTaczAmmo(killer, ammo * ammoBoost)) {
-                killer.displayClientMessage(Component.translatable("message.hexcraft.tacz_ammo"), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.tacz_ammo"), 0);
             }
             double ammoFull = effect(data, "tacz_ammo_full");
             if (ammoFull > 0 && killer.getRandom().nextFloat() < (float) ammoFull && restoreTaczAmmo(killer, Math.min(1.0, 1.0 * ammoBoost))) {
-                killer.displayClientMessage(Component.translatable("message.hexcraft.tacz_ammo_full"), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.tacz_ammo_full"), 0);
             }
 
             // 连杀狂潮：击杀进入 5 秒狂潮（连杀刷新持续时间）
@@ -382,7 +394,7 @@ public class HextechEvents {
                 int bonus = (int) Math.floor(bounty * (mob.getMaxHealth() >= 120 ? 2 : 1));
                 if (bonus > 0) {
                     data.addCoins(bonus);
-                    killer.displayClientMessage(Component.translatable("message.hexcraft.bounty", bonus), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.bounty", bonus), 0);
                 }
             }
             // 引燃链：燃烧目标死亡爆炸
@@ -411,7 +423,7 @@ public class HextechEvents {
             double foodKill = effect(data, "food_on_kill");
             if (foodKill > 0) {
                 killer.getFoodData().eat(1 + (int) Math.round(foodKill), (float) foodKill);
-                killer.displayClientMessage(Component.translatable("message.hexcraft.food_kill"), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.food_kill"), 0);
             }
             // 击杀药水：potion_strength/potion_speed/potion_regen:秒数
             double pStr = effect(data, "potion_strength");
@@ -436,15 +448,15 @@ public class HextechEvents {
                     default -> MobEffects.JUMP;
                 };
                 applyTo(killer, rand, (int) (pRand * 20), 0);
-                killer.displayClientMessage(Component.translatable("message.hexcraft.potion_random"), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.potion_random"), 0);
             }
             // 豪赌：gold_gamble 击杀 50% 赚 n 晶币、50% 亏 1 晶币（余额不为负）
             double gamble = effect(data, "gold_gamble");
             if (gamble > 0) {
                 int win = killer.getRandom().nextFloat() < 0.5f ? (int) Math.round(gamble) : -1;
                 data.addCoins(win);
-                killer.displayClientMessage(Component.translatable(win >= 0 ? "message.hexcraft.gamble_win" : "message.hexcraft.gamble_lose",
-                        Math.abs(win)), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable(win >= 0 ? "message.hexcraft.gamble_win" : "message.hexcraft.gamble_lose",
+                        Math.abs(win)), 0);
                 sync(killer);
             }
             // 净化：cleanse 击杀清除随机 1 个负面效果
@@ -456,7 +468,7 @@ public class HextechEvents {
                 }
                 if (!neg.isEmpty()) {
                     killer.removeEffect(neg.get(killer.getRandom().nextInt(neg.size())).getEffect());
-                    killer.displayClientMessage(Component.translatable("message.hexcraft.cleanse"), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.cleanse"), 0);
                 }
             }
             // 随机馈赠：random_loot 击杀随机获得 1 件随机物品（全物品池：原版+全部模组物品，过滤空气与技术物品）
@@ -480,21 +492,30 @@ public class HextechEvents {
                         } else {
                             int n = 1 + killer.getRandom().nextInt(1 + (int) Math.round(rl));
                             net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(item, n);
-                            boolean dropped = !killer.getInventory().add(st);
-                            if (dropped) {
-                                killer.drop(st, false);
-                            }
+                            // v0.7.0 馈赠改掉落物发放（不再直接塞入玩家背包）：
+                            // 在击杀者脚边生成真实物品实体，由玩家自己走近拾取（自动吸入背包）。
+                            // 根治"直接入包路径下提示文本显示空气"的问题——掉落物形式文本永远携带真实物品名；
+                            // 背包满时物品自然留在原地等待拾取，不再丢失。
+                            net.minecraft.world.entity.item.ItemEntity ent = new net.minecraft.world.entity.item.ItemEntity(
+                                    killer.level(), killer.getX(), killer.getY() + 0.5, killer.getZ(), st);
+                            ent.setPickUpDelay(10); // 短暂拾取延迟，防止与击杀同帧重复叠加
+                            ent.setNoGravity(false);
+                            killer.level().addFreshEntity(ent);
                             // v0.6.16 取证日志：记录实际物品注册 id 与 hoverName（再遇"空气"可从日志精确定位）
                             try {
                                 net.minecraft.resources.ResourceLocation rl2 = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item);
-                                LOGGER.info("[Hexcraft][Gift] gave {} x{} to {} (hoverName='{}', dropped={})",
+                                LOGGER.info("[Hexcraft][Gift] dropped {} x{} near {} (hoverName='{}')",
                                         rl2 == null ? "?" : rl2.toString(), n, killer.getName().getString(),
-                                        st.getHoverName().getString(), dropped);
+                                        st.getHoverName().getString());
                             } catch (Exception ignored) { }
-                            // v0.6.16 提示走滚动通道（gift 蓝），带实际物品名与数量；背包已满时注明掉落
+                            // v0.7.0 提示走滚动通道（gift 蓝），带实际物品名与数量 + 掉落拾取说明
+                            // v0.7.5 物品名改纯文本参数：hoverName 组件序列化后客户端 fromJson 偶发失败
+                            // （mod 物品自定义 chat 类型）→ 整条提示静默丢失（"馈赠文本没了"根因候选）；
+                            // 用服务端已翻译的纯文本字符串参数，彻底规避序列化/反序列化问题。
                             net.minecraft.network.chat.MutableComponent tipMsg = net.minecraft.network.chat.Component.translatable(
-                                    "message.hexcraft.random_loot", st.getHoverName(), n);
-                            if (dropped) tipMsg.append(net.minecraft.network.chat.Component.translatable("message.hexcraft.random_loot_dropped"));
+                                    "message.hexcraft.random_loot",
+                                    net.minecraft.network.chat.Component.literal(st.getHoverName().getString()), n);
+                            tipMsg.append(net.minecraft.network.chat.Component.translatable("message.hexcraft.random_loot_dropped"));
                             com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, tipMsg, 2); // 2=馈赠(gift)蓝
                         }
                     }
@@ -608,6 +629,18 @@ public class HextechEvents {
         return direct != null && direct.getClass().getName().contains("tacz");
     }
 
+    // ================= v0.8.0 维度专属海克斯：仅对应维度生效 =================
+
+    /** 是否在末地（任意层级：主世界存档的子末地也算末地维度） */
+    private static boolean inEnd(net.minecraft.world.entity.Entity e) {
+        return e != null && e.level() != null && e.level().dimension().equals(net.minecraft.world.level.Level.END);
+    }
+
+    /** 是否在下界 */
+    private static boolean inNether(net.minecraft.world.entity.Entity e) {
+        return e != null && e.level() != null && e.level().dimension().equals(net.minecraft.world.level.Level.NETHER);
+    }
+
     /** 战利品翻倍：loot_double 使生物自身掉落数量翻倍（范围不限，生物掉什么都翻倍；海克斯/装备通用） */
     @SubscribeEvent
     public static void onLootDrops(net.minecraftforge.event.entity.living.LivingDropsEvent event) {
@@ -670,6 +703,8 @@ public class HextechEvents {
 
         float dmgMul = 1.0f;
         double crit = effect(data, "crit");
+        // v0.8.0 维度专属海克斯：末地珍珠掌控暴击率并入常规暴击判定
+        if (inEnd(sp)) crit += effect(data, "end_crit");
         if (crit > 0 && sp.getRandom().nextFloat() < (float) crit) {
             dmgMul *= 1.5f * (float) (1 + effect(data, "crit_damage")); // 重磅一击：暴击伤害提升
         }
@@ -692,6 +727,9 @@ public class HextechEvents {
         boolean ranged = !melee && !tacz && direct != null;
         if (melee) dmgMul *= (float) (1 + effect(data, "melee_power"));
         if (ranged) dmgMul *= (float) (1 + effect(data, "ranged_power"));
+        // v0.8.0 维度专属海克斯：末地/下界攻击伤害提升（仅对应维度生效）
+        if (inEnd(sp)) dmgMul *= (float) (1 + effect(data, "end_damage"));
+        else if (inNether(sp)) dmgMul *= (float) (1 + effect(data, "nether_damage"));
         if (tacz) {
             dmgMul *= (float) (1 + effect(data, "tacz_power"));
             double tc = effect(data, "tacz_crit");
@@ -987,8 +1025,8 @@ public class HextechEvents {
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
                 if (perStack > 0 && s != null && s.value > 0) {
                     extraDamage(sp, target, amount * (float) perStack * (float) s.value);
-                    sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), 0);
                 }
                 hexStacked = true;
             }
@@ -1010,14 +1048,14 @@ public class HextechEvents {
             double bleedHit = effect(data, "bleed_damage");
             if (bleedHit > 0) {
                 applyBleed(target, amount * (float) bleedHit * 0.1f, 100);
-                sp.displayClientMessage(Component.translatable("message.hexcraft.bleed_apply"), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.bleed_apply"), 0);
             }
             // 减速：命中施加减速（持续 4 秒，等级加深最高 3 级）
             double slowHit = effect(data, "slow_on_hit");
             if (slowHit > 0) {
                 int amp = Math.min(3, Math.max(0, (int) Math.floor(slowHit * 4)));
                 applyTo(target, MobEffects.MOVEMENT_SLOWDOWN, 80, amp);
-                sp.displayClientMessage(Component.translatable("message.hexcraft.slow_hit", amp + 1), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.slow_hit", amp + 1), 0);
             }
             // 处决者（mark_execute）：命中自动标记目标（3.5 秒）；目标生命 ≤ 20% 最大生命时立即处决（最大生命 × 35% 魔法伤害，不触发反伤/不递归）
             double exec = effect(data, "mark_execute");
@@ -1027,16 +1065,16 @@ public class HextechEvents {
                 if (target.getHealth() <= thr) {
                     target.hurt(sp.damageSources().magic(), target.getMaxHealth() * 0.35f);
                     MARKS.remove(target.getUUID());
-                    sp.displayClientMessage(Component.translatable("message.hexcraft.mark_execute"), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.mark_execute"), 0);
                 } else {
-                    sp.displayClientMessage(Component.translatable("message.hexcraft.mark_target"), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.mark_target"), 0);
                 }
             }
             // 猎手标记（mark_target）：命中概率标记目标（3.5 秒；配合处决者消耗）
             double markT = effect(data, "mark_target");
             if (markT > 0 && sp.getRandom().nextFloat() < (float) Math.min(1.0, markT)) {
                 applyMark(sp, target);
-                sp.displayClientMessage(Component.translatable("message.hexcraft.mark_target"), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.mark_target"), 0);
             }
             // 命中刷新战斗叠层脱战计时
             data.refreshCombatStacks();
@@ -1071,7 +1109,7 @@ public class HextechEvents {
             double goldPunch = effect(data, "gold_punch");
             if (goldPunch > 0 && sp.getRandom().nextFloat() < (float) goldPunch) {
                 data.addCoins(1);
-                sp.displayClientMessage(Component.translatable("message.hexcraft.gold_punch"), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.gold_punch"), 0);
             }
             // 心之钢等：攻击命中概率叠永久属性层（stack_attr_onhit:键:倍率，25% 几率）；叠角龙在场时叠层翻倍——提示带海克斯名称
             // v0.4.3 修复：荆棘/反伤伤害不再无脑触发叠层；v0.4.7 起：反伤默认在 onDamageDealt 开头已短路（纯反伤），
@@ -1085,8 +1123,8 @@ public class HextechEvents {
                     if (sp.getRandom().nextFloat() < hitChance) {
                         e.stacks = safeStackAdd(e.stacks, gainWithMult(onHitMult, sp.getRandom()));
                         data.applyModifiers(sp);
-                        sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                                Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), true);
+                        com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
+                                Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), 0);
                         attrStacked = true;
                     }
                 }
@@ -1099,8 +1137,8 @@ public class HextechEvents {
                     if (sp.getRandom().nextFloat() < hitChance) {
                         eq.stacks = safeStackAdd(eq.stacks, gainWithMult(onHitMult, sp.getRandom()));
                         data.applyModifiers(sp);
-                        sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
-                                Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), true);
+                        com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.equip_stack_named",
+                                Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), 0);
                         attrStacked = true;
                     }
                 }
@@ -1195,6 +1233,28 @@ public class HextechEvents {
         if (fireResist > 0 && event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FIRE)) {
             event.setAmount((float) (event.getAmount() * (1 - Math.min(0.9, fireResist))));
         }
+        // v0.8.0 维度专属海克斯：末地摔落/虚空减伤、下界火焰/岩浆减伤（仅对应维度生效，独立乘区）
+        if (inEnd(sp)) {
+            double fallRed = effect(data, "end_fall_reduce");
+            if (fallRed > 0 && event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FALL)) {
+                event.setAmount((float) (event.getAmount() * (1 - Math.min(0.95, fallRed))));
+            }
+            double voidRed = effect(data, "end_void_reduce");
+            if (voidRed > 0 && event.getSource().getMsgId().contains("outOfWorld")) {
+                event.setAmount((float) (event.getAmount() * (1 - Math.min(0.95, voidRed))));
+            }
+        } else if (inNether(sp)) {
+            double lavaRed = effect(data, "nether_lava_reduce");
+            if (lavaRed > 0 && event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
+                    && event.getSource().getMsgId().contains("lava")) {
+                event.setAmount((float) (event.getAmount() * (1 - Math.min(0.95, lavaRed))));
+            }
+            double nFireRed = effect(data, "nether_fire_reduce");
+            if (nFireRed > 0 && event.getSource().is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
+                    && !event.getSource().getMsgId().contains("lava")) {
+                event.setAmount((float) (event.getAmount() * (1 - Math.min(0.95, nFireRed))));
+            }
+        }
         // v0.6.0 额外护甲减伤（独立乘区，突破原版护甲减伤天花板）：护甲超过阈值后每点再减 X%（上限 Y%）
         // 原版 1.20.1 护甲公式在 LivingHurtEvent 之后结算，此处乘区与之相乘 → 高护甲无上限锻造仍有收益
         if (com.hexcraft.config.HexConfig.EXTRA_ARMOR_CAP.get() > 0) {
@@ -1224,7 +1284,7 @@ public class HextechEvents {
                 && sp.getRandom().nextFloat() < (float) defy) {
             event.setCanceled(true);
             sp.heal(sp.getMaxHealth() * 0.30f);
-            sp.displayClientMessage(Component.translatable("message.hexcraft.death_defy"), true);
+            com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.death_defy"), 0);
             return;
         }
         // 应急护盾：低血时维持吸收护盾
@@ -1248,8 +1308,8 @@ public class HextechEvents {
             data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"), 1 + effect(data, "stack_cap") + whCapBonusHurt);
             PlayerData.StackEntry s = data.getStack(sdef.stack.key);
             if (s != null) {
-                sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                        Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
+                        Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), 0);
             }
             hurtStacked = true;
         }
@@ -1264,8 +1324,8 @@ public class HextechEvents {
                 if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
                     e.hurtStacks = safeStackAdd(e.hurtStacks, gainWithMult(hurtMult, sp.getRandom()));
                     data.applyModifiers(sp);
-                    sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                            Component.translatable("hexcraft.hextech." + e.id + ".name"), e.hurtStacks), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), e.hurtStacks), 0);
                     attrHurtStacked = true;
                 }
             }
@@ -1276,8 +1336,8 @@ public class HextechEvents {
                 if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
                     eq.stacks = safeStackAdd(eq.stacks, 1);
                     data.applyModifiers(sp);
-                    sp.displayClientMessage(Component.translatable("message.hexcraft.equip_stack_named",
-                            Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.equip_stack_named",
+                            Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), 0);
                     attrHurtStacked = true;
                 }
             }
@@ -1289,7 +1349,7 @@ public class HextechEvents {
                 && directAtk != sp && directAtk.isAlive()) {
             if (sp.getRandom().nextFloat() < (float) Math.min(1.0, thornFire)) {
                 directAtk.setSecondsOnFire(4);
-                sp.displayClientMessage(Component.translatable("message.hexcraft.thorns_fire"), true);
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.thorns_fire"), 0);
             }
         }
         if (hurtStacked || attrHurtStacked) sync(sp);
@@ -1384,10 +1444,13 @@ public class HextechEvents {
     }
 
     /**
-     * 矿物系海克斯（1.20.1 BreakEvent 无掉落列表可改 → 有海克斯时 cancel 原版流程，
-     * 手动破坏 + 应用效果生成掉落；无相关海克斯的玩家完全走原版，零开销）。
-     * 主方块与「矿脉共鸣」连锁子方块统一走 {@link #processMining}，
-     * 保证连锁挖掉的矿石同样享受 熔炼/时运翻倍/磁铁拾取，并吃到原版时运附魔及其它 mod 加成。
+     * 矿物系海克斯（v0.8.1 接入点重构）。
+     * 1.20.1 Forge 无破坏后掉落事件（BlockDropItemEvent 为 NeoForge 才有），原实现「setCanceled + 手动破坏重算掉落」会
+     * 打断第三方连锁挖矿 mod 的流程、且 getDrops 异常时掉落凭空消失。现改为：
+     *   ① BreakEvent 中不取消原版破坏，仅登记掉落增强上下文；
+     *   ② 掉落物实体加入世界（EntityJoinLevelEvent，与原版 popResource 同一调用栈）时按海克斯应用效果：
+     *      时运翻倍 / 冶炼 / 探矿 / 磁铁拾取 / 挖矿经验 / 矿脉共鸣连锁。
+     * 原版流程、第三方连锁、其它 mod 掉落全保留；getDrops 无结果时也由原版兜底，不再出现"挖掘不掉落物"。
      */
     @SubscribeEvent
     public static void onBlockBreak(net.minecraftforge.event.level.BlockEvent.BreakEvent event) {
@@ -1399,100 +1462,129 @@ public class HextechEvents {
         double mxp = effect(data, "mining_xp");
         double luck = effect(data, "mining_luck");
         double magnet = effect(data, "mining_magnet");
-        // 连锁子方块（VEIN_BUSY=true）复用统一处理但不触发二次连锁
         double vein = VEIN_BUSY ? 0 : effect(data, "mining_vein");
         if (fortune <= 0 && smelt <= 0 && mxp <= 0 && luck <= 0 && magnet <= 0 && vein <= 0) return;
         net.minecraft.world.level.block.state.BlockState state = event.getState();
         boolean ore = isOreBlock(state.getBlock());
-        if (!ore && luck <= 0 && mxp <= 0) return; // 非矿物方块只处理 探矿/经验
-        processMining(sp, state, event.getPos(), ore,
-                fortune, smelt, luck, magnet, mxp, event.getExpToDrop(), vein, event);
+        if (!ore && luck <= 0 && mxp <= 0) return; // 非矿物方块仅探矿/经验生效
+        if (!(sp.level() instanceof net.minecraft.server.level.ServerLevel slevel)) return;
+        MINING_CTX.put(event.getPos().asLong(), new MiningCtx(sp, state, ore,
+                fortune, smelt, luck, magnet, mxp, vein, slevel.getGameTime()));
     }
 
-    /**
-     * 统一矿物处理：取消原版破坏 → 手动破坏（不产掉落）→ 原版掉落（含时运/精准采集/其它 mod 加成）
-     * → 海克斯时运翻倍 → 熔炼（静态表快查 + 冶炼配方兜底，兼容其它 mod 矿石）→ 探矿/磁铁 → 生成掉落与经验 → 连锁开采。
-     * @param vein 仅主方块 >0；连锁子方块传 0（不二次连锁）
-     */
-    private static void processMining(ServerPlayer sp, net.minecraft.world.level.block.state.BlockState state,
-                                      net.minecraft.core.BlockPos pos, boolean ore,
-                                      double fortune, double smelt, double luck, double magnet, double mxp,
-                                      int exp, double vein, net.minecraftforge.event.level.BlockEvent.BreakEvent event) {
-        net.minecraft.server.level.ServerLevel slevel = (net.minecraft.server.level.ServerLevel) sp.level();
-        if (event != null) event.setCanceled(true); // 取消原版破坏流程（主方块与连锁子方块统一）
-        slevel.destroyBlock(pos, false);
+    /** 矿物掉落增强上下文（v0.8.1）：BreakEvent 登记 → 掉落物 join 时消费；按世界 tick 判过期，防泄漏 */
+    private static final class MiningCtx {
+        final ServerPlayer player;
+        final net.minecraft.world.level.block.state.BlockState state;
+        final boolean ore;
+        final double fortune, smelt, luck, magnet, mxp, vein;
+        final long tick;
+        boolean prospected; // 探矿之眼每方块仅触发一次
+        boolean expDone;    // 挖矿经验每方块仅补发一次
+        boolean veined;     // 矿脉共鸣每方块仅连锁一次
+        MiningCtx(ServerPlayer player, net.minecraft.world.level.block.state.BlockState state, boolean ore,
+                  double fortune, double smelt, double luck, double magnet, double mxp, double vein, long tick) {
+            this.player = player;
+            this.state = state;
+            this.ore = ore;
+            this.fortune = fortune;
+            this.smelt = smelt;
+            this.luck = luck;
+            this.magnet = magnet;
+            this.mxp = mxp;
+            this.vein = vein;
+            this.tick = tick;
+        }
+    }
 
-        // 原版掉落（含精准采集/时运附魔/其它 mod 掉落加成）；镐挖矿物时的 self drop 也由 getDrops 处理
-        java.util.List<net.minecraft.world.item.ItemStack> drops =
-                net.minecraft.world.level.block.Block.getDrops(state, slevel, pos, slevel.getBlockEntity(pos), sp, sp.getMainHandItem());
-        // 时运降临：矿物掉落翻倍（连锁子方块同样生效）
-        if (fortune > 0 && ore) {
-            java.util.List<net.minecraft.world.item.ItemStack> copy = new java.util.ArrayList<>(drops);
-            for (net.minecraft.world.item.ItemStack s : copy) {
-                net.minecraft.world.item.ItemStack d = s.copy();
-                d.setCount(Math.max(1, s.getCount() * (int) fortune));
-                drops.add(d);
+    /** BreakEvent → 原版破坏 → 掉落物实体加入世界（同一调用栈）。登记表按 pos 关联，仅消费本次破坏生成的掉落。 */
+    private static final Map<Long, MiningCtx> MINING_CTX = new ConcurrentHashMap<>();
+
+    /** 矿物掉落增强：掉落物落地瞬间应用 时运翻倍/冶炼/探矿/磁铁/经验/矿脉共鸣（v0.8.1） */
+    @SubscribeEvent
+    public static void onItemEntityJoin(net.minecraftforge.event.entity.EntityJoinLevelEvent event) {
+        if (!(event.getEntity() instanceof net.minecraft.world.entity.item.ItemEntity ie)) return;
+        if (!(ie.level() instanceof net.minecraft.server.level.ServerLevel slevel)) return;
+        if (MINING_CTX.isEmpty()) return;
+        long posKey = ie.blockPosition().asLong();
+        MiningCtx ctx = MINING_CTX.get(posKey);
+        if (ctx == null) return;
+        long now = slevel.getGameTime();
+        if (now - ctx.tick > 2) { // 过期：不是本次破坏的掉落（如玩家扔出），忽略并清理
+            MINING_CTX.remove(posKey);
+            return;
+        }
+        net.minecraft.world.item.ItemStack st = ie.getItem();
+        if (st == null || st.isEmpty()) return;
+        ServerPlayer sp = ctx.player;
+        // 时运降临：矿物掉落翻倍（每件掉落均翻倍，防堆叠上限溢出）
+        if (ctx.fortune > 0 && ctx.ore) {
+            int mult = Math.max(1, (int) ctx.fortune);
+            if (mult > 1) st.setCount(Math.min(st.getMaxStackSize(), st.getCount() * mult));
+        }
+        // 冶炼之触：原矿自动烧炼成锭（静态表快查，未命中走冶炼配方 → 兼容其它 mod 矿石）
+        if (ctx.smelt > 0 && ctx.ore) {
+            net.minecraft.world.item.Item smelted = SMELT_MAP.get(st.getItem());
+            if (smelted == null) smelted = smeltByRecipe(slevel, st);
+            if (smelted != null) ie.setItem(new net.minecraft.world.item.ItemStack(smelted, st.getCount()));
+        }
+        // 自动拾取：掉落优先存入存储 mod（超越维度→精妙背包→精致存储→背包），剩余留原地（v0.8.2）
+        if (ctx.magnet > 0) {
+            ItemStack remain = com.hexcraft.link.StorageLink.insert(sp, st);
+            if (remain == null || remain.isEmpty()) {
+                ie.discard();
+            } else if (remain.getCount() < st.getCount()) {
+                ie.setItem(remain); // 部分存入存储，剩余留在原地
             }
         }
-        // 冶炼之触：原矿自动烧炼成锭（静态表快查，未命中走冶炼配方系统 → 其它 mod 矿石只要有熔炉配方即可熔炼）
-        if (smelt > 0 && ore) {
-            for (int i = 0; i < drops.size(); i++) {
-                net.minecraft.world.item.ItemStack s = drops.get(i);
-                net.minecraft.world.item.Item smelted = SMELT_MAP.get(s.getItem());
-                if (smelted == null) smelted = smeltByRecipe(slevel, s);
-                if (smelted != null) drops.set(i, new net.minecraft.world.item.ItemStack(smelted, s.getCount()));
+        // 探矿之眼：挖普通方块几率额外掉贵重矿物（每方块一次）
+        if (ctx.luck > 0 && !ctx.ore && !ctx.prospected) {
+            ctx.prospected = true;
+            if (sp.getRandom().nextFloat() < (float) ctx.luck) {
+                net.minecraft.world.level.block.Block.popResource(slevel, ie.blockPosition(),
+                        new net.minecraft.world.item.ItemStack(RARE_ORES[sp.getRandom().nextInt(RARE_ORES.length)], 1));
             }
         }
-        // 探矿之眼：挖普通方块几率额外掉贵重矿物
-        if (luck > 0 && !ore && sp.getRandom().nextFloat() < (float) luck) {
-            drops.add(new net.minecraft.world.item.ItemStack(RARE_ORES[sp.getRandom().nextInt(RARE_ORES.length)], 1));
+        // 挖矿经验：海克斯额外经验（每方块一次；原版矿物经验由原版流程正常生成）
+        if (ctx.mxp > 0 && !ctx.expDone) {
+            ctx.expDone = true;
+            slevel.addFreshEntity(new net.minecraft.world.entity.ExperienceOrb(slevel,
+                    ie.getX(), ie.getY(), ie.getZ(), Math.max(1, (int) Math.floor(ctx.mxp))));
         }
-        // 自动拾取：掉落直接进背包（放不下留在原地）
-        if (magnet > 0) {
-            for (net.minecraft.world.item.ItemStack s : new java.util.ArrayList<>(drops)) {
-                if (sp.getInventory().add(s)) drops.remove(s);
-            }
+        // 矿脉共鸣：主方块掉落落地时连锁开采周围同种矿物（最多 8 个）；子方块 BreakEvent 因 VEIN_BUSY 不再二次连锁
+        if (ctx.vein > 0 && ctx.ore && !ctx.veined) {
+            ctx.veined = true;
+            chainVein(sp, slevel, ie.blockPosition(), ctx.state);
         }
-        // 生成掉落
-        for (net.minecraft.world.item.ItemStack s : drops) {
-            net.minecraft.world.level.block.Block.popResource(slevel, pos, s);
-        }
-        // 经验：事件已按方块/附魔算好（主方块与连锁子方块事件均提供）
-        if (exp > 0) {
-            sp.level().addFreshEntity(new net.minecraft.world.entity.ExperienceOrb(sp.level(),
-                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, exp));
-        }
-        if (mxp > 0) {
-            sp.level().addFreshEntity(new net.minecraft.world.entity.ExperienceOrb(sp.level(),
-                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, Math.max(1, (int) Math.floor(mxp))));
-        }
-        // 矿脉共鸣：挖掘矿物几率连锁开采周围同种矿物（最多 8 个）；子方块事件复用 processMining（vein=0）不二次连锁
-        if (vein > 0 && ore && sp.getRandom().nextFloat() < (float) vein) {
-            VEIN_BUSY = true;
-            try {
-                java.util.ArrayDeque<net.minecraft.core.BlockPos> queue = new java.util.ArrayDeque<>();
-                java.util.Set<Long> visited = new java.util.HashSet<>();
-                queue.add(pos);
-                visited.add(pos.asLong());
-                int mined = 0;
-                while (!queue.isEmpty() && mined < 8) {
-                    net.minecraft.core.BlockPos cur = queue.poll();
-                    if (!cur.equals(pos)) {
-                        if (!sp.level().getBlockState(cur).is(state.getBlock())) continue;
-                        sp.gameMode.destroyBlock(cur); // 触发 BreakEvent → VEIN_BUSY 分支 → processMining（熔炼/时运/拾取/经验，不连锁）
-                        mined++;
-                    }
-                    for (net.minecraft.core.Direction dir : net.minecraft.core.Direction.values()) {
-                        net.minecraft.core.BlockPos nb = cur.relative(dir);
-                        if (!visited.contains(nb.asLong()) && sp.level().getBlockState(nb).is(state.getBlock())) {
-                            visited.add(nb.asLong());
-                            queue.add(nb);
-                        }
+    }
+
+    /** 矿脉共鸣连锁：BFS 邻域同种矿物，逐个走原版破坏流程（每个子方块同样享受掉落增强，VEIN_BUSY 防二次连锁） */
+    private static void chainVein(ServerPlayer sp, net.minecraft.server.level.ServerLevel slevel,
+                                  net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
+        VEIN_BUSY = true;
+        try {
+            java.util.ArrayDeque<net.minecraft.core.BlockPos> queue = new java.util.ArrayDeque<>();
+            java.util.Set<Long> visited = new java.util.HashSet<>();
+            queue.add(pos);
+            visited.add(pos.asLong());
+            int mined = 0;
+            while (!queue.isEmpty() && mined < 8) {
+                net.minecraft.core.BlockPos cur = queue.poll();
+                if (!cur.equals(pos)) {
+                    if (!slevel.getBlockState(cur).is(state.getBlock())) continue;
+                    sp.gameMode.destroyBlock(cur); // 触发 BreakEvent → 登记 ctx → 原版破坏 → join 增强（不二次连锁）
+                    mined++;
+                }
+                for (net.minecraft.core.Direction dir : net.minecraft.core.Direction.values()) {
+                    net.minecraft.core.BlockPos nb = cur.relative(dir);
+                    if (!visited.contains(nb.asLong()) && slevel.getBlockState(nb).is(state.getBlock())) {
+                        visited.add(nb.asLong());
+                        queue.add(nb);
                     }
                 }
-            } finally {
-                VEIN_BUSY = false;
             }
+        } finally {
+            VEIN_BUSY = false;
         }
     }
 
@@ -1520,6 +1612,11 @@ public class HextechEvents {
         if (!(event.player instanceof ServerPlayer sp)) return;
         PlayerData data = ModCapabilities.get(sp);
         if (data == null) return;
+        // v0.8.1 矿物掉落增强上下文低频清理（每 128 tick 清一次超过 40 tick 的过期登记，防泄漏）
+        if ((sp.tickCount & 127) == 0 && !MINING_CTX.isEmpty()) {
+            long gt = sp.level().getGameTime();
+            MINING_CTX.entrySet().removeIf(e -> gt - e.getValue().tick > 40);
+        }
         // v0.6.16 TACZ 状态跟踪（仅持有对应海克斯的玩家记录，失去即清理，无界增长免疫）：
         // 架枪射击/走射专精共用位置跟踪；快速装填检测弹量 0→正（换弹完成）；切枪强化检测主手物品变化
         UUID uid = sp.getUUID();
@@ -1628,8 +1725,8 @@ public class HextechEvents {
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
                 if (s != null) {
                     s.timedTicks = data.timedBaseTicks(shortMult); // 刷新计时叠层剩余时长（到期自动消失）
-                    sp.displayClientMessage(Component.translatable("message.hexcraft.stack_named",
-                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), true);
+                    com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), 0);
                 }
                 tickStacked = true;
             }

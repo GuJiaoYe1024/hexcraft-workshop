@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "source": "goety",
+  "event": "goety_damage:0.30,goety_soul:1"
+}

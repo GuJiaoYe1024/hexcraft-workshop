@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 6,
+  "mods": [],
+  "event": "nether_lava_reduce:0.9,nether_fire_reduce:0.5"
+}

@@ -1,12 +1,20 @@
 package com.hexcraft.client.gui;
 
+import com.hexcraft.hextech.HextechRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.fml.ModList;
 
-/** 敬请期待页（v0.4.2）：世界海克斯左侧栏预留按钮点击后打开，提示更多分类开发中
- *  v0.4.4：接入 UI 缩放（配置「界面缩放」）。 */
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/** 联动总览页（v0.4.2 敬请期待页升级，v0.8.4 实装）：
+ *  世界海克斯左侧栏「联动总览」按钮打开，展示各联动 mod 的海克斯/装备统计与安装状态，
+ *  未安装的联动 mod 自动隐藏（内容不进入抽取池），已安装的按开关启用。 */
 public class FutureScreen extends HexScaledScreen {
     private static final Button.CreateNarration NARR = s -> s.get();
 
@@ -28,6 +36,30 @@ public class FutureScreen extends HexScaledScreen {
         }
     }
 
+    /** 联动来源显示名（modid → 展示名）；不在表中的 modid 原样显示 */
+    private static final Map<String, String> LINK_NAMES = new LinkedHashMap<>();
+
+    static {
+        LINK_NAMES.put("tacz", "TACZ 永恒枪械工坊");
+        LINK_NAMES.put("irons_spellbooks", "Iron's Spells 法术");
+        LINK_NAMES.put("iceandfire", "冰与火之歌");
+        LINK_NAMES.put("alexscaves", "Alex's Caves");
+        LINK_NAMES.put("twilightforest", "暮色森林");
+        LINK_NAMES.put("alexsmobs", "Alex's Mobs");
+        LINK_NAMES.put("cataclysm", "Cataclysm 末地灾变");
+        LINK_NAMES.put("goety", "Goety 巫术");
+        LINK_NAMES.put("mowziesmobs", "Mowzie's Mobs");
+        LINK_NAMES.put("artifacts", "Artifacts 神器");
+        LINK_NAMES.put("relics", "Relics 遗物");
+        LINK_NAMES.put("slashblade", "SlashBlade 拔刀剑");
+        LINK_NAMES.put("farmersdelight", "农夫乐事");
+        LINK_NAMES.put("ftbquests", "FTB Quests");
+        LINK_NAMES.put("projecte", "ProjectE 等价交换");
+        LINK_NAMES.put("dimensionstorage", "超越维度");
+        LINK_NAMES.put("sophisticatedbackpacks", "精妙背包");
+        LINK_NAMES.put("refinedstorage", "精致存储");
+    }
+
     public FutureScreen() {
         super(Component.translatable("hexcraft.gui.future_title"));
     }
@@ -43,14 +75,67 @@ public class FutureScreen extends HexScaledScreen {
     protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
         int cx = this.guiW() / 2;
         Component title = Component.translatable("hexcraft.gui.future_title");
-        g.drawCenteredString(this.font, title, cx, this.guiH() / 2 - 46, 0xFFFFC94A);
+        g.drawCenteredString(this.font, title, cx, 12, 0xFFFFC94A);
         int barW = this.font.width(title) + 40;
-        g.fillGradient(cx - barW / 2, this.guiH() / 2 - 32, cx + barW / 2, this.guiH() / 2 - 31, 0xFFFFC94A, 0xFFC77DFF);
-        Component desc = Component.translatable("hexcraft.gui.future_desc");
-        int y = this.guiH() / 2 - 10;
-        for (net.minecraft.util.FormattedCharSequence line : this.font.split(desc, Math.min(380, this.guiW() - 60))) {
+        g.fillGradient(cx - barW / 2, 24, cx + barW / 2, 25, 0xFFFFC94A, 0xFFC77DFF);
+
+        // 已装联动统计（按 source 分组：海克斯数 / 装备数）
+        Map<String, Integer> hexBy = new LinkedHashMap<>();
+        Map<String, Integer> eqBy = new LinkedHashMap<>();
+        for (com.hexcraft.hextech.HextechDefinition d : HextechRegistry.all()) {
+            if (d.source != null && !d.source.isEmpty()) hexBy.merge(d.source, 1, Integer::sum);
+        }
+        for (com.hexcraft.hextech.HextechDefinition d : HextechRegistry.allEquips()) {
+            if (d.source != null && !d.source.isEmpty()) eqBy.merge(d.source, 1, Integer::sum);
+        }
+        List<String> installed = new ArrayList<>();
+        List<String> missing = new ArrayList<>();
+        for (String src : LINK_NAMES.keySet()) {
+            int h = hexBy.getOrDefault(src, 0);
+            int e = eqBy.getOrDefault(src, 0);
+            String disp = LINK_NAMES.get(src);
+            if (h + e == 0) continue; // 未注册任何内容的来源不展示
+            if (ModList.get().isLoaded(src)) {
+                installed.add(disp + "：海克斯 " + h + " / 装备 " + e);
+            } else {
+                // v0.8.5 未安装行也展示数量，方便了解注册内容（介绍写全）
+                String detail = "";
+                if (h > 0 && e > 0) detail = "：海克斯 " + h + " / 装备 " + e;
+                else if (h > 0) detail = "：海克斯 " + h;
+                else if (e > 0) detail = "：装备 " + e;
+                missing.add(disp + detail + "（未安装，内容自动隐藏）");
+            }
+        }
+
+        int y = 44;
+        Component desc = Component.translatable("hexcraft.gui.future_desc",
+                hexBy.values().stream().mapToInt(Integer::intValue).sum(),
+                eqBy.values().stream().mapToInt(Integer::intValue).sum());
+        for (net.minecraft.util.FormattedCharSequence line : this.font.split(desc, Math.min(420, this.guiW() - 60))) {
             g.drawCenteredString(this.font, line, cx, y, 0xFFA9B4CC);
-            y += 12;
+            y += 11;
+        }
+        y += 6;
+        if (installed.isEmpty()) {
+            g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.future_empty"), cx, y, 0xFF6A7B96);
+        } else {
+            g.drawString(this.font, Component.translatable("hexcraft.gui.future_installed"),
+                    cx - 200, y, 0xFF9FB6FF);
+            y += 11;
+            for (String line : installed) {
+                g.drawString(this.font, Component.literal("• " + line), cx - 200, y, 0xFFD0D8E8);
+                y += 11;
+            }
+        }
+        y += 4;
+        if (!missing.isEmpty()) {
+            g.drawString(this.font, Component.translatable("hexcraft.gui.future_missing"),
+                    cx - 200, y, 0xFF9FB6FF);
+            y += 11;
+            for (String line : missing) {
+                g.drawString(this.font, Component.literal("• " + line), cx - 200, y, 0xFF8FA6C8);
+                y += 11;
+            }
         }
         this.renderWidgets(g, mx, my, pt);
     }

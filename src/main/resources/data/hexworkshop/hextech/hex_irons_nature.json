@@ -1,0 +1,7 @@
+
+{
+  "rarity":  "PRISMATIC",
+  "weight":  5,
+  "source":  "irons_spellbooks",
+  "event":  "spell_nature:0.30,spell_mana_regen:0.40"
+}

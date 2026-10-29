@@ -25,18 +25,28 @@ public class WorldHexScreen extends HexScaledScreen {
 
     /** 科技风按钮：深蓝紫渐变底 + 霓虹顶边 + 悬停亮框（与海克斯工坊主界面风格统一） */
     static class WBtn extends Button {
+        /** v0.8.5 当前页高亮：金色边框 + 白字 + 金色顶边（用于左侧「生物」当前页标识） */
+        private final boolean highlight;
+
         WBtn(int x, int y, int w, int h, Component label, OnPress onPress) {
+            this(x, y, w, h, label, onPress, false);
+        }
+
+        WBtn(int x, int y, int w, int h, Component label, OnPress onPress, boolean highlight) {
             super(x, y, w, h, label, onPress, NARR);
+            this.highlight = highlight;
         }
 
         @Override
         public void renderWidget(GuiGraphics g, int mx, int my, float pt) {
             boolean hover = isHover(mx, my, this);
-            int border = hover ? 0xFF8BD4FF : 0xFF1E6FE8;
-            int text = hover ? 0xFFFFFFFF : 0xFF9FB6FF;
+            int border = hover ? 0xFF8BD4FF : (highlight ? 0xFFFFC94A : 0xFF1E6FE8);
+            int text = hover ? 0xFFFFFFFF : (highlight ? 0xFFFFE08A : 0xFF9FB6FF);
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, border);
             g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xFF1E3A66, 0xFF0B1530);
-            g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF4AC7FF);
+            g.fill(getX(), getY(), getX() + width, getY() + 1, highlight ? 0xFFFFC94A : 0xFF4AC7FF);
+            // 当前页左侧竖亮条
+            if (highlight) g.fill(getX(), getY() + 3, getX() + 2, getY() + height - 3, 0xFFFFC94A);
             g.drawCenteredString(Minecraft.getInstance().font, this.getMessage(),
                     getX() + width / 2, getY() + (height - 8) / 2, text);
         }
@@ -116,8 +126,8 @@ public class WorldHexScreen extends HexScaledScreen {
 
         // 左侧按钮栏：第一位"生物"（当前页，高亮）
         this.addRenderableWidget(new WBtn(SIDEBAR_X, top + 8, SIDEBAR_W, 24,
-                Component.translatable("hexcraft.worldhex.cat_btn.bio"), b -> {}));
-        // "更多"：点击打开敬请期待页（v0.4.2）
+                Component.translatable("hexcraft.worldhex.cat_btn.bio"), b -> {}, true));
+        // "联动总览"（v0.4.2 敬请期待页 → v0.8.4 实装为联动统计页）
         this.addRenderableWidget(new WBtn(SIDEBAR_X, top + 38, SIDEBAR_W, 24,
                 Component.translatable("hexcraft.gui.world_more"),
                 b -> Minecraft.getInstance().setScreen(new FutureScreen())));

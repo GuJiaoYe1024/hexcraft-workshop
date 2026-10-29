@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "source": "slashblade",
+  "event": "blade_damage:0.30,blade_drop:0.20"
+}

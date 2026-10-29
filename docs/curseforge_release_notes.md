@@ -1,3 +1,35 @@
+Hexcraft Workshop v0.8.5 - Round-2 feedback fixes: link overview count calibrated + world hex keys restored + UI details written out
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- LINK OVERVIEW PAGE (Fixed): total hex count calibrated 340 -> 339 - one leftover in-code registration (hex_vampire, whose JSON was retired in v0.8.4) removed, so the registry now exactly matches the 339 JSON definitions and retired hexes can no longer be rolled; top description now states the TRUE total pool ("Total X hexes / Y equipment: installed link mods are in the pool, missing ones are auto-hidden"); missing-link rows now show their registered hex/equipment counts (e.g. "Iron's Spells: 29 hexes / 3 equipment (not installed, auto-hidden)")
+- WORLD HEX PAGE (Fixed + polished): 4 datapack world hexes (Blunt Mastery / Eternal Growth / Scattered Offense / Thick Battlefield) had their EN/CN name+desc keys accidentally removed in v0.8.4 - now restored (total world hexes = 44, code 40 + datapack 4, synced in mods.toml/README/release notes); the "Creatures" current-page button now has a gold highlight (gold border + left edge bar) to tell it apart from the "Link Overview" entry
+- ATTRIBUTE PANEL (polished): hidden attributes (lifesteal / jump height / thorns etc.) got hover hints ("provided by owned hexes/equipment stacks, changes with your build"); permanent-stack and equipment-stack rows got hover hints showing the full mechanic description + current stack count - every region of the panel is now explainable on hover
+- HEX PAGE (polished): hover tooltip now includes a rarity line (Silver / Gold / Prismatic, colored by tier) so quality tier is visible at a glance; long descriptions wrap fully instead of looking truncated
+- CONFIG UI (Fixed): the "Forge & Stack Rules" page's 7 sub-groups (armor reduction / forge multiplier & stacking / stack growth / equipment costs & bonuses / spell link values / link effect multipliers / anti-lag) now expand by default - selecting a group immediately shows its entries on the right, no more "selected but blank right side"
+- SELF-CHECK: 1544 bilingual keys aligned (EN/CN), world hex sheet in the content workbook regenerated to 44 rows, build success, deployed with matching SHA-256
+- NOTE: network protocol VERSION unchanged (23) - no new packets.
+
+Hexcraft Workshop v0.8.0 - Dimension-only hexes + combo hex expansion + config/UI overhaul
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- DIMENSION-ONLY HEXES (8 new): drawable in ANY dimension, effects only apply in their dimension
+  - END: Void Walker (-80% fall damage), Dragon Slayer Will (+30% attack damage), Pearl Mastery (+15% crit chance), Void Ward (-90% void/out-of-world damage)
+  - NETHER: Fire Lord (-70% fire damage), Lava Strider (-90% lava, -50% fire), Demon Hunter (+30% attack damage), Nether Greed (+50% kill coins)
+- COMBO HEXES (12 new): LOL champion-passive style - existing single mechanics combined 2-by-2 / 3-by-3, pure stacking, no new systems
+  - SILVER: Combo Vamp (lifesteal+melee), Crit Leech (crit+lifesteal), Execute Snowball (execute+XP), Thorn Shell (reflect+low-HP reduction)
+  - GOLD: Blood Rampage (low-HP lifesteal+berserk), Frost Crit (crit+crit damage), Arcane Vampire (lifesteal+magic shield), Loot & Coin (drops+coins)
+  - PRISMATIC: Blood Artist (lifesteal+overshield+kill heal), Death Dance (lethal-immunity+low-HP reduction), Executioner (execute+melee+lifesteal), Dragon Coin (coins+XP+double drops)
+- CONFIG UI REORGANIZED: economy / linked / values categories now use sub-categories (kill drops / anti-farm / forge prices & refunds; 6 linked mods x 4 toggles; armor / forge / stacks / equipment / spells / link multipliers / perf) - no more long flat lists
+- UI MORE TRANSPARENT + LAYOUT EDITOR ENHANCED: status bar / scroll tips / main screen background made more translucent (still readable); layout editor (L key): selected element now has a WHITE outline + live coordinates inside the box; arrow keys nudge 1px (Shift = 10px)
+- GALLERY STATS: hex page "owned / obtainable" and equipment codex "owned / total" stat bars added
+- FIXES & HOUSEKEEPING: 4 hex JSONs cleared of empty "event" fields; mods.toml description rewritten (300+ hexes / 55 equipment / 40 world hexes / six linked mods / v0.7 features); TACZ optional dependency declared (missing TACZ no longer errors at startup)
+- SELF-CHECK: 1434 bilingual keys aligned, all new hex JSONs valid, build success, deployed with matching SHA-256
+- NOTE: network protocol VERSION = 23 - server and clients must all update to the same build.
+
 Hexcraft Workshop v0.6.19 - Hex health bar (replaces vanilla, off by default) + random gift "air" fully purged + config UI translation fix
 =============================================================================
 

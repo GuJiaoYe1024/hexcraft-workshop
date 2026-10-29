@@ -9,5 +9,5 @@
       "perLevel": 30.0
     }
   ],
-  "event": "arcane_shield:0.3"
+  "event": "arcane_shield:0.3,spell_power:0.35"
 }

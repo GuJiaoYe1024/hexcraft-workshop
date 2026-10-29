@@ -1,0 +1,7 @@
+
+{
+    "rarity":  "PRISMATIC",
+    "weight":  6,
+    "source":  "twilightforest",
+    "event":  "tf_dimension_damage:0.30,tf_dimension_resist:0.30"
+}

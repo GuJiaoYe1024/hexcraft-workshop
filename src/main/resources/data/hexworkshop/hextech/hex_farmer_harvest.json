@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "source": "farmersdelight",
+  "event": "farmer_drop:0.30,food_on_kill:6"
+}

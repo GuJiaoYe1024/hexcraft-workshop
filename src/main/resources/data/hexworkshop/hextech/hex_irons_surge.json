@@ -1,0 +1,7 @@
+
+{
+  "rarity":  "PRISMATIC",
+  "weight":  5,
+  "source":  "irons_spellbooks",
+  "event":  "spell_mana_on_kill:3.0"
+}

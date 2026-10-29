@@ -51,6 +51,12 @@ public class ClientEvents {
                 mc.setScreen(new com.hexcraft.client.gui.WorldHexScreen());
             }
         }
+        // v0.7.2：L 键游戏内打开界面布局编辑器（半透明全屏画布，拖动调整提示/状态栏/页签位置）
+        while (ClientKeybinds.OPEN_LAYOUT.consumeClick()) {
+            if (!(mc.screen instanceof com.hexcraft.client.gui.HexLayoutScreen)) {
+                mc.setScreen(new com.hexcraft.client.gui.HexLayoutScreen(null));
+            }
+        }
     }
 
     @SubscribeEvent
@@ -69,8 +75,14 @@ public class ClientEvents {
         // v0.6.16 重新设计（最终版）：入口横排（左右）放在容器框【上方】、右对齐——
         // 海克斯工坊「海」在左、世界海克斯「世」在最右；按钮右缘对齐容器右缘（guiLeft+174 ≈ 容器右缘 176），
         // y=guiTop-28 在背包框上方（不占容器内部、不挡合成栏/物品格/附魔书/网格）。
+        // v0.7.1 位置配置化：tabX/tabY 填 >0 时用配置值（相对容器左上，向下为正），默认 0=自动。
+        // v0.7.4 坐标语义统一：0~4000 = 全屏比例坐标（与布局画布同一公式）
+        int tabX = com.hexcraft.config.HexConfig.TAB_X.get() > 0
+                ? (int) (com.hexcraft.config.HexConfig.TAB_X.get() * screen.width / 4000.0) : 124;
+        int tabY = com.hexcraft.config.HexConfig.TAB_Y.get() > 0
+                ? (int) (com.hexcraft.config.HexConfig.TAB_Y.get() * screen.height / 4000.0) : -28;
         TabButton btn = new TabButton(
-                guiLeft + 124, guiTop - 28,
+                guiLeft + tabX, guiTop + tabY,
                 Component.translatable("hexcraft.gui.main_tab"),
                 b -> {
                     // v0.6.3 打开主界面即向服务端请求完整同步（联机玩家抽取/变更后界面为空的兜底）
@@ -83,9 +95,9 @@ public class ClientEvents {
         // 使用 Forge ScreenEvent.Init.Post 提供的 addListener（内部绑定到 screen::addRenderableWidget，
         // 生产/开发环境均有效；替代旧反射方案——反射硬编码 official 方法名在生产环境（SRG）找不到导致页签失效）
         event.addListener(btn);
-        // 世界海克斯入口（v0.3.21）：最右上方
+        // 世界海克斯入口（v0.3.21）：最右上方（v0.7.1 跟随 tabX 配置整体平移，保持与「海」间距）
         TabButton worldBtn = new TabButton(
-                guiLeft + 150, guiTop - 28,
+                guiLeft + tabX + 26, guiTop + tabY,
                 Component.translatable("hexcraft.gui.world_tab"),
                 b -> {
                     // v0.6.3 打开世界海克斯界面即请求完整同步（费用快照 + 世界海克斯列表广播）

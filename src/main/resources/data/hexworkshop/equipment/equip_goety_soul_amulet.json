@@ -1,0 +1,14 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "✦",
+  "sell": 625,
+  "source": "goety",
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 80.0
+    }
+  ],
+  "event": "goety_damage:0.20,goety_soul:1"
+}

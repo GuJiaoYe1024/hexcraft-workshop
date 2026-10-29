@@ -9,5 +9,5 @@
       "perLevel": 1.2
     }
   ],
-  "event": "melee_power:0.6"
+  "event": "melee_power:0.6,spell_power:0.15"
 }

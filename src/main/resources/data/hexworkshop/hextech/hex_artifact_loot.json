@@ -1,0 +1,6 @@
+{
+    "rarity": "SILVER",
+    "weight": 10,
+    "source": "artifacts",
+    "event": "artifact_drop:0.25"
+}

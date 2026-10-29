@@ -1,0 +1,7 @@
+
+{
+    "rarity":  "PRISMATIC",
+    "weight":  6,
+    "source":  "twilightforest",
+    "event":  "tf_boss_damage:0.40,tf_boss_resist:0.3"
+}

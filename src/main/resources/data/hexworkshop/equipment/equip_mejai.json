@@ -3,7 +3,7 @@
   "weight": 9,
   "icon": "✦",
   "sell": 1000,
-  "event": "stack_attr:atk:0.0025",
+  "event": "stack_attr:atk:0.0025,spell_mana_on_kill:1.0,spell_power:0.10",
   "mods": [
     {
       "attr": "attack_damage",

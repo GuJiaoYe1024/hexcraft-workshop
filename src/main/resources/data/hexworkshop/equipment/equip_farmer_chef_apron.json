@@ -1,0 +1,14 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "🍗",
+  "sell": 625,
+  "source": "farmersdelight",
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 60.0
+    }
+  ],
+  "event": "farmer_chef:2,food_on_kill:4"
+}

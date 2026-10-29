@@ -9,5 +9,5 @@
       "perLevel": 120.0
     }
   ],
-  "event": "stack_attr:atk:0.002,arcane_shield:0.3"
+  "event": "stack_attr:atk:0.002,arcane_shield:0.3,spell_mana_max:3,spell_mana_shield:0.4"
 }

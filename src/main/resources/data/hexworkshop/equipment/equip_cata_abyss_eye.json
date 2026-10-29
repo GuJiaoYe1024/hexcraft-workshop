@@ -1,0 +1,18 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "✧",
+  "sell": 700,
+  "source": "cataclysm",
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 6.0
+    },
+    {
+      "attr": "max_health",
+      "perLevel": 50.0
+    }
+  ],
+  "event": "cataclysm_damage:0.20,cataclysm_resist:0.25"
+}

@@ -1,0 +1,18 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "❖",
+  "sell": 625,
+  "source": "relics",
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 4.0
+    },
+    {
+      "attr": "max_health",
+      "perLevel": 50.0
+    }
+  ],
+  "event": "relic_ward:0.25,relic_power:0.15"
+}

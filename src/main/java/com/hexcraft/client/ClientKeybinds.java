@@ -25,9 +25,17 @@ public class ClientKeybinds {
             InputConstants.KEY_K,
             "key.categories.hexcraft");
 
+    /** v0.7.2：界面布局编辑器按键（默认 L：游戏内直接弹半透明画布拖动调整提示/状态栏/页签位置） */
+    public static final KeyMapping OPEN_LAYOUT = new KeyMapping(
+            "key.hexcraft.open_layout",
+            InputConstants.Type.KEYSYM,
+            InputConstants.KEY_L,
+            "key.categories.hexcraft");
+
     @SubscribeEvent
     public static void onKeyRegister(RegisterKeyMappingsEvent event) {
         event.register(OPEN_HEXTECH);
         event.register(OPEN_WORLD_HEX);
+        event.register(OPEN_LAYOUT);
     }
 }
