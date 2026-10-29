@@ -1,3 +1,16 @@
+Hexcraft Workshop v0.8.6 - Round-3 fixes: world-hex rows overflow + link overview scroll/back button + real effect explanations
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- WORLD HEX PAGE (Fixed, screenshot #1): category block height was hard-coded to 4 rows, so large categories (e.g. Neutral, 30 entries) drew outside their block and got covered by the next block - count said 30/30 but only ~8 were visible. Now the block height auto-fits the actual row count of that category (min 4 rows), every entry stays inside its block, and page scrolling adapts to the taller content.
+- LINK OVERVIEW PAGE (Fixed, screenshot #2): the back button sat mid-screen and the 14 "not installed" rows pushed both the button and the list tail off the bottom of the screen, and the list had no scrolling at all. The back button is now pinned to the bottom-right corner (never overlaps, always visible/clickable); the list scrolls with the mouse wheel with viewport clipping - max scroll is computed from the actual row count, description header stays fixed.
+- CONFIG UI (Verified, screenshot #3): the screenshot shows the "HUD Display" tab - all 9 fields (spell link global multiplier / spell crit multiplier / execute threshold / quick chant per-level speed / mana reserve per-level cap / mana spring per-level regen / link effect multiplier / Ice & Fire / Alex's Caves) render fully with descriptions and reset buttons; the v0.8.5 "7 groups expanded by default" fix lives on the separate "Forge & Stack Rules" tab. The "unknown" shown in the first input field is a screenshot rendering artifact - the config value itself applies normally.
+- ATTRIBUTE PANEL (Fixed, screenshot #4): the generic hover line ("provided by owned hexes/equipment stacks, changes with your build") is gone. Each hidden attribute now shows its REAL mechanic + current value on hover, e.g. Lifesteal +31% -> "convert 31% of damage dealt into health", Thorns +2 -> "reflect 2 damage back on melee hit", Growth stacks -> "kills grant stacks, each stack boosts all damage by X%", Kill streak +33% -> "damage +33% after consecutive kills within 3s", Emergency shield +4.5 -> "maintain a 4.5-absorption shield below 35% HP", Overshield +70% -> "overhealing converts 70% into absorption shield", Full-HP overload +50% -> "damage +50% at full HP plus extra lifesteal", Vamp rage +15% -> "extra 15% lifesteal below 50% HP", Twin shot +15% -> "15% chance to fire an equal extra gunshot", Gun power +25% -> "gun damage +25%", Close-range gun +12% -> "close-range gun damage +12%" - all 43 effects covered in EN+CN.
+- Note: regular attributes like Knockback 2.67 show only when their value is above 0 (rules show only what grants a bonus).
+- SELF-CHECK: 1587 bilingual keys aligned (EN/CN), build success, deployed with matching SHA-256.
+- NOTE: network protocol VERSION unchanged (23) - no new packets.
+
 Hexcraft Workshop v0.8.5 - Round-2 feedback fixes: link overview count calibrated + world hex keys restored + UI details written out
 =============================================================================
 

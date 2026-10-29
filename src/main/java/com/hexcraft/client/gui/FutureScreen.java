@@ -14,7 +14,9 @@ import java.util.Map;
 
 /** 联动总览页（v0.4.2 敬请期待页升级，v0.8.4 实装）：
  *  世界海克斯左侧栏「联动总览」按钮打开，展示各联动 mod 的海克斯/装备统计与安装状态，
- *  未安装的联动 mod 自动隐藏（内容不进入抽取池），已安装的按开关启用。 */
+ *  未安装的联动 mod 自动隐藏（内容不进入抽取池），已安装的按开关启用。
+ *  v0.8.6：列表区支持鼠标滚轮滚动（视口裁剪，行不再画穿屏幕底部）；
+ *          返回按钮固定右下角（不再与列表文字重叠，长列表时始终可见可点）。 */
 public class FutureScreen extends HexScaledScreen {
     private static final Button.CreateNarration NARR = s -> s.get();
 
@@ -60,15 +62,37 @@ public class FutureScreen extends HexScaledScreen {
         LINK_NAMES.put("refinedstorage", "精致存储");
     }
 
+    private int scrollY;
+    /** 最近一次渲染的列表起点 / 行数（供滚轮计算最大滚动量） */
+    private int lastListTop = 44;
+    private int lastBodyRows = 0;
+
     public FutureScreen() {
         super(Component.translatable("hexcraft.gui.future_title"));
     }
 
     @Override
     protected void init() {
-        int cx = this.guiW() / 2;
-        this.addRenderableWidget(new WBtn(cx - 53, this.guiH() / 2 + 40, 106, 22,
+        this.scrollY = 0;
+        // v0.8.6 返回按钮固定右下角（guiH-30 区域，列表视口底在其上方，永不重叠）
+        this.addRenderableWidget(new WBtn(this.guiW() - 96, this.guiH() - 30, 80, 20,
                 Component.translatable("gui.back"), b -> onClose()));
+    }
+
+    @Override
+    public boolean mouseScrolled(double mx, double my, double delta) {
+        double s = uiScale();
+        int viewH = Math.max(20, this.guiH() - 36 - this.lastListTop);
+        int maxScroll = Math.max(0, this.lastBodyRows * 11 - viewH + 11);
+        if (maxScroll > 0) {
+            int ns = (int) (this.scrollY - delta * 16);
+            ns = Math.max(0, Math.min(ns, maxScroll));
+            if (ns != this.scrollY) {
+                this.scrollY = ns;
+                return true;
+            }
+        }
+        return super.mouseScrolled(mx / s, my / s, delta);
     }
 
     @Override
@@ -107,6 +131,7 @@ public class FutureScreen extends HexScaledScreen {
             }
         }
 
+        // 描述区固定（不滚动）
         int y = 44;
         Component desc = Component.translatable("hexcraft.gui.future_desc",
                 hexBy.values().stream().mapToInt(Integer::intValue).sum(),
@@ -116,27 +141,42 @@ public class FutureScreen extends HexScaledScreen {
             y += 11;
         }
         y += 6;
+
+        // 列表区：组装行（标题行/空态行/内容行），滚动偏移 + 视口裁剪（底部为返回按钮留白）
+        List<String> body = new ArrayList<>();
         if (installed.isEmpty()) {
-            g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.future_empty"), cx, y, 0xFF6A7B96);
+            body.add("__empty__");
         } else {
-            g.drawString(this.font, Component.translatable("hexcraft.gui.future_installed"),
-                    cx - 200, y, 0xFF9FB6FF);
-            y += 11;
-            for (String line : installed) {
-                g.drawString(this.font, Component.literal("• " + line), cx - 200, y, 0xFFD0D8E8);
-                y += 11;
-            }
+            body.add("__installed__");
+            body.addAll(installed);
         }
-        y += 4;
         if (!missing.isEmpty()) {
-            g.drawString(this.font, Component.translatable("hexcraft.gui.future_missing"),
-                    cx - 200, y, 0xFF9FB6FF);
-            y += 11;
-            for (String line : missing) {
-                g.drawString(this.font, Component.literal("• " + line), cx - 200, y, 0xFF8FA6C8);
-                y += 11;
+            body.add("__missing__");
+            body.addAll(missing);
+        }
+        int listTop = y;
+        int viewBot = this.guiH() - 36;
+        for (int i = 0; i < body.size(); i++) {
+            int ly = listTop + i * 11 - this.scrollY;
+            if (ly < listTop - 11 || ly > viewBot) continue; // 视口外行不绘制
+            String s = body.get(i);
+            if (s.equals("__empty__")) {
+                g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.future_empty"), cx, ly, 0xFF6A7B96);
+            } else if (s.equals("__installed__")) {
+                g.drawString(this.font, Component.translatable("hexcraft.gui.future_installed"),
+                        cx - 200, ly, 0xFF9FB6FF);
+            } else if (s.equals("__missing__")) {
+                g.drawString(this.font, Component.translatable("hexcraft.gui.future_missing"),
+                        cx - 200, ly, 0xFF9FB6FF);
+            } else if (installed.contains(s)) {
+                g.drawString(this.font, Component.literal("• " + s), cx - 200, ly, 0xFFD0D8E8);
+            } else {
+                g.drawString(this.font, Component.literal("• " + s), cx - 200, ly, 0xFF8FA6C8);
             }
         }
+        this.lastListTop = listTop;
+        this.lastBodyRows = body.size();
+
         this.renderWidgets(g, mx, my, pt);
     }
 }

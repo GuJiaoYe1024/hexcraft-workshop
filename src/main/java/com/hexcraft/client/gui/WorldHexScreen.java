@@ -71,8 +71,18 @@ public class WorldHexScreen extends HexScaledScreen {
     private static final int NAME_MIN_W = 46;
 
     private int rowH() { return this.guiH() < 300 ? 12 : this.guiH() < 460 ? 18 : 22; }
-    /** 区块高：按可用内容区高度等分（两排），保证 2×2 网格上下对称 */
-    private int blockH(int contentH) { return Math.max(12 + 4 * rowH() + TITLE_H, (contentH - GRID_GAP) / 2); }
+    /** 各分类当前条目数所需行数（每行 2 条），取最大者为区块高下限：v0.8.6 修复通用类条目多时
+     *  溢出块高被下方区块覆盖的问题（旧版固定按 4 行算，15 条=8 行会画穿块底） */
+    private int maxRowsNeeded() {
+        int rows = 4;
+        for (String cat : WorldHexRegistry.CATEGORIES) {
+            List<WorldHexDefinition> list = WorldHexRegistry.activeInCategory(ClientDataStore.worldHexes, cat);
+            rows = Math.max(rows, (list.size() + 1) / 2);
+        }
+        return rows;
+    }
+    /** 区块高：下限按实际最大条目行数计算；内容区更高时按两排等分拉满（2×2 网格上下对称） */
+    private int blockH(int contentH) { return Math.max(12 + maxRowsNeeded() * rowH() + TITLE_H, (contentH - GRID_GAP) / 2); }
     /** 内容区宽（右侧留白） */
     private int contentW() { return Math.max(200, this.guiW() - CONTENT_X - CONTENT_R_MARGIN); }
     /** 区块宽：两列等分 */
@@ -81,9 +91,9 @@ public class WorldHexScreen extends HexScaledScreen {
     private int itemW() { return (blockW() - 8 - 8) / 2; }
     /** 名字区宽（条目宽 - 取消按钮 - 间隙） */
     private int nameW() { return Math.max(NAME_MIN_W, itemW() - BTN_W - 6); }
-    /** 区块内条目区起点（条目在区块内垂直居中，保证整齐） */
-    private int entryTop(int blockY, int contentH) {
-        int inner = blockH(contentH) - TITLE_H - BLOCK_PAD - 4 * rowH();
+    /** 区块内条目区起点（按该分类实际行数垂直居中，保证整齐） */
+    private int entryTop(int blockY, int contentH, int rows) {
+        int inner = blockH(contentH) - TITLE_H - BLOCK_PAD - rows * rowH();
         return blockY + TITLE_H + 4 + Math.max(0, inner / 2);
     }
 
@@ -139,8 +149,8 @@ public class WorldHexScreen extends HexScaledScreen {
             String cat = WorldHexRegistry.CATEGORIES[i];
             int bx = blockX0 + (i % 2) * (blockW() + GRID_GAP);
             int by = blockY0 + (i / 2) * (blockH(contentH()) + GRID_GAP);
-            int eTop = entryTop(by, contentH());
             List<WorldHexDefinition> list = WorldHexRegistry.activeInCategory(ClientDataStore.worldHexes, cat);
+            int eTop = entryTop(by, contentH(), (list.size() + 1) / 2);
             int row = 0;
             for (WorldHexDefinition d : list) {
                 int x = bx + 8 + (row % 2) * (itemW() + 8);
@@ -215,8 +225,8 @@ public class WorldHexScreen extends HexScaledScreen {
             String cat = WorldHexRegistry.CATEGORIES[i];
             int bx = CONTENT_X + (i % 2) * (blockW() + GRID_GAP);
             int by = blockY0 + (i / 2) * (blockH(contentH()) + GRID_GAP);
-            int eTop = entryTop(by, contentH());
             List<WorldHexDefinition> list = WorldHexRegistry.activeInCategory(ClientDataStore.worldHexes, cat);
+            int eTop = entryTop(by, contentH(), (list.size() + 1) / 2);
             int max = ClientDataStore.worldMaxPerCategory;
 
             // 区块背景（统一尺寸，空分类同样完整显示）

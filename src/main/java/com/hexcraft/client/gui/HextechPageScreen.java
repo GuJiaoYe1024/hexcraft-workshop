@@ -393,7 +393,8 @@ public class HextechPageScreen extends HexScaledScreen {
                 if (inHoverRow && hitOwnCol) {
                     java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
                     tip.add(Component.translatable("hexcraft.effect." + r[0]).withStyle(c -> c.withColor(0xFF9FE4FF)));
-                    tip.add(Component.translatable("hexcraft.gui.effect_hint").withStyle(c -> c.withColor(0xFFAAB6D8)));
+                    // v0.8.6 具体效果说明：每个隐藏属性写明实际机制 + 当前数值（替换旧的通用来源套话）
+                    tip.add(Component.translatable("hexcraft.effect.hint." + r[0], r[1]).withStyle(c -> c.withColor(0xFFAAB6D8)));
                     hoverTip = tip;
                 }
                 idx++;
