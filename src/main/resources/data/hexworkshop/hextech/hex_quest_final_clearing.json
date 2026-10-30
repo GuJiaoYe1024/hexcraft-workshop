@@ -1,0 +1,6 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 6,
+  "mods": [],
+  "event": "boss_power:0.25,execute:0.1,kill_heal:2"
+}

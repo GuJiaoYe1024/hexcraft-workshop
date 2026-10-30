@@ -7,6 +7,11 @@ public class HexConfig {
     // ---- Common (server-authoritative) ----
     public static final ForgeConfigSpec COMMON_SPEC;
     public static final ForgeConfigSpec.IntValue XP_COST_PER_DRAW;
+    // ---- v0.8.8 经验递增（服务端生效）----
+    /** 经验递增开关（默认开启：每抽一次海克斯，下次抽取经验需求按已抽次数线性提高） */
+    public static final ForgeConfigSpec.BooleanValue XP_INCREMENT_ENABLED;
+    /** 经验递增幅度（每次抽取后下次需求 = 基础 × (1 + 幅度 × 已抽次数)，默认 0.20 = 每次 +20%） */
+    public static final ForgeConfigSpec.DoubleValue XP_INCREMENT_RATE;
     public static final ForgeConfigSpec.IntValue REROLL_COST;
     public static final ForgeConfigSpec.IntValue HEX_SLOT_COUNT;
     public static final ForgeConfigSpec.IntValue WEIGHT_SILVER;
@@ -118,6 +123,13 @@ public class HexConfig {
     public static final ForgeConfigSpec.DoubleValue IRONS_CRIT_MULT;
     /** 斩杀阈值：目标当前生命低于最大生命该比例时触发斩杀增伤（默认 0.30=30%） */
     public static final ForgeConfigSpec.DoubleValue IRONS_EXECUTE_THRESHOLD;
+    // ---- v0.8.8 斩杀双机制（服务端生效）：海克斯 execute 阈值 + 百分比削血 execute_pct 权重 ----
+    /** 海克斯斩杀（execute）触发阈值：目标当前生命低于最大生命该比例时触发斩杀增伤（默认 0.15=15%，原硬编码 20%） */
+    public static final ForgeConfigSpec.DoubleValue EXECUTE_THRESHOLD;
+    /** 百分比削血（execute_pct）·最大生命部分权重：命中追加伤害 = 目标最大生命 × 键值 × 此权重 + 目标当前生命 × 键值 × 下项权重（默认 0.5） */
+    public static final ForgeConfigSpec.DoubleValue EXECUTE_PCT_MAX_WEIGHT;
+    /** 百分比削血（execute_pct）·当前生命部分权重（默认 1.0） */
+    public static final ForgeConfigSpec.DoubleValue EXECUTE_PCT_CUR_WEIGHT;
     /** 迅捷咏唱每级施法速度（注入 Iron's CAST_TIME_REDUCTION 属性，默认 0.08=8%/级） */
     public static final ForgeConfigSpec.DoubleValue IRONS_CAST_HASTE;
     /** 魔力储备每级魔力上限（注入 Iron's MAX_MANA 属性，默认 4/级） */
@@ -192,6 +204,9 @@ public class HexConfig {
 
         b.comment("海克斯抽取").translation("hexcraft.config.cat.draw").push("draw");
         XP_COST_PER_DRAW = b.comment("每次海克斯抽取消耗的经验点数（≈19级为500xp）").translation("hexcraft.config.draw.xpCostPerDraw").defineInRange("xpCostPerDraw", 500, 10, 1000000);
+        // v0.8.8 经验递增（服务端生效，默认开启）
+        XP_INCREMENT_ENABLED = b.comment("经验递增（默认开启：每抽一次海克斯，下次抽取经验需求提高；关闭后恒定基础值）").translation("hexcraft.config.draw.xpIncrementEnabled").define("xpIncrementEnabled", true);
+        XP_INCREMENT_RATE = b.comment("经验递增幅度（下次抽取需求 = 基础 × (1 + 幅度 × 已抽次数)；默认 0.20 = 每次 +20%）").translation("hexcraft.config.draw.xpIncrementRate").defineInRange("xpIncrementRate", 0.20, 0.0, 1.0);
         REROLL_COST = b.comment("三选一刷新一次消耗的晶币").translation("hexcraft.config.draw.rerollCost").defineInRange("rerollCost", 20, 0, 10000);
         // v0.6.16 海克斯基础上限拉高+范围放宽：默认 16（原 8），范围 0~9999（0=无限制）
         HEX_SLOT_COUNT = b.comment("海克斯槽位基础上限（0=无限制；默认 16；满员后通过『栏位扩展』海克斯或棱彩锻造器解锁栏位；已超上限的存量玩家不受限）").translation("hexcraft.config.draw.hexLimit").defineInRange("hexLimit", 16, 0, 9999);
@@ -317,6 +332,10 @@ public class HexConfig {
         IRONS_EFFECT_MULT = b.comment("法术联动效果全局倍率（所有法术海克斯/装备事件效果基础值 × 该倍率；默认 1.0，调大更爽）").translation("hexcraft.config.v060.ironsEffectMult").defineInRange("ironsEffectMult", 1.0, 0.0, 10.0);
         IRONS_CRIT_MULT = b.comment("法术暴击倍率（暴击符文/影焰等触发法术暴击时的伤害倍率，默认 1.75）").translation("hexcraft.config.v060.ironsCritMult").defineInRange("ironsCritMult", 1.75, 1.0, 5.0);
         IRONS_EXECUTE_THRESHOLD = b.comment("斩杀阈值（目标当前生命低于最大生命该比例时触发斩杀增伤，默认 0.30=30%）").translation("hexcraft.config.v060.ironsExecuteThreshold").defineInRange("ironsExecuteThreshold", 0.30, 0.01, 1.0);
+        // v0.8.8 斩杀双机制（服务端生效）：海克斯 execute 阈值可调 + 百分比削血 execute_pct 两部分权重可调
+        EXECUTE_THRESHOLD = b.comment("海克斯斩杀阈值（目标当前生命低于最大生命该比例时触发斩杀增伤，默认 0.15=15%，原硬编码 20%；调低=更难斩杀）").translation("hexcraft.config.v060.executeThreshold").defineInRange("executeThreshold", 0.15, 0.01, 0.5);
+        EXECUTE_PCT_MAX_WEIGHT = b.comment("百分比削血·最大生命部分权重（命中追加伤害 = 目标最大生命×键值×此权重 + 目标当前生命×键值×下项权重；默认 0.5）").translation("hexcraft.config.v060.executePctMaxWeight").defineInRange("executePctMaxWeight", 0.5, 0.0, 3.0);
+        EXECUTE_PCT_CUR_WEIGHT = b.comment("百分比削血·当前生命部分权重（默认 1.0）").translation("hexcraft.config.v060.executePctCurWeight").defineInRange("executePctCurWeight", 1.0, 0.0, 3.0);
         IRONS_CAST_HASTE = b.comment("迅捷咏唱每级施法速度（注入 Iron's 施法时间缩减属性，默认 0.08=每级 -8% 施法时间）").translation("hexcraft.config.v060.ironsCastHaste").defineInRange("ironsCastHaste", 0.08, 0.0, 1.0);
         IRONS_MANA_MAX = b.comment("魔力储备每级魔力上限（注入 Iron's 魔力上限属性，默认 4/级）").translation("hexcraft.config.v060.ironsManaMax").defineInRange("ironsManaMax", 4.0, 0.0, 1000.0);
         IRONS_MANA_REGEN = b.comment("法力泉涌每级魔力回复（注入 Iron's 魔力回复属性，默认 0.5/级）").translation("hexcraft.config.v060.ironsManaRegen").defineInRange("ironsManaRegen", 0.5, 0.0, 100.0);

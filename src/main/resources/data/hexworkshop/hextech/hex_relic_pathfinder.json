@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [],
+  "event": "relic_drop:0.18,loot_bonus:0.2"
+}

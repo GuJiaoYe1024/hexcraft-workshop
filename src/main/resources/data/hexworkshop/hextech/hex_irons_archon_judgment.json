@@ -1,0 +1,6 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 6,
+  "mods": [],
+  "event": "spell_execute:0.12,spell_pen:0.18,spell_double:0.10"
+}

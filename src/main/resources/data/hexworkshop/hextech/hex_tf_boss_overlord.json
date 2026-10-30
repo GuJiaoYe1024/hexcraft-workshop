@@ -1,0 +1,6 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 6,
+  "mods": [],
+  "event": "tf_boss_damage:0.30,tf_boss_kill_heal:3"
+}

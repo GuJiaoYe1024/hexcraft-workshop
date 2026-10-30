@@ -100,6 +100,10 @@ public class WorldHexRegistry {
         register("whx_link_farm_bounty", CAT_FRIENDLY, "gold", "passive_hp:8.0,tamed_regen:1.0");            // 丰收祝福：友好生物生命 +8，驯服生物回血 1（农夫乐事联动主题）
         register("whx_link_soul_harvest", CAT_NEUTRAL, "gold", "neutral_atk:3.5,neutral_berserk:0.30");      // 灵魂收割：中立攻击 +3.5，受击 30% 反扑（巫术联动主题）
         register("whx_link_cataclysm_omen", CAT_HOSTILE, "gold", "hostile_hp:8.0,hostile_debuff:0.25");      // 灾变前兆：敌对生命 +8，攻击 25% 施虚弱/缓慢（末地灾变联动主题）
+
+        // ============ v0.8.8 经验税世界海克斯（玩家抽取海克斯经验需求提高）============
+        // 棱彩：百分比数值（纯诅咒，全体玩家抽取成本 +50%）
+        register("whx_draw_tax", CAT_GENERAL, "prismatic", "player_draw_cost:0.50");      // 抽卡税：玩家抽取海克斯经验需求 +50%
     }
 
     private static void register(String id, String category, String rarity, String effect) {

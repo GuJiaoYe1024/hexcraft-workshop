@@ -43,6 +43,8 @@ public class PlayerData {
     private int pityPrismatic;
     /** v0.6.9 棱彩锻造器解锁的海克斯栏位数（slot_boost 特殊词条，不计入属性词条列表） */
     private int slotBoost;
+    /** v0.8.8 经验递增：累计抽取次数（每次扣经验开启抽取 +1，驱动抽取成本递增） */
+    private int drawCount;
     private final List<HexEntry> hexes = new ArrayList<>();
     private final List<ForgeEntry> forges = new ArrayList<>();
     /** 已装备列表（上限 6 槽位） */
@@ -170,6 +172,9 @@ public class PlayerData {
 
     public int getForgesUsed() { return forgesUsed; }
     public void setForgesUsed(int n) { forgesUsed = Math.max(0, n); }
+    /** v0.8.8 经验递增：已抽取次数 */
+    public int getDrawCount() { return drawCount; }
+    public void setDrawCount(int n) { drawCount = Math.max(0, n); }
     public int getPityGold() { return pityGold; }
     public void setPityGold(int n) { pityGold = Math.max(0, n); }
     public int getPityPrismatic() { return pityPrismatic; }
@@ -524,6 +529,7 @@ public class PlayerData {
         tag.putInt("pityGold", pityGold);
         tag.putInt("pityPrismatic", pityPrismatic);
         tag.putInt("slotBoost", slotBoost); // v0.6.9 棱彩锻造解锁栏位数
+        tag.putInt("drawCount", drawCount); // v0.8.8 经验递增累计抽取次数
         ListTag hexList = new ListTag();
         for (HexEntry e : hexes) {
             CompoundTag t = new CompoundTag();
@@ -576,6 +582,7 @@ public class PlayerData {
         pityGold = tag.getInt("pityGold");
         pityPrismatic = tag.getInt("pityPrismatic");
         slotBoost = tag.getInt("slotBoost"); // v0.6.9 旧档缺省 0
+        drawCount = tag.getInt("drawCount"); // v0.8.8 旧档缺省 0
         hexes.clear();
         int dropHex = 0, dropForge = 0, dropEquip = 0;
         for (Tag t : tag.getList("hexes", 10)) {

@@ -1,3 +1,16 @@
+Hexcraft Workshop v0.8.8 - Execute rework + XP increment + world-hex draw tax + all 15 linked families +10 each (+150)
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- EXECUTE REWORK (anti-instant-kill): low-HP execute is kept but its trigger threshold is now configurable (20% -> default 15%); a brand-new percent-slice effect key `execute_pct` is added - every hit deals bonus damage equal to a % of the target's MAX HP plus a % of its CURRENT HP, so high-HP mobs get chipped down proportionally instead of dying to one hit. Both weights are configurable (executePctMaxWeight default 0.5 / executePctCurWeight default 1.0).
+- XP INCREMENT (config, on by default): every hextech draw raises the next draw's XP requirement by +20% of the base cost (500 -> 600 -> 700...). Toggle and rate configurable (xpIncrementEnabled / xpIncrementRate).
+- WORLD HEX "Draw Tax": new prismatic curse world hex `whx_draw_tax` - players' hextech draw XP requirement +50% (independent player_draw_cost multiplier).
+- LINKED HEX EXPANSION (+150): all 15 linked families gained 10 hexes each, reusing existing effect keys only (no new mechanic code). TACZ 36->46, Iron's Spells 29->39, Alex's Caves 20->30, Ice & Fire 20->30, Twilight Forest 18->28, Alex's Mobs 16->26, SlashBlade 10->20, Farmer's Delight / FTB Quests / ProjectE / Relics / Artifacts / Cataclysm / Goety / Mowzie's Mobs 9->19 each. Total pool 301 -> 451 (80 vanilla + 371 linked).
+- SOFT-DEPENDENCY VERSION FIX: all 18 optional (`mandatory=false`) dependencies now ship without a version range (only forge/minecraft keep theirs) - fixes the report that the 1.20.1 Forge build demands Relics 1+ while the Forge Relics only goes up to 0.8.
+- SELF-CHECK: bilingual lang 1511 -> 1823 keys, EN/CN fully aligned; 451 JSON definitions; every event key in the 223-key effect set; UTF-8 BOM preserved.
+- NOTE: network protocol VERSION unchanged (23) - no new packets; 61 equipment pieces unchanged.
+
 Hexcraft Workshop v0.8.7 - Vanilla hex pool trimmed to 80 + nine linked mod families expanded (+36)
 =============================================================================
 

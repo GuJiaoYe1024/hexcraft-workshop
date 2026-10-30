@@ -1,0 +1,6 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 6,
+  "mods": [],
+  "event": "iaf_dragon_kill_buff:0.25,iaf_dragon_damage:0.20,iaf_dragon_resist:0.20"
+}

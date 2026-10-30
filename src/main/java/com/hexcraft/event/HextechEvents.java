@@ -896,7 +896,7 @@ public class HextechEvents {
         // 刽子手（低血斩杀）/ 屠龙者（精英首领增伤）/ 附魔增伤（亡灵杀手/节肢杀手）
         if (target != null) {
             double tRatio = target.getHealth() / Math.max(1f, target.getMaxHealth());
-            if (tRatio < 0.2f) dmgMul *= (float) (1 + effect(data, "execute"));
+            if (tRatio < HexConfig.EXECUTE_THRESHOLD.get().floatValue()) dmgMul *= (float) (1 + effect(data, "execute"));
             if (target.getMaxHealth() >= 40) dmgMul *= (float) (1 + effect(data, "boss_power"));
             if (target.getMobType() == net.minecraft.world.entity.MobType.UNDEAD) dmgMul *= (float) (1 + effect(data, "enchant_smite"));
             if (target.getMobType() == net.minecraft.world.entity.MobType.ARTHROPOD) dmgMul *= (float) (1 + effect(data, "enchant_arthropod"));
@@ -994,6 +994,14 @@ public class HextechEvents {
             if (reaperBlade > 0) {
                 float tr = target.getHealth() / Math.max(1f, target.getMaxHealth());
                 if (tr < 0.35f) extraDamage(sp, target, amount * 0.3f * (float) reaperBlade);
+            }
+            // v0.8.8 百分比削血（execute_pct）：命中按目标最大生命% + 当前生命% 追加伤害（不直接斩杀，
+            // 高血怪按比例削血、低血怪由斩杀/普通伤害补刀；两部分权重进配置 EXECUTE_PCT_MAX/Cur_WEIGHT）
+            double execPct = effect(data, "execute_pct");
+            if (execPct > 0) {
+                float pctDmg = (float) (target.getMaxHealth() * execPct * HexConfig.EXECUTE_PCT_MAX_WEIGHT.get()
+                        + target.getHealth() * execPct * HexConfig.EXECUTE_PCT_CUR_WEIGHT.get());
+                if (pctDmg > 0) extraDamage(sp, target, pctDmg);
             }
             // v0.6.0 通用叠层管理器（JSON 驱动）：命中叠层海克斯（def.stack，onKill=false）命中即叠 1 层，
             // 迅战之角（stack_gain 叠速 / stack_cap 上限乘区）与世界海克斯「厚积战场」（叠层上限 +50%）自动生效；

@@ -1,0 +1,6 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 6,
+  "mods": [],
+  "event": "farmer_drop:0.3,food_on_kill:3,regen:1"
+}

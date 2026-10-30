@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [],
+  "event": "farmer_drop:0.25,loot_bonus:0.2"
+}

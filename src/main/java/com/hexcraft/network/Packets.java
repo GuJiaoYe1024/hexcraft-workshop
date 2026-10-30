@@ -91,12 +91,19 @@ public class Packets {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.slot_full", occ, lim), true);
                     return;
                 }
+                // v0.8.8 抽取成本 = 基础 × (1 + 经验递增幅度×已抽次数) × (1 + 世界海克斯「抽卡税」player_draw_cost)；下限 1
                 int cost = HexConfig.XP_COST_PER_DRAW.get();
+                if (HexConfig.XP_INCREMENT_ENABLED.get()) {
+                    cost = (int) Math.round(cost * (1 + HexConfig.XP_INCREMENT_RATE.get() * data.getDrawCount()));
+                }
+                cost = (int) Math.round(cost * (1 + com.hexcraft.event.WorldHexEvents.playerDrawCostMult(sp.serverLevel())));
+                cost = Math.max(1, cost);
                 if (realTotalXp(sp) < cost) {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.xp_not_enough", cost), true);
                     return;
                 }
                 sp.giveExperiencePoints(-cost);
+                data.setDrawCount(data.getDrawCount() + 1); // v0.8.8 经验递增：本次抽取计入已抽次数
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(false, 0);
                 offer.options.addAll(HextechRoller.rollHexOptions(data));
                 data.setPendingRoll(offer);

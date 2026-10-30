@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [],
+  "event": "tf_troll_damage:0.20,mining_fortune:0.15"
+}

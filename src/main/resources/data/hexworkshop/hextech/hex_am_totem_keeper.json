@@ -1,0 +1,6 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 6,
+  "mods": [],
+  "event": "am_totem:0.25,am_mob_damage:0.12,regen:0.6"
+}

@@ -214,6 +214,9 @@ public class WorldHexEvents {
     /** 世界海克斯抽取经验消耗倍率 */
     public static double drawCostMult(ServerLevel level) { return sumEffect(level, "draw_cost"); }
 
+    /** v0.8.8 玩家海克斯抽取经验消耗倍率（世界海克斯「抽卡税」效果键 player_draw_cost） */
+    public static double playerDrawCostMult(ServerLevel level) { return sumEffect(level, "player_draw_cost"); }
+
     /** 友好生物死亡不掉落概率（0.30 = 30%） */
     public static double passiveNoDrop(ServerLevel level) { return sumEffect(level, "passive_no_drop"); }
 

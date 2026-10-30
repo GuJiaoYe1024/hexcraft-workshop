@@ -1,0 +1,6 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 6,
+  "mods": [],
+  "event": "loot_bonus:0.25,loot_double:1,coin_bonus:0.15"
+}

@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [],
+  "event": "spell_cast_haste:0.15,spell_mana_cost:0.06"
+}

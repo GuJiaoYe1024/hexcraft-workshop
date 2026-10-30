@@ -9,13 +9,15 @@ displayName="Hexcraft Workshop 海克斯工坊"
 logoFile="hexworkshop_icon.png"
 description='''Hexcraft Workshop (海克斯工坊)
 以「双资源 → 三选一构筑」为核心的玩法强化模组，灵感来自英雄联盟海克斯大乱斗与斗魂竞技场。
-- 301 种海克斯增幅（白银/黄金/棱彩）：复合机制、永续成长、附魔与矿物联动，原版池 80 精炼去重、15 联动系 221 持续扩充
+- 451 种海克斯增幅（白银/黄金/棱彩）：复合机制、永续成长、附魔与矿物联动，原版池 80 精炼去重、15 联动系 371 持续扩充
 - 属性锻造器：13 属性 + 5 法术属性（联动）+ 5 事件锻造词条，锻造无上限、数值消毒防崩坏
 - 61 件词条装备：无尽之刃、饮血剑、心之钢等 LOL 风格机制移植，法强系装备法术联动，各联动模组均有专属装备
-- 世界海克斯 44 个：全服进度级构筑，生物/进度两种抽取途径
+- 世界海克斯 45 个：全服进度级构筑，生物/进度两种抽取途径
+- v0.8.8 斩杀双机制：低血斩杀 + 百分比削血（按目标最大生命/当前生命比例追加伤害，数值可配置）
+- v0.8.8 经验递增：每抽一次海克斯，下次抽取经验需求 +20%（可配置开关与幅度）
 - 完整经济系统：击杀掉落晶币，绿宝石双向兑换
 - TACZ 自动联动：安装永恒枪械工坊即解锁枪械海克斯/装备/锻造词条，弹药回复直通枪内子弹；未安装自动剔除
-- Iron's Spells 自动联动：安装法术与魔法书即解锁 29 个法术海克斯（施法/魔力/法术伤害/九大学校流派）、法术锻造词条、卢登/影焰/巫妖之祸法术联动；未安装自动剔除
+- Iron's Spells 自动联动：安装法术与魔法书即解锁 39 个法术海克斯（施法/魔力/法术伤害/九大学校流派）、法术锻造词条、卢登/影焰/巫妖之祸法术联动；未安装自动剔除
 - 冰与火之歌 自动联动：屠龙者/抗性/龙族克制海克斯与锻造词条
 - Alex's Caves 自动联动：辐射防护/洞穴生物克制海克斯与锻造词条
 - 暮色森林 自动联动：BOSS 进度/维度专属海克斯与锻造词条
@@ -55,7 +57,6 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="cloth_config"
 mandatory=false
-versionRange="[10,)"
 ordering="NONE"
 side="CLIENT"
 
@@ -63,7 +64,6 @@ side="CLIENT"
 [[dependencies.hexworkshop]]
 modId="tacz"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
@@ -71,7 +71,6 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="irons_spellbooks"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
@@ -79,7 +78,6 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="iceandfire"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
@@ -87,7 +85,6 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="alexscaves"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
@@ -95,7 +92,6 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="twilightforest"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
@@ -103,7 +99,6 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="alexsmobs"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
@@ -111,56 +106,48 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="cataclysm"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="goety"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="mowziesmobs"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="artifacts"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="relics"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="slashblade"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="farmersdelight"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="ftbquests"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
@@ -168,7 +155,6 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="projecte"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
@@ -176,20 +162,17 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="beyonddimensions"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="sophisticatedbackpacks"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="refinedstorage"
 mandatory=false
-versionRange="[1,)"
 ordering="NONE"
 side="BOTH"

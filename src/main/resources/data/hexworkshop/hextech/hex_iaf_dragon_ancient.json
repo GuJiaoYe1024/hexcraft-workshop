@@ -1,0 +1,6 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 6,
+  "mods": [],
+  "event": "iaf_fire_dragon_damage:0.12,iaf_ice_dragon_damage:0.12,iaf_lightning_dragon_damage:0.12"
+}
