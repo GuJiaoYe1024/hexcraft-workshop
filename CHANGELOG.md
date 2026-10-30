@@ -23,7 +23,7 @@
 
 **🔧 其他**
 
-- Relics 等软联动去版本号：18 个 `mandatory=false` 依赖移除 `versionRange`（仅保留 forge/minecraft 必选版本），修复 Forge 版 Relics 最高 0.8 被误判需 1+ 的问题
+- Relics 等软联动版本放宽：19 个 `mandatory=false` 依赖的 `versionRange` 统一放宽为 `[0,)`（兼容任意版本，修复 Forge 版 Relics 最高 0.8 被误判需 1+ 的问题；实测 FML 对缺失 versionRange 的依赖块会按空约束报加载错误，故保留字段仅放宽）
 - gradle 0.8.7 → 0.8.8；lang 1511 → **1823** 中英对齐（增 150 海克斯 ×2×2 + 世界海克斯/配置翻译键）
 
 ## v0.8.7 — 内容大精简：原版海克斯提纯至 80 + 九大联动系均衡扩充（2026-10-30）

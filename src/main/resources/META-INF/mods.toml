@@ -57,6 +57,7 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="cloth_config"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="CLIENT"
 
@@ -64,6 +65,7 @@ side="CLIENT"
 [[dependencies.hexworkshop]]
 modId="tacz"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
@@ -71,6 +73,7 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="irons_spellbooks"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
@@ -78,6 +81,7 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="iceandfire"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
@@ -85,6 +89,7 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="alexscaves"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
@@ -92,6 +97,7 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="twilightforest"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
@@ -99,6 +105,7 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="alexsmobs"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
@@ -106,48 +113,56 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="cataclysm"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="goety"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="mowziesmobs"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="artifacts"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="relics"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="slashblade"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="farmersdelight"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="ftbquests"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
@@ -155,6 +170,7 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="projecte"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
@@ -162,17 +178,20 @@ side="BOTH"
 [[dependencies.hexworkshop]]
 modId="beyonddimensions"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="sophisticatedbackpacks"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="refinedstorage"
 mandatory=false
+versionRange="[0,)"
 ordering="NONE"
 side="BOTH"
