@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [],
+  "event": "coin_bonus:0.2,loot_double:1"
+}

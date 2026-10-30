@@ -96,20 +96,14 @@ public class HextechRegistry {
 
     static {
         // ---- 白银（内置兜底，其余由数据包定义；数据包优先覆盖）----
-        register("hex_berserk", HextechRarity.SILVER, 10, List.of(mod(Attributes.ATTACK_DAMAGE, 1.5)), null);
         register("hex_frenzy", HextechRarity.SILVER, 10, List.of(mod(Attributes.ATTACK_SPEED, 0.8), mod(Attributes.MOVEMENT_SPEED, 0.02)), null);
-        register("hex_thunderlord", HextechRarity.SILVER, 10, List.of(mod(Attributes.ATTACK_SPEED, 0.2)), "crit:0.25");
 
         // ---- 黄金（内置兜底）----
         register("hex_swiftblade", HextechRarity.GOLD, 8, List.of(mod(Attributes.ATTACK_SPEED, 0.25), mod(Attributes.ATTACK_DAMAGE, 0.6)), null);
         register("hex_tracker", HextechRarity.GOLD, 8, List.of(mod(Attributes.MOVEMENT_SPEED, 0.015), mod(Attributes.ATTACK_DAMAGE, 0.6)), null);
-        register("hex_reaper", HextechRarity.GOLD, 6, List.of(), "xp_bonus:0.3,coin_bonus:0.25");
 
         // ---- 棱彩（6）----
-        register("hex_colossus", HextechRarity.PRISMATIC, 8, List.of(mod(Attributes.MAX_HEALTH, 12.0), mod(Attributes.ARMOR, 4.0)), null);
         register("hex_titan", HextechRarity.PRISMATIC, 6, List.of(mod(Attributes.ATTACK_DAMAGE, 2.5), mod(Attributes.MAX_HEALTH, 6.0)), null);
-        register("hex_goldmine", HextechRarity.PRISMATIC, 6, List.of(), "coin_bonus:0.6");
-        register("hex_scholar", HextechRarity.PRISMATIC, 6, List.of(), "xp_bonus:0.6");
         register("hex_legend", HextechRarity.PRISMATIC, 5, List.of(
                 mod(Attributes.ATTACK_DAMAGE, 1.0), mod(Attributes.ARMOR, 2.0), mod(Attributes.MAX_HEALTH, 4.0),
                 mod(Attributes.MOVEMENT_SPEED, 0.008), mod(Attributes.ATTACK_SPEED, 0.15)), null);

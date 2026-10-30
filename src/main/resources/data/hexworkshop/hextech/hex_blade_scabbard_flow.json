@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [],
+  "event": "stack_attr:attack_speed:0.02,echo:0.15"
+}

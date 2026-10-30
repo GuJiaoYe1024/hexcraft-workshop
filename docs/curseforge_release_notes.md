@@ -1,3 +1,13 @@
+Hexcraft Workshop v0.8.7 - Vanilla hex pool trimmed to 80 + nine linked mod families expanded (+36)
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- VANILLA HEX POOL (Trimmed 154 -> 80): 74 redundant / outclassed / low-value hexes moved to _retired (recoverable). Every mechanic family keeps its strongest representative - duplicate lifesteal, coin, echo, execute, crit, shield, blade, enchant (smite / arthropod / flame / knockback), mining (luck / xp) and dimension (pearl / gold-greed) entries removed. Total pool 339 -> 301 (80 vanilla + 221 linked): the draw pool is more focused and top-tier hexes are easier to roll.
+- LINKED HEX EXPANSION (+36): nine smaller linked families each gained 4 hexes - SlashBlade (Iaijutsu / Scabbard Flow / Moon Slash / Sakura Storm), Farmer's Delight (Garden Bounty / Hearty Meal / Chef Mastery / Harvest Moon), FTB Quests (Quest Master / Progress Sprint / Stage Clear / Side Quest), ProjectE (Alchemy Surge / Philosopher's Insight / Transmute Flow / Condensed Heart), Relics (Ancient Blessing / Relic Hunter / Warden's Gaze / Durability Echo), Artifacts (Antique Power / Relic Boost / Soulbound / Cursed Blade), Cataclysm (Wither Soul / Abyssal Gaze / Netherite Bulk / Ruin Power), Goety (Soul Eater / Necromancer's Pact / Wicked Blessing / Spirit Armor), Mowzie's Mobs (Beast Empathy / Feral Instinct / Titan Roar / Primal Healing). All reuse existing effect keys - no new mechanic code.
+- SELF-CHECK: bilingual lang trimmed to 1511 keys, EN/CN fully aligned; code static registrations for 6 retired hexes removed (thunderlord / goldmine / scholar / reaper / berserk / colossus).
+- NOTE: network protocol VERSION unchanged (23) - no new packets; 61 equipment pieces and 44 world hexes unchanged.
+
 Hexcraft Workshop v0.8.6 - Round-3 fixes: world-hex rows overflow + link overview scroll/back button + real effect explanations
 =============================================================================
 

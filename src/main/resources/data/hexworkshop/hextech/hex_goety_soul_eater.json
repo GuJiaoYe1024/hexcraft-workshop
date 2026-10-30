@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [],
+  "event": "kill_heal:1.5,lifesteal:0.1"
+}

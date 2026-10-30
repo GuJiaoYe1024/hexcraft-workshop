@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "mods": [],
+  "event": "bleed_damage:0.25,execute:0.1"
+}
