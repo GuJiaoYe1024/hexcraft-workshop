@@ -145,7 +145,7 @@ public class HextechEvents {
         for (PlayerData.EquipEntry eq : data.getEquipment()) {
             HextechDefinition def = HextechRegistry.getEquip(eq.id);
             if (def == null || def.event == null || def.event.isEmpty()) continue;
-            for (String token : def.event.split(",")) {
+            for (String token : eventTokens(def.event)) {
                 int ci = token.indexOf(':');
                 if (ci <= 0) continue;
                 if (token.substring(0, ci).equals(effect)) {
@@ -177,7 +177,7 @@ public class HextechEvents {
                 try { def = com.hexcraft.client.ClientDataStore.hexDef(e.id); } catch (Throwable ignored) { }
             }
             if (def == null || def.event == null || def.event.isEmpty()) continue;
-            for (String token : def.event.split(",")) {
+            for (String token : eventTokens(def.event)) {
                 int ci = token.indexOf(':');
                 if (ci <= 0) continue;
                 if (token.substring(0, ci).equals(effect)) {
@@ -200,6 +200,78 @@ public class HextechEvents {
             }
         }
         return sum;
+    }
+
+    // ================= v0.9.1 性能：event 分词缓存 + 批量效果查询 =================
+    private static final String[] EMPTY_TOKENS = new String[0];
+    /** event 字符串 → 分词数组缓存（跨玩家/跨调用共享，避免高频查询重复 split） */
+    private static final java.util.concurrent.ConcurrentHashMap<String, String[]> EVENT_TOKEN_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static String[] eventTokens(String ev) {
+        if (ev == null || ev.isEmpty()) return EMPTY_TOKENS;
+        String[] t = EVENT_TOKEN_CACHE.get(ev);
+        if (t == null) {
+            t = ev.split(",");
+            EVENT_TOKEN_CACHE.putIfAbsent(ev, t);
+        }
+        return t;
+    }
+
+    /** 批量查询多个效果键（一次遍历全部来源；onTick 等高频路径替代多次单键 effect() 全量扫描） */
+    public static java.util.Map<String, Double> effectBatch(PlayerData data, java.util.Collection<String> keys) {
+        java.util.Map<String, Double> out = new java.util.HashMap<>();
+        if (data == null || keys == null || keys.isEmpty()) return out;
+        for (String k : keys) out.put(k, 0.0);
+        // 海克斯
+        for (PlayerData.HexEntry e : data.getHexes()) {
+            HextechDefinition def = HextechRegistry.get(e.id);
+            if (def == null) {
+                try { def = com.hexcraft.client.ClientDataStore.hexDef(e.id); } catch (Throwable ignored) { }
+            }
+            if (def == null || def.event == null || def.event.isEmpty()) continue;
+            for (String token : eventTokens(def.event)) {
+                int ci = token.indexOf(':');
+                if (ci <= 0) continue;
+                String key = token.substring(0, ci);
+                if (!out.containsKey(key)) continue;
+                try {
+                    double v = Double.parseDouble(token.substring(ci + 1));
+                    double add = "stack_growth".equals(key) ? v * e.level * (1 + e.stacks) : v * e.level;
+                    out.merge(key, add, Double::sum);
+                } catch (Exception ignored) { }
+            }
+        }
+        // 组合羁绊（复用 COMBOS 表，仅一次）
+        for (String[] c : COMBOS) {
+            if (!out.containsKey(c[0])) continue;
+            if (hasComboList(data.getHexes(), java.util.Arrays.copyOfRange(c, 2, c.length))) {
+                try { out.merge(c[0], Double.parseDouble(c[1]), Double::sum); } catch (Exception ignored) { }
+            }
+        }
+        // 装备 event
+        for (PlayerData.EquipEntry eq : data.getEquipment()) {
+            HextechDefinition def = HextechRegistry.getEquip(eq.id);
+            if (def == null || def.event == null || def.event.isEmpty()) continue;
+            for (String token : eventTokens(def.event)) {
+                int ci = token.indexOf(':');
+                if (ci <= 0) continue;
+                String key = token.substring(0, ci);
+                if (!out.containsKey(key)) continue;
+                try { out.merge(key, Double.parseDouble(token.substring(ci + 1)) * eq.level, Double::sum); }
+                catch (Exception ignored) { }
+            }
+        }
+        // 事件型锻造词条
+        for (PlayerData.ForgeEntry f : data.getForges()) {
+            String ev = HextechRegistry.forgeEventKey(f.stat);
+            if (ev == null || !out.containsKey(ev)) continue;
+            try {
+                double per = HextechRegistry.forgeMod(f.stat).perLevel;
+                out.merge(ev, per * f.level * forgeTierMult(f), Double::sum);
+            } catch (Exception ignored) { }
+        }
+        return out;
     }
 
     // ================= v0.9.0 组合羁绊与叠层联动 =================
@@ -1822,6 +1894,11 @@ public class HextechEvents {
         return null;
     }
 
+    /** v0.9.1 性能：onTick 每 tick 批量查询的效果键集（固定不变） */
+    private static final java.util.Set<String> TICK_EFFECT_KEYS = java.util.Set.of(
+            "tacz_bipod", "tacz_strafe", "tacz_reload_haste", "tacz_swap_strike",
+            "tacz_barrage", "tacz_tracking", "tacz_crit_chain", "regen");
+
     /** 持续回血（再生/不朽）：每 5 秒回复 */
     @SubscribeEvent
     public static void onTick(TickEvent.PlayerTickEvent event) {
@@ -1835,54 +1912,57 @@ public class HextechEvents {
             long gt = sp.level().getGameTime();
             MINING_CTX.entrySet().removeIf(e -> gt - e.getValue().tick > 40);
         }
-        // v0.6.16 TACZ 状态跟踪（仅持有对应海克斯的玩家记录，失去即清理，无界增长免疫）：
-        // 架枪射击/走射专精共用位置跟踪；快速装填检测弹量 0→正（换弹完成）；切枪强化检测主手物品变化
+        // v0.9.1 性能：批量一次查询本 tick 全部效果键（替代旧版 9 次 effect() 全量扫描）；
+        // TACZ 状态跟踪段低频化（每 4 tick = 200ms 精度，对换弹完成/切枪/移动跟踪判定无感知）
         UUID uid = sp.getUUID();
-        double bipodEff = effect(data, "tacz_bipod");
-        double strafeEff = effect(data, "tacz_strafe");
-        double reloadEff = effect(data, "tacz_reload_haste");
-        double swapEff = effect(data, "tacz_swap_strike");
-        long now = System.currentTimeMillis();
-        if (bipodEff > 0 || strafeEff > 0) {
-            net.minecraft.world.phys.Vec3 pos = sp.position();
-            double[] last = LAST_POS.get(uid);
-            if (last == null) {
-                LAST_POS.put(uid, new double[]{pos.x, pos.y, pos.z});
-                LAST_MOVE.put(uid, now);
-            } else {
-                double dx = pos.x - last[0], dy = pos.y - last[1], dz = pos.z - last[2];
-                if (dx * dx + dy * dy + dz * dz > 0.0009) {
+        java.util.Map<String, Double> eff = effectBatch(data, TICK_EFFECT_KEYS);
+        if (sp.tickCount % 4 == 0) {
+            double bipodEff = eff.getOrDefault("tacz_bipod", 0.0);
+            double strafeEff = eff.getOrDefault("tacz_strafe", 0.0);
+            double reloadEff = eff.getOrDefault("tacz_reload_haste", 0.0);
+            double swapEff = eff.getOrDefault("tacz_swap_strike", 0.0);
+            long now = System.currentTimeMillis();
+            if (bipodEff > 0 || strafeEff > 0) {
+                net.minecraft.world.phys.Vec3 pos = sp.position();
+                double[] last = LAST_POS.get(uid);
+                if (last == null) {
                     LAST_POS.put(uid, new double[]{pos.x, pos.y, pos.z});
                     LAST_MOVE.put(uid, now);
+                } else {
+                    double dx = pos.x - last[0], dy = pos.y - last[1], dz = pos.z - last[2];
+                    if (dx * dx + dy * dy + dz * dz > 0.0009) {
+                        LAST_POS.put(uid, new double[]{pos.x, pos.y, pos.z});
+                        LAST_MOVE.put(uid, now);
+                    }
                 }
+            } else {
+                LAST_POS.remove(uid);
+                LAST_MOVE.remove(uid);
             }
-        } else {
-            LAST_POS.remove(uid);
-            LAST_MOVE.remove(uid);
+            if (reloadEff > 0) {
+                int cur = currentTaczAmmo(sp);
+                int lastAmmo = LAST_TACZ_AMMO.getOrDefault(uid, -1);
+                if (cur > 0 && lastAmmo == 0) RELOAD_UNTIL.put(uid, now + 4000); // 换弹完成（弹量 0→正）
+                LAST_TACZ_AMMO.put(uid, cur);
+            } else {
+                LAST_TACZ_AMMO.remove(uid);
+                RELOAD_UNTIL.remove(uid);
+            }
+            if (swapEff > 0) {
+                net.minecraft.world.item.Item main = sp.getMainHandItem().getItem();
+                net.minecraft.world.item.Item lastItem = LAST_MAIN_HAND.get(uid);
+                if (lastItem != null && lastItem != main) SWAP_UNTIL.put(uid, now + 3000); // 切主手武器
+                LAST_MAIN_HAND.put(uid, main);
+            } else {
+                LAST_MAIN_HAND.remove(uid);
+                SWAP_UNTIL.remove(uid);
+            }
+            // v0.6.16 持续射击 / 棱彩追踪 / 暴击链状态清理（仅持有者保留，失去即清，无界增长免疫）
+            if (eff.getOrDefault("tacz_barrage", 0.0) <= 0) { BAR_HITS.remove(uid); BAR_LAST_HIT.remove(uid); }
+            if (eff.getOrDefault("tacz_tracking", 0.0) <= 0) TACZ_TRACK.remove(uid);
+            if (eff.getOrDefault("tacz_crit_chain", 0.0) <= 0) CRIT_CHAIN_UNTIL.remove(uid);
         }
-        if (reloadEff > 0) {
-            int cur = currentTaczAmmo(sp);
-            int lastAmmo = LAST_TACZ_AMMO.getOrDefault(uid, -1);
-            if (cur > 0 && lastAmmo == 0) RELOAD_UNTIL.put(uid, now + 4000); // 换弹完成（弹量 0→正）
-            LAST_TACZ_AMMO.put(uid, cur);
-        } else {
-            LAST_TACZ_AMMO.remove(uid);
-            RELOAD_UNTIL.remove(uid);
-        }
-        if (swapEff > 0) {
-            net.minecraft.world.item.Item main = sp.getMainHandItem().getItem();
-            net.minecraft.world.item.Item lastItem = LAST_MAIN_HAND.get(uid);
-            if (lastItem != null && lastItem != main) SWAP_UNTIL.put(uid, now + 3000); // 切主手武器
-            LAST_MAIN_HAND.put(uid, main);
-        } else {
-            LAST_MAIN_HAND.remove(uid);
-            SWAP_UNTIL.remove(uid);
-        }
-        // v0.6.16 持续射击 / 棱彩追踪 / 暴击链状态清理（仅持有者保留，失去即清，无界增长免疫）
-        if (effect(data, "tacz_barrage") <= 0) { BAR_HITS.remove(uid); BAR_LAST_HIT.remove(uid); }
-        if (effect(data, "tacz_tracking") <= 0) TACZ_TRACK.remove(uid);
-        if (effect(data, "tacz_crit_chain") <= 0) CRIT_CHAIN_UNTIL.remove(uid);
-        double regen = effect(data, "regen");
+        double regen = eff.getOrDefault("regen", 0.0);
         if (regen > 0 && sp.tickCount % 100 == 0) {
             sp.heal((float) regen);
         }
