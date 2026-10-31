@@ -1,3 +1,13 @@
+Hexcraft Workshop v0.9.2 - Built-in DLC: 102 Vanilla Revival hexes + 24 "Origin Hunt" hexes (Nizhan-inspired)
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- BUILT-IN DLC SYSTEM: two DLC packs are shipped inside the mod (no extra download needed) and merged into the main draw pool. Two independent toggles in the config GUI ("Built-in DLC" group): `enableDlcVanilla` (Vanilla Revival) and `enableDlcNiyuan` (Origin Hunt), both ON by default. Turning one off removes that pack's hexes from the draw pool while keeping owned ones.
+- DLC "VANILLA REVIVAL" (102 hexes): all 73 hexes retired in v0.8.7 return, plus 29 older retired originals (Arena Sprint, Flesh Bleed, Crit Cascade, Death Dance, Execute Gold, Fire Rage, Frost Step, Gourmand, Last Stand, Lucky Clover, Big Party, Razor, Shadow Punch, Small Shield, Sniper Eye, Soul Siphon, Streak King, Vamp Rage, Vampire...). Faithful data recovery (rarity/weight/event/mods/stack untouched), every effect key already implemented; 6 leftover gen_* test hexes excluded; zh/en lang back to 2169 keys each.
+- DLC "ORIGIN HUNT" (24 hexes, inspired by Nizhan "Origin Grounds" buff system): three 6-hex sets with 3-piece combo tiers - BERSERK (melee power, rampage, low-HP burst, lifesteal; 2 combo tiers), GUERRILLA (move-bonus damage, strafing, attack speed, twin shot, full-HP crit; 2 combo tiers), BULWARK (low-HP shields, armor, damage reduction, knockback resist; 2 combo tiers); plus 6 global buffs (tri-family power, plunder, sustain, rage, sharpness, reborn). 6 new combo bonds added (COMBOS 19-24), all using existing effect keys - zero new mechanics.
+- Now 588 hex JSONs (462 + 102 + 24); every DLC hex verified against the implemented-key set (self-check ALL OK); jar 734,910 B, SHA-256 9208C143BBB733EE2566B8876A14E8047A3168F2CE88F653307E046819BCD66D.
+
 Hexcraft Workshop v0.9.1 - Execute nerf (20% total cap) + ARAM-inspired hexes
 =============================================================================
 
