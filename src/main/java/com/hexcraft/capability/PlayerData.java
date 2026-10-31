@@ -384,6 +384,14 @@ public class PlayerData {
                 }
                 continue;
             }
+            // v0.9.1 属性转化（ARAM 借鉴）：每级将 10% 护甲转化为攻击力（按当前护甲点结算）
+            if (e.id.equals("hex_stat_converter")) {
+                double conv = HextechEvents.effect(this, "stat_converter");
+                if (conv > 0) {
+                    applyOne(player, Attributes.ATTACK_DAMAGE, "hex:stat_converter#atk" + idx++, player.getArmorValue() * conv);
+                }
+                continue;
+            }
             for (HextechDefinition.ModSpec mod : def.mods) {
                 applyOne(player, mod.attr, "hex:" + e.id + "#" + idx++, mod.perLevel * e.level * hexPower);
             }

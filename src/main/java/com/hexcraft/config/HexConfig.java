@@ -340,7 +340,7 @@ public class HexConfig {
         IRONS_CRIT_MULT = b.comment("法术暴击倍率（暴击符文/影焰等触发法术暴击时的伤害倍率，默认 1.75）").translation("hexcraft.config.v060.ironsCritMult").defineInRange("ironsCritMult", 1.75, 1.0, 5.0);
         IRONS_EXECUTE_THRESHOLD = b.comment("斩杀阈值（目标当前生命低于最大生命该比例时触发斩杀增伤，默认 0.30=30%）").translation("hexcraft.config.v060.ironsExecuteThreshold").defineInRange("ironsExecuteThreshold", 0.30, 0.01, 1.0);
         // v0.8.8 斩杀双机制（服务端生效）：海克斯 execute 阈值可调 + 百分比削血 execute_pct 两部分权重可调
-        EXECUTE_THRESHOLD = b.comment("海克斯斩杀阈值（目标当前生命低于最大生命该比例时触发斩杀增伤，默认 0.15=15%，原硬编码 20%；调低=更难斩杀）").translation("hexcraft.config.v060.executeThreshold").defineInRange("executeThreshold", 0.15, 0.01, 0.5);
+        EXECUTE_THRESHOLD = b.comment("海克斯斩杀阈值（目标当前生命低于最大生命该比例时触发斩杀增伤，默认 0.15=15%，原硬编码 20%；上限 0.2=总处决最高 20%；调低=更难斩杀）").translation("hexcraft.config.v060.executeThreshold").defineInRange("executeThreshold", 0.15, 0.01, 0.2);
         EXECUTE_PCT_MAX_WEIGHT = b.comment("百分比削血·最大生命部分权重（命中追加伤害 = 目标最大生命×键值×此权重 + 目标当前生命×键值×下项权重；默认 0.5）").translation("hexcraft.config.v060.executePctMaxWeight").defineInRange("executePctMaxWeight", 0.5, 0.0, 3.0);
         EXECUTE_PCT_CUR_WEIGHT = b.comment("百分比削血·当前生命部分权重（默认 1.0）").translation("hexcraft.config.v060.executePctCurWeight").defineInRange("executePctCurWeight", 1.0, 0.0, 3.0);
         IRONS_CAST_HASTE = b.comment("迅捷咏唱每级施法速度（注入 Iron's 施法时间缩减属性，默认 0.08=每级 -8% 施法时间）").translation("hexcraft.config.v060.ironsCastHaste").defineInRange("ironsCastHaste", 0.08, 0.0, 1.0);

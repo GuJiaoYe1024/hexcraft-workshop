@@ -1,3 +1,12 @@
+Hexcraft Workshop v0.9.1 - Execute nerf (20% total cap) + ARAM-inspired hexes
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- EXECUTE NERF (total cap 20%): Executioner execute 0.20->0.08, Executioner Eternal 0.45->0.08, Fatal Wound 0.12->0.04, Execute Sigil spell_execute 0.15->0.08; melee trio totals 0.77->0.20 exactly at cap. Double hard-cap in code (execute & spell_execute both Math.min(0.2,...)); execute-threshold config max 0.5->0.2; Executioner combo +3% kept (18%<=20%); Mark Judge's 20% execute line untouched.
+- ARAM-INSPIRED HEXES (inspired by the "ARAM: Mayhem" Slay the Spire 2 mod, 11 additions): Enemy Hex system - elites/bosses gain an enemy hex on spawn based on the nearby player's highest rarity (fury/swift/bulwark/thorns/regen, prismatic tier stronger); Blood Pact (prismatic, temp strength on hit); Execution Collector (prismatic, execute bonus + coins on execute kills); Back to Basics (gold, +25% all dmg but -10% crit); Stat Converter (gold, 10% armor -> attack per level); Dice Maniac (gold, chance of free forge on kill); Corpse Explosion (gold, poison AOE on kill); Opening Forge (silver, random forge boon when entering a fight); Bloodthirst (silver, lifesteal + overflow shield); Black Candle (gold, cleanse on kill); Bounty Hunter (gold, elite/boss coins); Potion Master (silver, random potion on kill).
+- Now 462 hex JSONs; zh/en lang 1900 keys each (UTF-8 BOM kept).
+
 Hexcraft Workshop v0.9.0 - Hex combos & stack burst + forger event affixes + random craft bonus + live panel refresh
 =============================================================================
 

@@ -60,6 +60,10 @@ public class HextechEvents {
     private static final Map<UUID, Integer> COMBO_COUNT = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> VENGE_UNTIL = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> STEADY_UNTIL = new ConcurrentHashMap<>();
+    /** v0.9.1 处决收藏家：记录"被处决增伤命中的目标 UUID → 命中时刻"，命中后 1.5s 内死亡视为处决击杀 → 额外晶币 */
+    private static final Map<UUID, Long> EXEC_HIT_UNTIL = new ConcurrentHashMap<>();
+    /** v0.9.1 开局淬炼：记录玩家最近一次受击时刻，距上次受击 ≥30s 视为进入新战斗 → 随机锻造增益 */
+    private static final Map<UUID, Long> LAST_HURT = new ConcurrentHashMap<>();
     // v0.6.16 架枪射击：玩家位置跟踪（持有 tacz_bipod 时才记录，登出/失去自动清理）
     private static final Map<UUID, double[]> LAST_POS = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> LAST_MOVE = new ConcurrentHashMap<>();
@@ -481,6 +485,31 @@ public class HextechEvents {
                     com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.bounty", bonus), 0);
                 }
             }
+            // v0.9.1 处决收藏家（ARAM 借鉴）：被处决增伤命中后 1.5s 内死亡 → 视为处决击杀，额外晶币
+            double collector = effect(data, "collector");
+            if (collector > 0) {
+                Long execHit = EXEC_HIT_UNTIL.get(mob.getUUID());
+                if (execHit != null && execHit > System.currentTimeMillis()) {
+                    int bonus = (int) Math.floor(collector);
+                    if (bonus > 0) {
+                        data.addCoins(bonus);
+                        com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, Component.translatable("message.hexcraft.collector", bonus), 0);
+                    }
+                }
+                EXEC_HIT_UNTIL.remove(mob.getUUID());
+            }
+            // v0.9.1 尸爆（ARAM 借鉴）：击杀时周围 3 格敌对生物中毒
+            double corpse = effect(data, "corpse_explosion");
+            if (corpse > 0) {
+                int amp = (int) Math.min(2, Math.floor(corpse * 2));
+                for (net.minecraft.world.entity.LivingEntity e2 : mob.level().getEntitiesOfClass(
+                        net.minecraft.world.entity.LivingEntity.class, mob.getBoundingBox().inflate(3.0),
+                        e2 -> e2 != killer && e2 != mob && e2.isAlive()
+                                && e2 instanceof net.minecraft.world.entity.monster.Monster)) {
+                    e2.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.POISON, (int) Math.max(20, 60 * corpse), amp), killer);
+                }
+            }
             // 引燃链：燃烧目标死亡爆炸
             double fireChain = effect(data, "fire_chain");
             if (fireChain > 0 && mob.isOnFire()) {
@@ -725,6 +754,52 @@ public class HextechEvents {
         return e != null && e.level() != null && e.level().dimension().equals(net.minecraft.world.level.Level.NETHER);
     }
 
+    // ================= v0.9.1 敌方海克斯系统（ARAM 海克斯大乱斗 Enemy Hex 借鉴）=================
+    /** 敌方海克斯：精英/BOSS 生成时按附近玩家最高海克斯稀有度概率获得强化（狂怒/迅捷/铁壁/荆棘/再生），
+     *  玩家稀有度越高，敌人越容易获得且强度越高——"玩家变强，敌人同档变强"的镜像设计。 */
+    @SubscribeEvent
+    public static void onMobFinalizeSpawn(net.minecraftforge.event.entity.living.MobSpawnEvent.FinalizeSpawn event) {
+        net.minecraft.world.entity.LivingEntity mob = event.getEntity();
+        if (!(mob instanceof net.minecraft.world.entity.monster.Monster)) return;
+        if (mob.getMaxHealth() < 40) return; // 仅精英/首领（与悬赏猎人口径一致：≥40 精英，≥120 首领）
+        if (mob.level().isClientSide) return;
+        // 取 24 格内玩家的最高海克斯稀有度（SILVER=1 / GOLD=2 / PRISMATIC=3）
+        int top = 0;
+        net.minecraft.server.level.ServerPlayer notify = null;
+        for (net.minecraft.server.level.ServerPlayer p : mob.level().getEntitiesOfClass(
+                net.minecraft.server.level.ServerPlayer.class, mob.getBoundingBox().inflate(24.0))) {
+            if (notify == null) notify = p;
+            PlayerData d = ModCapabilities.get(p);
+            if (d == null) continue;
+            for (PlayerData.HexEntry e : d.getHexes()) {
+                HextechDefinition def = HextechRegistry.get(e.id);
+                if (def == null || def.rarity == null) continue;
+                top = Math.max(top, def.rarity.ordinal() + 1);
+            }
+        }
+        if (top == 0 || notify == null) return;
+        double chance = top == 1 ? 0.10 : top == 2 ? 0.20 : 0.35;
+        if (mob.getRandom().nextFloat() >= chance) return;
+        int count = 1 + (mob.getRandom().nextFloat() < 0.3 ? 1 : 0); // 30% 双敌方海克斯
+        for (int i = 0; i < count; i++) applyEnemyHex(mob, top);
+        com.hexcraft.network.Packets.S2CTipMessage.sendTo(notify,
+                Component.translatable("message.hexcraft.enemy_hex", mob.getDisplayName()), 0);
+    }
+
+    /** 敌方海克斯池（怪物永久强化，不可驱散）：狂怒(力量)/迅捷(移速)/铁壁(抗性)/荆棘(吸收护盾)/再生(回血) */
+    private static void applyEnemyHex(net.minecraft.world.entity.LivingEntity mob, int top) {
+        net.minecraft.world.effect.MobEffect[] pool = {
+                net.minecraft.world.effect.MobEffects.DAMAGE_BOOST,
+                net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED,
+                net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE,
+                net.minecraft.world.effect.MobEffects.ABSORPTION,
+                net.minecraft.world.effect.MobEffects.REGENERATION
+        };
+        net.minecraft.world.effect.MobEffect pick = pool[mob.getRandom().nextInt(pool.length)];
+        int amp = top >= 3 ? 1 : 0; // 棱彩档敌人强度高一档
+        mob.addEffect(new net.minecraft.world.effect.MobEffectInstance(pick, Integer.MAX_VALUE, amp, false, false));
+    }
+
     /** 战利品翻倍：loot_double 使生物自身掉落数量翻倍（范围不限，生物掉什么都翻倍；海克斯/装备通用） */
     @SubscribeEvent
     public static void onLootDrops(net.minecraftforge.event.entity.living.LivingDropsEvent event) {
@@ -789,6 +864,12 @@ public class HextechEvents {
         double crit = effect(data, "crit");
         // v0.8.0 维度专属海克斯：末地珍珠掌控暴击率并入常规暴击判定
         if (inEnd(sp)) crit += effect(data, "end_crit");
+        // v0.9.1 返璞归真（ARAM 借鉴）：全伤害提升，代价是暴击率下降（负面补偿，0.25 全伤 ↔ 0.10 暴击）
+        double btb = effect(data, "back_to_basics");
+        if (btb > 0) {
+            dmgMul *= (float) (1 + btb);
+            crit = Math.max(0, crit - btb * 0.4);
+        }
         if (crit > 0 && sp.getRandom().nextFloat() < (float) crit) {
             dmgMul *= 1.5f * (float) (1 + effect(data, "crit_damage")); // 重磅一击：暴击伤害提升
         }
@@ -983,7 +1064,12 @@ public class HextechEvents {
             // v0.9.0 组合羁绊「处决者」：斩杀阈值 +3%（同时拥有刽子手/永世刽子手/致命创伤）
             float execThr = HexConfig.EXECUTE_THRESHOLD.get().floatValue();
             if (hasCombo(data, "hex_executioner", "hex_executioner_eternal", "hex_fatal_wound")) execThr += 0.03f;
-            if (tRatio < execThr) dmgMul *= (float) (1 + effect(data, "execute"));
+            // v0.9.1 总处决封顶：execute 键值合计最高 20%（叠加多海克斯不超过 20% 斩杀增伤）
+            if (tRatio < execThr) {
+                dmgMul *= (float) (1 + Math.min(0.2f, (float) effect(data, "execute")));
+                // 处决收藏家：低血命中即标记"处决命中"，1.5s 内死亡视为处决击杀（onKill 消费）
+                if (effect(data, "collector") > 0) EXEC_HIT_UNTIL.put(target.getUUID(), System.currentTimeMillis() + 1500);
+            }
             if (target.getMaxHealth() >= 40) dmgMul *= (float) (1 + effect(data, "boss_power"));
             if (target.getMobType() == net.minecraft.world.entity.MobType.UNDEAD) dmgMul *= (float) (1 + effect(data, "enchant_smite"));
             if (target.getMobType() == net.minecraft.world.entity.MobType.ARTHROPOD) dmgMul *= (float) (1 + effect(data, "enchant_arthropod"));
@@ -1322,6 +1408,33 @@ public class HextechEvents {
         // v0.6.16 以血还血：持有者受击开启 5 秒复仇窗口（下一次攻击结算时消费）
         if (effect(data, "vengeance") > 0) {
             VENGE_UNTIL.put(sp.getUUID(), System.currentTimeMillis() + 5000);
+        }
+        // v0.9.1 血契（ARAM 借鉴）：受击概率获得临时力量（5 秒，等级随强度）
+        double bloodPact = effect(data, "blood_pact");
+        if (bloodPact > 0 && sp.getRandom().nextFloat() < (float) bloodPact) {
+            int amp = Math.max(0, (int) Math.min(2, Math.ceil(bloodPact * 2)) - 1);
+            sp.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.DAMAGE_BOOST, 100, amp));
+            com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.blood_pact"), 0);
+        }
+        // v0.9.1 开局淬炼（ARAM 借鉴）：距上次受击 ≥30s 视为进入新战斗 → 随机获得一项锻造增益（20 秒）
+        double openingForge = effect(data, "opening_forge");
+        if (openingForge > 0) {
+            long now = System.currentTimeMillis();
+            Long lastHurt = LAST_HURT.get(sp.getUUID());
+            if (lastHurt == null || now - lastHurt > 30000) {
+                int lvl = (int) Math.min(3, Math.ceil(openingForge));
+                net.minecraft.world.effect.MobEffect[] pool = {
+                        net.minecraft.world.effect.MobEffects.DAMAGE_BOOST,
+                        net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED,
+                        net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE,
+                        net.minecraft.world.effect.MobEffects.ABSORPTION
+                };
+                net.minecraft.world.effect.MobEffect pick = pool[sp.getRandom().nextInt(pool.length)];
+                sp.addEffect(new net.minecraft.world.effect.MobEffectInstance(pick, 400, Math.max(0, lvl - 1)));
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.opening_forge"), 0);
+            }
+            LAST_HURT.put(sp.getUUID(), now);
         }
         // 火免/耐火：火焰伤害先结算（免疫直接取消，防后续减伤穿透）
         double fireWard = effect(data, "fire_warden");

@@ -196,7 +196,7 @@ public class IronsSpellLink {
 
             double mul = 1.0 + power + school;
             if (execute > 0 && victim.getHealth() <= victim.getMaxHealth() * HexConfig.IRONS_EXECUTE_THRESHOLD.get()) {
-                mul *= (1.0 + Math.min(1.0, execute));
+                mul *= (1.0 + Math.min(0.2, execute)); // v0.9.1 法术处决增伤封顶 20%
             }
             if (pen > 0) mul *= (1.0 + Math.min(1.0, pen));
 

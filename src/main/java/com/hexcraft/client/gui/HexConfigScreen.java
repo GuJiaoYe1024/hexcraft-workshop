@@ -392,7 +392,7 @@ public class HexConfigScreen {
         )).setExpanded(true).build());
         // v0.9.0 处决双机制配置入口（斩杀阈值 + 百分比削血权重；此前仅有配置文件，GUI 缺失）
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.execute"), List.of(
-                doubleEntryEntry(eb, "v060.executeThreshold", HexConfig.EXECUTE_THRESHOLD, 0.01, 0.5, 0.15),
+                doubleEntryEntry(eb, "v060.executeThreshold", HexConfig.EXECUTE_THRESHOLD, 0.01, 0.2, 0.15),
                 doubleEntryEntry(eb, "v060.executePctMaxWeight", HexConfig.EXECUTE_PCT_MAX_WEIGHT, 0.0, 3.0, 0.5),
                 doubleEntryEntry(eb, "v060.executePctCurWeight", HexConfig.EXECUTE_PCT_CUR_WEIGHT, 0.0, 3.0, 1.0)
         )).setExpanded(true).build());

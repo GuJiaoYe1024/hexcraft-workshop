@@ -3,5 +3,5 @@
   "rarity":  "PRISMATIC",
   "weight":  5,
   "source":  "irons_spellbooks",
-  "event":  "spell_execute:0.15"
+  "event":  "spell_execute:0.08"
 }
