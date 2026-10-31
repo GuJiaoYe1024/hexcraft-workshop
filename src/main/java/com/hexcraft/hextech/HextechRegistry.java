@@ -343,11 +343,27 @@ public class HextechRegistry {
     }
 
     public static List<String> pool(HextechRarity rarity) {
+        return pool(rarity, 0);
+    }
+
+    /** v0.9.3 按来源分类抽取：filter 0=全部 / 1=原版(source=vanilla) / 2=联动(非 vanilla 且非 DLC) / 3=DLC(dlc_vanilla/dlc_niyuan) */
+    public static List<String> pool(HextechRarity rarity, int filter) {
         return DEFINITIONS.values().stream()
-                .filter(d -> d.rarity == rarity && isEnabled(d, "hex"))
+                .filter(d -> d.rarity == rarity && isEnabled(d, "hex") && matchSourceFilter(d.source, filter))
                 .sorted(Comparator.comparingInt(d -> -d.weight))
                 .map(d -> d.id)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    private static boolean matchSourceFilter(String source, int filter) {
+        if (filter <= 0) return true;
+        String s = source == null ? "vanilla" : source;
+        switch (filter) {
+            case 1: return "vanilla".equals(s);
+            case 2: return !"vanilla".equals(s) && !"dlc_vanilla".equals(s) && !"dlc_niyuan".equals(s);
+            case 3: return "dlc_vanilla".equals(s) || "dlc_niyuan".equals(s);
+            default: return true;
+        }
     }
 
     // ================= 锻造器词条（v0.6.0 重构：仅静态属性，机制全部海克斯化） =================

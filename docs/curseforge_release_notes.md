@@ -1,3 +1,14 @@
+Hexcraft Workshop v0.9.3 - Categorized draws, built-in DLC toggles, bond tracker on the stats page
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- DRAW CATEGORIES (main panel): the single "Draw" button is now four buttons in a row - Draw All (needs XP), Vanilla Draw, Linked Draw, DLC Draw. Same cost, same pity counter. The server filters the pool by source (0 all / 1 vanilla / 2 linked / 3 dlc_vanilla+dlc_niyuan) via a new 1-byte filter field in the draw packet (protocol is version-locked: client and server must match).
+- BUILT-IN DLC TOGGLES (config GUI > "DLC packs" tab): the page now shows two toggles at the top - Built-in DLC "Vanilla Revival" (102 hexes) and Built-in DLC "Origin Hunt" (24 hexes), ON by default, matching the main draw-pool filters. Your manually placed packs in hexworkshop_dlc/packs are still listed as before.
+- BOND TRACKER (stats page): a new "Hex Bonds" box under Growth/Stacks. Any bond with at least one member is listed (ACTIVE or x/y). Hover shows the bond name, member hexes, the bonded effect name with its bonus %, and how many members are missing. A stack-tier row shows the active tier (2+ stack hexes: +20%, 4+: +40% stack gain/cap).
+- The combo/stack tables were moved to a shared single source (ComboRegistry) so server settlement and client display can never drift.
+- Lang: 2206 keys per locale (zh_cn/en_us, UTF-8 BOM kept).
+
 Hexcraft Workshop v0.9.2 - Built-in DLC: 102 Vanilla Revival hexes + 24 "Origin Hunt" hexes (Nizhan-inspired)
 =============================================================================
 

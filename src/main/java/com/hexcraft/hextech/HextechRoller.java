@@ -13,16 +13,21 @@ public class HextechRoller {
 
     /** 海克斯三选一（服务端调用；会推进保底计数；抽取池已按来源过滤未启用联动内容） */
     public static List<String> rollHexOptions(PlayerData data) {
+        return rollHexOptions(data, 0);
+    }
+
+    /** v0.9.3 按来源分类抽取：filter 0=全部 / 1=原版 / 2=联动 / 3=DLC（原版/联动/DLC 专属抽取按钮用） */
+    public static List<String> rollHexOptions(PlayerData data, int filter) {
         HextechRarity rarity = rollRarity(data);
         List<String> out = new ArrayList<>(3);
-        List<String> pool = new ArrayList<>(HextechRegistry.pool(rarity));
+        List<String> pool = new ArrayList<>(HextechRegistry.pool(rarity, filter));
         while (out.size() < 3 && !pool.isEmpty()) {
             out.add(pool.remove(RANDOM.nextInt(pool.size())));
         }
         for (HextechRarity lower : new HextechRarity[]{HextechRarity.SILVER, HextechRarity.GOLD}) {
             if (out.size() >= 3) break;
             if (lower == rarity) continue;
-            List<String> fill = new ArrayList<>(HextechRegistry.pool(lower));
+            List<String> fill = new ArrayList<>(HextechRegistry.pool(lower, filter));
             fill.removeAll(out);
             while (out.size() < 3 && !fill.isEmpty()) {
                 out.add(fill.remove(RANDOM.nextInt(fill.size())));

@@ -304,6 +304,19 @@ public class HexConfigScreen {
         // 客户端也扫描一次本地 packs 目录（服务端在 AddReloadListenerEvent 扫描）
         com.hexcraft.dlc.DlcManager.scan();
         cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.dlc.hint")).build());
+        // v0.9.3 内置 DLC（随 mod 打包，无需玩家下载）：固定展示于 DLC 页顶部，开关与主抽取池一致
+        cat.addEntry(eb.startBooleanToggle(
+                        Component.translatable("hexcraft.config.dlc.builtin_vanilla"),
+                        com.hexcraft.config.HexConfig.DLC_VANILLA_ENABLED.get())
+                .setSaveConsumer(v -> com.hexcraft.config.HexConfig.DLC_VANILLA_ENABLED.set(v))
+                .setTooltip(Component.translatable("hexcraft.config.dlc.builtin_vanilla.tip"))
+                .build());
+        cat.addEntry(eb.startBooleanToggle(
+                        Component.translatable("hexcraft.config.dlc.builtin_niyuan"),
+                        com.hexcraft.config.HexConfig.DLC_NIYUAN_ENABLED.get())
+                .setSaveConsumer(v -> com.hexcraft.config.HexConfig.DLC_NIYUAN_ENABLED.set(v))
+                .setTooltip(Component.translatable("hexcraft.config.dlc.builtin_niyuan.tip"))
+                .build());
         for (com.hexcraft.dlc.DlcManager.PackInfo p : com.hexcraft.dlc.DlcManager.packs()) {
             String title = p.name + (p.version.isEmpty() ? "" : "  v" + p.version);
             if (!p.error.isEmpty()) {

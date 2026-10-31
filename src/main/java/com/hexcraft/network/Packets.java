@@ -71,8 +71,13 @@ public class Packets {
 
     // ================= C2S：请求抽取海克斯 =================
     public static class C2SRequestDraw {
-        public static void encode(C2SRequestDraw m, FriendlyByteBuf b) { }
-        public static C2SRequestDraw decode(FriendlyByteBuf b) { return new C2SRequestDraw(); }
+        public int filter; // v0.9.3 来源分类：0 全部 / 1 原版 / 2 联动 / 3 DLC
+        public static void encode(C2SRequestDraw m, FriendlyByteBuf b) { b.writeByte(m.filter); }
+        public static C2SRequestDraw decode(FriendlyByteBuf b) {
+            C2SRequestDraw m = new C2SRequestDraw();
+            m.filter = b.readByte();
+            return m;
+        }
         public static void handle(C2SRequestDraw m, Supplier<NetworkEvent.Context> ctx) {
             ctx.get().enqueueWork(() -> {
                 ServerPlayer sp = ctx.get().getSender();
@@ -105,7 +110,7 @@ public class Packets {
                 sp.giveExperiencePoints(-cost);
                 data.setDrawCount(data.getDrawCount() + 1); // v0.8.8 经验递增：本次抽取计入已抽次数
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(false, 0);
-                offer.options.addAll(HextechRoller.rollHexOptions(data));
+                offer.options.addAll(HextechRoller.rollHexOptions(data, m.filter));
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
             });

@@ -179,9 +179,22 @@ public class HextechPageScreen extends HexScaledScreen {
     }
 
     private void initHexes() {
-        this.addRenderableWidget(new HexButton(cx() + 4, cy() + 36, 226, 15,
-                Component.translatable("hexcraft.gui.draw", HexConfig.XP_COST_PER_DRAW.get()),
-                ACCENT, b -> PacketHandler.CHANNEL.sendToServer(new Packets.C2SRequestDraw())));
+        // v0.9.3 来源分类抽取：全部 / 原版 / 联动 / DLC（同费同保底，服务端按来源过滤抽取池）
+        int[] flt = {0, 1, 2, 3};
+        String[] lbl = {"hexcraft.gui.draw.all", "hexcraft.gui.draw.vanilla",
+                "hexcraft.gui.draw.linked", "hexcraft.gui.draw.dlc"};
+        int[] col = {ACCENT, 0xFF6FB1FF, 0xFF7FBF7F, 0xFFC77DFF};
+        for (int i = 0; i < 4; i++) {
+            final int f = flt[i];
+            Component label = i == 0
+                    ? Component.translatable(lbl[i], HexConfig.XP_COST_PER_DRAW.get())
+                    : Component.translatable(lbl[i]);
+            this.addRenderableWidget(new HexButton(cx() + 4 + i * 57, cy() + 36, 54, 15, label, col[i], b -> {
+                Packets.C2SRequestDraw p = new Packets.C2SRequestDraw();
+                p.filter = f;
+                PacketHandler.CHANNEL.sendToServer(p);
+            }));
+        }
         // 分类过滤栏（9 类，横向一排；选中高亮）
         int bw = 24;
         for (int i = 0; i < HEX_CATS.length; i++) {
@@ -472,6 +485,54 @@ public class HextechPageScreen extends HexScaledScreen {
                 }
             }
         }
+        // ===== 框4 组合羁绊（v0.9.3）：拥有 ≥1 成员的羁绊行；激活=已激活、未凑齐=x/y；hover 展示成员与效果 =====
+        java.util.List<int[]> comboRows = comboRows();
+        int comboStacks = comboStackCount();
+        boolean showStackTier = comboStacks >= 2;
+        if (!comboRows.isEmpty() || showStackTier) {
+            int cRows = comboRows.size() + (showStackTier ? 1 : 0);
+            int box4H = 14 + ((cRows + 1) / 2) * ROW_H + 4;
+            drawGroupBox(g, top, box4H);
+            drawSectionTitle(g, top + 2, 0, Component.translatable("hexcraft.gui.group_combo"));
+            idx = 2;
+            inner = top + 4;
+            for (int[] cr : comboRows) {
+                String[] c = com.hexcraft.hextech.ComboRegistry.COMBOS[cr[0]];
+                boolean full = cr[1] >= cr[2];
+                String status = full ? Component.translatable("hexcraft.gui.combo.active").getString()
+                                     : cr[1] + "/" + cr[2];
+                drawAttrRow(g, inner, idx, Component.translatable(com.hexcraft.hextech.ComboRegistry.nameKey(cr[0] + 1)), status);
+                // hover：羁绊名 + 成员海克斯 + 效果键加成 + 缺员提示
+                int rowY = inner + (idx / 2) * ROW_H;
+                boolean inHoverRow = hoverY >= rowY - 1 && hoverY <= rowY + 13;
+                boolean inLeftCol = hoverX >= cx() + 4 && hoverX < cx() + 115;
+                boolean inRightCol = hoverX >= cx() + 115 && hoverX <= cx() + 226;
+                boolean hitOwnCol = (idx % 2 == 0) ? inLeftCol : inRightCol;
+                if (inHoverRow && hitOwnCol) {
+                    java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                    tip.add(Component.translatable(com.hexcraft.hextech.ComboRegistry.nameKey(cr[0] + 1)).withStyle(t -> t.withColor(0xFFFFD28C)));
+                    StringBuilder members = new StringBuilder();
+                    for (int i = 2; i < c.length; i++) {
+                        if (i > 2) members.append("  ");
+                        members.append(Component.translatable("hexcraft.hextech." + c[i] + ".name").getString());
+                    }
+                    tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                    String effectName = Component.translatable("hexcraft.effect." + c[0]).getString();
+                    int pct = (int) Math.round(Double.parseDouble(c[1]) * 100);
+                    tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.effect").getString() + "：" + effectName + " +" + pct + "%").withStyle(t -> t.withColor(0xFF9FE4FF)));
+                    if (!full) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.missing", cr[2] - cr[1]).getString()).withStyle(t -> t.withColor(0xFFFF6B6B)));
+                    hoverTip = tip;
+                }
+                idx++;
+            }
+            if (showStackTier) {
+                if (idx % 2 == 1) idx++;
+                String tierKey = comboStacks >= 4 ? "hexcraft.gui.combo.stack4" : "hexcraft.gui.combo.stack2";
+                drawAttrRow(g, inner, idx, Component.translatable("hexcraft.gui.combo.stack_tier"),
+                        Component.translatable(tierKey, comboStacks).getString());
+            }
+            top += box4H + 4;
+        }
         g.disableScissor();
         if (maxAttrScroll() > 0) {
             g.drawString(this.font, Component.translatable("hexcraft.gui.scroll_hint"), cx() + 150, cy() + H - 40, 0xFF5A6A90);
@@ -539,6 +600,28 @@ public class HextechPageScreen extends HexScaledScreen {
             }
         }
         return out;
+    }
+
+    /** v0.9.3 属性页「组合羁绊」框数据：COMBOS 中拥有 ≥1 成员的行 {行号, 已拥有, 成员数} */
+    private static java.util.List<int[]> comboRows() {
+        java.util.List<int[]> out = new java.util.ArrayList<>();
+        java.util.Set<String> owned = new java.util.HashSet<>();
+        for (PlayerData.HexEntry h : ClientDataStore.hexes) owned.add(h.id);
+        String[][] combos = com.hexcraft.hextech.ComboRegistry.COMBOS;
+        for (int ri = 0; ri < combos.length; ri++) {
+            String[] c = combos[ri];
+            int have = 0;
+            for (int i = 2; i < c.length; i++) if (owned.contains(c[i])) have++;
+            if (have > 0) out.add(new int[]{ri, have, c.length - 2});
+        }
+        return out;
+    }
+
+    /** 拥有叠层类海克斯数量（v0.9.3 属性页叠层档位展示；服务端效果判定见 HextechEvents.countStackHexes） */
+    private static int comboStackCount() {
+        int n = 0;
+        for (PlayerData.HexEntry h : ClientDataStore.hexes) if (com.hexcraft.hextech.ComboRegistry.STACK_HEXES.contains(h.id)) n++;
+        return n;
     }
 
     /** 分组框：半透明深色背景 + 细边框（代替横线，绝不挡字） */
@@ -613,6 +696,13 @@ public class HextechPageScreen extends HexScaledScreen {
             int eqRows = stkEqs.isEmpty() ? 0 : 1 + (stkEqs.size() + 1) / 2;
             int bRows = hasBattle ? 1 + (battleStackCount() + 1) / 2 : 0;
             scrollH += 14 + (hexRows + eqRows + bRows) * ROW_H + 4;
+        }
+        // v0.9.3 组合羁绊框高度（与渲染共用 comboRows/comboStackCount 口径，避免滚不到底）
+        java.util.List<int[]> comboRows = comboRows();
+        int comboStacks = comboStackCount();
+        if (!comboRows.isEmpty() || comboStacks >= 2) {
+            int cRows = comboRows.size() + (comboStacks >= 2 ? 1 : 0);
+            scrollH += 14 + ((cRows + 1) / 2) * ROW_H + 4 + 4;
         }
         int viewH = H - 34 - 46 - 4;
         return Math.max(0, scrollH - viewH);
