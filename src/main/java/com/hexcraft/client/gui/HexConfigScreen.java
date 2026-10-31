@@ -319,7 +319,10 @@ public class HexConfigScreen {
         cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.dlc.hint")).build());
         // v0.9.3 内置 DLC 开关位于「海克斯抽取」页（抽取池来源），本页保持纯外接包列表
         for (com.hexcraft.dlc.DlcManager.PackInfo p : com.hexcraft.dlc.DlcManager.packs()) {
-            String title = p.name + (p.version.isEmpty() ? "" : "  v" + p.version);
+            // v0.9.3 修正4：无效包（缺 dlc_meta.json 等）name/version 可能为 null，先兜底再拼接，避免配置页构建 NPE
+            String pname = p.name == null ? p.id : p.name;
+            String pver = p.version;
+            String title = pname + (pver == null || pver.isEmpty() ? "" : "  v" + pver);
             if (!p.error.isEmpty()) {
                 cat.addEntry(eb.startTextDescription(Component.literal(title + "  [⚠ " + p.error + "]")
                         .withStyle(c -> c.withColor(0xFFFF6B6B))).build());

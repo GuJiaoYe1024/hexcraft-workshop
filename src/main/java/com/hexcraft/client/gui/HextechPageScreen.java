@@ -485,7 +485,24 @@ public class HextechPageScreen extends HexScaledScreen {
                 idx += 2;
                 for (PlayerData.StackEntry bs : battleStacks) {
                     Component bname = Component.literal(stackNameOf(bs.key));
-                    drawAttrRow(g, inner, idx++, bname, (int) bs.value + "/" + (int) bs.cap + "层");
+                    drawAttrRow(g, inner, idx, bname, (int) bs.value + "/" + (int) bs.cap + "层");
+                    // v0.9.3 修正4：战斗叠层 hover 介绍（机制说明 + 当前层数，与成长/装备叠层一致）
+                    int rowY = inner + (idx / 2) * ROW_H;
+                    boolean inHoverRow = hoverY >= rowY - 1 && hoverY <= rowY + 13;
+                    boolean inLeftCol = hoverX >= cx() + 4 && hoverX < cx() + 115;
+                    boolean inRightCol = hoverX >= cx() + 115 && hoverX <= cx() + 226;
+                    boolean hitOwnCol = (idx % 2 == 0) ? inLeftCol : inRightCol;
+                    if (inHoverRow && hitOwnCol) {
+                        String bid = "hex_" + bs.key; // 战伤突进→hex_combat_damage_spur，与 stackNameOf 的 probe 兜底一致
+                        java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                        tip.add(Component.literal(stackNameOf(bs.key)).withStyle(c -> c.withColor(0xFF9FE4FF)));
+                        if (ClientDataStore.hexDef(bid) != null) {
+                            tip.add(Component.translatable("hexcraft.hextech." + bid + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
+                        }
+                        tip.add(Component.literal("当前 " + (int) bs.value + " / " + (int) bs.cap + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
+                        hoverTip = tip;
+                    }
+                    idx++;
                 }
             }
             top += box3H + 4; // v0.9.3 修复：框3 结束后推进 top，否则框4 组合羁绊与框3 成长叠层重叠
@@ -700,7 +717,8 @@ public class HextechPageScreen extends HexScaledScreen {
             int hexRows = stkHexes.isEmpty() ? 0 : 1 + (stkHexes.size() + 1) / 2;
             int eqRows = stkEqs.isEmpty() ? 0 : 1 + (stkEqs.size() + 1) / 2;
             int bRows = hasBattle ? 1 + (battleStackCount() + 1) / 2 : 0;
-            scrollH += 14 + (hexRows + eqRows + bRows) * ROW_H + 4;
+            // v0.9.3 修正4：与渲染口径一致补 +4 间隔，否则滚到底底部最后一行被裁
+            scrollH += 14 + (hexRows + eqRows + bRows) * ROW_H + 4 + 4;
         }
         // v0.9.3 组合羁绊框高度（与渲染共用 comboRows/comboStackCount 口径，避免滚不到底）
         java.util.List<int[]> comboRows = comboRows();
@@ -709,7 +727,8 @@ public class HextechPageScreen extends HexScaledScreen {
             int cRows = comboRows.size() + (comboStacks >= 2 ? 1 : 0);
             scrollH += 14 + ((cRows + 1) / 2) * ROW_H + 4 + 4;
         }
-        int viewH = H - 34 - 46 - 4;
+        // v0.9.3 修正4：viewH 与 renderOverview scissor 可视区（cy+H-34 - y-46 = H-80）严格一致，去掉保守 -4
+        int viewH = H - 34 - 46;
         return Math.max(0, scrollH - viewH);
     }
 

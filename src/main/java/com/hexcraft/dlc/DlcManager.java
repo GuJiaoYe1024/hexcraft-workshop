@@ -94,20 +94,30 @@ public final class DlcManager {
      *  玩家可直接查看/复制了解 DLC 包结构；放入任意自己的包后不再生成。
      *  v0.9.3 修正2：原文件夹形式 example_pack 废弃，若存在则先删除再按 zip 双包生成。 */
     private static void ensureExamplePack(Path dir) {
-        // 清理上一版文件夹模板（仅删除 mod 自己生成的 example_pack）
+        // 清理上一版文件夹模板（递归删除，防止残留空目录被误判为无效包）
         Path legacy = dir.resolve("example_pack");
         if (Files.isDirectory(legacy)) {
-            try (DirectoryStream<Path> s = Files.newDirectoryStream(legacy)) {
-                for (Path p : s) {
+            try (java.util.stream.Stream<Path> walk = Files.walk(legacy)) {
+                walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> {
                     try { Files.deleteIfExists(p); } catch (IOException ignored) {}
-                }
+                });
             } catch (IOException ignored) {}
-            try { Files.deleteIfExists(legacy); } catch (IOException ignored) {}
         }
-        // 目录里已有玩家自己的包（任意内容）则不再生成示例
+        // 目录里已有玩家自己的包（非空文件夹 / zip / 任意文件）则不再生成示例；空目录不算内容
         boolean hasContent = false;
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
-            for (Path p : ds) { hasContent = true; break; }
+            for (Path p : ds) {
+                if (Files.isDirectory(p)) {
+                    boolean empty = true;
+                    try (DirectoryStream<Path> sub = Files.newDirectoryStream(p)) {
+                        empty = !sub.iterator().hasNext();
+                    } catch (IOException e) { continue; }
+                    if (!empty) { hasContent = true; break; }
+                } else {
+                    hasContent = true;
+                    break;
+                }
+            }
         } catch (IOException e) {
             return;
         }
