@@ -1,0 +1,12 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 3,
+  "event": "overshield:0.5",
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 1
+    }
+  ],
+  "source": "dlc_niyuan"
+}

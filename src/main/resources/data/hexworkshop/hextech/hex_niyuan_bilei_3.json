@@ -1,0 +1,16 @@
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "event": "",
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 1.5
+    },
+    {
+      "attr": "knockback_resistance",
+      "perLevel": 0.2
+    }
+  ],
+  "source": "dlc_niyuan"
+}

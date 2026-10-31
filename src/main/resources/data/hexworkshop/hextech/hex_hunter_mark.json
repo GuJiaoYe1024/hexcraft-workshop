@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "event": "mark_target:0.20,boss_power:0.18,crit:0.07",
+  "source": "dlc_vanilla"
+}

@@ -1,0 +1,10 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 5,
+  "event": "stack_growth:0.75",
+  "stackTag": [
+    "permanent_stack",
+    "damage_stack"
+  ],
+  "source": "dlc_vanilla"
+}

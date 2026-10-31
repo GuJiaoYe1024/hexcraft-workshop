@@ -1,0 +1,17 @@
+{
+  "rarity": "SILVER",
+  "weight": 8,
+  "event": "stack_attr:armor:0.05",
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 0.5
+    }
+  ],
+  "stackTag": [
+    "permanent_stack",
+    "armor_stack",
+    "on_kill_stack"
+  ],
+  "source": "dlc_vanilla"
+}

@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "event": "food_on_hit:1",
+  "source": "dlc_vanilla"
+}

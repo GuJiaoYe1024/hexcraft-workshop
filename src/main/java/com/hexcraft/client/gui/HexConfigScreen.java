@@ -282,6 +282,11 @@ public class HexConfigScreen {
                 boolEntryEntry(eb, "linked.enableEmcContent", HexConfig.ENABLE_EMC_CONTENT),
                 boolEntryEntry(eb, "linked.enableEmcHextech", HexConfig.ENABLE_EMC_HEXTECH)
         )).build());
+        // v0.9.2 内置 DLC（随 mod 打包无需下载：原版回归 102 + 逆原猎场增幅 24；独立开关控制是否并入主抽取池）
+        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.dlc"), List.of(
+                boolEntryEntry(eb, "linked.enableDlcVanilla", HexConfig.DLC_VANILLA_ENABLED),
+                boolEntryEntry(eb, "linked.enableDlcNiyuan", HexConfig.DLC_NIYUAN_ENABLED)
+        )).build());
     }
 
     private static void worldCategory(ConfigBuilder b, ConfigEntryBuilder eb) {

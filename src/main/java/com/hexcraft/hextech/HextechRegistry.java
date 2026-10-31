@@ -196,6 +196,9 @@ public class HextechRegistry {
     /** 来源是否启用（按内容小类细分）：原版恒可用；联动来源 = 已安装该 mod 且对应小类开关开启（总开关 && 细分开关） */
     public static boolean isSourceEnabled(String modid, String contentType) {
         if (modid == null || "vanilla".equals(modid)) return true;
+        // v0.9.2 内置 DLC 来源：非 mod 联动，纯配置开关控制（dlc_vanilla=原版回归；dlc_niyuan=逆原猎场增幅）
+        if ("dlc_vanilla".equals(modid)) return com.hexcraft.config.HexConfig.DLC_VANILLA_ENABLED.get();
+        if ("dlc_niyuan".equals(modid)) return com.hexcraft.config.HexConfig.DLC_NIYUAN_ENABLED.get();
         if (!net.minecraftforge.fml.ModList.get().isLoaded(modid)) return false; // 自动检测：未安装 → 不启用
         if ("tacz".equals(modid)) {
             boolean master = com.hexcraft.config.HexConfig.ENABLE_TACZ_CONTENT.get();

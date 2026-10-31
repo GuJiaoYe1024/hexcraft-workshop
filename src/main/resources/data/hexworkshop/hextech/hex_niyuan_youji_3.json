@@ -1,0 +1,12 @@
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "event": "jump:0.1",
+  "mods": [
+    {
+      "attr": "attack_speed",
+      "perLevel": 0.1
+    }
+  ],
+  "source": "dlc_niyuan"
+}

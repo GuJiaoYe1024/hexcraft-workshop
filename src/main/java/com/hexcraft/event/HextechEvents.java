@@ -276,7 +276,8 @@ public class HextechEvents {
 
     // ================= v0.9.0 组合羁绊与叠层联动 =================
     /** 组合羁绊表：{效果键, 加成值, 组内海克斯id...}。同时拥有组内全部海克斯 → effect() 该键额外追加加成（仅一次）。
-     *  全部复用现有效果键（223 键全集），不新增键；组合 8「处决者」（斩杀阈值）与组合 9「叠层之巅」（叠层上限）为特殊挂接，不进本表。 */
+     *  全部复用现有效果键（223 键全集），不新增键；组合 8「处决者」（斩杀阈值）与组合 9「叠层之巅」（叠层上限）为特殊挂接，不进本表。
+     *  v0.9.2 新增逆原 DLC 三系羁绊（19-24：狂战/游击/壁垒，每组 3 件套；同系两行 = 两档效果，凑齐任意 3 件触发对应档位）。 */
     private static final String[][] COMBOS = {
         {"melee_power", "0.15", "hex_warmaster", "hex_berserker_soul", "hex_bloodlust_blade"},                    // 1 近战无双
         {"tacz_power", "0.15", "hex_tacz_overlord", "hex_tacz_deadeye", "hex_tacz_crit_chain"},                    // 2 枪林弹雨
@@ -294,6 +295,13 @@ public class HextechEvents {
         {"farmer_drop", "0.20", "hex_farmer_grand_harvest", "hex_farmer_harvest_moon", "hex_farmer_feast"},        // 16 丰收盛宴
         {"spell_mana_max", "0.10", "hex_irons_mana_reservoir", "hex_irons_mana_spring", "hex_irons_mana_weaver"},  // 17 魔力泉涌
         {"cataclysm_damage", "0.15", "hex_cataclysm_boss_mark", "hex_cataclysm_punisher", "hex_cataclysm_wither_soul"}, // 18 灾厄猎手
+        // —— v0.9.2 逆原 DLC 三系羁绊（狂战/游击/壁垒；每组 3 件套，效果键复用现键）——
+        {"melee_power", "0.60", "hex_niyuan_kuangzhan_1", "hex_niyuan_kuangzhan_2", "hex_niyuan_kuangzhan_3"},      // 19 逆原·狂战·初阵
+        {"melee_power", "0.60", "hex_niyuan_kuangzhan_4", "hex_niyuan_kuangzhan_5", "hex_niyuan_kuangzhan_6"},      // 20 逆原·狂战·暴走
+        {"mobi_power", "0.50", "hex_niyuan_youji_1", "hex_niyuan_youji_2", "hex_niyuan_youji_3"},                    // 21 逆原·游击·疾行
+        {"mobi_power", "0.50", "hex_niyuan_youji_4", "hex_niyuan_youji_5", "hex_niyuan_youji_6"},                    // 22 逆原·游击·连击
+        {"overshield", "0.50", "hex_niyuan_bilei_1", "hex_niyuan_bilei_2", "hex_niyuan_bilei_3"},                    // 23 逆原·壁垒·坚守
+        {"overshield", "0.50", "hex_niyuan_bilei_4", "hex_niyuan_bilei_5", "hex_niyuan_bilei_6"},                    // 24 逆原·壁垒·不动
     };
 
     /** 叠层类海克斯全集（v0.9.0 叠层联动档位判定）：JSON stack 字段 2 个 + stack_attr/stack_gain/stack_attr_onhit/stack_attr_onhurt 事件键海克斯共 15 个 */

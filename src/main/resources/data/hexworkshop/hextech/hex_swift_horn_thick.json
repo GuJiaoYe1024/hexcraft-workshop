@@ -1,0 +1,9 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 4,
+  "event": "stack_cap:1.0",
+  "stackTag": [
+    "combat_stack"
+  ],
+  "source": "dlc_vanilla"
+}

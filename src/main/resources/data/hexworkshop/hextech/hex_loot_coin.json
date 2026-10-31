@@ -1,0 +1,7 @@
+{
+  "rarity": "GOLD",
+  "weight": 6,
+  "mods": [],
+  "event": "loot_bonus:0.3,coin_bonus:0.3",
+  "source": "dlc_vanilla"
+}

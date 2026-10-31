@@ -1,0 +1,7 @@
+{
+  "rarity": "SILVER",
+  "weight": 10,
+  "mods": [],
+  "event": "crit:0.1,lifesteal:0.04",
+  "source": "dlc_vanilla"
+}

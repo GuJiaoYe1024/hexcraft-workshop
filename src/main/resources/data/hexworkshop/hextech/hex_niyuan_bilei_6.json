@@ -1,0 +1,16 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 3,
+  "event": "shield_low:2",
+  "mods": [
+    {
+      "attr": "armor",
+      "perLevel": 2
+    },
+    {
+      "attr": "knockback_resistance",
+      "perLevel": 0.3
+    }
+  ],
+  "source": "dlc_niyuan"
+}

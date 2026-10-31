@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 6,
+  "event": "crit:0.1,echo:0.1",
+  "source": "dlc_vanilla"
+}
