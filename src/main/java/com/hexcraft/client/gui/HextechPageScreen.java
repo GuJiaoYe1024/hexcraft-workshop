@@ -556,7 +556,8 @@ public class HextechPageScreen extends HexScaledScreen {
             top += box4H + 4;
         }
         g.disableScissor();
-        if (maxAttrScroll() > 0) {
+        // v0.9.3 修正5：仅未滚到底时显示「滚动查看更多」，滚到底提示消失，避免误导「还有内容没显示全」
+        if (attrScroll < maxAttrScroll()) {
             g.drawString(this.font, Component.translatable("hexcraft.gui.scroll_hint"), cx() + 150, cy() + H - 40, 0xFF5A6A90);
         }
     }

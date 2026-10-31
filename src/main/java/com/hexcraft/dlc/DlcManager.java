@@ -103,8 +103,10 @@ public final class DlcManager {
                 });
             } catch (IOException ignored) {}
         }
-        // 目录里已有玩家自己的包（非空文件夹 / zip / 任意文件）则不再生成示例；空目录不算内容
-        boolean hasContent = false;
+        // 目录里只有示例 zip（固定两名）或空目录时：写入/重写两个示例包并默认启用；
+        // 存在玩家自己的包（其他文件/非空文件夹）则不干预
+        String[] exZips = {"[内置DLC·原版回归]VanillaRevival.zip", "[内置DLC·逆原]NiyuanHunt.zip"};
+        boolean onlySamples = true;
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
             for (Path p : ds) {
                 if (Files.isDirectory(p)) {
@@ -112,23 +114,27 @@ public final class DlcManager {
                     try (DirectoryStream<Path> sub = Files.newDirectoryStream(p)) {
                         empty = !sub.iterator().hasNext();
                     } catch (IOException e) { continue; }
-                    if (!empty) { hasContent = true; break; }
+                    if (!empty) { onlySamples = false; break; }
                 } else {
-                    hasContent = true;
-                    break;
+                    String fn = p.getFileName().toString();
+                    if (!fn.equals(exZips[0]) && !fn.equals(exZips[1])) { onlySamples = false; break; }
                 }
             }
         } catch (IOException e) {
             return;
         }
-        if (hasContent) return;
+        if (!onlySamples) return;
         try {
             Files.createDirectories(dir);
-            writeExampleZip(dir, "[内置DLC·原版回归]VanillaRevival.zip",
-                    EXAMPLE_META_VANILLA, "data/hex/example_vanilla_demo.json", EXAMPLE_HEX_VANILLA);
-            writeExampleZip(dir, "[内置DLC·逆原]NiyuanHunt.zip",
-                    EXAMPLE_META_NIYUAN, "data/hex/example_niyuan_demo.json", EXAMPLE_HEX_NIYUAN);
-            Hexcraft.LOGGER.info("Hexcraft-DLC: 已写入示例包 zip（原版+逆原，模板，可删除）");
+            for (String z : exZips) Files.deleteIfExists(dir.resolve(z));
+            writeExampleZip(dir, exZips[0], EXAMPLE_META_VANILLA, "data/hex/example_vanilla_demo.json", EXAMPLE_HEX_VANILLA);
+            writeExampleZip(dir, exZips[1], EXAMPLE_META_NIYUAN, "data/hex/example_niyuan_demo.json", EXAMPLE_HEX_NIYUAN);
+            // v0.9.3 修正5：示例包默认启用（用户要求 DLC 默认开启），写入启用索引
+            Map<String, Boolean> idx = readIndex();
+            idx.put(exZips[0], true);
+            idx.put(exZips[1], true);
+            writeIndex0(idx);
+            Hexcraft.LOGGER.info("Hexcraft-DLC: 已写入示例包 zip（原版+逆原，模板，默认启用，可删除）");
         } catch (IOException e) {
             Hexcraft.LOGGER.warn("Hexcraft-DLC: 示例包写入失败", e);
         }
@@ -146,11 +152,11 @@ public final class DlcManager {
         }
     }
 
-    /** 示例包 dlc_meta.json（真实可被扫描加载，enabled 默认关，玩家在 DLC 页勾选启用） */
+    /** 示例包 dlc_meta.json（真实可被扫描加载，v0.9.3 起默认启用，玩家在 DLC 页可关闭） */
     private static final String EXAMPLE_META_VANILLA = """
             {
               "name": "内置DLC·原版回归（示例模板，可删除）",
-              "description": "内置 DLC 示例包（原版向）：复制本 zip、改名，按 data/hex 下的海克斯 JSON 结构编写自己的内容包。启用开关在配置界面「DLC外接包」页。",
+              "description": "内置 DLC 示例包（原版向）：默认启用，海克斯「示例·原版回归」会进入抽取池。想自制内容包：复制本 zip、改名，按 data/hex 下的海克斯 JSON 结构编写自己的内容；不再需要时直接删除本 zip。",
               "version": "1.0.0"
             }
             """;
@@ -158,28 +164,28 @@ public final class DlcManager {
     private static final String EXAMPLE_META_NIYUAN = """
             {
               "name": "内置DLC·逆原（示例模板，可删除）",
-              "description": "内置 DLC 示例包（逆原向）：结构同原版包，海克斯来源 source 填 niyuan 即归入逆原池。复制改名即可制作自己的内容包。",
+              "description": "内置 DLC 示例包（逆原向）：默认启用，海克斯「示例·逆原」会进入抽取池。结构同原版包，海克斯来源 source 填 niyuan 即归入逆原池；不再需要时直接删除本 zip。",
               "version": "1.0.0"
             }
             """;
 
-    /** 示例海克斯 1（原版向）：展示基础结构（稀有度/权重/来源/效果键事件） */
+    /** 示例海克斯 1（原版向）：展示基础结构（稀有度/权重/来源/效果键事件，事件用合法键 melee_power=近战增伤） */
     private static final String EXAMPLE_HEX_VANILLA = """
             {
               "rarity": "SILVER",
               "weight": 10,
               "source": "vanilla",
-              "event": "attack_damage:0.2"
+              "event": "melee_power:0.2"
             }
             """;
 
-    /** 示例海克斯 2（逆原向）：展示黄金档与生命上限效果键 */
+    /** 示例海克斯 2（逆原向）：展示黄金档与吸血效果键（lifesteal=吸血） */
     private static final String EXAMPLE_HEX_NIYUAN = """
             {
               "rarity": "GOLD",
               "weight": 6,
               "source": "niyuan",
-              "event": "max_health:2"
+              "event": "lifesteal:0.05"
             }
             """;
 
@@ -261,8 +267,15 @@ public final class DlcManager {
     }
 
     private static void writeIndex() {
+        Map<String, Boolean> index = new LinkedHashMap<>();
+        PACKS.values().forEach(p -> index.put(p.id, p.enabled));
+        writeIndex0(index);
+    }
+
+    /** v0.9.3 修正5：按给定索引写文件（示例包默认启用用：scan 早期 PACKS 未加载，直接合并写） */
+    private static void writeIndex0(Map<String, Boolean> index) {
         JsonObject root = new JsonObject();
-        PACKS.values().forEach(p -> root.addProperty(p.id, p.enabled));
+        index.forEach(root::addProperty);
         try {
             Path f = indexFile();
             Files.createDirectories(f.getParent());

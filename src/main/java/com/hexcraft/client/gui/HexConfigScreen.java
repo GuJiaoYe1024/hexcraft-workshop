@@ -164,24 +164,7 @@ public class HexConfigScreen {
         // v0.9.0 经验递增配置入口（此前仅有配置文件，GUI 缺失）
         boolEntry(eb, cat, "draw.xpIncrementEnabled", HexConfig.XP_INCREMENT_ENABLED);
         doubleEntry(eb, cat, "draw.xpIncrementRate", HexConfig.XP_INCREMENT_RATE, 0.0, 1.0, 0.20);
-        // v0.9.3 内置 DLC 开关（抽取池来源，故置于海克斯抽取页）：原版回归 102 + 逆原猎场增幅 24，默认开启
-        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.dlc"), List.of(
-                dlcBuiltinToggle(eb, "hexcraft.config.dlc.builtin_vanilla",
-                        "hexcraft.config.dlc.builtin_vanilla.tip",
-                        com.hexcraft.config.HexConfig.DLC_VANILLA_ENABLED),
-                dlcBuiltinToggle(eb, "hexcraft.config.dlc.builtin_niyuan",
-                        "hexcraft.config.dlc.builtin_niyuan.tip",
-                        com.hexcraft.config.HexConfig.DLC_NIYUAN_ENABLED)
-        )).build());
-    }
-
-    /** v0.9.3 内置 DLC 开关条目（bool 型，读写 HexConfig 对应 ConfigValue，tooltip 同键名） */
-    private static me.shedaniel.clothconfig2.api.AbstractConfigListEntry<?> dlcBuiltinToggle(
-            ConfigEntryBuilder eb, String nameKey, String tipKey, ForgeConfigSpec.BooleanValue value) {
-        return eb.startBooleanToggle(Component.translatable(nameKey), value.get())
-                .setSaveConsumer(v -> value.set(v))
-                .setTooltip(Component.translatable(tipKey))
-                .build();
+        // v0.9.3 修正5：内置 DLC（原版回归 + 逆原猎场增幅）默认开启、常驻抽取池，删除 GUI 开关（用户要求）
     }
 
     /** v0.8.0 子分类重组：击杀掉落 / 防刷机制 / 锻造价格与退款，避免 16 项平铺难找 */
