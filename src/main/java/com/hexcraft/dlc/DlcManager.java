@@ -74,6 +74,7 @@ public final class DlcManager {
             Hexcraft.LOGGER.error("Hexcraft-DLC: 无法创建 packs 目录", e);
             return;
         }
+        ensureExamplePack(dir); // v0.9.3：目录为空时写入内置示例包（模板，玩家可复制参考）
         Map<String, Boolean> index = readIndex();
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
             for (Path p : ds) {
@@ -88,6 +89,56 @@ public final class DlcManager {
         }
         Hexcraft.LOGGER.info("Hexcraft-DLC: 扫描完成，共 {} 个外接包", PACKS.size());
     }
+
+    /** v0.9.3 内置示例包：packs 目录为空（首次安装 / 玩家清空）时写入文件夹形式模板，
+     *  玩家可直接查看/复制了解 DLC 包结构；放入任意自己的包后不再生成。 */
+    private static void ensureExamplePack(Path dir) {
+        try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
+            if (ds.iterator().hasNext()) return;
+        } catch (IOException e) {
+            return;
+        }
+        try {
+            Path pack = dir.resolve("example_pack");
+            Path hexDir = pack.resolve("data/hex");
+            Files.createDirectories(hexDir);
+            Files.writeString(pack.resolve("dlc_meta.json"), EXAMPLE_META, StandardCharsets.UTF_8);
+            Files.writeString(hexDir.resolve("example_demo_melee.json"), EXAMPLE_HEX_MELEE, StandardCharsets.UTF_8);
+            Files.writeString(hexDir.resolve("example_demo_vitality.json"), EXAMPLE_HEX_VITALITY, StandardCharsets.UTF_8);
+            Hexcraft.LOGGER.info("Hexcraft-DLC: 已写入内置示例包 example_pack（模板，可删除）");
+        } catch (IOException e) {
+            Hexcraft.LOGGER.warn("Hexcraft-DLC: 示例包写入失败", e);
+        }
+    }
+
+    /** 示例包 dlc_meta.json（真实可被扫描加载，enabled 默认关，玩家在 DLC 页勾选启用） */
+    private static final String EXAMPLE_META = """
+            {
+              "name": "示例包 Example Pack（模板，可删除）",
+              "description": "DLC 外接包参考模板：复制本文件夹改名即可制作自己的内容包。data/hex 下的海克斯 JSON 参考自 mod 自带数据（data/hexworkshop/hextech），更多字段见 mod 内原有海克斯。启用开关在配置界面「DLC外接包」页。",
+              "version": "1.0.0"
+            }
+            """;
+
+    /** 示例海克斯 1：展示基础结构（稀有度/权重/来源/效果键事件） */
+    private static final String EXAMPLE_HEX_MELEE = """
+            {
+              "rarity": "SILVER",
+              "weight": 10,
+              "source": "example",
+              "event": "attack_damage:0.2"
+            }
+            """;
+
+    /** 示例海克斯 2：展示黄金档与生命上限效果键 */
+    private static final String EXAMPLE_HEX_VITALITY = """
+            {
+              "rarity": "GOLD",
+              "weight": 6,
+              "source": "example",
+              "event": "max_health:2"
+            }
+            """;
 
     private static void loadFolder(Path dir, Map<String, Boolean> index) {
         String id = dir.getFileName().toString();

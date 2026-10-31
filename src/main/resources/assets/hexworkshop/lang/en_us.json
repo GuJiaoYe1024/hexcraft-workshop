@@ -2163,8 +2163,6 @@
   "hexcraft.hextech.hex_niyuan_buff_6.name": "Origin · Boost · Reborn",
   "hexcraft.hextech.hex_niyuan_buff_6.desc": "35%/lvl defy lethal hits; last-stand damage",
   "hexcraft.config.sub.dlc": "Built-in DLC",
-  "hexcraft.config.linked.enableDlcVanilla": "DLC Vanilla Revival",
-  "hexcraft.config.linked.enableDlcNiyuan": "DLC Origin Hunt",
   "hexcraft.combo.niyuan.kuangzhan": "Origin Berserk Set",
   "hexcraft.combo.niyuan.youji": "Origin Guerrilla Set",
   "hexcraft.combo.niyuan.bilei": "Origin Bulwark Set",
@@ -2194,7 +2192,7 @@
   "hexcraft.config.dlc.builtin_vanilla.tip": "All vanilla hexes retired in v0.8.7 return, shipped inside the mod and merged into the main draw pool. Turning off removes them from the pool; owned ones are kept.",
   "hexcraft.config.dlc.builtin_niyuan": "Built-in DLC · Origin Hunt (24)",
   "hexcraft.config.dlc.builtin_niyuan.tip": "Origin-Grounds-inspired buff hexes (Berserk/Guerrilla/Bulwark bonds + 6 global buffs), shipped inside the mod and merged into the main draw pool. Turning off removes them from the pool; owned ones are kept.",
-  "hexcraft.gui.draw.all": "Draw All (needs %s XP)",
+  "hexcraft.gui.draw.all": "Draw All",
   "hexcraft.gui.draw.vanilla": "Vanilla Draw",
   "hexcraft.gui.draw.linked": "Linked Draw",
   "hexcraft.gui.draw.dlc": "DLC Draw",
@@ -2204,5 +2202,6 @@
   "hexcraft.gui.combo.missing": "%s member(s) missing",
   "hexcraft.gui.combo.stack_tier": "Stack Tier",
   "hexcraft.gui.combo.stack2": "%s stack hexes owned → stack gain/cap +20%",
-  "hexcraft.gui.combo.stack4": "%s stack hexes owned → stack gain/cap +40%"
+  "hexcraft.gui.combo.stack4": "%s stack hexes owned → stack gain/cap +40%",
+  "hexcraft.gui.draw.all.tip": "Costs %s XP. Draw 3 options from ALL sources (vanilla / linked / built-in DLC)."
 }

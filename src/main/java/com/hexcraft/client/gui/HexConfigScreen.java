@@ -164,6 +164,24 @@ public class HexConfigScreen {
         // v0.9.0 经验递增配置入口（此前仅有配置文件，GUI 缺失）
         boolEntry(eb, cat, "draw.xpIncrementEnabled", HexConfig.XP_INCREMENT_ENABLED);
         doubleEntry(eb, cat, "draw.xpIncrementRate", HexConfig.XP_INCREMENT_RATE, 0.0, 1.0, 0.20);
+        // v0.9.3 内置 DLC 开关（抽取池来源，故置于海克斯抽取页）：原版回归 102 + 逆原猎场增幅 24，默认开启
+        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.dlc"), List.of(
+                dlcBuiltinToggle(eb, "hexcraft.config.dlc.builtin_vanilla",
+                        "hexcraft.config.dlc.builtin_vanilla.tip",
+                        com.hexcraft.config.HexConfig.DLC_VANILLA_ENABLED),
+                dlcBuiltinToggle(eb, "hexcraft.config.dlc.builtin_niyuan",
+                        "hexcraft.config.dlc.builtin_niyuan.tip",
+                        com.hexcraft.config.HexConfig.DLC_NIYUAN_ENABLED)
+        )).build());
+    }
+
+    /** v0.9.3 内置 DLC 开关条目（bool 型，读写 HexConfig 对应 ConfigValue，tooltip 同键名） */
+    private static me.shedaniel.clothconfig2.api.AbstractConfigListEntry<?> dlcBuiltinToggle(
+            ConfigEntryBuilder eb, String nameKey, String tipKey, ForgeConfigSpec.BooleanValue value) {
+        return eb.startBooleanToggle(Component.translatable(nameKey), value.get())
+                .setSaveConsumer(v -> value.set(v))
+                .setTooltip(Component.translatable(tipKey))
+                .build();
     }
 
     /** v0.8.0 子分类重组：击杀掉落 / 防刷机制 / 锻造价格与退款，避免 16 项平铺难找 */
@@ -282,11 +300,6 @@ public class HexConfigScreen {
                 boolEntryEntry(eb, "linked.enableEmcContent", HexConfig.ENABLE_EMC_CONTENT),
                 boolEntryEntry(eb, "linked.enableEmcHextech", HexConfig.ENABLE_EMC_HEXTECH)
         )).build());
-        // v0.9.2 内置 DLC（随 mod 打包无需下载：原版回归 102 + 逆原猎场增幅 24；独立开关控制是否并入主抽取池）
-        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.dlc"), List.of(
-                boolEntryEntry(eb, "linked.enableDlcVanilla", HexConfig.DLC_VANILLA_ENABLED),
-                boolEntryEntry(eb, "linked.enableDlcNiyuan", HexConfig.DLC_NIYUAN_ENABLED)
-        )).build());
     }
 
     private static void worldCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
@@ -304,19 +317,7 @@ public class HexConfigScreen {
         // 客户端也扫描一次本地 packs 目录（服务端在 AddReloadListenerEvent 扫描）
         com.hexcraft.dlc.DlcManager.scan();
         cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.dlc.hint")).build());
-        // v0.9.3 内置 DLC（随 mod 打包，无需玩家下载）：固定展示于 DLC 页顶部，开关与主抽取池一致
-        cat.addEntry(eb.startBooleanToggle(
-                        Component.translatable("hexcraft.config.dlc.builtin_vanilla"),
-                        com.hexcraft.config.HexConfig.DLC_VANILLA_ENABLED.get())
-                .setSaveConsumer(v -> com.hexcraft.config.HexConfig.DLC_VANILLA_ENABLED.set(v))
-                .setTooltip(Component.translatable("hexcraft.config.dlc.builtin_vanilla.tip"))
-                .build());
-        cat.addEntry(eb.startBooleanToggle(
-                        Component.translatable("hexcraft.config.dlc.builtin_niyuan"),
-                        com.hexcraft.config.HexConfig.DLC_NIYUAN_ENABLED.get())
-                .setSaveConsumer(v -> com.hexcraft.config.HexConfig.DLC_NIYUAN_ENABLED.set(v))
-                .setTooltip(Component.translatable("hexcraft.config.dlc.builtin_niyuan.tip"))
-                .build());
+        // v0.9.3 内置 DLC 开关位于「海克斯抽取」页（抽取池来源），本页保持纯外接包列表
         for (com.hexcraft.dlc.DlcManager.PackInfo p : com.hexcraft.dlc.DlcManager.packs()) {
             String title = p.name + (p.version.isEmpty() ? "" : "  v" + p.version);
             if (!p.error.isEmpty()) {

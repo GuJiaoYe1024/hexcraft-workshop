@@ -306,8 +306,8 @@ public class HexConfig {
         ENABLE_EMC_CONTENT = b.comment("总开关：启用 ProjectE 等价交换联动（需安装 projecte 才生效；EMC 充值通道 + 3 个等价交换海克斯；未安装时充值页不显示 EMC 通道、海克斯不进入抽取池）").translation("hexcraft.config.linked.enableEmcContent").define("enableEmcContent", true);
         ENABLE_EMC_HEXTECH = b.comment("ProjectE·海克斯：控制等价交换海克斯（点石成金/商贾之道/财富之力）是否进入抽取池").translation("hexcraft.config.linked.enableEmcHextech").define("enableEmcHextech", true);
         // v0.9.2 内置 DLC（随 mod 打包，无需玩家额外下载；默认开启，可独立关闭，关闭后对应海克斯不进入抽取池、已拥有项保留显示）
-        DLC_VANILLA_ENABLED = b.comment("内置 DLC·原版回归：启用 102 个原版海克斯回归（v0.8.7 提纯下线的原版内容完整恢复，并入主抽取池）").translation("hexcraft.config.linked.enableDlcVanilla").define("enableDlcVanilla", true);
-        DLC_NIYUAN_ENABLED = b.comment("内置 DLC·逆原：启用 24 个「逆原」猎场增幅海克斯（借鉴逆战原点猎场增幅：狂战/游击/壁垒三系羁绊 + 6 个全局强化，含 6 组组合羁绊）").translation("hexcraft.config.linked.enableDlcNiyuan").define("enableDlcNiyuan", true);
+        DLC_VANILLA_ENABLED = b.comment("内置 DLC·原版回归：启用 102 个原版海克斯回归（v0.8.7 提纯下线的原版内容完整恢复，并入主抽取池）").translation("hexcraft.config.dlc.builtin_vanilla").define("enableDlcVanilla", true);
+        DLC_NIYUAN_ENABLED = b.comment("内置 DLC·逆原：启用 24 个「逆原」猎场增幅海克斯（借鉴逆战原点猎场增幅：狂战/游击/壁垒三系羁绊 + 6 个全局强化，含 6 组组合羁绊）").translation("hexcraft.config.dlc.builtin_niyuan").define("enableDlcNiyuan", true);
         b.pop();
 
         b.comment("世界海克斯：全服共享的全局增强/诅咒体系（背包第二页签进入；抽取消耗经验、取消消耗晶币）").translation("hexcraft.config.cat.world").push("world");

@@ -2163,8 +2163,6 @@
   "hexcraft.hextech.hex_niyuan_buff_6.name": "原点·强化·重生",
   "hexcraft.hextech.hex_niyuan_buff_6.desc": "致命伤害 35%/级 几率免疫并回血；残血伤害提升",
   "hexcraft.config.sub.dlc": "内置 DLC",
-  "hexcraft.config.linked.enableDlcVanilla": "DLC·原版回归总开关",
-  "hexcraft.config.linked.enableDlcNiyuan": "DLC·逆原总开关",
   "hexcraft.combo.niyuan.kuangzhan": "逆原·狂战羁绊",
   "hexcraft.combo.niyuan.youji": "逆原·游击羁绊",
   "hexcraft.combo.niyuan.bilei": "逆原·壁垒羁绊",
@@ -2194,7 +2192,7 @@
   "hexcraft.config.dlc.builtin_vanilla.tip": "v0.8.7 提纯下线的原版海克斯全部回归，随 mod 打包并入主抽取池；关闭后不再进入抽取池，已拥有项保留显示。",
   "hexcraft.config.dlc.builtin_niyuan": "内置 DLC · 逆原（24 个）",
   "hexcraft.config.dlc.builtin_niyuan.tip": "借鉴逆战原点猎场的增幅海克斯（狂战/游击/壁垒三系羁绊 + 6 个全局强化），随 mod 打包并入主抽取池；关闭后不再进入抽取池，已拥有项保留显示。",
-  "hexcraft.gui.draw.all": "全部抽取（需 %s 经验）",
+  "hexcraft.gui.draw.all": "全部抽取",
   "hexcraft.gui.draw.vanilla": "原版抽取",
   "hexcraft.gui.draw.linked": "联动抽取",
   "hexcraft.gui.draw.dlc": "DLC抽取",
@@ -2204,5 +2202,6 @@
   "hexcraft.gui.combo.missing": "还差 %s 个成员",
   "hexcraft.gui.combo.stack_tier": "叠层档位",
   "hexcraft.gui.combo.stack2": "拥有 %s 件叠层海克斯 → 叠层获取/上限 +20%",
-  "hexcraft.gui.combo.stack4": "拥有 %s 件叠层海克斯 → 叠层获取/上限 +40%"
+  "hexcraft.gui.combo.stack4": "拥有 %s 件叠层海克斯 → 叠层获取/上限 +40%",
+  "hexcraft.gui.draw.all.tip": "消耗 %s 经验，从全部来源（原版/联动/内置 DLC）三选一抽取"
 }

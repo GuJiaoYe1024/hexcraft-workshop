@@ -10,6 +10,7 @@ import com.hexcraft.network.PacketHandler;
 import com.hexcraft.network.Packets;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.fml.ModList;
@@ -186,14 +187,17 @@ public class HextechPageScreen extends HexScaledScreen {
         int[] col = {ACCENT, 0xFF6FB1FF, 0xFF7FBF7F, 0xFFC77DFF};
         for (int i = 0; i < 4; i++) {
             final int f = flt[i];
-            Component label = i == 0
-                    ? Component.translatable(lbl[i], HexConfig.XP_COST_PER_DRAW.get())
-                    : Component.translatable(lbl[i]);
-            this.addRenderableWidget(new HexButton(cx() + 4 + i * 57, cy() + 36, 54, 15, label, col[i], b -> {
-                Packets.C2SRequestDraw p = new Packets.C2SRequestDraw();
-                p.filter = f;
-                PacketHandler.CHANNEL.sendToServer(p);
-            }));
+            // 按钮文字限 4 字以内（54px 放不下长文案，费用提示挂 all 按钮 tooltip）
+            HexButton w = new HexButton(cx() + 4 + i * 57, cy() + 36, 54, 15,
+                    Component.translatable(lbl[i]), col[i], b -> {
+                        Packets.C2SRequestDraw p = new Packets.C2SRequestDraw();
+                        p.filter = f;
+                        PacketHandler.CHANNEL.sendToServer(p);
+                    });
+            if (i == 0) {
+                w.setTooltip(Tooltip.create(Component.translatable(lbl[i] + ".tip", HexConfig.XP_COST_PER_DRAW.get())));
+            }
+            this.addRenderableWidget(w);
         }
         // 分类过滤栏（9 类，横向一排；选中高亮）
         int bw = 24;
