@@ -90,52 +90,85 @@ public final class DlcManager {
         Hexcraft.LOGGER.info("Hexcraft-DLC: 扫描完成，共 {} 个外接包", PACKS.size());
     }
 
-    /** v0.9.3 内置示例包：packs 目录为空（首次安装 / 玩家清空）时写入文件夹形式模板，
-     *  玩家可直接查看/复制了解 DLC 包结构；放入任意自己的包后不再生成。 */
+    /** v0.9.3 内置示例包：packs 目录为空时写入两个 zip 模板（原版/逆原分开，命名 [中文]英文），
+     *  玩家可直接查看/复制了解 DLC 包结构；放入任意自己的包后不再生成。
+     *  v0.9.3 修正2：原文件夹形式 example_pack 废弃，若存在则先删除再按 zip 双包生成。 */
     private static void ensureExamplePack(Path dir) {
+        // 清理上一版文件夹模板（仅删除 mod 自己生成的 example_pack）
+        Path legacy = dir.resolve("example_pack");
+        if (Files.isDirectory(legacy)) {
+            try (DirectoryStream<Path> s = Files.newDirectoryStream(legacy)) {
+                for (Path p : s) {
+                    try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+                }
+            } catch (IOException ignored) {}
+            try { Files.deleteIfExists(legacy); } catch (IOException ignored) {}
+        }
+        // 目录里已有玩家自己的包（任意内容）则不再生成示例
+        boolean hasContent = false;
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
-            if (ds.iterator().hasNext()) return;
+            for (Path p : ds) { hasContent = true; break; }
         } catch (IOException e) {
             return;
         }
+        if (hasContent) return;
         try {
-            Path pack = dir.resolve("example_pack");
-            Path hexDir = pack.resolve("data/hex");
-            Files.createDirectories(hexDir);
-            Files.writeString(pack.resolve("dlc_meta.json"), EXAMPLE_META, StandardCharsets.UTF_8);
-            Files.writeString(hexDir.resolve("example_demo_melee.json"), EXAMPLE_HEX_MELEE, StandardCharsets.UTF_8);
-            Files.writeString(hexDir.resolve("example_demo_vitality.json"), EXAMPLE_HEX_VITALITY, StandardCharsets.UTF_8);
-            Hexcraft.LOGGER.info("Hexcraft-DLC: 已写入内置示例包 example_pack（模板，可删除）");
+            Files.createDirectories(dir);
+            writeExampleZip(dir, "[内置DLC·原版回归]VanillaRevival.zip",
+                    EXAMPLE_META_VANILLA, "data/hex/example_vanilla_demo.json", EXAMPLE_HEX_VANILLA);
+            writeExampleZip(dir, "[内置DLC·逆原]NiyuanHunt.zip",
+                    EXAMPLE_META_NIYUAN, "data/hex/example_niyuan_demo.json", EXAMPLE_HEX_NIYUAN);
+            Hexcraft.LOGGER.info("Hexcraft-DLC: 已写入示例包 zip（原版+逆原，模板，可删除）");
         } catch (IOException e) {
             Hexcraft.LOGGER.warn("Hexcraft-DLC: 示例包写入失败", e);
         }
     }
 
+    private static void writeExampleZip(Path dir, String fileName, String meta, String hexPath, String hex) throws IOException {
+        Path zip = dir.resolve(fileName);
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(Files.newOutputStream(zip))) {
+            zos.putNextEntry(new java.util.zip.ZipEntry("dlc_meta.json"));
+            zos.write(meta.getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+            zos.putNextEntry(new java.util.zip.ZipEntry(hexPath));
+            zos.write(hex.getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+        }
+    }
+
     /** 示例包 dlc_meta.json（真实可被扫描加载，enabled 默认关，玩家在 DLC 页勾选启用） */
-    private static final String EXAMPLE_META = """
+    private static final String EXAMPLE_META_VANILLA = """
             {
-              "name": "示例包 Example Pack（模板，可删除）",
-              "description": "DLC 外接包参考模板：复制本文件夹改名即可制作自己的内容包。data/hex 下的海克斯 JSON 参考自 mod 自带数据（data/hexworkshop/hextech），更多字段见 mod 内原有海克斯。启用开关在配置界面「DLC外接包」页。",
+              "name": "内置DLC·原版回归（示例模板，可删除）",
+              "description": "内置 DLC 示例包（原版向）：复制本 zip、改名，按 data/hex 下的海克斯 JSON 结构编写自己的内容包。启用开关在配置界面「DLC外接包」页。",
               "version": "1.0.0"
             }
             """;
 
-    /** 示例海克斯 1：展示基础结构（稀有度/权重/来源/效果键事件） */
-    private static final String EXAMPLE_HEX_MELEE = """
+    private static final String EXAMPLE_META_NIYUAN = """
+            {
+              "name": "内置DLC·逆原（示例模板，可删除）",
+              "description": "内置 DLC 示例包（逆原向）：结构同原版包，海克斯来源 source 填 niyuan 即归入逆原池。复制改名即可制作自己的内容包。",
+              "version": "1.0.0"
+            }
+            """;
+
+    /** 示例海克斯 1（原版向）：展示基础结构（稀有度/权重/来源/效果键事件） */
+    private static final String EXAMPLE_HEX_VANILLA = """
             {
               "rarity": "SILVER",
               "weight": 10,
-              "source": "example",
+              "source": "vanilla",
               "event": "attack_damage:0.2"
             }
             """;
 
-    /** 示例海克斯 2：展示黄金档与生命上限效果键 */
-    private static final String EXAMPLE_HEX_VITALITY = """
+    /** 示例海克斯 2（逆原向）：展示黄金档与生命上限效果键 */
+    private static final String EXAMPLE_HEX_NIYUAN = """
             {
               "rarity": "GOLD",
               "weight": 6,
-              "source": "example",
+              "source": "niyuan",
               "event": "max_health:2"
             }
             """;

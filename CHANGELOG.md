@@ -12,7 +12,7 @@
 
 **📦 示例 DLC 包（图一）**
 
-- packs 目录为空时自动生成文件夹形式示例包 `example_pack`（dlc_meta.json + data/hex 两个示例海克斯），玩家可复制参考制作自己的 DLC 包；目录非空即不再生成
+- packs 目录为空时自动生成两个 zip 示例包（命名 `[中文]英文`、原版/逆原分开）：`[内置DLC·原版回归]VanillaRevival.zip` + `[内置DLC·逆原]NiyuanHunt.zip`（各含 dlc_meta.json + data/hex 示例海克斯），玩家可复制参考制作自己的 DLC 包；目录非空即不再生成
 
 **📋 属性面板组合羁绊（v0.9.0 表共享化）**
 

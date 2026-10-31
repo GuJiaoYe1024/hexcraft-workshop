@@ -488,6 +488,7 @@ public class HextechPageScreen extends HexScaledScreen {
                     drawAttrRow(g, inner, idx++, bname, (int) bs.value + "/" + (int) bs.cap + "层");
                 }
             }
+            top += box3H + 4; // v0.9.3 修复：框3 结束后推进 top，否则框4 组合羁绊与框3 成长叠层重叠
         }
         // ===== 框4 组合羁绊（v0.9.3）：拥有 ≥1 成员的羁绊行；激活=已激活、未凑齐=x/y；hover 展示成员与效果 =====
         java.util.List<int[]> comboRows = comboRows();
