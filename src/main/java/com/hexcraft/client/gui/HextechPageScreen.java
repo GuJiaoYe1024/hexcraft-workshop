@@ -550,8 +550,22 @@ public class HextechPageScreen extends HexScaledScreen {
             if (showStackTier) {
                 if (idx % 2 == 1) idx++;
                 String tierKey = comboStacks >= 4 ? "hexcraft.gui.combo.stack4" : "hexcraft.gui.combo.stack2";
-                drawAttrRow(g, inner, idx, Component.translatable("hexcraft.gui.combo.stack_tier"),
-                        Component.translatable(tierKey, comboStacks).getString());
+                // v0.9.3 修正7：lang 文案含 "+20%" 的 % 会让 Minecraft 的 translatable 格式化器（String.format）抛非法格式异常并原样返回 %s，
+                // 故改用无参 getString + 手动 replace 替换 %s（无参时不触发格式化，安全）
+                String tierVal = Component.translatable(tierKey).getString().replace("%s", String.valueOf(comboStacks));
+                drawAttrRow(g, inner, idx, Component.translatable("hexcraft.gui.combo.stack_tier"), tierVal);
+                // hover：叠层档位完整机制（行内为短文案，完整说明进 tooltip）
+                int rowY = inner + (idx / 2) * ROW_H;
+                boolean inHoverRow = hoverY >= rowY - 1 && hoverY <= rowY + 13;
+                boolean inLeftCol = hoverX >= cx() + 4 && hoverX < cx() + 115;
+                boolean inRightCol = hoverX >= cx() + 115 && hoverX <= cx() + 226;
+                boolean hitOwnCol = (idx % 2 == 0) ? inLeftCol : inRightCol;
+                if (inHoverRow && hitOwnCol) {
+                    java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                    tip.add(Component.translatable("hexcraft.gui.combo.stack_tier").withStyle(t -> t.withColor(0xFF9FE4FF)));
+                    tip.add(Component.literal("拥有 " + comboStacks + " 件叠层海克斯 → 叠层获取/上限 " + (comboStacks >= 4 ? "+40%" : "+20%")).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                    hoverTip = tip;
+                }
             }
             top += box4H + 4;
         }
