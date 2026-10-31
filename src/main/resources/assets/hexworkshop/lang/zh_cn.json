@@ -261,7 +261,7 @@
   "hexcraft.hextech.hex_death_defier.name": "亡者不死",
   "hexcraft.hextech.hex_death_defier.desc": "35%/级 几率免疫致命伤害，低血时获得护盾（4/级）。",
   "hexcraft.hextech.hex_tacz_fatal.name": "致命枪火",
-  "hexcraft.hextech.hex_tacz_fatal.desc": "每级 枪械暴击率 +20%、近距枪伤 +20%、暴击伤害 +30%",
+  "hexcraft.hextech.hex_tacz_fatal.desc": "每级 枪械暴击率 +20%、近距枪伤 +20%、暴击伤害 +30%、低生命目标处决增伤 +4%",
   "hexcraft.hextech.hex_tacz_survivor.name": "弹药永续",
   "hexcraft.hextech.hex_tacz_survivor.desc": "每级 击杀 15% 几率补满弹药、枪械击杀回复 2 点生命、枪伤 +10%",
   "hexcraft.hextech.hex_storm_focus.name": "风暴专注",
@@ -1898,5 +1898,16 @@
   "message.hexcraft.blood_pact": "血契：受击获得力量！",
   "message.hexcraft.collector": "处决收藏：+%s 晶币",
   "message.hexcraft.opening_forge": "开局淬炼：获得锻造增益！",
-  "message.hexcraft.enemy_hex": "敌方海克斯：%s 携带了敌方海克斯！"
+  "message.hexcraft.enemy_hex": "敌方海克斯：%s 携带了敌方海克斯！",
+  "hexcraft.gui.enemy_hex_btn": "敌方海克斯",
+  "hexcraft.gui.enemy_hex_title": "敌方海克斯",
+  "hexcraft.gui.enemy_hex_desc": "精英/BOSS 生成时，按附近 24 格内玩家最高海克斯稀有度，概率赋予敌人永久强化「敌方海克斯」——玩家变强，敌人同档变强。",
+  "hexcraft.gui.enemy_hex_chance": "触发概率：白银 10% / 黄金 20% / 棱彩 35%（30% 概率双海克斯，棱彩档强度更高）",
+  "hexcraft.gui.enemy_hex_pool": "敌方海克斯池（永久强化，不可驱散）",
+  "hexcraft.gui.enemy_hex.fury": "狂怒 · 力量提升，伤害增强",
+  "hexcraft.gui.enemy_hex.swift": "迅捷 · 移动速度提升",
+  "hexcraft.gui.enemy_hex.bulwark": "铁壁 · 伤害抗性提升",
+  "hexcraft.gui.enemy_hex.shield": "护盾 · 获得吸收护盾",
+  "hexcraft.gui.enemy_hex.regen": "再生 · 缓慢回复生命",
+  "hexcraft.gui.enemy_hex_note": "只对精英/首领（最大生命 ≥40）生效；玩家没有海克斯时不会触发。"
 }

@@ -259,7 +259,7 @@
   "hexcraft.hextech.hex_death_defier.name": "Unkillable",
   "hexcraft.hextech.hex_death_defier.desc": "35% chance/level to defy death; shield at low HP (4/level).",
   "hexcraft.hextech.hex_tacz_fatal.name": "Fatal Gunfire",
-  "hexcraft.hextech.hex_tacz_fatal.desc": "Per level: +20% gun crit, +20% close-range gun damage, +30% crit damage.",
+  "hexcraft.hextech.hex_tacz_fatal.desc": "Per level: +20% gun crit, +20% close-range gun damage, +30% crit damage, +4% execute bonus vs low-HP targets.",
   "hexcraft.hextech.hex_tacz_survivor.name": "Ammo Forever",
   "hexcraft.hextech.hex_tacz_survivor.desc": "Per level: 15% chance to refill ammo on kill; gun kills heal 2 HP; +10% gun damage.",
   "hexcraft.hextech.hex_storm_focus.name": "Storm Focus",
@@ -1898,5 +1898,16 @@
   "message.hexcraft.blood_pact": "Blood Pact: strength gained!",
   "message.hexcraft.collector": "Execute collect: +%s coins",
   "message.hexcraft.opening_forge": "Opening Forge: boon gained!",
-  "message.hexcraft.enemy_hex": "Enemy hex: %s carries an enemy hex!"
+  "message.hexcraft.enemy_hex": "Enemy hex: %s carries an enemy hex!",
+  "hexcraft.gui.enemy_hex_btn": "Enemy Hex",
+  "hexcraft.gui.enemy_hex_title": "Enemy Hex",
+  "hexcraft.gui.enemy_hex_desc": "When an elite/boss spawns, it may gain a permanent Enemy Hex based on the highest hex rarity of nearby players (within 24 blocks) - the stronger your hexes, the tougher its enemies.",
+  "hexcraft.gui.enemy_hex_chance": "Trigger chance: Silver 10% / Gold 20% / Prismatic 35% (30% chance of two hexes; prismatic tier is stronger)",
+  "hexcraft.gui.enemy_hex_pool": "Enemy Hex pool (permanent, undispellable)",
+  "hexcraft.gui.enemy_hex.fury": "Fury - strength boost, more damage",
+  "hexcraft.gui.enemy_hex.swift": "Swift - faster movement",
+  "hexcraft.gui.enemy_hex.bulwark": "Bulwark - damage resistance",
+  "hexcraft.gui.enemy_hex.shield": "Shield - absorption shield",
+  "hexcraft.gui.enemy_hex.regen": "Regen - slow health recovery",
+  "hexcraft.gui.enemy_hex_note": "Only affects elites/bosses (max HP >= 40); never triggers when no nearby player owns a hex."
 }

@@ -137,8 +137,12 @@ public class WorldHexScreen extends HexScaledScreen {
         // 左侧按钮栏：第一位"生物"（当前页，高亮）
         this.addRenderableWidget(new WBtn(SIDEBAR_X, top + 8, SIDEBAR_W, 24,
                 Component.translatable("hexcraft.worldhex.cat_btn.bio"), b -> {}, true));
-        // "联动总览"（v0.4.2 敬请期待页 → v0.8.4 实装为联动统计页）
+        // "敌方海克斯"（v0.9.1：敌方海克斯系统信息页，排在联动总览上方）
         this.addRenderableWidget(new WBtn(SIDEBAR_X, top + 38, SIDEBAR_W, 24,
+                Component.translatable("hexcraft.gui.enemy_hex_btn"),
+                b -> Minecraft.getInstance().setScreen(new EnemyHexScreen())));
+        // "联动总览"（v0.4.2 敬请期待页 → v0.8.4 实装为联动统计页）
+        this.addRenderableWidget(new WBtn(SIDEBAR_X, top + 68, SIDEBAR_W, 24,
                 Component.translatable("hexcraft.gui.world_more"),
                 b -> Minecraft.getInstance().setScreen(new FutureScreen())));
 
