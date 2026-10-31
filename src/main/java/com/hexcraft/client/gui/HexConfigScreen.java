@@ -333,15 +333,18 @@ public class HexConfigScreen {
                         .build());
                 continue;
             }
+            java.util.List<Component> dlcTips = new java.util.ArrayList<>();
+            dlcTips.add(Component.literal(p.description));
+            if (!p.dependencies.isEmpty()) {
+                dlcTips.add(Component.translatable("hexcraft.config.dlc.deps", String.join(", ", p.dependencies)));
+            }
+            dlcTips.add(Component.translatable("hexcraft.config.dlc.note"));
             cat.addEntry(eb.startBooleanToggle(
                             Component.translatable("hexcraft.config.dlc.toggle", title),
                             p.enabled)
                     .setSaveConsumer(v -> com.hexcraft.dlc.DlcManager.setEnabled(p.id, v))
                     .setDefaultValue(false)
-                    .setTooltip(Component.literal(p.description),
-                            p.dependencies.isEmpty() ? null :
-                                    Component.translatable("hexcraft.config.dlc.deps", String.join(", ", p.dependencies)),
-                            Component.translatable("hexcraft.config.dlc.note"))
+                    .setTooltip(dlcTips.toArray(new Component[0]))
                     .build());
         }
         if (com.hexcraft.dlc.DlcManager.packs().isEmpty()) {
