@@ -556,10 +556,8 @@ public class HextechPageScreen extends HexScaledScreen {
             top += box4H + 4;
         }
         g.disableScissor();
-        // v0.9.3 修正5：仅未滚到底时显示「滚动查看更多」，滚到底提示消失，避免误导「还有内容没显示全」
-        if (attrScroll < maxAttrScroll()) {
-            g.drawString(this.font, Component.translatable("hexcraft.gui.scroll_hint"), cx() + 150, cy() + H - 40, 0xFF5A6A90);
-        }
+        // v0.9.3 修正6：删除「滚动查看更多」底部提示——滚轮滚动能力保留，但不再有文字叠在最后一行/误导「还有内容没显示全」
+        // (原提示绘制在可视区底上方 6px，滚动中会叠压内容行，用户多轮反馈底部有文字未显示全)
     }
 
     /** 隐藏属性行集合（值 > 0 才显示）：暴击伤害 + 效果属性 + TACZ */
@@ -809,9 +807,7 @@ public class HextechPageScreen extends HexScaledScreen {
         if (list.isEmpty()) {
             g.drawString(this.font, Component.translatable("hexcraft.gui.cat_empty"), cx() + 6, top + 4, 0xFF5A6A90);
         }
-        if (maxHexScroll() > 0) {
-            g.drawString(this.font, Component.translatable("hexcraft.gui.scroll_hint"), cx() + 150, bottom - 10, 0xFF5A6A90);
-        }
+        // v0.9.3 修正6：滚动提示统一移除（底部不再有「滚动查看更多」文字叠压内容）
     }
 
     /** 当前分类过滤后的海克斯列表（全部时直接返回原列表） */
@@ -1009,9 +1005,7 @@ public class HextechPageScreen extends HexScaledScreen {
             ly += groupH + 6;
         }
         g.disableScissor();
-        if (maxForgeScroll() > 0) {
-            g.drawString(this.font, Component.translatable("hexcraft.gui.scroll_hint"), cx() + 150, bottom - 10, 0xFF5A6A90);
-        }
+        // v0.9.3 修正6：锻造页滚动提示统一移除
     }
 
     private int maxForgeScroll() {

@@ -317,9 +317,14 @@ public class HextechRegistry {
         return true; // 未来联动来源默认启用（按需扩展配置）
     }
 
-    /** 定义在当前环境是否可用（来源启用判定；contentType: hex / equip） */
+    /** 定义在当前环境是否可用（来源启用判定；contentType: hex / equip）。
+     *  v0.9.3 修正6：外接包内容（海克斯/装备/世界海克斯）的启停由所属 DLC 包决定（关闭包 → 不参与抽取），
+     *  内置 DLC（dlc_vanilla/dlc_niyuan）与非包内容仍走 source 开关判定。 */
     public static boolean isEnabled(HextechDefinition def, String contentType) {
-        return def != null && isSourceEnabled(def.source, contentType);
+        if (def == null) return false;
+        Boolean packEn = com.hexcraft.dlc.DlcManager.packEnabledOf(def.id);
+        if (packEn != null) return packEn;
+        return isSourceEnabled(def.source, contentType);
     }
 
     // ================= 装备 =================
@@ -346,22 +351,24 @@ public class HextechRegistry {
         return pool(rarity, 0);
     }
 
-    /** v0.9.3 按来源分类抽取：filter 0=全部 / 1=原版(source=vanilla) / 2=联动(非 vanilla 且非 DLC) / 3=DLC(dlc_vanilla/dlc_niyuan) */
+    /** v0.9.3 按来源分类抽取：filter 0=全部 / 1=原版(source=vanilla) / 2=联动(非 vanilla 且非 DLC 且非外接包) / 3=DLC(内置 dlc_* + 外接包内容) */
     public static List<String> pool(HextechRarity rarity, int filter) {
         return DEFINITIONS.values().stream()
-                .filter(d -> d.rarity == rarity && isEnabled(d, "hex") && matchSourceFilter(d.source, filter))
+                .filter(d -> d.rarity == rarity && isEnabled(d, "hex") && matchSourceFilter(d, filter))
                 .sorted(Comparator.comparingInt(d -> -d.weight))
                 .map(d -> d.id)
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    private static boolean matchSourceFilter(String source, int filter) {
+    private static boolean matchSourceFilter(HextechDefinition def, int filter) {
         if (filter <= 0) return true;
-        String s = source == null ? "vanilla" : source;
+        String s = def.source == null ? "vanilla" : def.source;
         switch (filter) {
             case 1: return "vanilla".equals(s);
-            case 2: return !"vanilla".equals(s) && !"dlc_vanilla".equals(s) && !"dlc_niyuan".equals(s);
-            case 3: return "dlc_vanilla".equals(s) || "dlc_niyuan".equals(s);
+            case 2: return !"vanilla".equals(s) && !"dlc_vanilla".equals(s) && !"dlc_niyuan".equals(s)
+                    && !com.hexcraft.dlc.DlcManager.isPackContent(def.id);
+            case 3: return "dlc_vanilla".equals(s) || "dlc_niyuan".equals(s)
+                    || com.hexcraft.dlc.DlcManager.isPackContent(def.id);
             default: return true;
         }
     }

@@ -64,9 +64,30 @@ public final class DlcManager {
 
     private static final Map<String, PackInfo> PACKS = new LinkedHashMap<>();
 
+    /** v0.9.3 修正6：内容归属——内容 id（海克斯/装备/世界海克斯）→ 所属 DLC 包 id（抽取启停按包控制） */
+    private static final Map<String, String> CONTENT_OWNER = new java.util.HashMap<>();
+
+    public static String packOf(String contentId) {
+        return CONTENT_OWNER.get(contentId);
+    }
+
+    /** 外接包内容启停：返回 Boolean（true=所属包已启用；false=关闭/无效）；非外接包内容返回 null（走 source 判定） */
+    public static Boolean packEnabledOf(String contentId) {
+        String pid = CONTENT_OWNER.get(contentId);
+        if (pid == null) return null;
+        PackInfo p = PACKS.get(pid);
+        return p != null && p.enabled && p.error.isEmpty();
+    }
+
+    /** 是否为外接包内容（用于抽取分类：DLC 按钮下归入 DLC） */
+    public static boolean isPackContent(String contentId) {
+        return CONTENT_OWNER.containsKey(contentId);
+    }
+
     /** 启动 / reload dlc 时扫描 packs 目录（文件夹 + *.zip），读取元数据与启用状态 */
     public static void scan() {
         PACKS.clear();
+        CONTENT_OWNER.clear();
         Path dir = packsDir();
         try {
             Files.createDirectories(dir);
@@ -156,7 +177,7 @@ public final class DlcManager {
     private static final String EXAMPLE_META_VANILLA = """
             {
               "name": "内置DLC·原版回归（示例模板，可删除）",
-              "description": "内置 DLC 示例包（原版向）：默认启用，海克斯「示例·原版回归」会进入抽取池。想自制内容包：复制本 zip、改名，按 data/hex 下的海克斯 JSON 结构编写自己的内容；不再需要时直接删除本 zip。",
+              "description": "内置 DLC 示例包（原版向）：默认启用，海克斯「示例·原版回归」会进入抽取池。想自制内容包：复制本 zip、改名，按 data/hex 下的海克斯 JSON 结构编写自己的内容；海克斯 source 字段可任意填写，自制内容会归入「DLC」抽取按钮，启停随本包开关。不再需要时直接删除本 zip。",
               "version": "1.0.0"
             }
             """;
@@ -164,7 +185,7 @@ public final class DlcManager {
     private static final String EXAMPLE_META_NIYUAN = """
             {
               "name": "内置DLC·逆原（示例模板，可删除）",
-              "description": "内置 DLC 示例包（逆原向）：默认启用，海克斯「示例·逆原」会进入抽取池。结构同原版包，海克斯来源 source 填 niyuan 即归入逆原池；不再需要时直接删除本 zip。",
+              "description": "内置 DLC 示例包（逆原向）：默认启用，海克斯「示例·逆原」会进入抽取池。结构同原版包，海克斯来源 source 任意填写即归入 DLC 抽取分类，启停随本包开关；不再需要时直接删除本 zip。",
               "version": "1.0.0"
             }
             """;
@@ -174,7 +195,7 @@ public final class DlcManager {
             {
               "rarity": "SILVER",
               "weight": 10,
-              "source": "vanilla",
+              "source": "example_vanilla",
               "event": "melee_power:0.2"
             }
             """;
@@ -184,7 +205,7 @@ public final class DlcManager {
             {
               "rarity": "GOLD",
               "weight": 6,
-              "source": "niyuan",
+              "source": "example_niyuan",
               "event": "lifesteal:0.05"
             }
             """;
@@ -316,6 +337,7 @@ public final class DlcManager {
             for (Map.Entry<String, JsonObject> e : readPackJson(p, "data/hex").entrySet()) {
                 try {
                     HextechRegistry.put(e.getKey(), HexDataLoader.parse(e.getKey(), e.getValue()));
+                    CONTENT_OWNER.put(e.getKey(), p.id);
                     n++;
                 } catch (Exception ex) {
                     Hexcraft.LOGGER.error("Hexcraft-DLC: 包 {} 海克斯 {} 加载失败", p.id, e.getKey(), ex);
@@ -331,6 +353,7 @@ public final class DlcManager {
             for (Map.Entry<String, JsonObject> e : readPackJson(p, "data/equipment").entrySet()) {
                 try {
                     HextechRegistry.putEquip(e.getKey(), EquipmentDataLoader.parse(e.getKey(), e.getValue()));
+                    CONTENT_OWNER.put(e.getKey(), p.id);
                     n++;
                 } catch (Exception ex) {
                     Hexcraft.LOGGER.error("Hexcraft-DLC: 包 {} 装备 {} 加载失败", p.id, e.getKey(), ex);
@@ -346,6 +369,7 @@ public final class DlcManager {
             for (Map.Entry<String, JsonObject> e : readPackJson(p, "data/world_hex").entrySet()) {
                 try {
                     WorldHexRegistry.put(e.getKey(), WorldHexDataLoader.parse(e.getKey(), e.getValue()));
+                    CONTENT_OWNER.put(e.getKey(), p.id);
                     n++;
                 } catch (Exception ex) {
                     Hexcraft.LOGGER.error("Hexcraft-DLC: 包 {} 世界海克斯 {} 加载失败", p.id, e.getKey(), ex);
