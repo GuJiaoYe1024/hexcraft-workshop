@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "projecte",
   "mods": [],
   "event": "xp_bonus:0.3,coin_bonus:0.3"
 }

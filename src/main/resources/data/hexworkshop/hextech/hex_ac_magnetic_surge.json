@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "alexscaves",
   "mods": [],
   "event": "ac_magnetic_damage:0.20,thorns:1"
 }

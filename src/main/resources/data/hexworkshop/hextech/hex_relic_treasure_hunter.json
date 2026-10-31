@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "relics",
   "mods": [],
   "event": "bounty:8,coin_bonus:0.2,loot_bonus:0.3"
 }

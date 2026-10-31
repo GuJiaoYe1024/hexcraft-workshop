@@ -161,6 +161,9 @@ public class HexConfigScreen {
         intEntry(eb, cat, "draw.pityGoldDraws", HexConfig.PITY_GOLD, 0, 100, 4);
         intEntry(eb, cat, "draw.pityPrismDraws", HexConfig.PITY_PRISMATIC, 0, 200, 8);
         intEntry(eb, cat, "draw.maxHextechLevel", HexConfig.MAX_HEXTECH_LEVEL, 1, 10, 3);
+        // v0.9.0 经验递增配置入口（此前仅有配置文件，GUI 缺失）
+        boolEntry(eb, cat, "draw.xpIncrementEnabled", HexConfig.XP_INCREMENT_ENABLED);
+        doubleEntry(eb, cat, "draw.xpIncrementRate", HexConfig.XP_INCREMENT_RATE, 0.0, 1.0, 0.20);
     }
 
     /** v0.8.0 子分类重组：击杀掉落 / 防刷机制 / 锻造价格与退款，避免 16 项平铺难找 */
@@ -186,6 +189,12 @@ public class HexConfigScreen {
                 intEntryEntry(eb, "eco.refundSilver", HexConfig.REFUND_SILVER, 0, 10000, 10),
                 intEntryEntry(eb, "eco.refundGold", HexConfig.REFUND_GOLD, 0, 10000, 30),
                 intEntryEntry(eb, "eco.refundPrismatic", HexConfig.REFUND_PRISMATIC, 0, 10000, 80)
+        )).build());
+        // v0.9.0 D：概率合成多产配置（工作台/背包/超越维度等所有合成概率额外多产出）
+        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.craft"), List.of(
+                boolEntryEntry(eb, "craft.bonusEnabled", HexConfig.CRAFT_BONUS_ENABLED),
+                doubleEntryEntry(eb, "craft.bonusChance", HexConfig.CRAFT_BONUS_CHANCE, 0.0, 1.0, 0.15),
+                intEntryEntry(eb, "craft.bonusCount", HexConfig.CRAFT_BONUS_COUNT, 1, 64, 1)
         )).build());
     }
 
@@ -380,6 +389,12 @@ public class HexConfigScreen {
         )).setExpanded(true).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.perf"), List.of(
                 boolEntryEntry(eb, "v060.perfTipThrottle", HexConfig.PERF_TIP_THROTTLE)
+        )).setExpanded(true).build());
+        // v0.9.0 处决双机制配置入口（斩杀阈值 + 百分比削血权重；此前仅有配置文件，GUI 缺失）
+        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.execute"), List.of(
+                doubleEntryEntry(eb, "v060.executeThreshold", HexConfig.EXECUTE_THRESHOLD, 0.01, 0.5, 0.15),
+                doubleEntryEntry(eb, "v060.executePctMaxWeight", HexConfig.EXECUTE_PCT_MAX_WEIGHT, 0.0, 3.0, 0.5),
+                doubleEntryEntry(eb, "v060.executePctCurWeight", HexConfig.EXECUTE_PCT_CUR_WEIGHT, 0.0, 3.0, 1.0)
         )).setExpanded(true).build());
     }
 

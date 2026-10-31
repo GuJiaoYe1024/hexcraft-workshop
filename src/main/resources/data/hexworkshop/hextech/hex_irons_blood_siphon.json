@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "irons_spellbooks",
   "mods": [],
   "event": "spell_lifesteal:0.10,spell_blood:0.15"
 }

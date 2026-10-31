@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "artifacts",
   "mods": [],
   "event": "artifact_rage:0.28,artifact_drop:0.18,kill_heal:1"
 }

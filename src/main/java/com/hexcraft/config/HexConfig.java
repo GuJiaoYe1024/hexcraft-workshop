@@ -152,6 +152,13 @@ public class HexConfig {
     // ---- v0.6.22 防卡顿机制（服务端：提示广播节流） ----
     /** 服务端滚动提示广播节流（默认开启：同一玩家同一文本 500ms 内只发 1 次，狂刷的击杀/入账提示自动去重合并，降低网络与客户端渲染压力） */
     public static final ForgeConfigSpec.BooleanValue PERF_TIP_THROTTLE;
+    // ---- v0.9.0 D：概率合成多产（服务端） ----
+    /** 概率合成多产总开关（默认开启） */
+    public static final ForgeConfigSpec.BooleanValue CRAFT_BONUS_ENABLED;
+    /** 合成额外多产触发概率（默认 0.15=15%） */
+    public static final ForgeConfigSpec.DoubleValue CRAFT_BONUS_CHANCE;
+    /** 合成额外多产份数（默认 1 份） */
+    public static final ForgeConfigSpec.IntValue CRAFT_BONUS_COUNT;
     // ---- HUD 优化（客户端）----
     /** v0.6.16 滚动提示总开关 */
     public static final ForgeConfigSpec.BooleanValue TIP_ENABLED;
@@ -350,6 +357,10 @@ public class HexConfig {
         // v0.6.22 防卡顿：服务端滚动提示广播节流（默认开启：同玩家同文本 500ms 内只广播 1 次，
         // 狂刷提示自动去重合并，降低联机网络与客户端渲染压力）
         PERF_TIP_THROTTLE = b.comment("提示广播节流（服务端生效，默认开启：同玩家同文本 500ms 内只发 1 条，击杀/入账狂刷时自动去重，防联机卡顿）").translation("hexcraft.config.v060.perfTipThrottle").define("perfTipThrottle", true);
+        // v0.9.0 D：概率合成多产（服务端生效：工作台/背包/超越维度等所有合成概率额外多产出；不可堆叠物品与特殊 NBT 跳过）
+        CRAFT_BONUS_ENABLED = b.comment("概率合成多产总开关（服务端生效，默认开启：合成时概率额外多产出，可关闭）").translation("hexcraft.config.craft.bonusEnabled").define("craftBonusEnabled", true);
+        CRAFT_BONUS_CHANCE = b.comment("合成额外多产触发概率（默认 0.15=15%；0=关闭多产）").translation("hexcraft.config.craft.bonusChance").defineInRange("craftBonusChance", 0.15, 0.0, 1.0);
+        CRAFT_BONUS_COUNT = b.comment("合成额外多产份数（默认 1 份；叠加不超过物品最大堆叠数）").translation("hexcraft.config.craft.bonusCount").defineInRange("craftBonusCount", 1, 1, 64);
         b.pop();
 
         COMMON_SPEC = b.build();

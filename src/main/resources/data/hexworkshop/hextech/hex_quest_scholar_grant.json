@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "ftbquests",
   "mods": [],
   "event": "goldmine:0.25,scholar:0.25"
 }

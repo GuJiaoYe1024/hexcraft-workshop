@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "farmersdelight",
   "mods": [],
   "event": "food_on_kill:3,loot_bonus:0.25"
 }

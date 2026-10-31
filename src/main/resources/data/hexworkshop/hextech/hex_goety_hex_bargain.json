@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "goety",
   "mods": [],
   "event": "goety_drop:0.18,coin_bonus:0.15"
 }

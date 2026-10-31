@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "cataclysm",
   "mods": [],
   "event": "cataclysm_resist:0.20,last_stand:0.10"
 }

@@ -1,3 +1,16 @@
+Hexcraft Workshop v0.9.0 - Hex combos & stack burst + forger event affixes + random craft bonus + live panel refresh
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- HEX COMBOS (B, "1+2" bond + stacks): 16 combo bonds - owning the 3 listed hexes grants a bonus effect-key value (melee_power / tacz_power / spell_power / iaf_dragon_damage / ac_deep_resist / coin_bonus / overshield / equip_power / tf_snow_queen_damage / goety_soul / am_mob_damage / blade_damage / relic_drop / farmer_drop / spell_mana_max / cataclysm_damage, +10%~20% each); 2 special combos - "Executioner" raises the execute threshold by +3%, "Stack Pinnacle" multiplies the stack cap by 1.3. Stack scaling tiers: owning 2+ stack hexes -> gain/cap x1.2, 4+ -> x1.4; a maxed stack hex deals x1.5 damage per stack.
+- FORGER UPDATE (C): 12 new event affixes across the linked families (TACZ power/crit/reload, spell pen/lifesteal, Goety soul, SlashBlade damage, Relics drop, Alex's Caves deep damage, Cataclysm resist, Mowzie damage, FarmersDelight drop); base values +50% (atk 0.5->0.75, armor 1.0->1.5, hp 2.0->3.0, luck 0.25->0.375); 3 new percent affixes (atk +3%/lvl, armor +3%/lvl, luck +5%/lvl); source-guard keeps uninstalled-mod affixes out of the roll; the forger UI now shows a source tag (TACZ / IRONS / IAF ...).
+- RANDOM CRAFT BONUS (D): all crafting (table / inventory / beyonddimensions...) has a 15% chance to yield 1 extra output (non-stackable items and special NBT skipped to prevent duplication); chance and count configurable (craftBonusChance / craftBonusCount), can be fully disabled.
+- LIVE PANEL REFRESH (E): opening the main panel requests the freshest server data and rebuilds (keeping the current tab); any server sync while a panel is open now rebuilds it in place, so draws / forging / equips / stack changes show up immediately; tab switches always re-read the latest data; world-hex and roll screens refresh the same way.
+- LINKED SOURCE FIX: all 223 linked hex JSONs now carry a proper `source` field (the v0.8.7/v0.8.8 batches were all missing it), so hexes of a mod that is not installed no longer appear in the draw pool.
+- LANG: 3 legacy missing config translations added (keep-equips / keep-forges / keep-hexes, name+tooltip); bilingual zh/en now 1874 keys, fully aligned, UTF-8 BOM preserved.
+- NOTE: network protocol VERSION unchanged - no new packets; 451 hexes, 44 world hexes, 61 equipment pieces.
+
 Hexcraft Workshop v0.8.8 - Execute rework + XP increment + world-hex draw tax + all 15 linked families +10 each (+150)
 =============================================================================
 

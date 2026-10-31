@@ -1,5 +1,6 @@
 {
     "rarity":  "PRISMATIC",
     "weight":  5,
+    "source": "tacz",
     "event":  "tacz_tracking:0.12"
 }

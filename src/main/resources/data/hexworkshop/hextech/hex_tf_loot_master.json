@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "twilightforest",
   "mods": [],
   "event": "loot_bonus:0.25,loot_double:1,coin_bonus:0.15"
 }

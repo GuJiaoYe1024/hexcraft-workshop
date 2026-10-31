@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "projecte",
   "mods": [],
   "event": "emc_transmute:0.2"
 }

@@ -1,5 +1,6 @@
 {
   "rarity": "GOLD",
   "weight": 6,
+  "source": "tacz",
   "event": "tacz_crit:0.2,tacz_close_power:0.2,crit_damage:0.3"
 }

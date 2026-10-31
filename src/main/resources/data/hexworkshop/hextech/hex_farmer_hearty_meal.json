@@ -1,6 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
+  "source": "farmersdelight",
   "mods": [],
   "event": "regen:0.5,food_on_hit:1"
 }

@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "cataclysm",
   "mods": [],
   "event": "cataclysm_resist:0.25,shield_low:3,thorns:2"
 }

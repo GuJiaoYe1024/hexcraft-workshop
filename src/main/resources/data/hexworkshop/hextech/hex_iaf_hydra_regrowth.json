@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "iceandfire",
   "mods": [],
   "event": "iaf_hydra_damage:0.28,regen:0.8"
 }

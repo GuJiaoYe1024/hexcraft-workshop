@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "irons_spellbooks",
   "mods": [],
   "event": "spell_fire:0.12,spell_nature:0.12,spell_lightning:0.10"
 }

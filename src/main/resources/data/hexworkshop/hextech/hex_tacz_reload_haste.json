@@ -1,5 +1,6 @@
 {
   "rarity": "SILVER",
   "weight": 7,
+  "source": "tacz",
   "event": "tacz_reload_haste:0.25"
 }

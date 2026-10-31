@@ -857,10 +857,12 @@ public class HextechPageScreen extends HexScaledScreen {
                 String nameStr = (String) it[0];
                 g.drawString(this.font, nameStr, colX, iy, 0xFFAAB6D8);
                 // v0.4.5：来源角标按词条名实际宽度动态定位（名字后 4px），不再固定 colX+100 侵入右列词条
-                if (Boolean.TRUE.equals(it[1])) {
+                // v0.9.0 C4：角标改为通用来源 tag（TACZ/IRONS/IAF…），不再写死 TACZ
+                String tagStr = (String) it[1];
+                if (tagStr != null) {
                     int tagX = colX + this.font.width(nameStr) + 4;
-                    if (tagX + this.font.width("TACZ") <= colX + 110) {
-                        g.drawString(this.font, "TACZ", tagX, iy, 0xFF4DE6FF);
+                    if (tagX + this.font.width(tagStr) <= colX + 110) {
+                        g.drawString(this.font, tagStr, tagX, iy, 0xFF4DE6FF);
                     }
                 }
                 // hover 提示：悬停查看锻造词条具体效果（名称 + 实际加成 + 档位 + 描述 + 来源）
@@ -883,8 +885,8 @@ public class HextechPageScreen extends HexScaledScreen {
                     tip.add(Component.literal(descTpl
                             .replace("{tierName}", tierName)
                             .replace("{displayValue}", real)));
-                    if (Boolean.TRUE.equals(it[1])) {
-                        tip.add(Component.translatable("hexcraft.gui.source_tag", "TACZ").withStyle(c -> c.withColor(0xFF4DE6FF)));
+                    if (it[1] != null) {
+                        tip.add(Component.translatable("hexcraft.gui.source_tag", (String) it[1]).withStyle(c -> c.withColor(0xFF4DE6FF)));
                     }
                     hoverTip = tip;
                 }
@@ -901,12 +903,13 @@ public class HextechPageScreen extends HexScaledScreen {
         return Math.max(0, forgeGroupHeight() - (234 - 88));
     }
 
-    /** v0.6.1 锻造词条实际加成文本：基础值 × 档位倍率（读取运行时配置）；百分比词条(hppct/aspdpct)转百分号展示 */
+    /** v0.6.1 锻造词条实际加成文本：基础值 × 档位倍率（读取运行时配置）；百分比词条转百分号展示
+     *  v0.9.0 C4：百分比判定并入统一 isPercentForgeStat（hppct/aspdpct/atkpct/armorpct/luckpct） */
     private String forgeValueText(String stat, int tier) {
         com.hexcraft.hextech.HextechDefinition.ModSpec m = com.hexcraft.hextech.HextechRegistry.forgeMod(stat);
         if (m == null) return "?";
         double v = m.perLevel * com.hexcraft.hextech.HextechRegistry.tierMult(tier);
-        if (stat.equals("hppct") || stat.equals("aspdpct")) {
+        if (com.hexcraft.hextech.HextechRegistry.isPercentForgeStat(stat)) {
             String p = String.format(java.util.Locale.ROOT, "%.2f", v * 100.0).replaceFirst("\\.?0+$", "");
             return "+" + p + "%";
         }
@@ -939,8 +942,9 @@ public class HextechPageScreen extends HexScaledScreen {
             ForgeGroup grp = new ForgeGroup(tierKeys[t], tierColors[t], t);
             for (Map.Entry<String, Integer> e : agg.entrySet()) {
                 String name = Component.translatable("hexcraft.forge." + e.getKey() + ".name").getString();
-                boolean tacz = "tacz".equals(com.hexcraft.hextech.HextechRegistry.sourceOf(e.getKey()));
-                grp.items.add(new Object[]{name + "  ×" + e.getValue(), tacz, e.getKey()});
+                // v0.9.0 C4：来源角标通用化——任意事件型联动词条按来源 mod 显示角标（原版属性词条 null 不标）
+                String tag = com.hexcraft.hextech.HextechRegistry.forgeStatSourceTag(e.getKey());
+                grp.items.add(new Object[]{name + "  ×" + e.getValue(), tag, e.getKey()});
             }
             groups.add(grp);
         }

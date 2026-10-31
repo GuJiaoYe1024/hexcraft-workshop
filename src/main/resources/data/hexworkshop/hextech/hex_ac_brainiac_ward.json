@@ -1,6 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
+  "source": "alexscaves",
   "mods": [],
   "event": "ac_brainiac_damage:0.10,shield_low:2"
 }

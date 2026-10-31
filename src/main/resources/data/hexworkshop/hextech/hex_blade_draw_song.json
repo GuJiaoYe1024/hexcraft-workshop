@@ -1,6 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
+  "source": "slashblade",
   "mods": [],
   "event": "stack_attr:attack_speed:0.02,echo:0.12"
 }

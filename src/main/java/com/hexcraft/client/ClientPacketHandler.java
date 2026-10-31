@@ -19,17 +19,17 @@ public class ClientPacketHandler {
         ClientDataStore.apply(msg);
         // v0.6.3 打开界面时请求同步：回包到达后用最新数据重建主界面一次（保留当前页签），
         // 避免联机玩家抽取/变更后打开界面读到旧缓存（显示为空）的问题
-        if (ClientDataStore.requestPendingSync) {
-            ClientDataStore.requestPendingSync = false;
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.screen instanceof com.hexcraft.client.gui.HextechPageScreen) {
-                com.hexcraft.client.gui.HextechPageScreen old = (com.hexcraft.client.gui.HextechPageScreen) mc.screen;
-                int t = old.currentTab();
-                com.hexcraft.client.gui.HextechPageScreen fresh = new com.hexcraft.client.gui.HextechPageScreen();
-                fresh.setInitialTab(t);
-                mc.setScreen(fresh);
-            }
+        // v0.9.0 E：面板自动更新——数据变化实时刷新（服务端任意同步到达且主界面开着即重建，保留页签，
+        // 不再仅限 requestPendingSync 时机；覆盖抽卡/锻造/装备/叠层变化等所有同步场景）
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen instanceof com.hexcraft.client.gui.HextechPageScreen) {
+            com.hexcraft.client.gui.HextechPageScreen old = (com.hexcraft.client.gui.HextechPageScreen) mc.screen;
+            int t = old.currentTab();
+            com.hexcraft.client.gui.HextechPageScreen fresh = new com.hexcraft.client.gui.HextechPageScreen();
+            fresh.setInitialTab(t);
+            mc.setScreen(fresh);
         }
+        ClientDataStore.requestPendingSync = false;
     }
 
     /** v0.6.4 服务端 Registry 定义同步：填充客户端定义缓存（联机客户端海克斯页/属性页依赖） */

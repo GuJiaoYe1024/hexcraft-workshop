@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "goety",
   "mods": [],
   "event": "shield_low:3,regen:0.5"
 }

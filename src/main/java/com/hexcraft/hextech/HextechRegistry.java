@@ -118,12 +118,13 @@ public class HextechRegistry {
 
         // ---- 锻造属性池（倍率 1/2/3 对应基础/黄金/棱彩锻造器；无上限锻造 → 数值全部下调防崩坏）----
         // v0.5.0 数值上调：基础生命/攻击/防御多给一点，配得上三档价格
-        FORGE_MODS.put("atk", mod(Attributes.ATTACK_DAMAGE, 0.5));
-        FORGE_MODS.put("armor", mod(Attributes.ARMOR, 1.0));
-        FORGE_MODS.put("hp", mod(Attributes.MAX_HEALTH, 2.0));
+        // v0.9.0 C2：力量/生命/幸运/防御基础数值 +50%（atk 0.5→0.75、armor 1.0→1.5、hp 2.0→3.0、luck 0.25→0.375）
+        FORGE_MODS.put("atk", mod(Attributes.ATTACK_DAMAGE, 0.75));
+        FORGE_MODS.put("armor", mod(Attributes.ARMOR, 1.5));
+        FORGE_MODS.put("hp", mod(Attributes.MAX_HEALTH, 3.0));
         FORGE_MODS.put("spd", mod(Attributes.MOVEMENT_SPEED, 0.0015));
         FORGE_MODS.put("aspd", mod(Attributes.ATTACK_SPEED, 0.025));
-        FORGE_MODS.put("luck", mod(Attributes.LUCK, 0.25));
+        FORGE_MODS.put("luck", mod(Attributes.LUCK, 0.375));
         FORGE_MODS.put("knockback", mod(Attributes.ATTACK_KNOCKBACK, 0.12));
         FORGE_MODS.put("resist", mod(Attributes.KNOCKBACK_RESISTANCE, 0.025));
         FORGE_MODS.put("tough", mod(Attributes.ARMOR_TOUGHNESS, 0.25));
@@ -131,6 +132,10 @@ public class HextechRegistry {
         // 数值上调：棱彩每档一次 +5% 生命 / +3% 攻速（原 2%/1.5% 太少）
         FORGE_MODS.put("hppct", mod(Attributes.MAX_HEALTH, 0.05));        // 每级最大生命 +5%
         FORGE_MODS.put("aspdpct", mod(Attributes.ATTACK_SPEED, 0.03));    // 每级攻击速度 +3%
+        // v0.9.0 C3：百分比词条 3 条（乘法叠加，同 hppct 机制）——力量/防御/幸运 %
+        FORGE_MODS.put("atkpct", mod(Attributes.ATTACK_DAMAGE, 0.03));    // 每级力量 +3%
+        FORGE_MODS.put("armorpct", mod(Attributes.ARMOR, 0.03));          // 每级防御 +3%
+        FORGE_MODS.put("luckpct", mod(Attributes.LUCK, 0.05));            // 每级幸运 +5%
     }
 
     /** Forge 扩展属性（ENTITY_REACH/STEP_HEIGHT）在注册完成后惰性加入锻造池，避免静态块时机问题 */
@@ -160,6 +165,20 @@ public class HextechRegistry {
             // v0.6.22 Alex's Mobs 事件型锻造词条
             FORGE_EVENT_MODS.put("beast_bane", new String[]{"am_mob_damage", "0.05"});         // 猎兽：对 Alex's Mobs 生物增伤 5%/级
         } catch (Throwable ignored) { }
+        // v0.9.0 C1：事件型锻造词条 12 条（全部复用 223 效果键全集；未装对应 mod / 关闭对应开关时由
+        //  forgeEventSourceEnabled 双守卫自动过滤，不进抽取池）
+        FORGE_EVENT_MODS.put("tacz_power", new String[]{"tacz_power", "0.03"});           // 枪械大师：枪械伤害 +3%/级
+        FORGE_EVENT_MODS.put("tacz_crit", new String[]{"tacz_crit", "0.02"});             // 枪械暴击：枪械暴击率 +2%/级
+        FORGE_EVENT_MODS.put("tacz_reload_haste", new String[]{"tacz_reload_haste", "0.02"}); // 装填专精：换弹速度 +2%/级
+        FORGE_EVENT_MODS.put("spell_pen", new String[]{"spell_pen", "0.02"});             // 法术穿透：法术穿透 +2%/级
+        FORGE_EVENT_MODS.put("spell_lifesteal", new String[]{"spell_lifesteal", "0.02"}); // 法术吸血：法术吸血 +2%/级
+        FORGE_EVENT_MODS.put("goety_soul", new String[]{"goety_soul", "0.03"});           // 灵魂汲取：灵魂获取 +3%/级
+        FORGE_EVENT_MODS.put("blade_damage", new String[]{"blade_damage", "0.04"});       // 拔刀精通：拔刀剑伤害 +4%/级
+        FORGE_EVENT_MODS.put("relic_drop", new String[]{"relic_drop", "0.03"});           // 遗物寻觅：遗物掉落 +3%/级
+        FORGE_EVENT_MODS.put("ac_deep_damage", new String[]{"ac_deep_damage", "0.04"});   // 深渊猎手：深渊生物增伤 +4%/级
+        FORGE_EVENT_MODS.put("cataclysm_resist", new String[]{"cataclysm_resist", "0.04"}); // 灾厄抗性：灾厄生物减伤 +4%/级
+        FORGE_EVENT_MODS.put("mowzie_damage", new String[]{"mowzie_damage", "0.04"});     // 远古猎手：Mowzie 生物增伤 +4%/级
+        FORGE_EVENT_MODS.put("farmer_drop", new String[]{"farmer_drop", "0.05"});         // 丰收祝福：农夫乐事掉落 +5%/级
     }
 
     private static HextechDefinition.ModSpec mod(Attribute attr, double perLevel) {
@@ -357,28 +376,49 @@ public class HextechRegistry {
         return pool;
     }
 
-    /** 事件型锻造词条来源是否启用（按对应 mod 的 forge 细分开关；词条本身仅在 mod 已安装时注册，双重守卫） */
+    /** 事件型锻造词条来源是否启用：配置开关 + 对应 mod 已安装 双守卫（v0.9.0 起加 ModList 检测——
+     *  未装联动 mod 时词条不进抽取池，杜绝「没装 mod 也抽到无效词条」；配置开关仍可手动关闭） */
     private static boolean forgeEventSourceEnabled(String stat) {
         return switch (stat) {
-            case "dragon_bane" -> com.hexcraft.config.HexConfig.ENABLE_IAF_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_IAF_FORGE.get();
-            case "radiation_ward", "deep_breath" -> com.hexcraft.config.HexConfig.ENABLE_AC_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_AC_FORGE.get();
-            case "boss_bane" -> com.hexcraft.config.HexConfig.ENABLE_TF_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_TF_FORGE.get();
-            case "beast_bane" -> com.hexcraft.config.HexConfig.ENABLE_AM_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_AM_FORGE.get();
+            case "dragon_bane" -> modLoaded("iceandfire") && com.hexcraft.config.HexConfig.ENABLE_IAF_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_IAF_FORGE.get();
+            case "radiation_ward", "deep_breath", "ac_deep_damage" -> modLoaded("alexscaves") && com.hexcraft.config.HexConfig.ENABLE_AC_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_AC_FORGE.get();
+            case "boss_bane" -> modLoaded("twilightforest") && com.hexcraft.config.HexConfig.ENABLE_TF_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_TF_FORGE.get();
+            case "beast_bane" -> modLoaded("alexsmobs") && com.hexcraft.config.HexConfig.ENABLE_AM_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_AM_FORGE.get();
+            case "tacz_power", "tacz_crit", "tacz_reload_haste" -> modLoaded("tacz") && com.hexcraft.config.HexConfig.ENABLE_TACZ_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_TACZ_FORGE.get();
+            case "spell_pen", "spell_lifesteal" -> modLoaded("irons_spellbooks") && com.hexcraft.config.HexConfig.ENABLE_IRONS_CONTENT.get() && com.hexcraft.config.HexConfig.ENABLE_IRONS_FORGE.get();
+            case "goety_soul" -> modLoaded("goety") && com.hexcraft.config.HexConfig.ENABLE_GOETY_CONTENT.get();
+            case "blade_damage" -> modLoaded("slashblade") && com.hexcraft.config.HexConfig.ENABLE_SLASHBLADE_CONTENT.get();
+            case "relic_drop" -> modLoaded("relics") && com.hexcraft.config.HexConfig.ENABLE_RELICS_CONTENT.get();
+            case "cataclysm_resist" -> modLoaded("cataclysm") && com.hexcraft.config.HexConfig.ENABLE_CATACLYSM_CONTENT.get();
+            case "mowzie_damage" -> modLoaded("mowziesmobs") && com.hexcraft.config.HexConfig.ENABLE_MOWZIESMOBS_CONTENT.get();
+            case "farmer_drop" -> modLoaded("farmersdelight") && com.hexcraft.config.HexConfig.ENABLE_FARMERSDELIGHT_CONTENT.get();
             default -> true;
         };
+    }
+
+    /** mod 是否安装（ModList 异常时按已安装处理，避免测试环境误禁） */
+    private static boolean modLoaded(String modid) {
+        try { return net.minecraftforge.fml.ModList.get().isLoaded(modid); }
+        catch (Throwable t) { return true; }
+    }
+
+    /** 百分比（乘法叠加）锻造词条：hppct/aspdpct + v0.9.0 C3 atkpct/armorpct/luckpct
+     *  （applyModifiers 对这些 stat 走 MULTIPLY_BASE，显示值 = 基础×档位倍率） */
+    public static boolean isPercentForgeStat(String stat) {
+        return "hppct".equals(stat) || "aspdpct".equals(stat) || "atkpct".equals(stat) || "armorpct".equals(stat) || "luckpct".equals(stat);
     }
 
     /** v0.6.0 校准版：词条抽取权重（按档位；白银档压低高段位词条权重，但全部 >0 理论可出）
      *  v0.6.9 slot_boost 仅棱彩档可出（权重 3，低概率稀有解锁）
      *  v0.6.20 法术词条（spell_power/max_mana/mana_regen/spell_cd/cast_haste）：白银档压低，黄金/棱彩提权
-     *  v0.6.21 三联动事件词条（dragon_bane/radiation_ward/deep_breath/boss_bane）：同法术词条档位权重策略 */
+     *  v0.6.21 三联动事件词条（dragon_bane/radiation_ward/deep_breath/boss_bane）：同法术词条档位权重策略
+     *  v0.9.0 C1 事件词条 12 条统一并入 FORGE_EVENT_MODS 动态判定，同策略 */
     public static int forgeWeight(int tier, String stat) {
         if ("slot_boost".equals(stat)) return tier == 2 ? 3 : 0; // 棱彩专属
-        boolean event = "dragon_bane".equals(stat) || "radiation_ward".equals(stat) || "deep_breath".equals(stat)
-                || "boss_bane".equals(stat) || "beast_bane".equals(stat);
+        boolean event = FORGE_EVENT_MODS.containsKey(stat);
         boolean spell = stat.startsWith("spell_") || stat.equals("max_mana") || stat.equals("mana_regen") || stat.equals("cast_haste");
         boolean hi = "reach".equals(stat) || "step".equals(stat);
-        boolean pct = "hppct".equals(stat) || "aspdpct".equals(stat);
+        boolean pct = isPercentForgeStat(stat);
         if (!hi && !pct && !spell && !event) return 10;           // 基础 9 条：三档同权
         if (tier <= 0) return spell || event ? 2 : 1;              // 白银档：法术/事件/高段位词条权重压低（>0 可出）
         if (tier == 1) return spell || event ? 8 : 6;              // 黄金档：法术/事件词条提权
@@ -413,6 +453,25 @@ public class HextechRegistry {
         ensureForgeExt();
         String[] ev = FORGE_EVENT_MODS.get(stat);
         return ev == null ? null : ev[0];
+    }
+
+    /** 词条来源 mod 简称（事件型锻造词条显示角标用；原版属性词条返回 null，不标角标） */
+    public static String forgeStatSourceTag(String stat) {
+        return switch (stat) {
+            case "dragon_bane" -> "IAF";
+            case "radiation_ward", "deep_breath", "ac_deep_damage" -> "AC";
+            case "boss_bane" -> "TF";
+            case "beast_bane" -> "AM";
+            case "tacz_power", "tacz_crit", "tacz_reload_haste" -> "TACZ";
+            case "spell_pen", "spell_lifesteal" -> "IRONS";
+            case "goety_soul" -> "GOETY";
+            case "blade_damage" -> "SLASHBLADE";
+            case "relic_drop" -> "RELICS";
+            case "cataclysm_resist" -> "CATACLYSM";
+            case "mowzie_damage" -> "MOWZIE";
+            case "farmer_drop" -> "FARMER";
+            default -> null;
+        };
     }
 
     /** 随机档位（锻造随机抽取）：按海克斯稀有度权重 60/30/10 */

@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "cataclysm",
   "mods": [],
   "event": "cataclysm_drop:0.25,boss_power:0.20,kill_heal:1.5"
 }

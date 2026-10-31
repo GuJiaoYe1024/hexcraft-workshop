@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "farmersdelight",
   "mods": [],
   "event": "trade_discount:0.15,coin_bonus:0.15"
 }

@@ -1,6 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
+  "source": "slashblade",
   "mods": [],
   "event": "blade_damage:0.12"
 }

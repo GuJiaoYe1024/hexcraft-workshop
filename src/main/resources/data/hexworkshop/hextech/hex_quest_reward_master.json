@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "ftbquests",
   "mods": [],
   "event": "bounty:8,coin_bonus:0.1"
 }

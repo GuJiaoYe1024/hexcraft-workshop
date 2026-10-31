@@ -1,6 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
+  "source": "projecte",
   "mods": [],
   "event": "lifesteal:0.08,regen:0.5"
 }

@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "iceandfire",
   "mods": [],
   "event": "iaf_fire_dragon_damage:0.22,fire_warden:1"
 }

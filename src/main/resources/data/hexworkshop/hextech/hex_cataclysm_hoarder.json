@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "cataclysm",
   "mods": [],
   "event": "cataclysm_drop:0.18,loot_bonus:0.25"
 }

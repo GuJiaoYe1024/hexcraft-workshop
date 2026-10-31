@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "mowziesmobs",
   "mods": [],
   "event": "mowzie_damage:0.25,boss_power:0.20,splash:0.20"
 }

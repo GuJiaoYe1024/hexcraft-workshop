@@ -188,12 +188,72 @@ public class HextechEvents {
                 }
             }
         }
+        // v0.9.0 组合羁绊：同时拥有组内全部海克斯 → 该效果键追加组合加成（仅一次，复用现有键）
+        for (String[] c : COMBOS) {
+            if (!c[0].equals(effect)) continue;
+            if (hasComboList(hexes, java.util.Arrays.copyOfRange(c, 2, c.length))) {
+                try { sum += Double.parseDouble(c[1]); } catch (Exception ignored) { }
+            }
+        }
         return sum;
     }
 
-    /** 锻造词条总等级（同词条多档锻造累加；供无上限锻造机制判定） */
-    public static double forgeLevel(PlayerData data, String stat) {
+    // ================= v0.9.0 组合羁绊与叠层联动 =================
+    /** 组合羁绊表：{效果键, 加成值, 组内海克斯id...}。同时拥有组内全部海克斯 → effect() 该键额外追加加成（仅一次）。
+     *  全部复用现有效果键（223 键全集），不新增键；组合 8「处决者」（斩杀阈值）与组合 9「叠层之巅」（叠层上限）为特殊挂接，不进本表。 */
+    private static final String[][] COMBOS = {
+        {"melee_power", "0.15", "hex_warmaster", "hex_berserker_soul", "hex_bloodlust_blade"},                    // 1 近战无双
+        {"tacz_power", "0.15", "hex_tacz_overlord", "hex_tacz_deadeye", "hex_tacz_crit_chain"},                    // 2 枪林弹雨
+        {"spell_power", "0.15", "hex_irons_archmage", "hex_irons_arcane_focus", "hex_irons_echo"},                // 3 奥术主宰
+        {"iaf_dragon_damage", "0.15", "hex_iaf_dragon_lord", "hex_iaf_dragon_blood", "hex_iaf_dragon_fury"},      // 4 龙裔之力
+        {"ac_deep_resist", "0.10", "hex_ac_deep_guard", "hex_ac_abyssal_breath", "hex_ac_underworld_archon"},     // 5 深渊守望
+        {"coin_bonus", "0.15", "hex_midas_hand", "hex_trade_discount", "hex_golden_bet"},                          // 6 生财有道
+        {"overshield", "0.10", "hex_undying", "hex_eternal_shield", "hex_immortal_wall"},                          // 7 不灭之躯
+        {"equip_power", "0.10", "hex_equip_weaver", "hex_equip_count", "hex_forge_power"},                         // 10 全能武装
+        {"tf_snow_queen_damage", "0.15", "hex_tf_snow_queen_bane", "hex_tf_snow_queen_ward", "hex_tf_yeti_winter"},// 11 冰雪审判
+        {"goety_soul", "0.15", "hex_goety_soul_eater", "hex_goety_soul_harvester", "hex_goety_necromancer_pact"},  // 12 冥府契约
+        {"am_mob_damage", "0.10", "hex_am_predator", "hex_am_predator_circle", "hex_am_apex_stalker"},             // 13 猎手本能
+        {"blade_damage", "0.15", "hex_blade_iai_flash", "hex_blade_moon_slash", "hex_blade_sakura_storm"},         // 14 拔刀奥义
+        {"relic_drop", "0.15", "hex_relic_treasure_hunter", "hex_relic_treasure_map", "hex_artifact_loot"},        // 15 寻宝专家
+        {"farmer_drop", "0.20", "hex_farmer_grand_harvest", "hex_farmer_harvest_moon", "hex_farmer_feast"},        // 16 丰收盛宴
+        {"spell_mana_max", "0.10", "hex_irons_mana_reservoir", "hex_irons_mana_spring", "hex_irons_mana_weaver"},  // 17 魔力泉涌
+        {"cataclysm_damage", "0.15", "hex_cataclysm_boss_mark", "hex_cataclysm_punisher", "hex_cataclysm_wither_soul"}, // 18 灾厄猎手
+    };
+
+    /** 叠层类海克斯全集（v0.9.0 叠层联动档位判定）：JSON stack 字段 2 个 + stack_attr/stack_gain/stack_attr_onhit/stack_attr_onhurt 事件键海克斯共 15 个 */
+    private static final java.util.Set<String> STACK_HEXES = java.util.Set.of(
+            "hex_tick_damage_wax", "hex_timed_multi_aspect", "hex_artifact_endurance_stack",
+            "hex_blade_draw_song", "hex_blade_scabbard_flow", "hex_blade_soul_flurry",
+            "hex_combat_perm_mix", "hex_heart_steel", "hex_hurt_speed_boost", "hex_kill_speed_perm",
+            "hex_mowzie_feral_instinct", "hex_mowzie_frenzy_claw", "hex_perm_damage_apex",
+            "hex_stack_tank", "hex_swift_horn_quick");
+
+    /** 玩家是否同时拥有组内全部海克斯（data 版本） */
+    public static boolean hasCombo(PlayerData data, String... ids) {
+        if (data == null) return false;
+        java.util.Set<String> owned = new java.util.HashSet<>();
+        for (PlayerData.HexEntry e : data.getHexes()) owned.add(e.id);
+        for (String id : ids) if (!owned.contains(id)) return false;
+        return true;
+    }
+
+    private static boolean hasComboList(java.util.List<PlayerData.HexEntry> hexes, String[] ids) {
+        java.util.Set<String> owned = new java.util.HashSet<>();
+        for (PlayerData.HexEntry e : hexes) owned.add(e.id);
+        for (String id : ids) if (!owned.contains(id)) return false;
+        return true;
+    }
+
+    /** 拥有叠层类海克斯数量（v0.9.0 叠层联动档位：≥2 叠速/上限 +20%，≥4 各 +40%） */
+    public static int countStackHexes(PlayerData data) {
         if (data == null) return 0;
+        int n = 0;
+        for (PlayerData.HexEntry e : data.getHexes()) if (STACK_HEXES.contains(e.id)) n++;
+        return n;
+    }
+
+    /** 锻造词条总等级（同词条多档锻造累加；供无上限锻造机制判定） */
+    public static double forgeLevel(PlayerData data, String stat) {        if (data == null) return 0;
         double v = 0;
         for (PlayerData.ForgeEntry f : data.getForges()) {
             if (f.stat.equals(stat)) v += f.level;
@@ -215,6 +275,30 @@ public class HextechEvents {
             if (f.stat.equals(stat)) v += f.level * forgeTierMult(f);
         }
         return v;
+    }
+
+    // ===== v0.9.0 D：概率合成多产 =====
+    /** 工作台 / 背包 / 超越维度等所有合成：按配置概率额外多产出（不可堆叠物品与特殊 NBT 跳过；服务端权威） */
+    @SubscribeEvent
+    public static void onCraftBonus(net.minecraftforge.event.entity.player.PlayerEvent.ItemCraftedEvent event) {
+        if (!com.hexcraft.config.HexConfig.CRAFT_BONUS_ENABLED.get()) return;
+        net.minecraft.world.entity.player.Player pl = event.getEntity();
+        if (!(pl instanceof ServerPlayer sp)) return;
+        if (sp.level().isClientSide) return;
+        ItemStack result = event.getCrafting();
+        if (result.isEmpty() || !result.isStackable()) return;
+        // 特殊 NBT 产物跳过（附魔/自定义数据等，防复制式漏洞）
+        if (result.hasTag()) return;
+        double chance = com.hexcraft.config.HexConfig.CRAFT_BONUS_CHANCE.get();
+        if (chance <= 0 || sp.getRandom().nextFloat() >= (float) chance) return;
+        int count = Math.min(com.hexcraft.config.HexConfig.CRAFT_BONUS_COUNT.get(), result.getMaxStackSize());
+        ItemStack bonus = result.copy();
+        bonus.setCount(count);
+        if (!sp.getInventory().add(bonus)) {
+            sp.drop(bonus, false);
+        }
+        com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp,
+                Component.translatable("message.hexcraft.craft_bonus", bonus.getHoverName(), count), 0);
     }
 
     @SubscribeEvent
@@ -896,7 +980,10 @@ public class HextechEvents {
         // 刽子手（低血斩杀）/ 屠龙者（精英首领增伤）/ 附魔增伤（亡灵杀手/节肢杀手）
         if (target != null) {
             double tRatio = target.getHealth() / Math.max(1f, target.getMaxHealth());
-            if (tRatio < HexConfig.EXECUTE_THRESHOLD.get().floatValue()) dmgMul *= (float) (1 + effect(data, "execute"));
+            // v0.9.0 组合羁绊「处决者」：斩杀阈值 +3%（同时拥有刽子手/永世刽子手/致命创伤）
+            float execThr = HexConfig.EXECUTE_THRESHOLD.get().floatValue();
+            if (hasCombo(data, "hex_executioner", "hex_executioner_eternal", "hex_fatal_wound")) execThr += 0.03f;
+            if (tRatio < execThr) dmgMul *= (float) (1 + effect(data, "execute"));
             if (target.getMaxHealth() >= 40) dmgMul *= (float) (1 + effect(data, "boss_power"));
             if (target.getMobType() == net.minecraft.world.entity.MobType.UNDEAD) dmgMul *= (float) (1 + effect(data, "enchant_smite"));
             if (target.getMobType() == net.minecraft.world.entity.MobType.ARTHROPOD) dmgMul *= (float) (1 + effect(data, "enchant_arthropod"));
@@ -1012,6 +1099,13 @@ public class HextechEvents {
                     ? com.hexcraft.event.WorldHexEvents.combatStackCapBonus(whLvl2) : 0;
             double whPermGain = sp.level() instanceof net.minecraft.server.level.ServerLevel whLvl3
                     ? com.hexcraft.event.WorldHexEvents.permStackGainBonus(whLvl3) : 0;
+            // v0.9.0 叠层联动（B2）：拥有叠层类海克斯 ≥2 → 叠速/上限各 +20%；≥4 → 各 +40%（覆盖档1）；
+            // 组合「叠层之巅」（叠层坦克+迅战之角+熔火叠甲）→ 上限额外 +30%
+            double comboGain = 1.0, comboCap = 1.0;
+            int stackHexCount = countStackHexes(data);
+            if (stackHexCount >= 4) { comboGain = 1.4; comboCap = 1.4; }
+            else if (stackHexCount >= 2) { comboGain = 1.2; comboCap = 1.2; }
+            if (hasCombo(data, "hex_stack_tank", "hex_swift_horn_quick", "hex_tick_damage_wax")) comboCap *= 1.3;
             for (PlayerData.HexEntry e : data.getHexes()) {
                 HextechDefinition sdef = HextechRegistry.get(e.id);
                 if (sdef == null || sdef.stack == null) continue;
@@ -1021,7 +1115,7 @@ public class HextechEvents {
                     if (data.getStack(sdef.stack.key) == null) {
                         data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat, sdef.stack.decayDelay, sdef.stack.decayRate));
                     }
-                    data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"), 1 + effect(data, "stack_cap") + whCapBonus);
+                    data.addStack(sdef.stack.key, (1 + effect(data, "stack_gain")) * comboGain, (1 + effect(data, "stack_cap") + whCapBonus) * comboCap);
                 }
                 double perStack = 0;
                 for (String token : sdef.event.split(",")) {
@@ -1032,7 +1126,10 @@ public class HextechEvents {
                 }
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
                 if (perStack > 0 && s != null && s.value > 0) {
-                    extraDamage(sp, target, amount * (float) perStack * (float) s.value);
+                    // v0.9.0 满层爆发：叠满（达到实时上限）时该叠层海克斯每层效果额外 +50%
+                    double realCap = s.cap * ((1 + effect(data, "stack_cap") + whCapBonus) * comboCap);
+                    double perStackEff = (s.value >= realCap - 0.001) ? perStack * 1.5 : perStack;
+                    extraDamage(sp, target, amount * (float) perStackEff * (float) s.value);
                     com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
                             Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), 0);
                 }

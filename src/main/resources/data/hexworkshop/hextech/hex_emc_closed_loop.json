@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "projecte",
   "mods": [],
   "event": "emc_transmute:0.3,loot_double:1,coin_bonus:0.2"
 }

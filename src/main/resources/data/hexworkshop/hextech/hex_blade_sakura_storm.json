@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "slashblade",
   "mods": [],
   "event": "splash:0.3,twin_shot:0.15,crit:0.1"
 }

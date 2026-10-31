@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "artifacts",
   "mods": [],
   "event": "melee_power:0.15,crit:0.1"
 }

@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "slashblade",
   "mods": [],
   "event": "blade_burst:0.35,combo_crit:0.10"
 }

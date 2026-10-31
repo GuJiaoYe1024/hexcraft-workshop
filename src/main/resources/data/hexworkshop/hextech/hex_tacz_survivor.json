@@ -1,5 +1,6 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "tacz",
   "event": "tacz_ammo_full:0.15,tacz_heal:2,tacz_power:0.1"
 }

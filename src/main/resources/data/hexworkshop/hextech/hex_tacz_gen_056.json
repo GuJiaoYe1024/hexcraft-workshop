@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "tacz",
   "mods": [
     {
       "attr": "movement_speed",

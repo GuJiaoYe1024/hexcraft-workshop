@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "projecte",
   "mods": [],
   "event": "gold_gamble:0.2,coin_bonus:0.15"
 }

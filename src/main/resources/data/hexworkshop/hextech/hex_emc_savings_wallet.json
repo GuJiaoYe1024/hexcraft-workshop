@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "projecte",
   "mods": [],
   "event": "emc_wealth:1,coin_bonus:0.15"
 }

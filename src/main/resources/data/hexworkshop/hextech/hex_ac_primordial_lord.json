@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "alexscaves",
   "mods": [],
   "event": "ac_prehistoric_damage:0.30,ac_prehistoric_kill_heal:3"
 }

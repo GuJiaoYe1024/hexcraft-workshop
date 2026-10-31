@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "slashblade",
   "mods": [],
   "event": "blade_drop:0.2,loot_bonus:0.15"
 }

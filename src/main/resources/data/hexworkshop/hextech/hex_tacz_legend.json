@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
+  "source": "tacz",
   "mods": [
     {
       "attr": "attack_damage",

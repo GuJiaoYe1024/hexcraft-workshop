@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "artifacts",
   "mods": [],
   "event": "stack_attr:attack_speed:0.02,last_stand:0.10"
 }

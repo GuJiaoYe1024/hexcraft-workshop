@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "mowziesmobs",
   "mods": [],
   "event": "mowzie_drop:0.18,boss_power:0.15"
 }

@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "alexscaves",
   "mods": [],
   "event": "ac_tremorzilla_damage:0.30,ac_dark_vision:1,ac_dark_damage:0.15"
 }

@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
+  "source": "relics",
   "mods": [],
   "event": "relic_ward:0.2,shield_low:2"
 }

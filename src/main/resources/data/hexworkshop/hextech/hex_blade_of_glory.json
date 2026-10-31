@@ -1,6 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 5,
+  "source": "slashblade",
   "mods": [
     {
       "attr": "attack_damage",

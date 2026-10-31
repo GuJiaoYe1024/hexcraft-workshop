@@ -1,6 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
+  "source": "slashblade",
   "mods": [],
   "event": "kill_heal:2,stack_gain:0.12,melee_power:0.15"
 }
