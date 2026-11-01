@@ -1,4 +1,15 @@
-﻿Hexcraft Workshop v0.9.5 - Performance overhaul, tiered Origin-Hunt bonds, bond display upgrade
+﻿Hexcraft Workshop v0.9.6 - ARAM Mayhem augment sets are now native to the base mod
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- MECHANIC (as you decided): the official League of Legends ARAM Mayhem AUGMENT SETS (Patch 26.3 "Augment Sets": collecting 2-4 augments of one set unlocks extra effects) are now a native mechanic of the BASE mod - not the Origin-Hunt DLC. Every set activates at TFT-style tiers of 2/4/6/8 members, and lower tiers keep stacking at higher ones.
+- ALL 9 OFFICIAL SETS, 8 members each (6 existing base hexes + 2 brand-new ARAM-themed hexes per set, source=vanilla): Firecracker (gun damage +15/30/50/75%, +170% at 8), Stackasaurus Rex (stack growth +25/50/75/100%, +250%), Archmage (spell power +15/30/45/60%, +150%), Wee Woo Wee Woo (overshield +10/20/30/40%, +100%), High Roller (coin bonus +10/20/30/40%, +100%), Deathknell (death-defy +5/10/15/20%), Fully Automated (ability echo +5/10/15/20%), Snowday (frost bite +10/20/30/40%, +100%), Dive Bomb (firework +10/20/30/40%, +100%).
+- 18 NEW ARAM-THEMED HEXES (Firecracker Rocket, Bouncy Firecracker, Titan Stack, Ramp Rex, Archmage Crest, Arcane Pact, Wee Woo Siren, Ambulance Sirens, High Roller, Lucky Anvil, Deathknell Toll, Bell Toll, Auto Cast, Magic Assembly Line, Big Snowball, Ice Day, Dive Bomb, Clown College): GOLD / weight 3 / vanilla source, every event reuses an existing effect key - zero new hooks. A hex can belong to several sets at once, just like a TFT champion carries multiple traits; the 16 original 3-piece bonds and the 5 Origin-Hunt DLC tiered bonds keep working side by side.
+- BOND TRACKER (stats page): all 9 sets are auto-listed with per-tier progress, gold highlight and hover details (same rendering pipeline as v0.9.5).
+- lang: 2281 keys per locale (zh_cn / en_us, UTF-8 BOM kept).
+
+Hexcraft Workshop v0.9.5 - Performance overhaul, tiered Origin-Hunt bonds, bond display upgrade
 =============================================================================
 
 Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.

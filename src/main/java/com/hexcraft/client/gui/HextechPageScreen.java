@@ -688,8 +688,8 @@ public class HextechPageScreen extends HexScaledScreen {
             if (have > 0) out.add(new ComboRow(false, ri, have, c.length - 2, have >= c.length - 2 ? 1 : 0,
                     null, null, null, com.hexcraft.hextech.ComboRegistry.nameKey(ri + 1)));
         }
-        // v0.9.5 逆原分档羁绊（按件数激活档位，低档叠加）
-        for (com.hexcraft.hextech.ComboRegistry.TieredCombo tc : com.hexcraft.hextech.ComboRegistry.TIERED_COMBOS) {
+        // v0.9.5 逆原分档羁绊 + v0.9.6 大乱斗套装羁绊（按件数激活档位，低档叠加）
+        for (com.hexcraft.hextech.ComboRegistry.TieredCombo tc : com.hexcraft.hextech.ComboRegistry.allTiered()) {
             int have = com.hexcraft.hextech.ComboRegistry.ownedCount(tc, owned);
             if (have > 0) out.add(new ComboRow(true, 0, have, com.hexcraft.hextech.ComboRegistry.memberCount(tc),
                     com.hexcraft.hextech.ComboRegistry.tierOf(tc, owned),
