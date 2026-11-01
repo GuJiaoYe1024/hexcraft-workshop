@@ -200,6 +200,13 @@ public class HextechEvents {
                 try { sum += Double.parseDouble(c[1]); } catch (Exception ignored) { }
             }
         }
+        // v0.9.5 逆原分档羁绊：按件数激活档位（2/4/6），低档效果高档仍叠加生效（还原逆战·未来原点猎场）
+        for (com.hexcraft.hextech.ComboRegistry.TieredCombo tc : com.hexcraft.hextech.ComboRegistry.TIERED_COMBOS) {
+            int tier = com.hexcraft.hextech.ComboRegistry.tierOf(tc, hexes);
+            for (int t = 0; t < tier; t++) {
+                if (tc.effects()[t].equals(effect)) sum += tc.values()[t];
+            }
+        }
         return sum;
     }
 

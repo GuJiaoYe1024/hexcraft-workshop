@@ -86,6 +86,7 @@ public final class DlcManager {
 
     /** 启动 / reload dlc 时扫描 packs 目录（文件夹 + *.zip），读取元数据与启用状态 */
     public static void scan() {
+        com.hexcraft.hextech.HextechRegistry.invalidatePoolCache(); // v0.9.5：内容变更清空抽取池缓存（下次抽取重建）
         PACKS.clear();
         CONTENT_OWNER.clear();
         Path dir = packsDir();
@@ -312,6 +313,7 @@ public final class DlcManager {
         if (p == null) return;
         p.enabled = enabled;
         writeIndex();
+        com.hexcraft.hextech.HextechRegistry.invalidatePoolCache(); // v0.9.5：包启停即时影响抽取池
     }
 
     /** 全部包（UI 列表用） */

@@ -1,3 +1,13 @@
+﻿Hexcraft Workshop v0.9.5 - Performance overhaul, tiered Origin-Hunt bonds, bond display upgrade
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- PERFORMANCE: draw pools (hex / equip / forge) are now lazily cached by rarity x category (ConcurrentHashMap + immutable lists, inspired by ModernFix lazy loading & StellarCreate cache invalidation) - previously every draw scanned and sorted all 596 hexes. The cache is invalidated on DLC scan/reload, DLC pack toggles and config changes (ModConfigEvent), so linked-content switches apply instantly. The stats page caches combo rows / stack tier by ClientDataStore dataVersion (bumped on every sync), and the 7 duplicated hover row/column checks are merged into one hoverColumn() method.
+- ORIGIN HUNT DLC (Nizhan "Overlimit Hunt" inspired, only inside the Origin Hunt DLC): the bond framework is upgraded to TIERED bonds - tiers activate by member count (2/4/6), and lower tiers stay active at higher ones, exactly like the Nizhan Origin-Hunt buff tiers. Berserk (melee +30/60/100%, +190% at 6), Guerrilla (move +25% / gun +50/70%, +120% at 6) and Bulwark (damage reduction +30/60/40%, +130% at 6) are reworked from "2x3-piece" sets into real tiers; two new families join: Sniper (ranged gun +30/+60% at 2/4) and Hunter (melee +30/+60% at 2/4), with 8 new Origin-Hunt hexes. All new content is source=dlc_niyuan - vanilla & linked content untouched.
+- BOND DISPLAY (stats page, styled after League's ARAM Mayhem augment sets): active bonds now glow gold like activated ARAM sets; tiered bonds highlight their current tier and hover-listing per-tier effects plus how many pieces are missing for the next tier. The stack-tier row turns gold at 4+ pieces.
+- lang: 2236 keys per locale (zh_cn / en_us, UTF-8 BOM kept; obsolete keys cleaned).
+
 Hexcraft Workshop v0.9.4 - Live stack-cap display & unified stack mechanics
 =============================================================================
 

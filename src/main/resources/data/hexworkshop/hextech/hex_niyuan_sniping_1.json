@@ -1,0 +1,12 @@
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "event": "tacz_power:0.12",
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 1.0
+    }
+  ],
+  "source": "dlc_niyuan"
+}

@@ -1,0 +1,12 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 3,
+  "event": "melee_power:0.22",
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 2.0
+    }
+  ],
+  "source": "dlc_niyuan"
+}

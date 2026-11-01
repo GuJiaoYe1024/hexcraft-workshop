@@ -20,6 +20,25 @@ public class HextechRegistry {
     /** 装备注册表（数据驱动；内置由 gen_equips.py 生成，加载器装载） */
     private static final Map<String, HextechDefinition> EQUIPMENTS = new LinkedHashMap<>();
 
+    // ================= v0.9.5 抽取池惰性缓存（网上参考：ModernFix 惰性加载 + StellarCreate 缓存智能失效） =================
+    // 此前每次抽卡 pool()/equipPool()/forgePool() 全量遍历 DEFINITIONS（588 个）并排序；
+    // 现按 (稀有度 × 分类) 键惰性缓存为不可变列表，首次调用构建、之后 O(1) 命中；
+    // 失效点：DlcManager.scan()（启动/reload dlc）、包启停 setEnabled()、配置 GUI 修改广播（Packets）——均调用 invalidatePoolCache()。
+    private record PoolKey(HextechRarity rarity, int filter) {}
+    private static final java.util.concurrent.ConcurrentHashMap<PoolKey, List<String>> POOL_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.concurrent.ConcurrentHashMap<HextechRarity, List<String>> EQUIP_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.concurrent.ConcurrentHashMap<Integer, List<String>> FORGE_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** 清空抽取池缓存（DLC reload / 包启停 / 配置变更时调用，下次抽取重建） */
+    public static void invalidatePoolCache() {
+        POOL_CACHE.clear();
+        EQUIP_CACHE.clear();
+        FORGE_CACHE.clear();
+    }
+
     // ================= 内容来源分类（原版 / 联动 mod 内容，自动检测 + 配置开关） =================
     /** 海克斯 id 前缀 → 依赖 modid（联动来源注册表；未来联动 mod 内容在此注册，自动检测、默认启用、可配置关闭）。
      *  必须在静态注册块之前初始化，避免类初始化期间 HextechDefinition 构造触发判源时读到 null */
@@ -333,6 +352,10 @@ public class HextechRegistry {
     public static void putEquip(String id, HextechDefinition def) { EQUIPMENTS.put(id, def); }
 
     public static List<String> equipPool(HextechRarity rarity) {
+        return EQUIP_CACHE.computeIfAbsent(rarity, r -> List.copyOf(buildEquipPool(r)));
+    }
+
+    private static List<String> buildEquipPool(HextechRarity rarity) {
         return EQUIPMENTS.values().stream()
                 .filter(d -> d.rarity == rarity && isEnabled(d, "equip"))
                 .sorted(Comparator.comparingInt(d -> -d.weight))
@@ -351,8 +374,13 @@ public class HextechRegistry {
         return pool(rarity, 0);
     }
 
-    /** v0.9.3 按来源分类抽取：filter 0=全部 / 1=原版(source=vanilla) / 2=联动(非 vanilla 且非 DLC 且非外接包) / 3=DLC(内置 dlc_* + 外接包内容) */
+    /** v0.9.3 按来源分类抽取：filter 0=全部 / 1=原版(source=vanilla) / 2=联动(非 vanilla 且非 DLC 且非外接包) / 3=DLC(内置 dlc_* + 外接包内容)
+     *  v0.9.5 惰性缓存：按 (稀有度, 分类) 键，首次全遍历构建 + 排序，此后 O(1) 命中；不可变列表，调用方必须复制后使用 */
     public static List<String> pool(HextechRarity rarity, int filter) {
+        return POOL_CACHE.computeIfAbsent(new PoolKey(rarity, filter), k -> List.copyOf(buildPool(k.rarity(), k.filter())));
+    }
+
+    private static List<String> buildPool(HextechRarity rarity, int filter) {
         return DEFINITIONS.values().stream()
                 .filter(d -> d.rarity == rarity && isEnabled(d, "hex") && matchSourceFilter(d, filter))
                 .sorted(Comparator.comparingInt(d -> -d.weight))
@@ -393,6 +421,10 @@ public class HextechRegistry {
      *  档位强度由 FORGE_TIER_MULT 倍率（×1/×2/×3）与 forgeWeight 权重共同区分。
      *  v0.6.9 棱彩档额外加入「栏位扩展」特殊词条（slot_boost，非属性，选中解锁 1 个海克斯栏位）。 */
     public static List<String> forgePool(int tier) {
+        return FORGE_CACHE.computeIfAbsent(tier, t -> List.copyOf(buildForgePool(t)));
+    }
+
+    private static List<String> buildForgePool(int tier) {
         ensureForgeExt();
         List<String> pool = new ArrayList<>(FORGE_MODS.keySet());
         for (Map.Entry<String, String[]> e : FORGE_EVENT_MODS.entrySet()) {

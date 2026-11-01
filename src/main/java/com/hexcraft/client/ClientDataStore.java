@@ -42,6 +42,8 @@ public class ClientDataStore {
     public static int hexLimit;
     // v0.6.16 服务端权威永久叠层上限（属性页"生效层数"显示用）
     public static int permStackCap = 200;
+    /** v0.9.5 数据版本号：apply/applyWorld 每次递增，界面缓存（组合羁绊行等）据此失效 */
+    public static int dataVersion;
 
     /** v0.6.0 服务端是否已装载本 mod：收到过 S2CSyncData 视为已装载（单机/联机服务端装 mod=true；服务端未装=false，隐藏 H/K 入口） */
     public static boolean serverPresent;
@@ -114,6 +116,7 @@ public class ClientDataStore {
         hexLimit = msg.hexLimit;
         permStackCap = msg.permStackCap; // v0.6.16 服务端权威叠层上限
         costVersion++;
+        dataVersion++; // v0.9.5 数据版本号：属性页组合羁绊/叠层档位缓存据此失效（避免每帧重算）
     }
 
     public static void applyWorld(Packets.S2CSyncWorldHexes msg) {

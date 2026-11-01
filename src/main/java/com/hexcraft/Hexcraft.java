@@ -31,6 +31,8 @@ public class Hexcraft {
         com.hexcraft.config.HexGameRules.touch();
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         modBus.addListener(this::commonSetup);
+        // v0.9.5：配置变更（GUI 保存 / 文件修改 / reload）时清空抽取池缓存，联动开关与权重即时生效
+        modBus.addListener(this::onConfigReload);
 
         ModItems.ITEMS.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
@@ -85,5 +87,10 @@ public class Hexcraft {
         event.enqueueWork(PacketHandler::register);
         // v0.6.0 属性上限突破（护甲/生命/攻击距离等 maxValue 放大，无上限锻造不撞天花板）
         event.enqueueWork(AttributeUnlock::unlock);
+    }
+
+    /** v0.9.5：配置 Reloading/Loading 事件（GUI 保存、文件修改、reload 均触发）→ 清空抽取池缓存，联动内容开关即时生效 */
+    private void onConfigReload(net.minecraftforge.fml.event.config.ModConfigEvent e) {
+        com.hexcraft.hextech.HextechRegistry.invalidatePoolCache();
     }
 }
