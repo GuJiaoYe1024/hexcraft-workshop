@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "event": "spell_power:0.12,fire_chain:0.10,spell_mana_max:0.08",
+  "source": "dlc_niyuan"
+}

@@ -49,6 +49,9 @@ public class HextechEvents {
     private static final Map<UUID, Map<String, Long>> LAST_KILLS = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> LAST_KILL_STREAK = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> RAMPAGE_UNTIL = new ConcurrentHashMap<>();
+    /** v0.9.7 力场（逆原羁绊）：站立叠增伤层（每层 +1%，上限 10 层，移动清零） */
+    private static final Map<UUID, Integer> STAND_LAYERS = new ConcurrentHashMap<>();
+    private static final Map<UUID, double[]> STAND_POS = new ConcurrentHashMap<>();
     /** 额外伤害重入锁：echo/splash/fire_chain/frost_bite 的额外 hurt 不再触发本类伤害事件 */
     private static volatile boolean EXTRA_BUSY = false;
 
@@ -1118,6 +1121,9 @@ public class HextechEvents {
         }
         // 成长性全伤害加成
         dmgMul *= (float) (1 + effect(data, "stack_growth"));
+        // v0.9.7 力场（逆原羁绊）：站立叠层增伤（每层 +1%，上限 10 层，移动清零）
+        int standLayers = STAND_LAYERS.getOrDefault(sp.getUUID(), 0);
+        if (standLayers > 0) dmgMul *= (float) (1 + standLayers * 0.01);
         // 疾风剑客：移速转伤
         double mobi = effect(data, "mobi_power");
         if (mobi > 0) {
@@ -1894,7 +1900,7 @@ public class HextechEvents {
     /** v0.9.1 性能：onTick 每 tick 批量查询的效果键集（固定不变） */
     private static final java.util.Set<String> TICK_EFFECT_KEYS = java.util.Set.of(
             "tacz_bipod", "tacz_strafe", "tacz_reload_haste", "tacz_swap_strike",
-            "tacz_barrage", "tacz_tracking", "tacz_crit_chain", "regen");
+            "tacz_barrage", "tacz_tracking", "tacz_crit_chain", "regen", "stand_power");
 
     /** 持续回血（再生/不朽）：每 5 秒回复 */
     @SubscribeEvent
@@ -1962,6 +1968,29 @@ public class HextechEvents {
         double regen = eff.getOrDefault("regen", 0.0);
         if (regen > 0 && sp.tickCount % 100 == 0) {
             sp.heal((float) regen);
+        }
+        // v0.9.7 力场（逆原羁绊）：原地站立叠增伤层（每 20 tick = 1 秒按 stand_power 值叠层，
+        // 上限 10 层、每层 +1%，移动清零；失去力场海克斯下一 tick 自动清理）
+        double standPow = eff.getOrDefault("stand_power", 0.0);
+        if (standPow > 0) {
+            if (sp.tickCount % 20 == 0) {
+                net.minecraft.world.phys.Vec3 pos = sp.position();
+                double[] sp0 = STAND_POS.get(uid);
+                if (sp0 == null) {
+                    STAND_POS.put(uid, new double[]{pos.x, pos.y, pos.z});
+                } else {
+                    double dx = pos.x - sp0[0], dy = pos.y - sp0[1], dz = pos.z - sp0[2];
+                    if (dx * dx + dy * dy + dz * dz > 0.0009) {
+                        STAND_POS.put(uid, new double[]{pos.x, pos.y, pos.z});
+                        STAND_LAYERS.put(uid, 0); // 移动清零
+                    } else {
+                        STAND_LAYERS.put(uid, Math.min(10, STAND_LAYERS.getOrDefault(uid, 0) + (int) Math.round(standPow)));
+                    }
+                }
+            }
+        } else {
+            STAND_LAYERS.remove(uid);
+            STAND_POS.remove(uid);
         }
         // v0.6.0 通用叠层管理器：每 tick 结算战斗叠层脱战衰减（每 20 tick 结算一次，降低开销）
         // 世界海克斯「攻势易散」加速衰减（独立乘区）

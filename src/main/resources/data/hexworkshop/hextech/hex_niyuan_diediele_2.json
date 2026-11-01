@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "event": "stack_growth:0.05,stack_attr_onhit:0.01",
+  "source": "dlc_niyuan"
+}

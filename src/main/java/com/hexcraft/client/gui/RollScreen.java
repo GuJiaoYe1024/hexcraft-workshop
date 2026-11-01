@@ -70,6 +70,9 @@ public class RollScreen extends HexScaledScreen {
     @Override
     public void tick() {
         if (anim < 1f) anim = Math.min(1f, anim + 0.13f); // 高帧率入场：更快更顺滑
+        // v0.9.7 入场闪光推进：anim 0→0.5 扫完（光带快于浮入，节奏更利落）
+        float glow = anim * 2f - 1f;
+        for (CardButton c : cards) c.glowX = glow;
         pTick++;
         ensureParts();
         for (float[] p : parts) {
@@ -324,6 +327,8 @@ public class RollScreen extends HexScaledScreen {
         int dy;
         float scale = 1f;
         float glowPulse = 1f;
+        /** v0.9.7 入场闪光位置（-1 左 → 1 右，tick 随 anim 推进；>1 或 <-1 表示不画） */
+        float glowX = -2f;
 
         CardButton(int x, int y, int w, int h, int color, String label, OnPress onPress) {
             super(x, y, w, h, Component.empty(), onPress, DEFAULT_NARRATION);
@@ -348,6 +353,12 @@ public class RollScreen extends HexScaledScreen {
             // 渐变底
             g.fillGradient(x1, y1, x1 + w2, y1 + h2,
                     (a * 240 / 255) << 24 | 0x002C2E58, (a * 244 / 255) << 24 | 0x000D1220);
+            // v0.9.7 入场闪光：稀有度色光带从左扫到右（anim 驱动，扫过后消失）
+            if (glowX > -1f && glowX < 1f) {
+                int gx = x1 + (int) ((glowX + 1f) * 0.5f * w2);
+                g.fill(gx - 2, y1, gx + 2, y1 + h2, (a * 110 / 255) << 24 | (color & 0x00FFFFFF));
+                g.fill(gx - 1, y1, gx + 1, y1 + h2, (a << 24) | 0x00FFFFFF);
+            }
             // 稀有度缎带
             g.fill(x1, y1, x1 + w2, y1 + 16, (a << 24) | (color & 0x00FFFFFF));
             g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font,

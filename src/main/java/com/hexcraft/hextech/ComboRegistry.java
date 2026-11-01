@@ -58,68 +58,95 @@ public final class ComboRegistry {
             // 狩猎：近战/猎杀流（v0.9.5 新增，还原「狩猎」词条：暴伤碎片）
             new TieredCombo("hexcraft.combo.tier.hunting",
                     new String[]{"hex_niyuan_hunting_1", "hex_niyuan_hunting_2", "hex_niyuan_hunting_3", "hex_niyuan_hunting_4"},
-                    new int[]{2, 4}, new String[]{"melee_power", "melee_power"}, new double[]{0.30, 0.60})
+                    new int[]{2, 4}, new String[]{"melee_power", "melee_power"}, new double[]{0.30, 0.60}),
+            // 力场：站桩增伤流（v0.9.7 新增，还原逆战超限「力场」：原地站立叠伤害增益层，移动清零）
+            // 专属 hook stand_power（服务端每 20 tick 检测：未移动按值叠层/秒，上限 10 层 ×1%，移动清零）
+            new TieredCombo("hexcraft.combo.tier.forcefield",
+                    new String[]{"hex_niyuan_licheng_1", "hex_niyuan_licheng_2", "hex_niyuan_licheng_3",
+                            "hex_niyuan_licheng_4", "hex_niyuan_licheng_5", "hex_niyuan_licheng_6"},
+                    new int[]{2, 4, 6}, new String[]{"stand_power", "stand_power", "stand_power"}, new double[]{1.0, 2.0, 3.0}),
+            // 瞬暴：暴击爆发流（v0.9.7 新增，还原逆战超限「瞬暴」：满血暴击+暴伤爆发）
+            new TieredCombo("hexcraft.combo.tier.burst",
+                    new String[]{"hex_niyuan_shunbao_1", "hex_niyuan_shunbao_2", "hex_niyuan_shunbao_3",
+                            "hex_niyuan_shunbao_4", "hex_niyuan_shunbao_5", "hex_niyuan_shunbao_6"},
+                    new int[]{2, 4, 6}, new String[]{"full_hp_crit", "crit_damage", "crit_damage"}, new double[]{0.15, 0.30, 0.60}),
+            // 技战：技能战流（v0.9.7 新增，还原逆战超限「技战」：施法/引燃连锁）
+            new TieredCombo("hexcraft.combo.tier.techwar",
+                    new String[]{"hex_niyuan_jizhan_1", "hex_niyuan_jizhan_2", "hex_niyuan_jizhan_3",
+                            "hex_niyuan_jizhan_4", "hex_niyuan_jizhan_5", "hex_niyuan_jizhan_6"},
+                    new int[]{2, 4, 6}, new String[]{"spell_power", "fire_chain", "spell_mana_max"}, new double[]{0.20, 0.15, 0.10}),
+            // 共振：装备共鸣流（v0.9.7 新增，还原逆战超限「共振」：装备词条共鸣增伤）
+            new TieredCombo("hexcraft.combo.tier.resonance",
+                    new String[]{"hex_niyuan_gongzhen_1", "hex_niyuan_gongzhen_2", "hex_niyuan_gongzhen_3", "hex_niyuan_gongzhen_4"},
+                    new int[]{2, 4}, new String[]{"equip_power", "equip_power"}, new double[]{0.20, 0.40}),
+            // 叠叠乐：叠层增幅流（v0.9.7 新增，还原逆战超限「叠叠乐」：叠层获取/成长增幅）
+            new TieredCombo("hexcraft.combo.tier.stackloop",
+                    new String[]{"hex_niyuan_diediele_1", "hex_niyuan_diediele_2", "hex_niyuan_diediele_3",
+                            "hex_niyuan_diediele_4", "hex_niyuan_diediele_5", "hex_niyuan_diediele_6"},
+                    new int[]{2, 4, 6}, new String[]{"stack_growth", "stack_growth", "stack_growth"}, new double[]{0.25, 0.50, 1.00})
     );
 
     /** v0.9.6 海克斯大乱斗套装羁绊（还原 LOL ARAM Mayhem 官方 9 个强化符文套装 Augment Sets：
      *  收集同一套装 2-4 个强化符文解锁额外效果 → 本 mod 按云顶式 2/4/6/8 件分档，低档效果高档仍叠加）。
-     *  成员 = 本体现有海克斯（可跨套装参与，同云顶棋子多羁绊）+ 每套 2 个新建官方特色海克斯（source 留空=本体）；
-     *  档位效果键全部复用现有效果键（无新 hook），服务端/客户端分档结算与渲染沿用 TIERED_COMBOS 同套逻辑。 */
+     *  v0.9.7 机制化：9 套按官方机制重配效果键（弹射连发/双重施放/低血护盾/遗物掉落/免死濒死/连杀狂潮/冰霜疾风/悬赏晶币），
+     *  死亡系合并（divebomb 两成员并入 deathknell，官方 Deathknell=Dive Bomb 同一套）、新增金币雨 Make it Rain。
+     *  成员 = 本体现有海克斯（可跨套装参与，同云顶棋子多羁绊）+ 每套 2 个新建官方特色海克斯（source 留空=本体）。 */
     public static final java.util.List<TieredCombo> ARAM_SETS = java.util.List.of(
-            // 1 炮竹 Firecracker：官方弹跳增伤（2 档 40%/4 档 80%）→ 枪械弹幕增伤
+            // 1 炮竹 Firecracker：官方飞弹弹射（2 档 2 次 40%/4 档 3 次 80%）→ 双子射击连发 + 枪械弹幕增伤
             new TieredCombo("hexcraft.combo.tier.aram.firecracker",
                     new String[]{"hex_tacz_crit_chain", "hex_tacz_crit_master", "hex_tacz_multi_shot", "hex_tacz_double_shot",
                             "hex_full_crit", "hex_twin_fire", "hex_aram_firecracker_rocket", "hex_aram_firecracker_bounce"},
-                    new int[]{2, 4, 6, 8}, new String[]{"tacz_power", "tacz_power", "tacz_power", "tacz_power"},
-                    new double[]{0.15, 0.30, 0.50, 0.75}),
-            // 2 叠叠龙 Stackasaurus Rex：官方叠层获得 +50/+100/+200% → 成长层数增幅
+                    new int[]{2, 4, 6, 8}, new String[]{"twin_shot", "twin_shot", "tacz_power", "tacz_power"},
+                    new double[]{0.10, 0.20, 0.40, 0.50}),
+            // 2 叠叠龙 Stackasaurus Rex：官方额外叠层 +50/+100/+200% → 成长层数增幅（机制保留）
             new TieredCombo("hexcraft.combo.tier.aram.stackasaurus",
                     new String[]{"hex_heart_steel", "hex_stack_tank", "hex_tick_damage_wax", "hex_artifact_endurance_stack",
                             "hex_blade_draw_song", "hex_perm_damage_apex", "hex_aram_titan_stack", "hex_aram_ramp_rex"},
                     new int[]{2, 4, 6, 8}, new String[]{"stack_growth", "stack_growth", "stack_growth", "stack_growth"},
                     new double[]{0.25, 0.50, 0.75, 1.00}),
-            // 3 大法师 Archmage：官方套装奖励（AP 型）30% → 法术增伤
+            // 3 大法师 Archmage：官方施法返还随机技能 40→30% 冷却 → 施法回响（双重施放，云顶法师）+ 法术增伤
             new TieredCombo("hexcraft.combo.tier.aram.archmage",
                     new String[]{"hex_irons_archmage", "hex_irons_arcane_focus", "hex_irons_arcane_strike", "hex_irons_archon_judgment",
                             "hex_irons_elemental_surge", "hex_irons_blood_siphon", "hex_aram_archmage_crest", "hex_aram_arcane_pact"},
-                    new int[]{2, 4, 6, 8}, new String[]{"spell_power", "spell_power", "spell_power", "spell_power"},
-                    new double[]{0.15, 0.30, 0.45, 0.60}),
-            // 4 救护车 Wee Woo Wee Woo：官方治疗/护盾强化 → 溢出转盾
+                    new int[]{2, 4, 6, 8}, new String[]{"echo", "echo", "spell_power", "spell_power"},
+                    new double[]{0.05, 0.10, 0.30, 0.45}),
+            // 4 救护车 Wee Woo Wee Woo：官方低血盟友移速+治疗护盾强化 → 低血应急护盾 + 溢出转盾
             new TieredCombo("hexcraft.combo.tier.aram.weewoo",
                     new String[]{"hex_undying", "hex_eternal_shield", "hex_immortal_wall", "hex_combat_shield_surge",
                             "hex_arcane_cloak", "hex_irons_healing_word", "hex_aram_wee_woo", "hex_aram_ambulance_sirens"},
-                    new int[]{2, 4, 6, 8}, new String[]{"overshield", "overshield", "overshield", "overshield"},
-                    new double[]{0.10, 0.20, 0.30, 0.40}),
-            // 5 豪赌客 High Roller：官方小兵几率掉锻造器/金棱彩掉率 → 晶币加成
+                    new int[]{2, 4, 6, 8}, new String[]{"shield_low", "shield_low", "overshield", "overshield"},
+                    new double[]{2.0, 4.0, 0.30, 0.50}),
+            // 5 豪赌客 High Roller：官方小兵掉锻造器/金棱彩几率 → 遗物掉落（锻造器 MC 化）+ 晶币加成
             new TieredCombo("hexcraft.combo.tier.aram.highroller",
                     new String[]{"hex_midas_hand", "hex_trade_discount", "hex_golden_bet", "hex_dice_maniac",
                             "hex_opening_forge", "hex_emc_savings_wallet", "hex_aram_high_roller", "hex_aram_lucky_anvil"},
-                    new int[]{2, 4, 6, 8}, new String[]{"coin_bonus", "coin_bonus", "coin_bonus", "coin_bonus"},
-                    new double[]{0.10, 0.20, 0.30, 0.40}),
-            // 6 死亡钟 Deathknell：官方死亡倒计时 -40% → 免死/濒死保护
+                    new int[]{2, 4, 6, 8}, new String[]{"relic_drop", "relic_drop", "coin_bonus", "coin_bonus"},
+                    new double[]{0.10, 0.20, 0.20, 0.30}),
+            // 6 死亡系 Deathknell（=Dive Bomb，官方同一套，v0.9.7 合并两成员）：官方死亡倒计时 -40→25% → 免死 + 濒死减伤
             new TieredCombo("hexcraft.combo.tier.aram.deathknell",
                     new String[]{"hex_death_defier", "hex_executioner_eternal", "hex_corpse_explosion",
-                            "hex_soul_reaper", "hex_am_titan_subdue", "hex_death_dance", "hex_aram_deathknell", "hex_aram_bell_toll"},
-                    new int[]{2, 4, 6, 8}, new String[]{"death_defy", "death_defy", "death_defy", "death_defy"},
+                            "hex_soul_reaper", "hex_am_titan_subdue", "hex_death_dance", "hex_aram_deathknell", "hex_aram_bell_toll",
+                            "hex_aram_dive_bomb", "hex_aram_clown_college"},
+                    new int[]{2, 4, 6, 8}, new String[]{"death_defy", "death_defy", "last_stand", "last_stand"},
                     new double[]{0.05, 0.10, 0.15, 0.20}),
-            // 7 全自动 Fully Automated：官方自动释放类技能冷却 -30% → 技能回响/自动再施
+            // 7 全自动 Fully Automated：官方自动施法 CD -30% → 连杀狂潮（生产线越转越快）+ 法术增伤
             new TieredCombo("hexcraft.combo.tier.aram.fullyautomated",
                     new String[]{"hex_irons_echo", "hex_irons_echo_recovery", "hex_echo_blade", "hex_echo_cloak",
                             "hex_echo_rampage", "hex_irons_swiftcast", "hex_aram_auto_cast", "hex_aram_factory_line"},
-                    new int[]{2, 4, 6, 8}, new String[]{"echo", "echo", "echo", "echo"},
-                    new double[]{0.05, 0.10, 0.15, 0.20}),
-            // 8 下雪天 Snowday：官方雪球/冰霜强化 → 冰霜之咬增伤
+                    new int[]{2, 4, 6, 8}, new String[]{"rampage", "rampage", "spell_power", "spell_power"},
+                    new double[]{0.10, 0.20, 0.30, 0.45}),
+            // 8 下雪天 Snowday：官方雪球急速 + 伤害 → 冰霜之咬 + 疾风增伤（雪球冲脸）+ 冰雪增伤
             new TieredCombo("hexcraft.combo.tier.aram.snowday",
                     new String[]{"hex_tf_snow_queen_bane", "hex_tf_snow_queen_ward", "hex_tf_yeti_winter", "hex_irons_frost_shard",
                             "hex_ice_crown", "hex_frost_crit", "hex_aram_snowball", "hex_aram_ice_day"},
-                    new int[]{2, 4, 6, 8}, new String[]{"frost_bite", "frost_bite", "frost_bite", "frost_bite"},
+                    new int[]{2, 4, 6, 8}, new String[]{"frost_bite", "frost_bite", "mobi_power", "tf_snow_queen_damage"},
                     new double[]{0.10, 0.20, 0.30, 0.40}),
-            // 9 俯冲轰炸 Dive Bomb：官方死亡爆炸/俯冲 → 烟花爆炸/范围
-            new TieredCombo("hexcraft.combo.tier.aram.divebomb",
-                    new String[]{"hex_firework_king", "hex_all_damage_proc", "hex_storm_breaker",
-                            "hex_fire_blade", "hex_nether_fire_lord", "hex_dragon_dance", "hex_aram_dive_bomb", "hex_aram_clown_college"},
-                    new int[]{2, 4, 6, 8}, new String[]{"firework", "firework", "firework", "firework"},
-                    new double[]{0.10, 0.20, 0.30, 0.40})
+            // 9 金币雨 Make it Rain（v0.9.7 新增，官方第 9 套）：官方击杀掉 6/12 金币 → 精英/首领悬赏晶币 + 晶币加成
+            new TieredCombo("hexcraft.combo.tier.aram.makeitrain",
+                    new String[]{"hex_midas_hand", "hex_trade_discount", "hex_golden_bet", "hex_opening_forge",
+                            "hex_emc_savings_wallet", "hex_dice_maniac", "hex_aram_make_it_rain", "hex_aram_coin_trail"},
+                    new int[]{2, 4, 6, 8}, new String[]{"bounty", "bounty", "coin_bonus", "coin_bonus"},
+                    new double[]{3.0, 6.0, 0.20, 0.30})
     );
 
     /** 全部分档羁绊（逆原 TIERED_COMBOS + 大乱斗 ARAM_SETS），服务端结算与客户端渲染统一遍历此表 */

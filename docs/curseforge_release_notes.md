@@ -1,4 +1,22 @@
-﻿Hexcraft Workshop v0.9.6 - ARAM Mayhem augment sets are now native to the base mod
+﻿Hexcraft Workshop v0.9.7 - Real ARAM set MECHANICS, 5 new Origin-Hunt bonds, UI/animation/code polish
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- BASE MOD - REAL MECHANICS (as you decided: mechanize + new hooks allowed): the 9 official ARAM Mayhem sets now run on real TFT-style mechanics instead of flat numbers (same 2/4/6/8 tier framework, lower tiers keep stacking):
+  - Firecracker -> TWIN-SHOT chain fire (the official bounce), then gun damage.
+  - Archmage -> SPELL ECHO double-cast (TFT Mage, mirroring the official "cast refunds cooldown -> cast again"), then spell power.
+  - Wee Woo Wee Woo -> LOW-HP EMERGENCY SHIELD, then overshield conversion (official low-health heal/shield boost).
+  - High Roller -> RELIC DROP (the official forger anvils, MC-ified), then coin bonus.
+  - Snowday -> FROST BITE + mobi speed damage + snow damage (official snowball haste + damage).
+  - Fully Automated -> RAMPAGE kill streak (the auto-cast loop), then spell power.
+  - Stackasaurus (stack growth) / Deathknell family (death-defy + last stand) / Make it Rain (bounty) keep their mechanical form.
+- OFFICIAL 9-SET SCOPE: the DEATH family is merged (Deathknell absorbs Dive Bomb's two members - official Deathknell = Dive Bomb is one set, now 10 members), and the free slot becomes the official 9th set **Make it Rain**: killing elites/bosses drops bounty coins (MC-ified "kills drop 6/12 gold"). 2 new ARAM hexes: Make it Rain, Coin Trail.
+- ORIGIN HUNT DLC - 5 NEW TIERED BONDS (5 -> 10): Force Field (NEW hook stand_power - stand still to stack +1% damage layers, reset on moving, 20-cap), Burst (full-HP crit + crit damage), Techwar (spell power + fire chain + mana), Resonance (equip power), Stack Loop (stack growth). 28 new Origin-Hunt hexes (GOLD / weight 7 / source=dlc_niyuan only).
+- UI/ANIMATION/CODE POLISH: ARAM set rows show a purple name on the stats page to tell them apart; tiered bond hovers now list members; the draw screen cards get a rarity-colored flash sweep on entry; ComboRow cache keeps source/members in one place.
+- lang: 2347 keys per locale (zh_cn / en_us, UTF-8 BOM kept; the obsolete "Dive Bomb" set key removed).
+
+Hexcraft Workshop v0.9.6 - ARAM Mayhem augment sets are now native to the base mod
 =============================================================================
 
 Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
