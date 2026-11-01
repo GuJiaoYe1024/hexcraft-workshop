@@ -1,0 +1,11 @@
+{
+  "rarity": "GOLD",
+  "weight": 4,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 0.6
+    }
+  ],
+  "event": "ac_dark_damage:0.25,last_stand:0.05"
+}

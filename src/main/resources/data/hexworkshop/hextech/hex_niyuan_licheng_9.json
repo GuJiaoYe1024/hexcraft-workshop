@@ -1,0 +1,12 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 2,
+  "event": "stand_power:2.5,shield_gain:0.15",
+  "source": "dlc_niyuan",
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 1.8
+    }
+  ]
+}

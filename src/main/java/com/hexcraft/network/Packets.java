@@ -708,13 +708,13 @@ public class Packets {
             m.worldDrawCost = worldDrawCost(sp);
             m.occSlots = d.occupiedSlots();
             m.hexLimit = d.hexSlotLimit();
-            // v0.6.16 服务端权威叠层上限；v0.9.7 修复轮：配置 0=机制决定（游玩默认 200，个人凑齐 8/10 件套满档解锁无上限→MAX_VALUE，
+            // v0.6.16 服务端权威叠层上限；v0.9.7 v2-C：配置 0=机制决定（基础 200，叠层专家档1=400/档2=600/档3=800/档4=1000/档5满员∞→MAX_VALUE，
             // 客户端不显示"生效N"标注）；配置 >0=房主/服主锁死固定上限，锁定时羁绊解锁不生效
             int pCap = HexConfig.PERMANENT_STACK_CAP.get();
             if (pCap > 0) {
                 m.permStackCap = pCap;
             } else {
-                m.permStackCap = HextechEvents.unlimitedStackCap(d) ? Integer.MAX_VALUE : 200;
+                m.permStackCap = HextechEvents.stackCapFor(d);
             }
             return m;
         }

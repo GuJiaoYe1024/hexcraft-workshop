@@ -195,19 +195,13 @@ public class HextechEvents {
                 }
             }
         }
-        // v0.9.0 组合羁绊：同时拥有组内全部海克斯 → 该效果键追加组合加成（仅一次，复用现有键）
-        // v0.9.3 表移至 ComboRegistry 共享（服务端结算 + 客户端属性页展示单源）
-        for (String[] c : com.hexcraft.hextech.ComboRegistry.COMBOS) {
-            if (!c[0].equals(effect)) continue;
-            if (hasComboList(hexes, java.util.Arrays.copyOfRange(c, 2, c.length))) {
-                try { sum += Double.parseDouble(c[1]); } catch (Exception ignored) { }
-            }
-        }
-        // v0.9.5 逆原分档羁绊 + v0.9.6 大乱斗套装羁绊：按件数激活档位（2/4/6/8…），低档效果高档仍叠加生效
+        // v0.9.0 组合羁绊：v0.9.7 v2 起三件套 16 已升级为分档羁绊（BASE_COMBOS），与逆原/大乱斗/新增流派/叠层专家统一遍历 allTiered()
         for (com.hexcraft.hextech.ComboRegistry.TieredCombo tc : com.hexcraft.hextech.ComboRegistry.allTiered()) {
             int tier = com.hexcraft.hextech.ComboRegistry.tierOf(tc, hexes);
+            // v0.9.7 v2 棱彩：全部成员凑齐（=最高档）→ 该羁绊所有档位效果叠加后 ×prismaticMult（巨大提升）
+            double mult = (tier >= tc.tierCounts().length) ? tc.prismaticMult() : 1.0;
             for (int t = 0; t < tier; t++) {
-                if (tc.effects()[t].equals(effect)) sum += tc.values()[t];
+                if (tc.effects()[t].equals(effect)) sum += tc.values()[t] * mult;
             }
         }
         return sum;
@@ -253,11 +247,13 @@ public class HextechEvents {
                 } catch (Exception ignored) { }
             }
         }
-        // 组合羁绊（复用 COMBOS 表，仅一次）
-        for (String[] c : com.hexcraft.hextech.ComboRegistry.COMBOS) {
-            if (!out.containsKey(c[0])) continue;
-            if (hasComboList(data.getHexes(), java.util.Arrays.copyOfRange(c, 2, c.length))) {
-                try { out.merge(c[0], Double.parseDouble(c[1]), Double::sum); } catch (Exception ignored) { }
+        // v0.9.7 v2：分档羁绊统一遍历 allTiered()（三件套升级/新增流派/叠层专家/逆原/大乱斗），低档叠加；满员棱彩 ×prismaticMult
+        for (com.hexcraft.hextech.ComboRegistry.TieredCombo tc : com.hexcraft.hextech.ComboRegistry.allTiered()) {
+            int tier = com.hexcraft.hextech.ComboRegistry.tierOf(tc, data.getHexes());
+            double mult = (tier >= tc.tierCounts().length) ? tc.prismaticMult() : 1.0;
+            for (int t = 0; t < tier; t++) {
+                if (!out.containsKey(tc.effects()[t])) continue;
+                out.merge(tc.effects()[t], tc.values()[t] * mult, Double::sum);
             }
         }
         // 装备 event
@@ -315,33 +311,51 @@ public class HextechEvents {
         return n;
     }
 
-    /** v0.9.7 修复轮：个人叠层无上限解锁判定——拥有任一 8 件套/死亡系 10 件套满档（全成员）即解锁（个人生效）。
-     *  云顶式规则：凑齐 8 或 10 件套（大乱斗套装满 8/8、死亡系满 10/10）→ 该玩家永久叠层/每层叠层不再受 200 与 cap 钳制。 */
+    /** v0.9.7 v2-C：个人叠层无上限解锁判定——叠层专家羁绊满档（10 件 = 档 5）即解锁（个人生效）。
+     *  v2 起个人叠层上限由「叠层专家」羁绊逐步解锁（档1=400/档2=600/档3=800/档4=1000/档5=∞），
+     *  修复轮 2 的「任意 ≥8 成员件套满档」过渡判定已收窄为叠层专家专属，避免三件套 12 成员满档误判。 */
     public static boolean unlimitedStackCap(PlayerData data) {
         if (data == null) return false;
+        return stackMasterTierOf(data) >= com.hexcraft.hextech.ComboRegistry.STACK_MASTER.tierCounts().length;
+    }
+
+    /** v0.9.7 v2-C：个人叠层生效上限（服务端权威，客户端属性页显示同源）。
+     *  基础 200；叠层专家档1（2件）=400 / 档2（4件）=600 / 档3（6件）=800 / 档4（8件）=1000 / 档5 满员=∞ */
+    public static int stackCapFor(PlayerData data) {
+        if (data == null) return 200;
+        int tier = stackMasterTierOf(data);
+        if (tier >= 5) return Integer.MAX_VALUE;
+        if (tier >= 4) return 1000;
+        if (tier >= 3) return 800;
+        if (tier >= 2) return 600;
+        if (tier >= 1) return 400;
+        return 200;
+    }
+
+    /** 叠层专家当前档位（0=未激活，1..5=档1..档5满员） */
+    private static int stackMasterTierOf(PlayerData data) {
         java.util.Set<String> owned = new java.util.HashSet<>();
         for (com.hexcraft.capability.PlayerData.HexEntry e : data.getHexes()) owned.add(e.id);
-        for (com.hexcraft.hextech.ComboRegistry.TieredCombo tc : com.hexcraft.hextech.ComboRegistry.allTiered()) {
-            if (tc.members().length >= 8 && com.hexcraft.hextech.ComboRegistry.ownedCount(tc, owned) >= tc.members().length) {
-                return true;
-            }
-        }
-        return false;
+        return com.hexcraft.hextech.ComboRegistry.stackMasterTier(owned);
     }
 
     /** v0.9.4：叠层实时上限乘区（叠层档位 1.2/1.4 × 组合「叠层之巅」+30% × 效果键 stack_cap × 世界海克斯叠层上限加成）。
      *  与 addStack 截断、满层爆发 realCap、客户端属性页显示（Packets 同步实时 cap）完全同源，杜绝"显示 200 层实际 240 层"的口径分叉。
-     *  v0.9.7 修复轮：个人解锁无上限叠层后返回超大乘数（cap×乘数→Infinity→min 不截断，满层爆发不触发），对应显示处按 ∞ 处理。 */
+     *  v0.9.7 修复轮：个人解锁无上限叠层后返回超大乘数（cap×乘数→Infinity→min 不截断，满层爆发不触发），对应显示处按 ∞ 处理。
+     *  v0.9.7 v2-C：叠层专家档位梯级注入乘区（档1 ×2=400 / 档2 ×3=600 / 档3 ×4=800 / 档4 ×5=1000，基于基础 200）。 */
     public static double stackCapMultiplier(PlayerData data, net.minecraft.server.level.ServerLevel level) {
         if (data == null || level == null) return 1.0;
         if (unlimitedStackCap(data)) return Double.MAX_VALUE;
+        double tierMult = 1.0;
+        int smt = stackMasterTierOf(data);
+        if (smt >= 1) tierMult = smt + 1.0;
         double whCapBonus = com.hexcraft.event.WorldHexEvents.combatStackCapBonus(level);
         double comboCap = 1.0;
         int n = countStackHexes(data);
         if (n >= 4) comboCap = 1.4;
         else if (n >= 2) comboCap = 1.2;
         if (hasCombo(data, "hex_stack_tank", "hex_swift_horn_quick", "hex_tick_damage_wax")) comboCap *= 1.3;
-        return (1 + effect(data, "stack_cap") + whCapBonus) * comboCap;
+        return (1 + effect(data, "stack_cap") + whCapBonus) * comboCap * tierMult;
     }
 
     /** 锻造词条总等级（同词条多档锻造累加；供无上限锻造机制判定） */

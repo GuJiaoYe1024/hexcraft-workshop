@@ -1,0 +1,11 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 3,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 0.7
+    }
+  ],
+  "event": "goety_soul:0.20"
+}

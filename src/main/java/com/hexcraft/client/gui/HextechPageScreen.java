@@ -62,9 +62,11 @@ public class HextechPageScreen extends HexScaledScreen {
             {"tacz_power", "tacz_power", "1"}, {"tacz_crit", "tacz_crit", "1"},
             {"tacz_close_power", "tacz_close_power", "1"}, {"tacz_far_power", "tacz_far_power", "1"},
             {"tacz_heal", "tacz_heal", "0"}};
-    private static final String[] TABS = {"overview", "hexes", "forge", "equip", "recharge"};
+    private static final String[] TABS = {"overview", "hexes", "bonds", "forge", "equip", "recharge"};
     private static final int ACCENT = 0xFF4FD8FF;
     private static final int ACCENT_VIOLET = 0xFF7A6BFF;
+    /** v0.9.7 v2-A：羁绊页签组头颜色（原生/新流派/叠层专家/逆原/大乱斗） */
+    private static final int[] GROUP_COLORS = {0xFF4FD8FF, 0xFFFFD700, 0xFFC77DFF, 0xFF8AB4FF, 0xFFFF9FE0};
 
     private int tab;
     private int hexScroll;
@@ -83,7 +85,9 @@ public class HextechPageScreen extends HexScaledScreen {
     private static final int[] HEX_CAT_COLORS = {
             0xFF4FD8FF, 0xFFFF6B6B, 0xFF55FF88, 0xFFFFD700, 0xFF8AB4FF,
             0xFFC77DFF, 0xFF6BE4FF, 0xFFFFC94A, 0xFFFF9FE0};
-    private int[] navY = new int[5];
+    private int navY[] = new int[6];
+    /** v0.9.7 v2-A：羁绊页签滚动（47 条全量图鉴） */
+    private int bondScroll;
     private final java.util.List<float[]> parts = new java.util.ArrayList<>();
     private int pTick;
     /** v0.6.3 上次渲染的费用快照版本（tick 检测变化重建按钮） */
@@ -120,8 +124,9 @@ public class HextechPageScreen extends HexScaledScreen {
 
         if (tab == 0) initOverview();
         else if (tab == 1) initHexes();
-        else if (tab == 2) initForge();
-        else if (tab == 3) initEquip();
+        else if (tab == 2) initBonds(); // v0.9.7 v2-A 羁绊页签（纯自绘列表，无控件）
+        else if (tab == 3) initForge();
+        else if (tab == 4) initEquip();
         else initRecharge();
     }
 
@@ -135,6 +140,10 @@ public class HextechPageScreen extends HexScaledScreen {
 
     private void initOverview() {
         // 属性页不再内嵌兑换按钮（充值已独立为最左侧「充值」页签）
+    }
+
+    /** v0.9.7 v2-A：羁绊页签（纯自绘列表，无控件） */
+    private void initBonds() {
     }
 
     /** 充值材质表：0绿宝石 1铜 2铁 3金 4钻石 5下界合金；每行标签 = 材质 ×单枚晶币 */
@@ -348,8 +357,9 @@ public class HextechPageScreen extends HexScaledScreen {
         hoverTip = null;
         if (tab == 0) renderOverview(g, y);
         else if (tab == 1) renderHexes(g, y);
-        else if (tab == 2) renderForge(g, y);
-        else if (tab == 3) renderEquip(g, y);
+        else if (tab == 2) renderBonds(g, y);
+        else if (tab == 3) renderForge(g, y);
+        else if (tab == 4) renderEquip(g, y);
         else renderRecharge(g, y);
         // 自绘列表 hover 提示：最后绘制，盖在列表上方
         if (hoverTip != null && !hoverTip.isEmpty()) {
@@ -516,17 +526,19 @@ public class HextechPageScreen extends HexScaledScreen {
                 if (cr.tiered()) {
                     // v0.9.5 逆原分档羁绊（2/4/6 按件数激活）：满档金色、已激活浅金、未激活常规
                     // v0.9.7 优化：大乱斗套装（source=aram）行名紫色区分来源；hover 补成员列表
-                    // v0.9.7 修复轮：8 件套/死亡系 10 件套满档 → 整行棱彩紫 + 状态「已解锁」（个人叠层无上限解锁）
+                    // v0.9.7 v2 棱彩：每条羁绊满员（全部成员凑齐）→ 整行棱彩紫 + 状态「棱彩」+ 全效果 ×2（巨大提升）；
+                    // 档位色阶梯（云顶式）：档1白 → 档2银 → 档3浅金 → 档4深金 → 满员棱彩紫
                     boolean maxTier = cr.tier() >= cr.tierCounts().length;
-                    boolean prismaticUnlocked = maxTier && cr.tierCounts()[cr.tierCounts().length - 1] >= 8;
+                    boolean stackMaster = "hexcraft.combo.v2.stackmaster".equals(cr.nameKey());
+                    boolean prismaticUnlocked = maxTier;
                     String status = maxTier
-                            ? Component.translatable(prismaticUnlocked ? "hexcraft.gui.combo.unlocked" : "hexcraft.gui.combo.active").getString()
+                            ? Component.translatable("hexcraft.gui.combo.prismatic").getString()
                             : cr.have() + "/" + cr.total();
                     Component tierName = Component.translatable(cr.nameKey());
                     if ("aram".equals(cr.source())) tierName = tierName.copy().withStyle(t -> t.withColor(0xFFC77DFF));
-                    drawAttrRow(g, inner, idx, tierName, status,
-                            prismaticUnlocked ? 0xFFC77DFF
-                                    : (maxTier ? 0xFFFFD700 : (cr.tier() >= 1 ? 0xFFE8C36A : 0xFFFFFFFF)));
+                    int rowColor = prismaticUnlocked ? 0xFFC77DFF
+                            : TIER_COLORS[Math.max(0, Math.min(cr.tier() - 1, TIER_COLORS.length - 1))];
+                    drawAttrRow(g, inner, idx, tierName, status, rowColor);
                     // hover：成员列表 + 各档效果 + 当前档 + 下一档缺数
                     int rowY = inner + (idx / 2) * ROW_H;
                     int hc = hoverColumn(hoverX, hoverY, rowY);
@@ -551,33 +563,11 @@ public class HextechPageScreen extends HexScaledScreen {
                         }
                         if (!maxTier) tip.add(Component.literal("再 " + (cr.tierCounts()[cr.tier()] - cr.have()) + " 件激活档" + (cr.tier() + 1))
                                 .withStyle(t -> t.withColor(0xFFFF6B6B)));
-                        hoverTip = tip;
-                    }
-                } else {
-                    String[] c = com.hexcraft.hextech.ComboRegistry.COMBOS[cr.rowIdx()];
-                    boolean full = cr.have() >= cr.total();
-                    String status = full ? Component.translatable("hexcraft.gui.combo.active").getString()
-                                         : cr.have() + "/" + cr.total();
-                    // v0.9.5 显示优化：已激活羁绊数值列金色高亮（类似海克斯大乱斗/TFT 激活羁绊亮色），未激活保持常规
-                    drawAttrRow(g, inner, idx, Component.translatable(cr.nameKey()), status,
-                            full ? 0xFFFFD700 : 0xFFFFFFFF);
-                    // hover：羁绊名 + 成员海克斯 + 效果键加成 + 缺员提示
-                    int rowY = inner + (idx / 2) * ROW_H;
-                    int hc = hoverColumn(hoverX, hoverY, rowY);
-                    boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
-                    if (hc != 0 && hitOwnCol) {
-                        java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
-                        tip.add(Component.translatable(cr.nameKey()).withStyle(t -> t.withColor(0xFFFFD28C)));
-                        StringBuilder members = new StringBuilder();
-                        for (int i = 2; i < c.length; i++) {
-                            if (i > 2) members.append("  ");
-                            members.append(Component.translatable("hexcraft.hextech." + c[i] + ".name").getString());
-                        }
-                        tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
-                        String effectName = Component.translatable("hexcraft.effect." + c[0]).getString();
-                        int pct = (int) Math.round(Double.parseDouble(c[1]) * 100);
-                        tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.effect").getString() + "：" + effectName + " +" + pct + "%").withStyle(t -> t.withColor(0xFF9FE4FF)));
-                        if (!full) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.missing", cr.total() - cr.have()).getString()).withStyle(t -> t.withColor(0xFFFF6B6B)));
+                        if (stackMaster) tip.add(Component.literal("叠层上限梯级：2件400 → 4件600 → 6件800 → 8件1000 → 10件∞（棱彩）")
+                                .withStyle(t -> t.withColor(0xFF9FE4FF)));
+                        if (maxTier && stackMaster) tip.add(Component.literal("叠层上限已解锁：∞").withStyle(t -> t.withColor(0xFFC77DFF)));
+                        if (maxTier) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.prismatic_bonus").getString())
+                                .withStyle(t -> t.withColor(0xFFC77DFF)));
                         hoverTip = tip;
                     }
                 }
@@ -681,13 +671,29 @@ public class HextechPageScreen extends HexScaledScreen {
     /** v0.9.5 组合羁绊/叠层档位缓存：依赖 ClientDataStore 数据版本号，同步到达才重算（原每帧全遍历 COMBOS+海克斯） */
     private static int cachedComboVer = Integer.MIN_VALUE;
     private static java.util.List<ComboRow> cachedComboRows = java.util.List.of();
+    /** v0.9.7 v2-A：羁绊页签全量图鉴缓存（47 条，含未拥有；与 comboRows 同版本号同源重建） */
+    private static java.util.List<BondRow> cachedBonds = java.util.List.of();
     private static int cachedComboStack;
 
+    /** v0.9.7 v2 档位颜色阶梯（云顶式）：档1 白 → 档2 银 → 档3 浅金 → 档4 深金 → 满员棱彩紫（满档单独判） */
+    private static final int[] TIER_COLORS = {0xFFFFFFFF, 0xFFC0C8D0, 0xFFE8C36A, 0xFFFFB347, 0xFFC77DFF};
+
     /** v0.9.5 组合羁绊展示行（tiered=false 三件套布尔；tiered=true 分档羁绊 2/4/6，tier=当前激活档数）。
-     *  v0.9.7 优化：新增 source（"niyuan"/"aram"/null=三件套）与 members（分档羁绊成员 id 列表，hover 展示）。 */
+     *  v0.9.7 优化：新增 source（"niyuan"/"aram"/null=本体）与 members（分档羁绊成员 id 列表，hover 展示）。
+     *  v0.9.7 v2：三件套布尔行已废弃，全部 47 条羁绊均为 tiered=true。 */
     private record ComboRow(boolean tiered, int rowIdx, int have, int total, int tier,
                             int[] tierCounts, String[] effects, double[] values, String nameKey,
                             String source, String[] members) {}
+
+    /** v0.9.7 v2-A：羁绊页签图鉴行（group：0 原生/1 新流派/2 叠层专家/3 逆原/4 大乱斗） */
+    private record BondRow(String nameKey, String[] members, int[] tierCounts, String[] effects,
+                           double[] values, int have, int tier, int group) {}
+
+    /** v0.9.7 v2-A：羁绊页签全量图鉴（47 条，含未拥有 0/总） */
+    private static java.util.List<BondRow> bondRows() {
+        if (ClientDataStore.dataVersion != cachedComboVer) rebuildComboCache();
+        return cachedBonds;
+    }
 
     /** v0.9.3 属性页「组合羁绊」框数据：COMBOS 中拥有 ≥1 成员的行 + 逆原分档羁绊行 */
     private static java.util.List<ComboRow> comboRows() {
@@ -706,26 +712,33 @@ public class HextechPageScreen extends HexScaledScreen {
         java.util.List<ComboRow> out = new java.util.ArrayList<>();
         java.util.Set<String> owned = new java.util.HashSet<>();
         for (PlayerData.HexEntry h : ClientDataStore.hexes) owned.add(h.id);
-        String[][] combos = com.hexcraft.hextech.ComboRegistry.COMBOS;
-        for (int ri = 0; ri < combos.length; ri++) {
-            String[] c = combos[ri];
-            int have = 0;
-            for (int i = 2; i < c.length; i++) if (owned.contains(c[i])) have++;
-            if (have > 0) out.add(new ComboRow(false, ri, have, c.length - 2, have >= c.length - 2 ? 1 : 0,
-                    null, null, null, com.hexcraft.hextech.ComboRegistry.nameKey(ri + 1), null, null));
-        }
-        // v0.9.5 逆原分档羁绊 + v0.9.6 大乱斗套装羁绊（按件数激活档位，低档叠加）
+        // v0.9.7 v2：47 条羁绊统一遍历 allTiered()（三件套升级 16 + 新增流派 11 + 叠层专家 1 + 逆原 10 + 大乱斗 9），
+        // 三件套布尔行已废弃；source 标记：BASE/NEW/STACK=本体 null、TIERED=niyuan、ARAM=aram
         java.util.List<com.hexcraft.hextech.ComboRegistry.TieredCombo> tcs = com.hexcraft.hextech.ComboRegistry.allTiered();
+        int niyuanStart = com.hexcraft.hextech.ComboRegistry.BASE_COMBOS.size()
+                + com.hexcraft.hextech.ComboRegistry.NEW_COMBOS.size() + 1;
+        int aramStart = niyuanStart + com.hexcraft.hextech.ComboRegistry.TIERED_COMBOS.size();
+        java.util.List<BondRow> bonds = new java.util.ArrayList<>();
         for (int ti = 0; ti < tcs.size(); ti++) {
             com.hexcraft.hextech.ComboRegistry.TieredCombo tc = tcs.get(ti);
             int have = com.hexcraft.hextech.ComboRegistry.ownedCount(tc, owned);
             if (have > 0) out.add(new ComboRow(true, 0, have, com.hexcraft.hextech.ComboRegistry.memberCount(tc),
                     com.hexcraft.hextech.ComboRegistry.tierOf(tc, owned),
                     tc.tierCounts(), tc.effects(), tc.values(), tc.nameKey(),
-                    ti < com.hexcraft.hextech.ComboRegistry.TIERED_COMBOS.size() ? "niyuan" : "aram",
+                    ti >= aramStart ? "aram" : (ti >= niyuanStart ? "niyuan" : null),
                     tc.members()));
+            // v0.9.7 v2-A 羁绊页签全量行（含未拥有）
+            int group = ti < com.hexcraft.hextech.ComboRegistry.BASE_COMBOS.size() ? 0
+                    : (ti < com.hexcraft.hextech.ComboRegistry.BASE_COMBOS.size()
+                            + com.hexcraft.hextech.ComboRegistry.NEW_COMBOS.size() ? 1
+                    : (ti == com.hexcraft.hextech.ComboRegistry.BASE_COMBOS.size()
+                            + com.hexcraft.hextech.ComboRegistry.NEW_COMBOS.size() ? 2
+                    : (ti < aramStart ? 3 : 4)));
+            bonds.add(new BondRow(tc.nameKey(), tc.members(), tc.tierCounts(), tc.effects(), tc.values(),
+                    have, com.hexcraft.hextech.ComboRegistry.tierOf(tc, owned), group));
         }
         cachedComboRows = out;
+        cachedBonds = bonds;
         int n = 0;
         for (PlayerData.HexEntry h : ClientDataStore.hexes) if (com.hexcraft.hextech.ComboRegistry.STACK_HEXES.contains(h.id)) n++;
         cachedComboStack = n;
@@ -738,6 +751,85 @@ public class HextechPageScreen extends HexScaledScreen {
         g.fill(cx() + 2, y + height - 1, cx() + 230, y + height, 0xFF30466B);
         g.fill(cx() + 2, y, cx() + 3, y + height, 0xFF30466B);
         g.fill(cx() + 229, y, cx() + 230, y + height, 0xFF30466B);
+    }
+
+    /** v0.9.7 v2-A：羁绊页签可视高（标题 2 行 26px + 列表区 y+62 ~ y+H-40 ≈ 186px） */
+    private int maxBondScroll() {
+        java.util.List<BondRow> rows = bondRows();
+        int lineCount = rows.size() + 5; // 47 条 + 5 组头
+        return Math.max(0, lineCount * ROW_H - 186);
+    }
+
+    /** v0.9.7 v2-A：羁绊页签——47 条全量图鉴（含未拥有），单列滚动；
+     *  组头 原生(16)/新流派(11)/叠层专家(1)/逆原(10)/大乱斗(9)；行色=档位色阶（白银浅金深金），满员=棱彩紫 */
+    private void renderBonds(GuiGraphics g, int y) {
+        g.drawString(this.font, Component.translatable("hexcraft.gui.bonds_title"), cx() + 4, y + 36, 0xFF9FE4FF);
+        g.drawString(this.font, Component.translatable("hexcraft.gui.bonds_hint"), cx() + 4, y + 48, 0xFF6FA8FF);
+        int top = y + 62;
+        java.util.List<BondRow> rows = bondRows();
+        int ms = maxBondScroll();
+        if (bondScroll > ms) bondScroll = ms;
+        int line = 0;
+        int lastGroup = -1;
+        for (BondRow br : rows) {
+            if (br.group != lastGroup) {
+                int gy = top + line * ROW_H - bondScroll;
+                lastGroup = br.group;
+                if (gy >= top - 14 && gy <= top + 186) {
+                    g.fill(cx() + 4, gy, cx() + 226, gy + 13, 0x33000000);
+                    g.drawString(this.font, Component.translatable("hexcraft.gui.bonds_group" + br.group),
+                            cx() + 6, gy + 1, GROUP_COLORS[br.group]);
+                }
+                line++;
+            }
+            int ry = top + line * ROW_H - bondScroll;
+            line++;
+            if (ry < top - 14 || ry > top + 186) continue;
+            boolean maxTier = br.tier >= br.tierCounts().length;
+            boolean ownedAny = br.have > 0;
+            String status = maxTier
+                    ? Component.translatable("hexcraft.gui.combo.prismatic").getString()
+                    : br.have + "/" + br.members().length;
+            Component name = Component.translatable(br.nameKey());
+            if (maxTier) name = name.copy().withStyle(t -> t.withColor(0xFFC77DFF));
+            else if (!ownedAny) name = name.copy().withStyle(t -> t.withColor(0xFF5A6A90));
+            else name = name.copy().withStyle(t -> t.withColor(
+                    TIER_COLORS[Math.max(0, Math.min(br.tier - 1, TIER_COLORS.length - 1))]));
+            // 名称（档位色：未拥有灰、已激活白→银→浅金→深金、满员棱彩紫）+ 状态右对齐
+            String nameStr = Component.translatable(br.nameKey()).getString();
+            while (this.font.width(nameStr) > 150 && nameStr.length() > 1) nameStr = nameStr.substring(0, nameStr.length() - 1);
+            int rowColor = maxTier ? 0xFFC77DFF
+                    : (ownedAny ? TIER_COLORS[Math.max(0, Math.min(br.tier - 1, TIER_COLORS.length - 1))] : 0xFF5A6A90);
+            g.drawString(this.font, nameStr, cx() + 6, ry + 1, rowColor);
+            g.drawString(this.font, status, cx() + 226 - this.font.width(status), ry + 1,
+                    maxTier ? 0xFFC77DFF : (ownedAny ? 0xFFE8C36A : 0xFF5A6A90));
+            // hover：成员 + 各档 + 下一档缺数 + 棱彩
+            int hc = hoverColumn(hoverX, hoverY, ry);
+            if (hc != 0) {
+                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                tip.add(Component.translatable(br.nameKey()).withStyle(t -> t.withColor(0xFFFFD28C)));
+                if (br.members().length > 0) {
+                    StringBuilder members = new StringBuilder();
+                    for (int mi = 0; mi < br.members().length; mi++) {
+                        if (mi > 0) members.append("  ");
+                        members.append(Component.translatable("hexcraft.hextech." + br.members()[mi] + ".name").getString());
+                    }
+                    tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                }
+                for (int t = 0; t < br.tierCounts().length; t++) {
+                    String en = Component.translatable("hexcraft.effect." + br.effects()[t]).getString();
+                    int pct = (int) Math.round(br.values()[t] * 100);
+                    int slotColor = t < br.tier ? 0xFFFFD700 : 0xFFAAB6D8;
+                    tip.add(Component.literal("档" + (t + 1) + "（" + br.tierCounts()[t] + "件）：" + en + " +" + pct + "%")
+                            .withStyle(st -> st.withColor(slotColor)));
+                }
+                if (!maxTier) tip.add(Component.literal("再 " + (br.tierCounts()[br.tier()] - br.have) + " 件激活档" + (br.tier() + 1))
+                        .withStyle(t -> t.withColor(0xFFFF6B6B)));
+                if (maxTier) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.prismatic_bonus").getString())
+                        .withStyle(t -> t.withColor(0xFFC77DFF)));
+                hoverTip = tip;
+            }
+        }
     }
 
     /** 充值页渲染：6 材质两行式（标签在上、按钮在下，按钮按金属配色）+ 晶币→绿宝石行 + 规则提示 */
@@ -988,7 +1080,7 @@ public class HextechPageScreen extends HexScaledScreen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (tab == 2) {
+        if (tab == 3) {
             forgeScroll = Math.max(0, Math.min(maxForgeScroll(), forgeScroll - (int) Math.round(delta * 12)));
             return true;
         }
@@ -996,12 +1088,16 @@ public class HextechPageScreen extends HexScaledScreen {
             hexScroll = Math.max(0, Math.min(maxHexScroll(), hexScroll - (int) Math.round(delta * HEX_ROW_H)));
             return true;
         }
+        if (tab == 2) {
+            bondScroll = Math.max(0, Math.min(maxBondScroll(), bondScroll - (int) Math.round(delta * ROW_H)));
+            return true;
+        }
         if (tab == 0) {
             attrScroll = Math.max(0, Math.min(maxAttrScroll(), attrScroll - (int) Math.round(delta * ROW_H)));
             return true;
         }
         // v0.6.5 装备图鉴滚动（仅图鉴模式）
-        if (tab == 3 && equipGallery) {
+        if (tab == 4 && equipGallery) {
             galleryScroll = Math.max(0, Math.min(maxGalleryScroll(), galleryScroll - (int) Math.round(delta * 13)));
             return true;
         }

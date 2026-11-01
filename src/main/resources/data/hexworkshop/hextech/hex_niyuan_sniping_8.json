@@ -1,0 +1,12 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 3,
+  "event": "tacz_power:0.40,tacz_crit:0.12",
+  "source": "dlc_niyuan",
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 1.0
+    }
+  ]
+}

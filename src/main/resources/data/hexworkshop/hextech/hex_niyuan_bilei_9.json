@@ -1,0 +1,12 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 2,
+  "event": "overshield:0.50,death_defy:0.05",
+  "source": "dlc_niyuan",
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 5.0
+    }
+  ]
+}

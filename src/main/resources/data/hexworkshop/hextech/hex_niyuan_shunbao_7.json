@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 5,
+  "event": "crit_damage:0.20,crit:0.08",
+  "source": "dlc_niyuan"
+}

@@ -1,0 +1,11 @@
+{
+  "rarity": "GOLD",
+  "weight": 4,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 2.5
+    }
+  ],
+  "event": "spell_mana_max:0.10,regen:0.02"
+}

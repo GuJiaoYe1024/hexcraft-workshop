@@ -27,6 +27,15 @@ FIX ROUND 2 (same build 0.9.7, stack-cap mechanic):
 - DRAW ANIMATION SMOOTHNESS: background particles 24→14 with a single fill each; card name/desc/owned-badge/stack-suffix are pre-built once when the draw opens (zero per-frame translations or lookups); glow halo fill costs reduced (2px halo + low-alpha skip).
 - lang: 2367 keys per locale (+1 combo.unlocked).
 
+v2 BOND SYSTEM (same build 0.9.7, complete bond redesign - the 6 decisions you made are now live):
+- ALL 47 BONDS ARE NOW TFT-STYLE TIERED (the old 16 boolean 3-piece bonds are gone): Core 16 (12 members, tiers 3/6/8/10/12), New Archetypes 11 (10 members, 2/4/6/8/10), Stack Master 1 (10 members, 2/4/6/8/10), Origin-Hunt 10 (9 members, odd tiers 1/3/5/7/9), ARAM 9 (2/4/6/8). Server & client both iterate a single allTiered() list; lower tiers still stack into higher ones.
+- 11 NEW ARCHETYPE BONDS: Combo / Crit / Burning / Shield / Heal / Summon / Mobility / Mana / Economy / Execute / Survival - members are reused from existing hexes and can serve several bonds at once.
+- STACK MASTER (your decision C): 10 members at 2/4/6/8/10 - your PERSONAL stack cap now unlocks step by step: 2 pcs 400 / 4 pcs 600 / 6 pcs 800 / 8 pcs 1000 / 10 pcs FULL SET = unlimited (∞). The tier multiplier feeds the same cap pipeline as actual truncation / full-cap burst / stats-page display (one source of truth); server authority stackCapFor is synced, and a config >0 still hard-locks it.
+- ONE COLOR PER TIER + FULL-SET PRISMATIC (your decision): TFT-style tier colors white -> silver -> light gold -> deep gold, and when ALL members of a bond are collected the whole row turns prismatic purple and ALL bond effects are DOUBLED (×2) - new prismaticMult=2.0 on every TieredCombo, applied server-side in effect/effectBatch.
+- NEW HEXES (your decision B): base mod +15 (Abyss 6 / Mastery 2 / Summon 4 / Mana 3 - names avoid link-mod prefixes so the bonds fill without those mods installed); Origin-Hunt +36 (every one of the 10 tiered families grows to 9 members: Berserker/Guerrilla/Bulwark/Field/Burst/Techwar/Stackloop +3 each, Sniping/Hunting/Resonance +5 each, source=dlc_niyuan so they only appear in the Origin-Hunt pool).
+- BOND TAB (your decision A): the main hex screen's left nav gains a "Bonds" page - a full 47-bond codex (including bonds you don't own yet), grouped Core/New Archetypes/Stack Master/Origin/ARAM, rows colored by tier (grey = unowned, prismatic purple = full set), hover shows members/tiers/missing count/prismatic bonus, scrollable. The stats-page bond box stays.
+- lang: 2491 keys per locale (+72 Origin-Hunt name/desc +8 bond-tab keys); jar SHA-256 F7732EBF...1FB81 (801,037B) deployed to all four copies, hashes match.
+
 Hexcraft Workshop v0.9.6 - ARAM Mayhem augment sets are now native to the base mod
 =============================================================================
 

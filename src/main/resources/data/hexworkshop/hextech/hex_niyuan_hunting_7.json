@@ -1,0 +1,6 @@
+{
+  "rarity": "GOLD",
+  "weight": 4,
+  "event": "melee_power:0.30,execute:0.08",
+  "source": "dlc_niyuan"
+}

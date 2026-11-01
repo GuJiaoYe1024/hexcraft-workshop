@@ -1,0 +1,12 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 2,
+  "event": "stack_growth:0.60",
+  "source": "dlc_niyuan",
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 5.0
+    }
+  ]
+}

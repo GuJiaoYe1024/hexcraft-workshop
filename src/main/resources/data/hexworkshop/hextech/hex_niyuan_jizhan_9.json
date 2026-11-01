@@ -1,0 +1,12 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 2,
+  "event": "spell_power:0.35,fire_chain:0.35",
+  "source": "dlc_niyuan",
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 1.5
+    }
+  ]
+}

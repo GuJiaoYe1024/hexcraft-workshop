@@ -1,0 +1,11 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 3,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 0.8
+    }
+  ],
+  "event": "spell_mana_max:0.12,spell_power:0.10"
+}

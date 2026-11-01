@@ -1,0 +1,11 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 2,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 4.0
+    }
+  ],
+  "event": "ac_dark_damage:0.40,lifesteal:0.05"
+}

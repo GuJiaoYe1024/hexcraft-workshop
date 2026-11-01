@@ -1,0 +1,11 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 3,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 0.7
+    }
+  ],
+  "event": "ac_dark_damage:0.30,execute:0.03"
+}
