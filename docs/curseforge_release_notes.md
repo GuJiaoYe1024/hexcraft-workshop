@@ -36,6 +36,17 @@ v2 BOND SYSTEM (same build 0.9.7, complete bond redesign - the 6 decisions you m
 - BOND TAB (your decision A): the main hex screen's left nav gains a "Bonds" page - a full 47-bond codex (including bonds you don't own yet), grouped Core/New Archetypes/Stack Master/Origin/ARAM, rows colored by tier (grey = unowned, prismatic purple = full set), hover shows members/tiers/missing count/prismatic bonus, scrollable. The stats-page bond box stays.
 - lang: 2491 keys per locale (+72 Origin-Hunt name/desc +8 bond-tab keys); jar SHA-256 16015253...DA7A7 (801,008B) deployed to all four copies, hashes match. Late fix: the Summon bond kept 12 members from the skeleton phase (incl. 2 Cataclysm-link members) - now trimmed to 10 so it matches its 2/4/6/8/10 tiers and fills without link mods; the Deathknell family stays at 10 members by design (official Deathknell = Dive Bomb, one set).
 
+v2 MECHANICS PASS (same build 0.9.7 - the 47 bonds stop being pure numbers, "do them all, more is better"):
+- Answering "every bond is just numbers, they all feel the same": researched TFT and LOL Wild Rift augments (Gunslinger / Mercenary / Burn Bright / Fortune / Steelheart / Dragon's Might / Thornmail+Unbreakable prototypes) and rebuilt the bonds:
+  - 34 BONDS NOW MIX EXISTING EFFECT KEYS: different tiers of the same bond bind DIFFERENT mechanics instead of just bigger numbers (e.g. Combo = Twin Shot x4 + Rampage; Burning = Fire Chain x4 + Lifesteal - burn-heal, no explosion; Execute = Execute x4 + Rampage; Economy = Coin Bonus + Bounty; Survival = Kill Heal + Death Defy). Zero new hooks, the existing server-side effect aggregator applies them automatically.
+  - 13 MECHANIC BONDS KEEP THEIR FORM: all 9 ARAM sets + Force Field / Burst / Techwar / Stack Master.
+  - 4 BONDS GET A BRAND-NEW DEDICATED HOOK (each one unique, not a number):
+    1. CHAIN LIGHTNING (Calamity Hunter full set, Dragon's Might prototype): on-hit chance to arc lightning to nearby enemies (50% damage, 1s cooldown).
+    2. ASCENSION (Abyss Warden full set, Shurima prototype): after 8 seconds of sustained combat (attacking or taking hits within 2s windows) you ascend and gain bonus damage; 2s out of combat resets it.
+    3. IRON BODY (Undying Body full set, Wild Rift Unbreakable prototype): any single hit above 10% of max health has the excess reduced by 30% (anti one-shot).
+    4. THORN ARMOR (Bulwark full set, Wild Rift Thornmail prototype): melee attackers take a % of your damage back (separate from the flat thorns reflect).
+- lang: 2496 keys per locale (+5 new effect keys chain_lightning/ascend/ironbody/thorn_armor/tick_gain); jar SHA-256 BCE048DD...308515 (802,119B) deployed to all four copies, hashes match.
+
 Hexcraft Workshop v0.9.6 - ARAM Mayhem augment sets are now native to the base mod
 =============================================================================
 

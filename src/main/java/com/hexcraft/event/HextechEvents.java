@@ -81,6 +81,10 @@ public class HextechEvents {
     private static final Map<UUID, Map<UUID, long[]>> TACZ_TRACK = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> CRIT_CHAIN_UNTIL = new ConcurrentHashMap<>();
     private static final Set<UUID> MULTI_BUSY = ConcurrentHashMap.newKeySet();
+    // v0.9.7 v2 机制特色化：闪电链冷却 / 飞升战斗计时（持续战斗 8 秒进入飞升，脱战 2 秒清零）
+    private static final Map<UUID, Long> CHAIN_UNTIL = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> ASCEND_LAST = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> ASCEND_TICKS = new ConcurrentHashMap<>();
 
     /** 施加流血实例（每 tick 伤害 / 存活 tick）；独立计时，多次命中叠加多个实例 */
     private static void applyBleed(LivingEntity target, float dmgPerTick, int ticks) {
@@ -952,6 +956,8 @@ public class HextechEvents {
         //   （含反伤）都能触发全部攻击特效——叠层、吸血、词条照常结算。
         boolean thornsHit = event.getSource().getMsgId().contains("thorns");
         if (thornsHit && effect(data, "all_damage_proc") <= 0) return;
+        // v0.9.7 v2 飞升：玩家主动输出即记为战斗（受击端在 onHurt 同步标记），供持续战斗 8 秒飞升判定
+        ASCEND_LAST.put(sp.getUUID(), System.currentTimeMillis());
 
         // —— 吸血（动态提升：嗜血狂怒 / 满血过载）+ 溢出转盾 ——
         double lifesteal = effect(data, "lifesteal");
@@ -1193,6 +1199,11 @@ public class HextechEvents {
         // 连杀狂潮（击杀后 5 秒）
         if (System.currentTimeMillis() < RAMPAGE_UNTIL.getOrDefault(sp.getUUID(), 0L)) {
             dmgMul *= (float) (1 + effect(data, "rampage"));
+        // v0.9.7 v2 飞升（ascend，深渊守望羁绊满档）：持续战斗 8 秒后全伤害加成，脱战 2 秒重置
+        double ascendDmg = effect(data, "ascend");
+        if (ascendDmg > 0 && ASCEND_TICKS.getOrDefault(sp.getUUID(), 0) >= 160) {
+            dmgMul *= (float) (1 + ascendDmg);
+        }
         }
         // 世界海克斯独立乘区：全体玩家造成伤害倍率 + 对中立生物伤害倍率（独立于玩家海克斯，不与其它 mod 冲突）
         if (sp.level() instanceof net.minecraft.server.level.ServerLevel whLevel) {
@@ -1253,6 +1264,13 @@ public class HextechEvents {
             double lightningBlade = effect(data, "lightning_blade");
             if (lightningBlade > 0 && sp.getRandom().nextFloat() < Math.min(1f, 0.15f * (float) lightningBlade)) {
                 chainLightning(sp, target, amount * 0.30f, 2.5);
+            }
+            // v0.9.7 v2 闪电链（chain_lightning，灾厄猎手羁绊满档，云顶巨龙威势原型）：命中几率电击附近敌人（50% 伤害），1 秒冷却
+            double chain = effect(data, "chain_lightning");
+            if (chain > 0 && sp.getRandom().nextFloat() < (float) chain
+                    && System.currentTimeMillis() >= CHAIN_UNTIL.getOrDefault(sp.getUUID(), 0L)) {
+                CHAIN_UNTIL.put(sp.getUUID(), System.currentTimeMillis() + 1000);
+                chainLightning(sp, target, amount * 0.50f, 3.0);
             }
             // 刀锋之舞：攻速溢出部分按 8%/级 转化为额外伤害
             double danceBlade = effect(data, "dance_blade");
@@ -1509,6 +1527,8 @@ public class HextechEvents {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
         PlayerData data = ModCapabilities.get(sp);
         if (data == null) return;
+        // v0.9.7 v2 飞升：玩家受击同样记为战斗（供持续战斗 8 秒飞升判定）
+        ASCEND_LAST.put(sp.getUUID(), System.currentTimeMillis());
         // v0.6.16 以血还血：持有者受击开启 5 秒复仇窗口（下一次攻击结算时消费）
         if (effect(data, "vengeance") > 0) {
             VENGE_UNTIL.put(sp.getUUID(), System.currentTimeMillis() + 5000);
@@ -1595,6 +1615,12 @@ public class HextechEvents {
         if (guard > 0 && sp.getHealth() / Math.max(1f, sp.getMaxHealth()) < 0.30f) {
             event.setAmount((float) (event.getAmount() * (1 - guard)));
         }
+        // v0.9.7 v2 金刚不坏（ironbody，不灭之躯羁绊满档，手游尖刺防御原型）：单次伤害超过最大生命 10% 的部分减免 X%（防秒杀）
+        double ironbody = effect(data, "ironbody");
+        if (ironbody > 0 && event.getAmount() > sp.getMaxHealth() * 0.10f) {
+            float excess = event.getAmount() - sp.getMaxHealth() * 0.10f;
+            event.setAmount(event.getAmount() - excess * (float) Math.min(1.0, ironbody));
+        }
         // 法术护盾：魔法伤害减免（1.19+ 伤害系统重构，按伤害消息标识判定魔法）
         double arcane = effect(data, "arcane_shield");
         if (arcane > 0 && event.getSource().getMsgId().contains("magic")) {
@@ -1676,6 +1702,12 @@ public class HextechEvents {
             }
         }
         if (hurtStacked || attrHurtStacked) sync(sp);
+        // v0.9.7 v2 荆棘装甲（thorn_armor，逆原壁垒羁绊满档，手游尖刺防御原型）：受近战攻击反弹比例伤害（区别于 thorns 固定值反伤）
+        double thornArmor = effect(data, "thorn_armor");
+        if (thornArmor > 0 && event.getSource().getDirectEntity() instanceof LivingEntity ta
+                && ta != sp && ta.isAlive()) {
+            ta.hurt(sp.damageSources().thorns(sp), event.getAmount() * (float) Math.min(1.0, thornArmor));
+        }
         // 荆棘反伤 + 反击风暴（v0.6.0 反伤之刃锻造词条迁出，已有 thorns/counter 海克斯覆盖反伤）
         double thorns = effect(data, "thorns");
         double counter = effect(data, "counter");
@@ -1930,7 +1962,7 @@ public class HextechEvents {
     /** v0.9.1 性能：onTick 每 tick 批量查询的效果键集（固定不变） */
     private static final java.util.Set<String> TICK_EFFECT_KEYS = java.util.Set.of(
             "tacz_bipod", "tacz_strafe", "tacz_reload_haste", "tacz_swap_strike",
-            "tacz_barrage", "tacz_tracking", "tacz_crit_chain", "regen", "stand_power");
+            "tacz_barrage", "tacz_tracking", "tacz_crit_chain", "regen", "stand_power", "ascend");
 
     /** 持续回血（再生/不朽）：每 5 秒回复 */
     @SubscribeEvent
@@ -1998,6 +2030,18 @@ public class HextechEvents {
         double regen = eff.getOrDefault("regen", 0.0);
         if (regen > 0 && sp.tickCount % 100 == 0) {
             sp.heal((float) regen);
+        }
+        // v0.9.7 v2 飞升（ascend）：持续战斗（2 秒内有进/出伤害）累计 160 tick = 8 秒进入飞升，脱战 2 秒清零
+        double ascendEff = eff.getOrDefault("ascend", 0.0);
+        if (ascendEff > 0) {
+            Long lastCombat = ASCEND_LAST.get(uid);
+            if (lastCombat != null && System.currentTimeMillis() - lastCombat < 2000) {
+                ASCEND_TICKS.merge(uid, 1, Integer::sum);
+            } else {
+                ASCEND_TICKS.remove(uid);
+            }
+        } else {
+            ASCEND_TICKS.remove(uid);
         }
         // v0.9.7 力场（逆原羁绊）：原地站立叠增伤层（每 20 tick = 1 秒按 stand_power 值叠层，
         // 上限 10 层、每层 +1%，移动清零；失去力场海克斯下一 tick 自动清理）
