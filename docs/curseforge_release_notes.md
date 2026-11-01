@@ -17,6 +17,11 @@ Apology: the author's ability is limited, this mod is mostly built with AI assis
 - CONFIG SCREEN POLISH: every category now starts with a short description entry; the "Forge & Stack Rules" sub-categories default to collapsed (matching other pages); the "Layout" page groups its 6 coordinates into Tip / Status Bar / Tab sub-categories.
 - lang: 2360 keys per locale (zh_cn / en_us, UTF-8; +13 config-screen keys; the obsolete "Dive Bomb" set key removed).
 
+FIX ROUND (same build 0.9.7, re-released):
+- TRANSLATION FIX: the Forge screen showed raw keys `hexcraft.forge.armorpct.name/desc` - root cause: the 3 percent forge traits added in v0.9.0 (Atk% / Def% / Luck%) never got their lang entries. Full key audit found exactly these 6 traits missing (atkpct/armorpct/luckpct x name/desc) and nothing else; both locales now add 6 keys each (力量增幅/防御增幅/幸运增幅 = Might/Aegis/Fortune Surge). lang: 2366 keys per locale; code-literal and JSON-driven keys re-checked, 0 missing.
+- MAX HEALTH 1024 CAP FIXED (real bug): in 1.20.1 Attribute.sanitizeValue() clamps the FINAL value to [min, max], and MAX_HEALTH's maxValue is exactly 1024.0 - so stacking past 1024 health did nothing (the old "modifiers bypass the cap" comment was wrong). AttributeUnlock now truly lifts the cap: reflection sets maxValue to 1e7 for all 9 base attributes (health/armor/toughness/damage/speed/move/luck/knockback-res/knockback), the same approach as AttributeFix, coexists fine.
+- STATS PAGE SCROLL HINT RESTORED: when content overflows and you haven't scrolled to the bottom, a small "▽" appears at the bottom-right of the stats area (auto-hides at bottom). The page height was already computed from content and refreshes automatically.
+
 Hexcraft Workshop v0.9.6 - ARAM Mayhem augment sets are now native to the base mod
 =============================================================================
 
