@@ -708,9 +708,14 @@ public class Packets {
             m.worldDrawCost = worldDrawCost(sp);
             m.occSlots = d.occupiedSlots();
             m.hexLimit = d.hexSlotLimit();
-            // v0.6.16 服务端权威叠层上限：配置 0=无限制时下发 MAX_VALUE（客户端不显示"生效N"标注）
+            // v0.6.16 服务端权威叠层上限；v0.9.7 修复轮：配置 0=机制决定（游玩默认 200，个人凑齐 8/10 件套满档解锁无上限→MAX_VALUE，
+            // 客户端不显示"生效N"标注）；配置 >0=房主/服主锁死固定上限，锁定时羁绊解锁不生效
             int pCap = HexConfig.PERMANENT_STACK_CAP.get();
-            m.permStackCap = pCap > 0 ? pCap : Integer.MAX_VALUE;
+            if (pCap > 0) {
+                m.permStackCap = pCap;
+            } else {
+                m.permStackCap = HextechEvents.unlimitedStackCap(d) ? Integer.MAX_VALUE : 200;
+            }
             return m;
         }
 

@@ -22,6 +22,11 @@ FIX ROUND (same build 0.9.7, re-released):
 - MAX HEALTH 1024 CAP FIXED (real bug): in 1.20.1 Attribute.sanitizeValue() clamps the FINAL value to [min, max], and MAX_HEALTH's maxValue is exactly 1024.0 - so stacking past 1024 health did nothing (the old "modifiers bypass the cap" comment was wrong). AttributeUnlock now truly lifts the cap: reflection sets maxValue to 1e7 for all 9 base attributes (health/armor/toughness/damage/speed/move/luck/knockback-res/knockback), the same approach as AttributeFix, coexists fine.
 - STATS PAGE SCROLL HINT RESTORED: when content overflows and you haven't scrolled to the bottom, a small "▽" appears at the bottom-right of the stats area (auto-hides at bottom). The page height was already computed from content and refreshes automatically.
 
+FIX ROUND 2 (same build 0.9.7, stack-cap mechanic):
+- STACK-CAP UNLOCK MECHANIC (answers "is the 生效 200 cap real?"): the "permanent stack cap" config now defaults to 0 = in-game rule. During play the default effective cap stays 200; a player who completes a full 8-piece ARAM set / the 10-member Deathknell family UNLOCKS unlimited stacks for THEMSELVES (that bond row turns whole-line prismatic purple with an "UNLOCKED" status; battle-stack caps show as ∞). Room/server owners can set the config to any >0 value to lock the cap at that value, which also disables the unlock. Existing saves: if you see 200 again, set `permanentStackGlobalCap` to 0 (or delete the line and let the mod regenerate it) in config/hexworkshop-common.toml.
+- DRAW ANIMATION SMOOTHNESS: background particles 24→14 with a single fill each; card name/desc/owned-badge/stack-suffix are pre-built once when the draw opens (zero per-frame translations or lookups); glow halo fill costs reduced (2px halo + low-alpha skip).
+- lang: 2367 keys per locale (+1 combo.unlocked).
+
 Hexcraft Workshop v0.9.6 - ARAM Mayhem augment sets are now native to the base mod
 =============================================================================
 

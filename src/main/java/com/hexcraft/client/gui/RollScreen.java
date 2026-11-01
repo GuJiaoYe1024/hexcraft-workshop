@@ -52,6 +52,26 @@ public class RollScreen extends HexScaledScreen {
                     ? Component.translatable("hexcraft.forge.tier." + (msg.tier == 0 ? "basic" : msg.tier == 1 ? "gold" : "prismatic")).getString()
                     : Component.translatable("hexcraft.rarity." + msg.rarities.get(idx)).getString();
             cards[idx] = new CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> onCardClick(idx));
+            // v0.9.7 修复轮：渲染内容 init 时固化（名称/描述/已拥有/叠层后缀），动画期间每帧零翻译零查询
+            String id = msg.options.get(idx);
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            if (msg.forge) {
+                String forgeTierKey = msg.tier == 0 ? "basic" : msg.tier == 1 ? "gold" : "prismatic";
+                String tierName = Component.translatable("hexcraft.forge.tier." + forgeTierKey).getString();
+                String real = forgeCardValueText(id, msg.tier);
+                cards[idx].nameStr = Component.translatable("hexcraft.forge." + id + ".name").getString();
+                String descStr = Component.translatable("hexcraft.forge." + id + ".desc").getString()
+                        .replace("{tierName}", tierName).replace("{displayValue}", real);
+                cards[idx].descLines = mc.font.split(Component.literal(descStr), CARD_W - 24);
+            } else {
+                cards[idx].nameStr = Component.translatable("hexcraft.hextech." + id + ".name").getString();
+                cards[idx].descLines = mc.font.split(Component.translatable("hexcraft.hextech." + id + ".desc"), CARD_W - 24);
+                com.hexcraft.capability.PlayerData.HexEntry owned = ownedHex(id);
+                cards[idx].ownedLevel = owned == null ? -1 : owned.level;
+                cards[idx].tagSuffix = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(
+                        com.hexcraft.client.ClientDataStore.hexDef(id),
+                        mc.options.languageCode.startsWith("zh"));
+            }
             this.addRenderableWidget(cards[idx]);
         }
         int btnY = cardY + CARD_H + 18;
@@ -84,7 +104,7 @@ public class RollScreen extends HexScaledScreen {
     private void ensureParts() {
         if (partsInit) return;
         partsInit = true;
-        for (int i = 0; i < 24; i++) {
+        for (int i = 0; i < 14; i++) { // v0.9.7 修复轮：24→14 粒子减量（视觉密度不变，帧填充减半）
             parts.add(new float[]{P_RAND.nextFloat() * this.guiW(), P_RAND.nextFloat() * this.guiH(),
                     0.20f + P_RAND.nextFloat() * 0.30f, P_RAND.nextFloat() * 6.28f,
                     1f + P_RAND.nextFloat() * 1.5f, P_RAND.nextBoolean() ? 0xFF9FE4FF : 0xFFC77DFF});
@@ -177,8 +197,7 @@ public class RollScreen extends HexScaledScreen {
             int a = (int) ((0.14f + 0.10f * (float) Math.sin(pTick * 0.08f + p[3])) * 255);
             if (a <= 8) continue;
             int sz = (int) p[4];
-            g.fill((int) p[0] - 1, (int) p[1] - 1, (int) p[0] + sz + 1, (int) p[1] + sz + 1,
-                    (a / 3) << 24 | ((int) p[5] & 0x00FFFFFF));
+            // v0.9.7 修复轮：去掉外圈暗 fill（每粒子 2 次填充→1 次），动画流畅
             g.fill((int) p[0], (int) p[1], (int) p[0] + sz, (int) p[1] + sz, a << 24 | ((int) p[5] & 0x00FFFFFF));
         }
 
@@ -222,50 +241,30 @@ public class RollScreen extends HexScaledScreen {
 
         for (int i = 0; i < 3; i++) {
             String id = msg.options.get(i);
-            Component name = Component.translatable(msg.forge
-                    ? "hexcraft.forge." + id + ".name" : "hexcraft.hextech." + id + ".name");
-            Component desc;
-            if (msg.forge) {
-                // v0.6.2 锻造卡：lang 模板占位符 {tierName}/{displayValue} 运行时填充（与属性页 tooltip 同口径）
-                String forgeTierKey = msg.tier == 0 ? "basic" : msg.tier == 1 ? "gold" : "prismatic";
-                String tierName = Component.translatable("hexcraft.forge.tier." + forgeTierKey).getString();
-                String real = forgeCardValueText(id, msg.tier);
-                desc = Component.literal(Component.translatable("hexcraft.forge." + id + ".desc").getString()
-                        .replace("{tierName}", tierName).replace("{displayValue}", real));
-            } else {
-                desc = Component.translatable("hexcraft.hextech." + id + ".desc");
-            }
-            int color = rarityColor(msg.rarities.get(i));
+            int color = msg.forge ? 0xFF6FB1FF : cards[i].color; // forge 卡名字蓝（原口径 rarityColor("forge")，与边框 tier 色区分）
             int cx = cardX[i] + CARD_W / 2;
             int a = (int) (cards[i].alpha * 255);
             int cy = cardY + cards[i].dy;
 
             // v0.6.5 已拥有角标：重复抽取=叠等级（MAX_HEXTECH_LEVEL 上限），提前提示避免困惑
-            com.hexcraft.capability.PlayerData.HexEntry owned = ownedHex(id);
-            if (owned != null && !msg.forge) {
+            if (cards[i].ownedLevel >= 0) {
                 g.drawCenteredString(this.font,
-                        Component.translatable("hexcraft.gui.owned_tag", owned.level),
+                        Component.translatable("hexcraft.gui.owned_tag", cards[i].ownedLevel),
                         cx, cy + 20, (a << 24) | 0x00FFD28C);
             }
 
-            g.drawCenteredString(this.font, name, cx, cy + 42, (a << 24) | (color & 0x00FFFFFF));
-            g.drawCenteredString(this.font, name, cx + 1, cy + 43, (a / 3) << 24 | (color & 0x00FFFFFF)); // 名称柔光
+            g.drawCenteredString(this.font, Component.literal(cards[i].nameStr), cx, cy + 42, (a << 24) | (color & 0x00FFFFFF));
+            g.drawCenteredString(this.font, Component.literal(cards[i].nameStr), cx + 1, cy + 43, (a / 3) << 24 | (color & 0x00FFFFFF)); // 名称柔光
             g.fill(cardX[i] + 14, cy + 56, cardX[i] + CARD_W - 14, cy + 57, 0x33505F88);
-            List<FormattedCharSequence> lines = this.font.split(desc, CARD_W - 24);
             int dy = cy + 62;
-            for (FormattedCharSequence line : lines) {
+            for (FormattedCharSequence line : cards[i].descLines) {
                 g.drawCenteredString(this.font, line, cx, dy, (a << 24) | 0x00C8D0E8);
                 dy += 11;
                 if (dy > cy + CARD_H - 6) break;
             }
             // v0.6.2 海克斯卡叠层标签后缀（运行时拼接【叠层：xxx｜xxx｜xxx】）
-            if (!msg.forge) {
-                String tagSuffix = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(
-                        com.hexcraft.client.ClientDataStore.hexDef(id),
-                        net.minecraft.client.Minecraft.getInstance().options.languageCode.startsWith("zh"));
-                if (tagSuffix != null) {
-                    g.drawCenteredString(this.font, tagSuffix, cx, dy + 2, (a << 24) | 0x008FA6C8);
-                }
+            if (cards[i].tagSuffix != null) {
+                g.drawCenteredString(this.font, cards[i].tagSuffix, cx, dy + 2, (a << 24) | 0x008FA6C8);
             }
         }
 
@@ -329,6 +328,11 @@ public class RollScreen extends HexScaledScreen {
         float glowPulse = 1f;
         /** v0.9.7 入场闪光位置（-1 左 → 1 右，tick 随 anim 推进；>1 或 <-1 表示不画） */
         float glowX = -2f;
+        /** v0.9.7 修复轮：init 时固化渲染内容（名称/描述行/已拥有等级/叠层后缀），避免每帧重复翻译/查询，动画流畅 */
+        String nameStr;
+        java.util.List<FormattedCharSequence> descLines;
+        int ownedLevel = -1;   // -1=未拥有
+        String tagSuffix;      // 可为 null
 
         CardButton(int x, int y, int w, int h, int color, String label, OnPress onPress) {
             super(x, y, w, h, Component.empty(), onPress, DEFAULT_NARRATION);
@@ -346,9 +350,11 @@ public class RollScreen extends HexScaledScreen {
             int w2 = (int) (width * scale);
             int h2 = (int) (height * scale);
             int x1 = cx - w2 / 2, y1 = cy - h2 / 2;
-            // 外辉光（稀有度色，随入场与脉动呼吸）
+            // 外辉光（稀有度色，随入场与脉动呼吸；v0.9.7 修复轮：外扩 3→2px + 低 alpha 跳过，减少每帧大矩形填充）
             int glow = (int) (a * glowPulse);
-            g.fill(x1 - 3, y1 - 3, x1 + w2 + 3, y1 + h2 + 3, glow << 24 | (color & 0x00FFFFFF));
+            if (glow >= 30) {
+                g.fill(x1 - 2, y1 - 2, x1 + w2 + 2, y1 + h2 + 2, glow << 24 | (color & 0x00FFFFFF));
+            }
             g.fill(x1 - 1, y1 - 1, x1 + w2 + 1, y1 + h2 + 1, (a << 24) | (border & 0x00FFFFFF));
             // 渐变底
             g.fillGradient(x1, y1, x1 + w2, y1 + h2,

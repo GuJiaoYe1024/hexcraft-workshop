@@ -315,10 +315,26 @@ public class HextechEvents {
         return n;
     }
 
+    /** v0.9.7 修复轮：个人叠层无上限解锁判定——拥有任一 8 件套/死亡系 10 件套满档（全成员）即解锁（个人生效）。
+     *  云顶式规则：凑齐 8 或 10 件套（大乱斗套装满 8/8、死亡系满 10/10）→ 该玩家永久叠层/每层叠层不再受 200 与 cap 钳制。 */
+    public static boolean unlimitedStackCap(PlayerData data) {
+        if (data == null) return false;
+        java.util.Set<String> owned = new java.util.HashSet<>();
+        for (com.hexcraft.capability.PlayerData.HexEntry e : data.getHexes()) owned.add(e.id);
+        for (com.hexcraft.hextech.ComboRegistry.TieredCombo tc : com.hexcraft.hextech.ComboRegistry.allTiered()) {
+            if (tc.members().length >= 8 && com.hexcraft.hextech.ComboRegistry.ownedCount(tc, owned) >= tc.members().length) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** v0.9.4：叠层实时上限乘区（叠层档位 1.2/1.4 × 组合「叠层之巅」+30% × 效果键 stack_cap × 世界海克斯叠层上限加成）。
-     *  与 addStack 截断、满层爆发 realCap、客户端属性页显示（Packets 同步实时 cap）完全同源，杜绝"显示 200 层实际 240 层"的口径分叉。 */
+     *  与 addStack 截断、满层爆发 realCap、客户端属性页显示（Packets 同步实时 cap）完全同源，杜绝"显示 200 层实际 240 层"的口径分叉。
+     *  v0.9.7 修复轮：个人解锁无上限叠层后返回超大乘数（cap×乘数→Infinity→min 不截断，满层爆发不触发），对应显示处按 ∞ 处理。 */
     public static double stackCapMultiplier(PlayerData data, net.minecraft.server.level.ServerLevel level) {
         if (data == null || level == null) return 1.0;
+        if (unlimitedStackCap(data)) return Double.MAX_VALUE;
         double whCapBonus = com.hexcraft.event.WorldHexEvents.combatStackCapBonus(level);
         double comboCap = 1.0;
         int n = countStackHexes(data);

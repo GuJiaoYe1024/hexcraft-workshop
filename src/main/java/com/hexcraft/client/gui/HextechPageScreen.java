@@ -481,7 +481,7 @@ public class HextechPageScreen extends HexScaledScreen {
                 idx += 2;
                 for (PlayerData.StackEntry bs : battleStacks) {
                     Component bname = Component.literal(stackNameOf(bs.key));
-                    drawAttrRow(g, inner, idx, bname, (int) bs.value + "/" + (int) bs.cap + "层");
+                    drawAttrRow(g, inner, idx, bname, (int) bs.value + "/" + capText((int) bs.cap) + "层");
                     // v0.9.3 修正4：战斗叠层 hover 介绍（机制说明 + 当前层数，与成长/装备叠层一致）
                     int rowY = inner + (idx / 2) * ROW_H;
                     int hc = hoverColumn(hoverX, hoverY, rowY); // v0.9.5 hover 列判定去重
@@ -493,7 +493,7 @@ public class HextechPageScreen extends HexScaledScreen {
                         if (ClientDataStore.hexDef(bid) != null) {
                             tip.add(Component.translatable("hexcraft.hextech." + bid + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
                         }
-                        tip.add(Component.literal("当前 " + (int) bs.value + " / " + (int) bs.cap + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
+                        tip.add(Component.literal("当前 " + (int) bs.value + " / " + capText((int) bs.cap) + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
                         hoverTip = tip;
                     }
                     idx++;
@@ -516,13 +516,17 @@ public class HextechPageScreen extends HexScaledScreen {
                 if (cr.tiered()) {
                     // v0.9.5 逆原分档羁绊（2/4/6 按件数激活）：满档金色、已激活浅金、未激活常规
                     // v0.9.7 优化：大乱斗套装（source=aram）行名紫色区分来源；hover 补成员列表
+                    // v0.9.7 修复轮：8 件套/死亡系 10 件套满档 → 整行棱彩紫 + 状态「已解锁」（个人叠层无上限解锁）
                     boolean maxTier = cr.tier() >= cr.tierCounts().length;
-                    String status = maxTier ? Component.translatable("hexcraft.gui.combo.active").getString()
-                                            : cr.have() + "/" + cr.total();
+                    boolean prismaticUnlocked = maxTier && cr.tierCounts()[cr.tierCounts().length - 1] >= 8;
+                    String status = maxTier
+                            ? Component.translatable(prismaticUnlocked ? "hexcraft.gui.combo.unlocked" : "hexcraft.gui.combo.active").getString()
+                            : cr.have() + "/" + cr.total();
                     Component tierName = Component.translatable(cr.nameKey());
                     if ("aram".equals(cr.source())) tierName = tierName.copy().withStyle(t -> t.withColor(0xFFC77DFF));
                     drawAttrRow(g, inner, idx, tierName, status,
-                            maxTier ? 0xFFFFD700 : (cr.tier() >= 1 ? 0xFFE8C36A : 0xFFFFFFFF));
+                            prismaticUnlocked ? 0xFFC77DFF
+                                    : (maxTier ? 0xFFFFD700 : (cr.tier() >= 1 ? 0xFFE8C36A : 0xFFFFFFFF)));
                     // hover：成员列表 + 各档效果 + 当前档 + 下一档缺数
                     int rowY = inner + (idx / 2) * ROW_H;
                     int hc = hoverColumn(hoverX, hoverY, rowY);
@@ -793,6 +797,11 @@ public class HextechPageScreen extends HexScaledScreen {
             return "+" + s + "%";
         }
         return "+" + fmt(v);
+    }
+
+    /** v0.9.7 修复轮：叠层上限文本——个人解锁无上限后服务端下发 Integer.MAX_VALUE，显示 ∞ */
+    private static String capText(int cap) {
+        return cap >= Integer.MAX_VALUE ? "\u221E" : String.valueOf(cap);
     }
 
     private int maxAttrScroll() {
