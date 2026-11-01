@@ -1,3 +1,13 @@
+Hexcraft Workshop v0.9.4 - Live stack-cap display & unified stack mechanics
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+- LIVE STACK CAP (stats page / hex page): battle-stack caps now show the REAL effective cap (base cap x stack tier 1.2/1.4 x "Stack Peak" combo x stack_cap effect key x world-hex cap bonus), sourced from the exact same multiplier the server settles with - e.g. Crescendo shows 240 instead of 200 when you own 3 stack hexes (tier +20%). No more "shows 200, actually 240" drift.
+- UNIFIED STACK MECHANICS: the hurt-stack (on_hurt_stack) and tick-stack (on_tick_stack) cap multipliers previously missed the stack tier (only hit-stacks applied it); all four stack paths (hit / hurt / tick / full-cap burst) now share one multiplier method, so every battle stack obeys the same cap rule.
+- Permanent (kill-based) stacks keep their independent global cap (PERMANENT_STACK_CAP). The sync packet now carries the live cap, so client display always matches server settlement.
+- jar 743,022 B, SHA-256 F5647363AFBC566D41A60998093500B8740B5950CE7238DD682520B2CCB85FA6.
+
 Hexcraft Workshop v0.9.3 - Categorized draws, DLC toggles moved to the draw page, example DLC pack, bond tracker
 =============================================================================
 

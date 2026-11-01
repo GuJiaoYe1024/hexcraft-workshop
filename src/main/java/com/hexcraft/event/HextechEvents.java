@@ -305,6 +305,19 @@ public class HextechEvents {
         return n;
     }
 
+    /** v0.9.4：叠层实时上限乘区（叠层档位 1.2/1.4 × 组合「叠层之巅」+30% × 效果键 stack_cap × 世界海克斯叠层上限加成）。
+     *  与 addStack 截断、满层爆发 realCap、客户端属性页显示（Packets 同步实时 cap）完全同源，杜绝"显示 200 层实际 240 层"的口径分叉。 */
+    public static double stackCapMultiplier(PlayerData data, net.minecraft.server.level.ServerLevel level) {
+        if (data == null || level == null) return 1.0;
+        double whCapBonus = com.hexcraft.event.WorldHexEvents.combatStackCapBonus(level);
+        double comboCap = 1.0;
+        int n = countStackHexes(data);
+        if (n >= 4) comboCap = 1.4;
+        else if (n >= 2) comboCap = 1.2;
+        if (hasCombo(data, "hex_stack_tank", "hex_swift_horn_quick", "hex_tick_damage_wax")) comboCap *= 1.3;
+        return (1 + effect(data, "stack_cap") + whCapBonus) * comboCap;
+    }
+
     /** 锻造词条总等级（同词条多档锻造累加；供无上限锻造机制判定） */
     public static double forgeLevel(PlayerData data, String stat) {        if (data == null) return 0;
         double v = 0;
@@ -1230,17 +1243,15 @@ public class HextechEvents {
             // 每层伤害加成 = event 中与 stack.key 同名的键值 × 等级
             // 积聚之刃（crescendo）：棱彩 200 层上限、脱战 6 秒后每 tick 衰减 2 层、每层额外伤害 +1%×等级
             boolean hexStacked = false;
-            double whCapBonus = sp.level() instanceof net.minecraft.server.level.ServerLevel whLvl2
-                    ? com.hexcraft.event.WorldHexEvents.combatStackCapBonus(whLvl2) : 0;
             double whPermGain = sp.level() instanceof net.minecraft.server.level.ServerLevel whLvl3
                     ? com.hexcraft.event.WorldHexEvents.permStackGainBonus(whLvl3) : 0;
             // v0.9.0 叠层联动（B2）：拥有叠层类海克斯 ≥2 → 叠速/上限各 +20%；≥4 → 各 +40%（覆盖档1）；
             // 组合「叠层之巅」（叠层坦克+迅战之角+熔火叠甲）→ 上限额外 +30%
-            double comboGain = 1.0, comboCap = 1.0;
+            // v0.9.4：上限乘区已统一收敛到 stackCapMultiplier（档位×叠层之巅×stack_cap×世界海克斯），此处仅保留叠速档位 comboGain
+            double comboGain = 1.0;
             int stackHexCount = countStackHexes(data);
-            if (stackHexCount >= 4) { comboGain = 1.4; comboCap = 1.4; }
-            else if (stackHexCount >= 2) { comboGain = 1.2; comboCap = 1.2; }
-            if (hasCombo(data, "hex_stack_tank", "hex_swift_horn_quick", "hex_tick_damage_wax")) comboCap *= 1.3;
+            if (stackHexCount >= 4) comboGain = 1.4;
+            else if (stackHexCount >= 2) comboGain = 1.2;
             for (PlayerData.HexEntry e : data.getHexes()) {
                 HextechDefinition sdef = HextechRegistry.get(e.id);
                 if (sdef == null || sdef.stack == null) continue;
@@ -1250,7 +1261,8 @@ public class HextechEvents {
                     if (data.getStack(sdef.stack.key) == null) {
                         data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat, sdef.stack.decayDelay, sdef.stack.decayRate));
                     }
-                    data.addStack(sdef.stack.key, (1 + effect(data, "stack_gain")) * comboGain, (1 + effect(data, "stack_cap") + whCapBonus) * comboCap);
+                    data.addStack(sdef.stack.key, (1 + effect(data, "stack_gain")) * comboGain,
+                            stackCapMultiplier(data, (net.minecraft.server.level.ServerLevel) sp.level()));
                 }
                 double perStack = 0;
                 for (String token : sdef.event.split(",")) {
@@ -1262,7 +1274,7 @@ public class HextechEvents {
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
                 if (perStack > 0 && s != null && s.value > 0) {
                     // v0.9.0 满层爆发：叠满（达到实时上限）时该叠层海克斯每层效果额外 +50%
-                    double realCap = s.cap * ((1 + effect(data, "stack_cap") + whCapBonus) * comboCap);
+                    double realCap = s.cap * stackCapMultiplier(data, (net.minecraft.server.level.ServerLevel) sp.level());
                     double perStackEff = (s.value >= realCap - 0.001) ? perStack * 1.5 : perStack;
                     extraDamage(sp, target, amount * (float) perStackEff * (float) s.value);
                     com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
@@ -1561,9 +1573,9 @@ public class HextechEvents {
             sp.setAbsorptionAmount((float) lowShield);
         }
         // ===== v0.6.2 受击叠层（on_hurt_stack：event 含 hurt_gain 键的海克斯，受击叠 1 层）=====
+        // v0.9.4：受击叠层上限乘区与命中段统一（stackCapMultiplier：档位 1.2/1.4 × 叠层之巅 × stack_cap × 世界海克斯），
+        // 修复此前受击段漏乘叠层档位导致的"同是战斗叠层、上限口径不一"
         boolean hurtStacked = false;
-        double whCapBonusHurt = sp.level() instanceof net.minecraft.server.level.ServerLevel whLv2
-                ? com.hexcraft.event.WorldHexEvents.combatStackCapBonus(whLv2) : 0;
         for (PlayerData.HexEntry e : data.getHexes()) {
             if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不受击叠层
             HextechDefinition sdef = HextechRegistry.get(e.id);
@@ -1572,7 +1584,8 @@ public class HextechEvents {
                 data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat,
                         sdef.stack.decayDelay, sdef.stack.decayRate));
             }
-            data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"), 1 + effect(data, "stack_cap") + whCapBonusHurt);
+            data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"),
+                    stackCapMultiplier(data, (net.minecraft.server.level.ServerLevel) sp.level()));
             PlayerData.StackEntry s = data.getStack(sdef.stack.key);
             if (s != null) {
                 com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
@@ -1996,7 +2009,8 @@ public class HextechEvents {
                     data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat,
                             sdef.stack.decayDelay, sdef.stack.decayRate));
                 }
-                data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"), 1 + effect(data, "stack_cap"));
+                data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"),
+                        stackCapMultiplier(data, (net.minecraft.server.level.ServerLevel) sp.level()));
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
                 if (s != null) {
                     s.timedTicks = data.timedBaseTicks(shortMult); // 刷新计时叠层剩余时长（到期自动消失）

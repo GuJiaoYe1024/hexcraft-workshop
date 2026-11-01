@@ -689,9 +689,13 @@ public class Packets {
             }).toList());
             m.attrs.putAll(PlayerData.computeAttrs(sp));
             m.stacks.clear();
+            // v0.9.4：下发实时生效叠层上限（基础 cap × 叠层档位 × stack_cap 效果键 × 世界海克斯 × 叠层之巅），
+            // 客户端属性页/海克斯页显示与实际结算同源（如积聚之刃基础 200、3 件叠层海克斯时显示 240 而非 200）
+            double stackCapMult = HextechEvents.stackCapMultiplier(d, sp.serverLevel());
             for (PlayerData.StackEntry s : d.getStacksForBonus()) {
                 PlayerData.StackEntry ns = new PlayerData.StackEntry(s.key, s.cap, s.combat, s.decayDelay, s.decayRate);
                 ns.value = s.value;
+                ns.cap = s.cap * stackCapMult;
                 m.stacks.add(ns);
             }
             // v0.6.3 费用快照：与实扣完全同源（discounted / draw_cost 乘区）
