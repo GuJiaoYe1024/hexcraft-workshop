@@ -177,10 +177,10 @@ public final class ComboRegistry {
                             "hex_paladin", "hex_black_candle"},
                     new int[]{2, 4, 6, 8, 10}, new String[]{"kill_heal", "kill_heal", "kill_heal", "kill_heal", "kill_heal"},
                     new double[]{1.0, 2.0, 3.5, 5.0, 8.0}, 2.0),
-            // 6 召唤流（图腾/仆从，+4 新建补员）
+            // 6 召唤流（图腾/仆从/守卫，+4 新建补员；剔除 cataclysm 联动件对齐 10 成员，纯 vanilla 可凑满）
             new TieredCombo("hexcraft.combo.v2.combo6",
                     new String[]{"hex_am_totem", "hex_am_totem_keeper", "hex_goety_warding_wisp", "hex_goety_soul_bulwark",
-                            "hex_relic_guardian", "hex_relic_overseer", "hex_cataclysm_ward", "hex_corpse_explosion",
+                            "hex_relic_guardian", "hex_relic_overseer",
                             "hex_summon_overlord", "hex_summon_army", "hex_summon_pact", "hex_summon_totem_master"},
                     new int[]{2, 4, 6, 8, 10}, new String[]{"goety_soul", "goety_soul", "goety_soul", "goety_soul", "goety_soul"},
                     new double[]{0.10, 0.20, 0.35, 0.50, 0.70}, 2.0),
