@@ -1,4 +1,4 @@
-﻿{
+{
   "gamerule.hexworkshopKeepCoins": "Keep Coins on Death",
   "gamerule.hexworkshopKeepCoins.description": "Whether coins are kept after death (default off = cleared)",
   "gamerule.hexworkshopKeepEquips": "Keep Equipment on Death",
@@ -2345,5 +2345,18 @@
   "hexcraft.hextech.hex_niyuan_diediele_5.desc": "Stack growth +10%, on-hit stack chance +2%",
   "hexcraft.hextech.hex_niyuan_diediele_6.name": "Stack Loop: Finale",
   "hexcraft.hextech.hex_niyuan_diediele_6.desc": "Stack growth +12%, on-hit stack chance +3%",
-  "hexcraft.effect.stand_power": "Force stacks/sec"
+  "hexcraft.effect.stand_power": "Force stacks/sec",
+  "hexcraft.config.catdesc.draw": "Draw costs, pity counters, rarity weights and XP progression rules",
+  "hexcraft.config.catdesc.economy": "Coin drops, anti-farm, forge prices/refunds and crafting bonus",
+  "hexcraft.config.catdesc.linked": "Per-mod toggles for all linked mods (content / hextech / forge / equip)",
+  "hexcraft.config.catdesc.world": "World hextech enabling and draw costs",
+  "hexcraft.config.catdesc.v060": "Forge duplicate rule, multipliers, stack growth, equip costs, linked values and execute",
+  "hexcraft.config.catdesc.v060hud": "Health bar, tip toasts, anti-lag limits and display options",
+  "hexcraft.config.catdesc.v070layout": "On-screen coordinates of tips, status bar and inventory tabs",
+  "hexcraft.config.catdesc.dlc": "Manage external content packs: toggles, versions and dependencies",
+  "hexcraft.config.catdesc.client": "UI scale, particles and behaviour after draw/forge",
+  "hexcraft.config.catdesc.rules": "What is kept on death: hexes, forges, equips and coins",
+  "hexcraft.config.sub.tip": "Tip Position",
+  "hexcraft.config.sub.hp": "Hex Status Bar Position",
+  "hexcraft.config.sub.tab": "Inventory Tab Position"
 }

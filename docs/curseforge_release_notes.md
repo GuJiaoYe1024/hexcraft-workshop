@@ -1,4 +1,4 @@
-﻿Hexcraft Workshop v0.9.7 - Real ARAM set MECHANICS, 5 new Origin-Hunt bonds, UI/animation/code polish
+Hexcraft Workshop v0.9.7 - Real ARAM set MECHANICS, 5 new Origin-Hunt bonds, UI/animation/code polish
 =============================================================================
 
 Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
@@ -14,7 +14,8 @@ Apology: the author's ability is limited, this mod is mostly built with AI assis
 - OFFICIAL 9-SET SCOPE: the DEATH family is merged (Deathknell absorbs Dive Bomb's two members - official Deathknell = Dive Bomb is one set, now 10 members), and the free slot becomes the official 9th set **Make it Rain**: killing elites/bosses drops bounty coins (MC-ified "kills drop 6/12 gold"). 2 new ARAM hexes: Make it Rain, Coin Trail.
 - ORIGIN HUNT DLC - 5 NEW TIERED BONDS (5 -> 10): Force Field (NEW hook stand_power - stand still to stack +1% damage layers, reset on moving, 20-cap), Burst (full-HP crit + crit damage), Techwar (spell power + fire chain + mana), Resonance (equip power), Stack Loop (stack growth). 28 new Origin-Hunt hexes (GOLD / weight 7 / source=dlc_niyuan only).
 - UI/ANIMATION/CODE POLISH: ARAM set rows show a purple name on the stats page to tell them apart; tiered bond hovers now list members; the draw screen cards get a rarity-colored flash sweep on entry; ComboRow cache keeps source/members in one place.
-- lang: 2347 keys per locale (zh_cn / en_us, UTF-8 BOM kept; the obsolete "Dive Bomb" set key removed).
+- CONFIG SCREEN POLISH: every category now starts with a short description entry; the "Forge & Stack Rules" sub-categories default to collapsed (matching other pages); the "Layout" page groups its 6 coordinates into Tip / Status Bar / Tab sub-categories.
+- lang: 2360 keys per locale (zh_cn / en_us, UTF-8; +13 config-screen keys; the obsolete "Dive Bomb" set key removed).
 
 Hexcraft Workshop v0.9.6 - ARAM Mayhem augment sets are now native to the base mod
 =============================================================================

@@ -1,4 +1,4 @@
-﻿{
+{
   "gamerule.hexworkshopKeepCoins": "死亡保留晶币",
   "gamerule.hexworkshopKeepCoins.description": "玩家死亡后是否保留晶币余额（默认关=死亡清零）",
   "gamerule.hexworkshopKeepEquips": "死亡保留装备",
@@ -2345,5 +2345,18 @@
   "hexcraft.hextech.hex_niyuan_diediele_5.desc": "成长层数获取 +10%，命中叠层几率 +2%",
   "hexcraft.hextech.hex_niyuan_diediele_6.name": "叠叠乐·终极连段",
   "hexcraft.hextech.hex_niyuan_diediele_6.desc": "成长层数获取 +12%，命中叠层几率 +3%",
-  "hexcraft.effect.stand_power": "力场层/秒"
+  "hexcraft.effect.stand_power": "力场层/秒",
+  "hexcraft.config.catdesc.draw": "抽取消耗、保底、稀有度权重与经验递增等抽卡规则",
+  "hexcraft.config.catdesc.economy": "击杀晶币掉落、防刷机制、锻造价格与退款、合成多产",
+  "hexcraft.config.catdesc.linked": "各联动模组的内容总开关与海克斯/锻造/装备开关",
+  "hexcraft.config.catdesc.world": "世界级海克斯的启用与抽取消耗",
+  "hexcraft.config.catdesc.v060": "锻造重复规则、各倍率、叠层成长、装备费用、联动数值与处决机制",
+  "hexcraft.config.catdesc.v060hud": "生命条显示、滚动提示开关与防卡顿上限",
+  "hexcraft.config.catdesc.v070layout": "滚动提示、状态栏、背包页签在屏幕上的坐标",
+  "hexcraft.config.catdesc.dlc": "管理外接内容包（DLC）：启用开关、版本与依赖信息",
+  "hexcraft.config.catdesc.client": "界面缩放、粒子特效与抽取/锻造后的交互行为",
+  "hexcraft.config.catdesc.rules": "死亡后保留哪些内容：海克斯/锻造/装备/晶币",
+  "hexcraft.config.sub.tip": "滚动提示位置",
+  "hexcraft.config.sub.hp": "海克斯状态栏位置",
+  "hexcraft.config.sub.tab": "背包页签位置"
 }

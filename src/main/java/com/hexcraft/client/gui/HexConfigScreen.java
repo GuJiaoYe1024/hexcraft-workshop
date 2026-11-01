@@ -152,6 +152,7 @@ public class HexConfigScreen {
 
     private static void drawCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.draw"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.draw")).build());
         intEntry(eb, cat, "draw.xpCostPerDraw", HexConfig.XP_COST_PER_DRAW, 10, 1000000, 500);
         intEntry(eb, cat, "draw.rerollCost", HexConfig.REROLL_COST, 0, 10000, 20);
         intEntry(eb, cat, "draw.hexLimit", HexConfig.HEX_SLOT_COUNT, 0, 9999, 16);
@@ -170,6 +171,7 @@ public class HexConfigScreen {
     /** v0.8.0 子分类重组：击杀掉落 / 防刷机制 / 锻造价格与退款，避免 16 项平铺难找 */
     private static void economyCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.economy"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.economy")).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.drop"), List.of(
                 intEntryEntry(eb, "eco.coinMin", HexConfig.COIN_MIN, 0, 100, 1),
                 intEntryEntry(eb, "eco.coinMax", HexConfig.COIN_MAX, 0, 100, 3),
@@ -202,6 +204,7 @@ public class HexConfigScreen {
     /** v0.8.0 子分类重组：按联动 mod 分组（每组 4 开关：总开关/海克斯/锻造/装备），避免 24 项平铺 */
     private static void linkedCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.linked"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.linked")).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.tacz"), List.of(
                 boolEntryEntry(eb, "linked.enableTaczContent", HexConfig.ENABLE_TACZ_CONTENT),
                 boolEntryEntry(eb, "linked.enableTaczHextech", HexConfig.ENABLE_TACZ_HEXTECH),
@@ -287,6 +290,7 @@ public class HexConfigScreen {
 
     private static void worldCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.world"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.world")).build());
         boolEntry(eb, cat, "world.enabled", HexConfig.WORLD_ENABLED);
         intEntry(eb, cat, "world.drawXp", HexConfig.WORLD_DRAW_XP, 10, 1000000, 2000);
         intEntry(eb, cat, "world.cancelCoin", HexConfig.WORLD_CANCEL_COIN, 0, 100000, 800);
@@ -297,6 +301,7 @@ public class HexConfigScreen {
      *  isCodeDlc=true 的包不提供开关（置灰），提示放入 mods 文件夹并重启——本 DLC 系统不加载 Java 类代码 */
     private static void dlcCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.dlc"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.dlc")).build());
         // 客户端也扫描一次本地 packs 目录（服务端在 AddReloadListenerEvent 扫描）
         com.hexcraft.dlc.DlcManager.scan();
         cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.dlc.hint")).build());
@@ -340,6 +345,7 @@ public class HexConfigScreen {
 
     private static void clientCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.client"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.client")).build());
         doubleEntry(eb, cat, "client.uiScale", HexConfig.UI_SCALE, 0.5, 2.0, 1.0);
         boolEntry(eb, cat, "client.particlesEnabled", HexConfig.PARTICLES_ENABLED);
         // v0.6.3 抽取/锻造完成后返回工坊界面（玩家可选：继续连抽 or 直接关闭）
@@ -352,11 +358,12 @@ public class HexConfigScreen {
      *  避免 24 项杂糅难找。所有项服务端生效，未安装对应 mod 时无实际效果 */
     private static void v060Category(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.v060"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.v060")).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.armor"), List.of(
                 doubleEntryEntry(eb, "v060.extraArmorThreshold", HexConfig.EXTRA_ARMOR_THRESHOLD, 0.0, 200.0, 25.0),
                 doubleEntryEntry(eb, "v060.extraArmorPerPoint", HexConfig.EXTRA_ARMOR_PER_POINT, 0.0, 5.0, 0.5),
                 doubleEntryEntry(eb, "v060.extraArmorCap", HexConfig.EXTRA_ARMOR_CAP, 0.0, 80.0, 25.0)
-        )).setExpanded(true).build());
+        )).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.forge"), List.of(
                 eb.startEnumSelector(name("v060.forgeDuplicateRule"), HexConfig.DuplicateRule.class, HexConfig.FORGE_DUPLICATE_RULE.get())
                         .setSaveConsumer(v -> {
@@ -370,17 +377,17 @@ public class HexConfigScreen {
                 doubleEntryEntry(eb, "v060.forgeMultGold", HexConfig.FORGE_MULT_GOLD, 0.1, 20.0, 2.0),
                 doubleEntryEntry(eb, "v060.forgeMultPrismatic", HexConfig.FORGE_MULT_PRISMATIC, 0.1, 20.0, 3.0),
                 intEntryEntry(eb, "v060.forgeSlotMax", HexConfig.FORGE_SLOT_MAX, 0, 9999, 99)
-        )).setExpanded(true).build());
+        )).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.stack"), List.of(
                 doubleEntryEntry(eb, "v060.permanentStackMult", HexConfig.PERMANENT_STACK_MULT, 0.1, 10.0, 1.0),
                 intEntryEntry(eb, "v060.permanentStackCap", HexConfig.PERMANENT_STACK_CAP, 0, 9999, 200),
                 doubleEntryEntry(eb, "v060.stackDrakeMult", HexConfig.STACK_DRAKE_MULT, 0.0, 3.0, 0.75)
-        )).setExpanded(true).build());
+        )).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.equipval"), List.of(
                 intEntryEntry(eb, "v060.equipGoldCost", HexConfig.EQUIP_GOLD_COST, 0, 1000000, 2500),
                 intEntryEntry(eb, "v060.equipPrismaticCost", HexConfig.EQUIP_PRISMATIC_COST, 0, 1000000, 4000),
                 doubleEntryEntry(eb, "v060.equipCountMult", HexConfig.EQUIP_COUNT_MULT, 0.0, 10.0, 1.0)
-        )).setExpanded(true).build());
+        )).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.ironsval"), List.of(
                 doubleEntryEntry(eb, "v060.ironsEffectMult", HexConfig.IRONS_EFFECT_MULT, 0.0, 10.0, 1.0),
                 doubleEntryEntry(eb, "v060.ironsCritMult", HexConfig.IRONS_CRIT_MULT, 1.0, 5.0, 1.75),
@@ -388,28 +395,29 @@ public class HexConfigScreen {
                 doubleEntryEntry(eb, "v060.ironsCastHaste", HexConfig.IRONS_CAST_HASTE, 0.0, 1.0, 0.08),
                 doubleEntryEntry(eb, "v060.ironsManaMax", HexConfig.IRONS_MANA_MAX, 0.0, 1000.0, 4.0),
                 doubleEntryEntry(eb, "v060.ironsManaRegen", HexConfig.IRONS_MANA_REGEN, 0.0, 100.0, 0.5)
-        )).setExpanded(true).build());
+        )).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.linkmult"), List.of(
                 doubleEntryEntry(eb, "v060.iafEffectMult", HexConfig.IAF_EFFECT_MULT, 0.0, 10.0, 1.0),
                 doubleEntryEntry(eb, "v060.acEffectMult", HexConfig.AC_EFFECT_MULT, 0.0, 10.0, 1.0),
                 doubleEntryEntry(eb, "v060.tfEffectMult", HexConfig.TF_EFFECT_MULT, 0.0, 10.0, 1.0),
                 doubleEntryEntry(eb, "v060.amEffectMult", HexConfig.AM_EFFECT_MULT, 0.0, 10.0, 1.0)
-        )).setExpanded(true).build());
+        )).build());
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.perf"), List.of(
                 boolEntryEntry(eb, "v060.perfTipThrottle", HexConfig.PERF_TIP_THROTTLE)
-        )).setExpanded(true).build());
+        )).build());
         // v0.9.0 处决双机制配置入口（斩杀阈值 + 百分比削血权重；此前仅有配置文件，GUI 缺失）
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.execute"), List.of(
                 doubleEntryEntry(eb, "v060.executeThreshold", HexConfig.EXECUTE_THRESHOLD, 0.01, 0.2, 0.15),
                 doubleEntryEntry(eb, "v060.executePctMaxWeight", HexConfig.EXECUTE_PCT_MAX_WEIGHT, 0.0, 3.0, 0.5),
                 doubleEntryEntry(eb, "v060.executePctCurWeight", HexConfig.EXECUTE_PCT_CUR_WEIGHT, 0.0, 3.0, 1.0)
-        )).setExpanded(true).build());
+        )).build());
     }
 
     /** v0.6.16 HUD 优化分组：开关类条目（滚动提示开关 / 拖动模式 / 队列上限 / 合并 / 血条开关 / 属性安全钳）；
      *  v0.7.1 位置类条目（TIP/HP/TAB 坐标 + 布局编辑器）已拆分到独立「界面布局」分组，避免本页条目拥挤。 */
     private static void hudCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.v060hud"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.v060hud")).build());
         // 生命值显示优化（默认 0=关闭，与其它 mod 零冲突；开启后钳玩家自身最大生命/护甲/韧性到该值，
         // 防高数值整合包血量 HUD 渲染溢出——屏幕中央黄/红异常竖条）
         intEntry(eb, cat, "v060.attrDisplayCap", HexConfig.ATTR_DISPLAY_CAP, 0, 100000000, 0);
@@ -425,22 +433,31 @@ public class HexConfigScreen {
     }
 
     /** v0.7.1 界面布局分组：滚动提示 / 状态栏 / 背包页签 的位置坐标（可直接手填精确值）。
-     *  v0.7.2 拖动改走游戏内按键（默认 L 弹半透明画布），本页不再放按钮条目。 */
+     *  v0.7.2 拖动改走游戏内按键（默认 L 弹半透明画布），本页不再放按钮条目。
+     *  v0.9.7 配置页优化：6 个坐标按三组子分类收纳，避免平铺难找。 */
     private static void layoutCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.v070layout"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.v070layout")).build());
         // 滚动提示位置
-        intEntry(eb, cat, "v060.tipX", HexConfig.TIP_X, 0, 4000, 8);
-        intEntry(eb, cat, "v060.tipY", HexConfig.TIP_Y, 0, 4000, 34);
+        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.tip"), List.of(
+                intEntryEntry(eb, "v060.tipX", HexConfig.TIP_X, 0, 4000, 8),
+                intEntryEntry(eb, "v060.tipY", HexConfig.TIP_Y, 0, 4000, 34)
+        )).build());
         // 海克斯状态栏位置（三合一：生命/护甲/饱食）
-        intEntry(eb, cat, "v060.hpX", HexConfig.HP_X, 0, 4000, 0);
-        intEntry(eb, cat, "v060.hpY", HexConfig.HP_Y, 0, 4000, 0);
+        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.hp"), List.of(
+                intEntryEntry(eb, "v060.hpX", HexConfig.HP_X, 0, 4000, 0),
+                intEntryEntry(eb, "v060.hpY", HexConfig.HP_Y, 0, 4000, 0)
+        )).build());
         // 背包/合成界面页签位置（v0.7.1 新增配置化）
-        intEntry(eb, cat, "v070.tabX", HexConfig.TAB_X, 0, 4000, 0);
-        intEntry(eb, cat, "v070.tabY", HexConfig.TAB_Y, 0, 4000, 0);
+        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.tab"), List.of(
+                intEntryEntry(eb, "v070.tabX", HexConfig.TAB_X, 0, 4000, 0),
+                intEntryEntry(eb, "v070.tabY", HexConfig.TAB_Y, 0, 4000, 0)
+        )).build());
     }
 
     private static void rulesCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.rules"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.rules")).build());
         for (int i = 0; i < RULE_KEYS.length; i++) {
             final int idx = i;
             cat.addEntry(eb.startBooleanToggle(
