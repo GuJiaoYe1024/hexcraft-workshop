@@ -4,6 +4,9 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.FontManager;
@@ -14,13 +17,14 @@ import net.minecraft.resources.ResourceLocation;
  * 海克斯工坊内置中文字体入口。
  *
  * 字体资源：assets/hexworkshop/font/hexfont.json（Noto Sans SC 子集，OFL 1.1 开源协议）。
- * 原理：1.20.1 的 Font 渲染时按文本 style.font 从「id -> FontSet」函数取字体集，未显式
- * 指定字体的文本使用 minecraft:default。FontManager 维护着全部已加载字体集
- * （fontSets，private），这里通过反射读取该映射，构造一个把 minecraft:default 重定向到
- * 内置中文字体集的自定义 Font；其余字体 id（如 minecraft:uniform）仍走原版字体集，
- * 因此只影响海克斯界面自己绘制的文字，不影响聊天、原版界面等全局文字。
+ * 1.20.1 中 FontManager 在资源重载时统一扫描 assets 下各命名空间的 font 目录
+ * 并填充私有字段 fontSets（Map&lt;ResourceLocation, FontSet&gt;）。这里通过反射读取该映射，
+ * 构造一个把默认字体 id 重定向到内置中文字体集的自定义 Font；其余字体 id（如
+ * minecraft:uniform）仍走原字体集，因此只影响海克斯界面自己绘制的文字。
  */
 public final class HexFonts {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     /** 内置字体资源 id（对应 assets/hexworkshop/font/hexfont.json） */
     public static final ResourceLocation FONT_ID = ResourceLocation.fromNamespaceAndPath("hexworkshop", "hexfont");
@@ -36,6 +40,8 @@ public final class HexFonts {
             Font base = Minecraft.getInstance().font;
             Map<ResourceLocation, FontSet> sets = fontSets();
             if (sets != null) {
+                LOGGER.info("[HexFonts] fontSets size={} hasHexfont={} allKeys={}",
+                        sets.size(), sets.containsKey(FONT_ID), sets.keySet());
                 Function<ResourceLocation, FontSet> resolver = id -> {
                     ResourceLocation target = (id == null || id.equals(Minecraft.DEFAULT_FONT)) ? FONT_ID : id;
                     FontSet fs = sets.get(target);
@@ -45,6 +51,9 @@ public final class HexFonts {
                     return fs;
                 };
                 ui = new Font(resolver, false);
+                LOGGER.info("[HexFonts] custom ui Font created");
+            } else {
+                LOGGER.error("[HexFonts] fontSets reflection returned null, UI falls back to vanilla font!");
             }
             if (ui == null) {
                 ui = base;
@@ -56,11 +65,21 @@ public final class HexFonts {
     @SuppressWarnings("unchecked")
     private static Map<ResourceLocation, FontSet> fontSets() {
         try {
-            FontManager fm = (FontManager) fontManagerField().get(Minecraft.getInstance());
-            Field field = FontManager.class.getDeclaredField("fontSets");
-            field.setAccessible(true);
-            return (Map<ResourceLocation, FontSet>) field.get(fm);
-        } catch (Exception e) {
+            Field fmField = fontManagerField();
+            if (fmField == null) {
+                LOGGER.error("[HexFonts] cannot find Minecraft fontManager field (type FontManager)");
+                return null;
+            }
+            FontManager fm = (FontManager) fmField.get(Minecraft.getInstance());
+            if (fm == null) {
+                LOGGER.error("[HexFonts] Minecraft.fontManager field value is null");
+                return null;
+            }
+            Field setsField = FontManager.class.getDeclaredField("fontSets");
+            setsField.setAccessible(true);
+            return (Map<ResourceLocation, FontSet>) setsField.get(fm);
+        } catch (Throwable t) {
+            LOGGER.error("[HexFonts] fontSets reflection failed", t);
             return null;
         }
     }
@@ -73,7 +92,8 @@ public final class HexFonts {
                     return f;
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Throwable t) {
+            LOGGER.error("[HexFonts] field scan failed", t);
         }
         return null;
     }
