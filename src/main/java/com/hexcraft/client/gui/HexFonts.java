@@ -75,7 +75,20 @@ public final class HexFonts {
                 LOGGER.error("[HexFonts] Minecraft.fontManager field value is null");
                 return null;
             }
-            Field setsField = FontManager.class.getDeclaredField("fontSets");
+            // 1.20.1 Forge 运行时类为 srg 重映射（client-*-srg.jar），字段真名是 f_94999_；
+            // mojmap 名 fontSets 仅存在于编译期，反射字符串不会被自动重映射，需双名尝试。
+            Field setsField = null;
+            for (String name : new String[]{"fontSets", "f_94999_"}) {
+                try {
+                    setsField = FontManager.class.getDeclaredField(name);
+                    break;
+                } catch (NoSuchFieldException ignored) {
+                }
+            }
+            if (setsField == null) {
+                LOGGER.error("[HexFonts] no fontSets/f_94999_ field on FontManager");
+                return null;
+            }
             setsField.setAccessible(true);
             return (Map<ResourceLocation, FontSet>) setsField.get(fm);
         } catch (Throwable t) {

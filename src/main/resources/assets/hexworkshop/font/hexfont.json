@@ -2,7 +2,7 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "fonts/hexfont.ttf",
+      "file": "hexworkshop:fonts/hexfont.ttf",
       "shift": 0.0,
       "size": 11.0,
       "oversample": 8.0
