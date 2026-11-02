@@ -372,13 +372,13 @@
             <div class="rcg-sec"><div class="rcg-sec-h">材质 → 晶币<span>6 种材质按费率兑换，即时到账</span></div>
               <div class="rcg-rows" id="rcgMatRows"></div>
             </div>
-            <div class="rcg-sec"><div class="rcg-sec-h">晶币 → 绿宝石<span>30 晶币 = 1 绿宝石</span></div>
+            <div class="rcg-sec"><div class="rcg-sec-h">晶币 → 绿宝石<span>64 晶币 = 1 绿宝石</span></div>
               <div class="rcg-rows" id="rcgBackRows"></div>
             </div>
-            <div class="rcg-sec"><div class="rcg-sec-h">EMC 通道 → 晶币<span>需安装 ProjectE · 1024 EMC = 1 晶币（钻石 8192 EMC = 8 晶币，与材质通道完全对齐）</span></div>
+            <div class="rcg-sec"><div class="rcg-sec-h">EMC 通道 → 晶币<span>需安装 ProjectE · 256 EMC = 1 晶币（1 铁锭 = 1 晶币，按 EMC 价值锚定）</span></div>
               <div class="rcg-emc">
                 <div class="rcg-row"><span class="mats"><i style="background:#7f7fff"></i>玩家 EMC 余额</span><span class="rte" id="emcBal">42,240 EMC</span><span class="btns" id="emcBtns"></span></div>
-                <div class="emc-rate">从玩家自身 EMC 余额直接充值（v0.9.8 起不再折算/销毁手上物品）· emc_bargain 加成可抵减所需 EMC · 数值以游戏内实时结算为准</div>
+                <div class="emc-rate">从玩家自身 EMC 余额直接充值（v0.9.9 起不再折算/销毁手上物品）· emc_bargain 加成可抵减所需 EMC · 数值以游戏内实时结算为准</div>
               </div>
               <div class="emc-table" id="emcTable"></div>
             </div>
@@ -804,19 +804,19 @@
   }
   /* ===== 充值：材质⇄晶币兑换（贴合游戏内 HextechPageScreen 现有玩法） ===== */
   var MATS=[
-    {n:"绿宝石",r:30,c:"#55ff55"},
-    {n:"铜锭",r:1,c:"#ff8c00"},
-    {n:"铁锭",r:2,c:"#d8d8d8"},
-    {n:"金锭",r:4,c:"#ffd700"},
-    {n:"钻石",r:8,c:"#4de6ff"},
-    {n:"下界合金锭",r:64,c:"#c77dff"}
+    {n:"绿宝石",r:64,c:"#55ff55"},
+    {n:"铜锭",r:2,c:"#ff8c00"},
+    {n:"铁锭",r:1,c:"#d8d8d8"},
+    {n:"金锭",r:8,c:"#ffd700"},
+    {n:"钻石",r:32,c:"#4de6ff"},
+    {n:"下界合金锭",r:224,c:"#c77dff"}
   ],EX_COUNTS=[1,32,64,128,256],rcgCur=null;
-  /* v0.9.8 EMC 通道：玩家 EMC 余额直充。汇率 1024 EMC=1 晶币（与材质通道对齐：钻石 8192 EMC = 8 晶币）。
-     材料 EMC 为 ProjectE 默认映射值：铁/金/钻石为跨源稳定值；绿宝石/铜锭/下界合金锭标默认值，以游戏内实时查询为准 */
-  var EMC_RATE=1024,EMC_COINS=[16,32,64,128,256],PLAYER_EMC=42240,
+  /* v0.9.9 EMC 通道：玩家 EMC 余额直充。汇率 256 EMC = 1 晶币（= 1 铁锭；材质通道同锚：铁1 铜2 金8 钻32 绿64 下界合金224）。
+     材料 EMC 为 ProjectE 官方映射值（data\projecte\pe_custom_conversions）：绿宝石 16384 / 铜锭 512 / 下界合金锭 57344 */
+  var EMC_RATE=256,EMC_COINS=[100,200,400,800],PLAYER_EMC=42240,
       EMC_MATS=[
-        {n:"绿宝石",emc:512},
-        {n:"铜锭",emc:64},
+        {n:"绿宝石",emc:16384},
+        {n:"铜锭",emc:512},
         {n:"铁锭",emc:256},
         {n:"金锭",emc:2048},
         {n:"钻石",emc:8192},
@@ -829,13 +829,13 @@
       h+='<div class="rcg-row"><span class="mats"><i style="background:'+m.c+'"></i>'+m.n+'</span><span class="rte">1 '+m.n.replace("锭","")+' = '+m.r+' 晶币</span><span class="btns">'+exBtns(i,0)+'</span></div>';
     });
     document.getElementById("rcgMatRows").innerHTML=h;
-    document.getElementById("rcgBackRows").innerHTML='<div class="rcg-row"><span class="mats"><i style="background:#55ff55"></i>绿宝石</span><span class="rte">30 晶币 = 1 绿宝石</span><span class="btns">'+exBtns(0,1)+'</span></div>';
-    /* EMC 通道：五档批量（16/32/64/128/256 晶币）+ 材料 EMC 换算表 */
+    document.getElementById("rcgBackRows").innerHTML='<div class="rcg-row"><span class="mats"><i style="background:#55ff55"></i>绿宝石</span><span class="rte">64 晶币 = 1 绿宝石</span><span class="btns">'+exBtns(0,1)+'</span></div>';
+    /* EMC 通道：100 晶币起步（100/200/400/800 晶币）+ 材料 EMC 换算表 */
     document.getElementById("emcBtns").innerHTML=EMC_COINS.map(function(c){
       var need=c*EMC_RATE;
       return '<button class="xb" title="消耗 '+need.toLocaleString()+' EMC" onclick="openEmc('+c+')">'+c+'◆</button>'
     }).join("");
-    var t='<div class="rcg-sec-h" style="margin-top:8px">常用材料 EMC 换算表<span>EMC ÷ 1024 = 晶币 · 游戏内实时查询为准</span></div>';
+    var t='<div class="rcg-sec-h" style="margin-top:8px">常用材料 EMC 换算表<span>EMC ÷ 256 = 晶币 · 游戏内实时查询为准</span></div>';
     t+='<div class="rcg-rows">';
     EMC_MATS.forEach(function(m){
       var coins=(m.emc/EMC_RATE).toFixed(m.emc%EMC_RATE?2:0);

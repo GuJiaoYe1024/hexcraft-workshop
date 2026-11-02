@@ -1,3 +1,17 @@
+Hexcraft Workshop v0.9.9 - EMC recharge pricing reworked: exchange rate anchored to real EMC values + forge prices raised
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+EMC PRICING REDONE (values decided by you, no more invented exchange rates):
+- BASE RATE: 1 coin = 256 EMC (= the EMC value of 1 iron ingot). EMC_COIN_RATE default 1024 -> 256 (shared by the EMC recharge channel and the Equivalent-Exchange hextechs).
+- MATERIAL CHANNEL re-anchored to the official ProjectE EMC ratios (Iron1 : Copper2 : Gold8 : Diamond32 : Emerald64 : Netherite224): Emerald 64 / Copper 2 / Iron 1 / Gold 8 / Diamond 32 / Netherite Ingot 224 coins each.
+- COINS -> EMERALD buy-back aligned to 64 coins = 1 emerald (inverse of the new 1-emerald = 64-coins rate, so no two-way arbitrage).
+- EMC RECHARGE TIERS raised: 16/32/64/128/256 -> start at 100: 100/200/400/800 coins (100 coins = 100 iron = 25,600 EMC).
+- FORGE PRICES +50 across the board: Basic 50->100 / Gold 150->200 / Prismatic 400->450 coins. Draw, equipment and reroll prices unchanged.
+- v1.0.0 UI preview EMC table placeholder errors fixed (Emerald 512->16384, Copper 64->512 - official ProjectE mapping values now).
+- Build 38s, jar 808,713B SHA 1F39ABE0... (0.9.8 replaced, backup _bak_hexworkshop_0.9.8_pre099.jar).
+
 Hexcraft Workshop v0.9.8 - Storage three-brother REAL integration + execute_pct dead-key activated + full re-audit clean
 =============================================================================
 

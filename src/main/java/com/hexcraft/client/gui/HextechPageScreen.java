@@ -146,8 +146,9 @@ public class HextechPageScreen extends HexScaledScreen {
     private void initBonds() {
     }
 
-    /** 充值材质表：0绿宝石 1铜 2铁 3金 4钻石 5下界合金；每行标签 = 材质 ×单枚晶币 */
-    private static final int[] RECHARGE_RATE = {30, 1, 2, 4, 8, 64};
+    /** 充值材质表：0绿宝石 1铜 2铁 3金 4钻石 5下界合金；每行标签 = 材质 ×单枚晶币
+     *  v0.9.9 用户拍板按 EMC 价值锚定（1 晶币 = 1 铁锭 256 EMC）：绿64 铜2 铁1 金8 钻32 下界224；晶币→绿宝石同锚 64 */
+    private static final int[] RECHARGE_RATE = {64, 2, 1, 8, 32, 224};
     private static final int[] RECHARGE_COUNTS = {1, 32, 64, 128, 256};
 
     /** 充值页：6 种材质（绿宝石+全部金属锭）→ 晶币，晶币 → 绿宝石；五档批量 ×1/×32/×64/×128/×256 */
@@ -174,11 +175,11 @@ public class HextechPageScreen extends HexScaledScreen {
                     Component.translatable("hexcraft.gui.recharge_coin", c), 0xFFFFD700,
                     b -> sendExchange(1, 0, c)));
         }
-        // v0.9.8 EMC 通道（ProjectE 已装时显示）：玩家 EMC 余额直充——五档批量（16/32/64/128/256 晶币），
-        // 点按从玩家自身 EMC 余额按汇率扣减加晶币（不再折算/销毁主手物品）；tooltip 显示所需 EMC
+        // v0.9.9 EMC 通道（ProjectE 已装时显示）：玩家 EMC 余额直充——档位 100 晶币起步（100/200/400/800），
+        // 点按从玩家自身 EMC 余额按汇率 256（=1 铁锭）扣减加晶币（不再折算/销毁主手物品）；tooltip 显示所需 EMC
         if (net.minecraftforge.fml.ModList.get().isLoaded("projecte")) {
             int ey = cy2 + 22;
-            int[] emcCoins = {16, 32, 64, 128, 256};
+            int[] emcCoins = {100, 200, 400, 800};
             double rate = Math.max(1.0, com.hexcraft.config.HexConfig.EMC_COIN_RATE.get());
             for (int i = 0; i < emcCoins.length; i++) {
                 final int c = emcCoins[i];

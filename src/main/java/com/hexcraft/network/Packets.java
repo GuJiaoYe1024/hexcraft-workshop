@@ -461,16 +461,16 @@ public class Packets {
                 if (sp == null || (m.dir != 0 && m.dir != 1)) return;
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
-                int[] rates = {30, 1, 2, 4, 8, 64}; // 绿宝石/铜/铁/金/钻石/下界合金
-                // v0.9.8 EMC 通道重构（material=6，dir 必须 0）：玩家 EMC 余额直充——按档位晶币数
+                int[] rates = {64, 2, 1, 8, 32, 224}; // v0.9.9 用户拍板按 EMC 价值锚定：绿宝石/铜/铁/金/钻石/下界合金（1 晶币 = 1 铁锭 256 EMC）；晶币→绿宝石同步 64 晶币=1 绿宝石防套利
+                // v0.9.9 EMC 通道（material=6，dir 必须 0）：玩家 EMC 余额直充——按档位晶币数
                 // 从 ProjectE 玩家自身 EMC 余额（IKnowledgeProvider）扣减，加晶币；不再折算/销毁主手物品。
-                // 档位与材质通道五档批量同节奏：16/32/64/128/256 晶币；所需 EMC = 晶币 × 汇率（emc_bargain 加成抵减）。
+                // 档位 100 晶币起步：100/200/400/800；所需 EMC = 晶币 × 汇率 256（emc_bargain 加成抵减）。
                 if (m.material == 6) {
                     if (m.dir != 0) return;
                     if (!net.minecraftforge.fml.ModList.get().isLoaded("projecte")) return;
                     int coins = m.count;
                     boolean valid = false;
-                    for (int c : new int[]{16, 32, 64, 128, 256}) if (c == coins) { valid = true; break; }
+                    for (int c : new int[]{100, 200, 400, 800}) if (c == coins) { valid = true; break; }
                     if (!valid) return;
                     double rate = Math.max(1.0, com.hexcraft.config.HexConfig.EMC_COIN_RATE.get());
                     double bonus = Math.min(5.0, HextechEvents.effect(data, "emc_bargain"));

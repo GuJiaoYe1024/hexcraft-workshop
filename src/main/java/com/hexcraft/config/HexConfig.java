@@ -150,7 +150,7 @@ public class HexConfig {
     /** Alex's Mobs 联动效果全局倍率（默认 1.0） */
     public static final ForgeConfigSpec.DoubleValue AM_EFFECT_MULT;
     // ---- v0.8.3 ProjectE EMC 数值（服务端生效） ----
-    /** EMC 折算晶币汇率：多少 EMC 换 1 晶币（默认 1024：与充值页材质通道完全对齐——钻石 EMC 8192 ÷ 1024 = 8 晶币 = 充值页 1 钻石 8 晶币；v0.9.8 修正原默认 4 造成的 256 倍失衡） */
+    /** EMC 折算晶币汇率：多少 EMC 换 1 晶币（v0.9.9 用户拍板：默认 256 = 1 铁锭 256 EMC = 1 晶币；材质通道同锚：铁1 铜2 金8 钻32 绿64 下界合金224，1 晶币 = 1 铁锭 EMC） */
     public static final ForgeConfigSpec.DoubleValue EMC_COIN_RATE;
     // ---- v0.9.7 FTB Quests 真联动：任务完成奖励基准 ----
     public static final ForgeConfigSpec.IntValue QUEST_REWARD_BASE_COINS;
@@ -240,9 +240,9 @@ public class HexConfig {
         COIN_BOSS_MAX = b.comment("首领怪(生命≥120)掉落上限").translation("hexcraft.config.eco.coinBossMax").defineInRange("coinBossMax", 50, 0, 10000);
         ANTI_FARM_WINDOW_SEC = b.comment("反刷窗口：窗口内重复击杀同种怪掉落衰减（0=关闭）").translation("hexcraft.config.eco.antiFarmWindowSec").defineInRange("antiFarmWindowSec", 30, 0, 600);
         ANTI_FARM_DECAY = b.comment("反刷衰减系数（0.2=掉落降至20%）").translation("hexcraft.config.eco.antiFarmDecay").defineInRange("antiFarmDecay", 0.2, 0.0, 1.0);
-        FORGE_BASIC_PRICE = b.comment("基础锻造器价格(晶币)").translation("hexcraft.config.eco.forgeBasicPrice").defineInRange("forgeBasicPrice", 50, 0, 100000);
-        FORGE_GOLD_PRICE = b.comment("黄金锻造器价格(晶币)").translation("hexcraft.config.eco.forgeGoldPrice").defineInRange("forgeGoldPrice", 150, 0, 100000);
-        FORGE_PRISMATIC_PRICE = b.comment("棱彩锻造器价格(晶币)").translation("hexcraft.config.eco.forgePrismaticPrice").defineInRange("forgePrismaticPrice", 400, 0, 100000);
+        FORGE_BASIC_PRICE = b.comment("基础锻造器价格(晶币；v0.9.9 按 EMC 价值调价：50→100)").translation("hexcraft.config.eco.forgeBasicPrice").defineInRange("forgeBasicPrice", 100, 0, 100000);
+        FORGE_GOLD_PRICE = b.comment("黄金锻造器价格(晶币；v0.9.9 按 EMC 价值调价：150→200)").translation("hexcraft.config.eco.forgeGoldPrice").defineInRange("forgeGoldPrice", 200, 0, 100000);
+        FORGE_PRISMATIC_PRICE = b.comment("棱彩锻造器价格(晶币；v0.9.9 按 EMC 价值调价：400→450)").translation("hexcraft.config.eco.forgePrismaticPrice").defineInRange("forgePrismaticPrice", 450, 0, 100000);
         MAX_FORGES = b.comment("锻造总次数上限（0=无限制，默认无限制）").translation("hexcraft.config.eco.forgeLimit").defineInRange("forgeLimit", 0, 0, 100000);
         REFUND_SILVER = b.comment("满级重复抽到白银海克斯的晶币补偿").translation("hexcraft.config.eco.refundSilver").defineInRange("refundSilver", 10, 0, 10000);
         REFUND_GOLD = b.comment("满级重复抽到黄金海克斯的晶币补偿").translation("hexcraft.config.eco.refundGold").defineInRange("refundGold", 30, 0, 10000);
@@ -363,8 +363,8 @@ public class HexConfig {
         TF_EFFECT_MULT = b.comment("暮色森林联动效果全局倍率（默认 1.0）").translation("hexcraft.config.v060.tfEffectMult").defineInRange("tfEffectMult", 1.0, 0.0, 10.0);
         // v0.6.22 Alex's Mobs 联动效果倍率（服务端生效；未安装该 mod 时无实际效果）
         AM_EFFECT_MULT = b.comment("Alex's Mobs 联动效果全局倍率（默认 1.0）").translation("hexcraft.config.v060.amEffectMult").defineInRange("amEffectMult", 1.0, 0.0, 10.0);
-        // v0.8.3 ProjectE EMC 数值（服务端生效；v0.9.8 汇率默认值 4 → 1024：钻石 8192 EMC ÷ 1024 = 8 晶币，与充值页材质通道 1 钻石 8 晶币完全对齐，消除原 256 倍失衡）
-        EMC_COIN_RATE = b.comment("EMC 折算晶币汇率：多少 EMC 换 1 晶币（默认 1024：钻石 EMC 8192 ÷ 1024 = 8 晶币，与充值页 1 钻石 8 晶币完全对齐。EMC 通道与等价交换海克斯共用此汇率）").translation("hexcraft.config.v060.emcCoinRate").defineInRange("emcCoinRate", 1024.0, 1.0, 1000000.0);
+        // v0.8.3 ProjectE EMC 数值（服务端生效；v0.9.9 用户拍板默认 256：1 晶币 = 1 铁锭 EMC = 256，材质通道同步按 EMC 价值锚定铁1/铜2/金8/钻32/绿64/下界224，消除原 1024 拍脑袋汇率）
+        EMC_COIN_RATE = b.comment("EMC 折算晶币汇率：多少 EMC 换 1 晶币（默认 256 = 1 铁锭 256 EMC = 1 晶币；材质通道同锚：铁1 铜2 金8 钻32 绿64 下界合金224。EMC 通道与等价交换海克斯共用此汇率）").translation("hexcraft.config.v060.emcCoinRate").defineInRange("emcCoinRate", 256.0, 1.0, 1000000.0);
         // ---- v0.9.7 FTB Quests 真联动：任务完成奖励基准（每 1 级 quest 海克斯，叠加 bounty/coin_bonus/xp_bonus 加成） ----
         QUEST_REWARD_BASE_COINS = b.comment("FTB Quests 任务完成联动奖励：每 1 级 quest 海克斯的基础晶币（再叠加 bounty 悬赏晶币 / coin_bonus 财源倍率）").translation("hexcraft.config.v097.questRewardBaseCoins").defineInRange("questRewardBaseCoins", 20, 0, 100000);
         QUEST_REWARD_BASE_XP = b.comment("FTB Quests 任务完成联动奖励：每 1 级 quest 海克斯的基础经验值（再叠加 xp_bonus 学识倍率）").translation("hexcraft.config.v097.questRewardBaseXp").defineInRange("questRewardBaseXp", 20, 0, 100000);
