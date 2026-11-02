@@ -93,6 +93,15 @@
 - **主类守卫 13/13 调用点确认**：Hexcraft.java 对 irons_spellbooks/iceandfire/alexscaves/twilightforest/alexsmobs/cataclysm/goety/mowziesmobs/artifacts/relics/slashblade/farmersdelight/ftbquests/projecte 的 isLoaded 守卫全部存在且 modId 正确
 - **如实记录（非 bug，事实核查）**：① AC 伤害类型实测无 `toxic`/`magnetic`（毒性区酸液由 acid 覆盖、磁区伤害由原版 lightningBolt 的 "lightning" 子串兜住，ac_toxic_resist/ac_magnetic_resist 实际生效面窄于注释描述，判定写法合理不修）；② StorageLink 三条第三方存储分支依赖 beyonddimensions/sophisticatedbackpacks/refinedstorage，当前 34 mod 清单未装三者 → mining_magnet 静默回退玩家背包（代码行为正确零副作用；如需"掉落直存第三方存储"真联动，需安装任一存储 mod）
 
+**🛠️ 修复轮 4·严查轮 3（用户装好 4 个存储 mod 后 StorageLink 反射签名逐一 javap 实锤，修 1 个真 bug）**
+- **4 个存储 mod 全量 javap 实锤**（用户 PCL 安装：`[超越维度] beyonddimensions-0.7.30` / `[精妙背包] sophisticatedbackpacks-3.26.19` / `[精妙核心] sophisticatedcore-1.5.21` / `[精致存储] refinedstorage-1.12.4`）：
+  - modId 全部正确：beyonddimensions / sophisticatedbackpacks / sophisticatedcore / refinedstorage——与 StorageLink 守卫一致
+  - **BD 分支**：DimensionsNet.getPrimaryNetFromPlayer(Player)/getUnifiedStorage()、ItemStackKey(ItemStack) 构造、IStackHandler.getStackByKey(IStackKey)/insert(IStackKey,long,boolean)、KeyAmount.amount() 全部存在
+  - **SB 分支**：CapabilityBackpackWrapper.BACKPACK_WRAPPER_CAPABILITY（Capability<IBackpackWrapper>）、IBackpackWrapper extends IStorageWrapper（getInventoryForInputOutput 可 invoke）、IItemHandlerSimpleInserter.insertItem(ItemStack,boolean) 全部存在
+  - **RS 分支**：API.instance()（返回 IRSAPI）、IRSAPI.getNetworkManager(ServerLevel)、INetworkManager.all()、INetwork.getPosition()/getLevel()/insertItem(ItemStack,int,Action)、Action.PERFORM 全部存在
+- **实锤 1 个真 bug 并修复（StorageLink.java 两处）**：BD 的 UnifiedStorage 继承链是 `AbstractUnorderedStackHandler implements IStackHandler`（与 StackHandler 实现类平级，非父子）；SB 的 getInventoryForInputOutput() 返回 ITrackedContentsItemHandler（插入方法声明在 IItemHandlerSimpleInserter 接口，实现类不保证为返回对象类型）。原代码从实现类（StackHandler / InventoryHandler）拿反射 Method 去 invoke 接口返回对象 → 运行期抛 IllegalArgumentException → 分支永久静默关闭。已改为从接口 IStackHandler / IItemHandlerSimpleInserter 拿方法，invoke 合法。**修好后三条分支在装齐存储 mod 时全部真实落地。**
+- 构建 27s、jar 808,593B（SHA-256 **A4202006…051E**）替换正式客户端（旧 808,594B 备份 `H:\MC1314\联动实测\_bak_hexworkshop_0.9.7_storagelink-iface.jar`）
+
 ## v0.9.6 — 海克斯大乱斗原版 9 套装羁绊进本体（2026-11-01）
 
 **🎯 机制（用户拍板：官方 9 套全做 + 云顶式多档 2/4/6/8 + 现有/新建成员混用）**

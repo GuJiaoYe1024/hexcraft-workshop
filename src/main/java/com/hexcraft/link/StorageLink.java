@@ -81,7 +81,10 @@ public final class StorageLink {
                 bdGetUnified = netCls.getMethod("getUnifiedStorage");
                 Class<?> keyCls = Class.forName("com.wintercogs.beyonddimensions.api.storage.key.impl.ItemStackKey");
                 bdKeyCtor = keyCls.getConstructor(net.minecraft.world.item.ItemStack.class);
-                Class<?> usCls = Class.forName("com.wintercogs.beyonddimensions.api.storage.handler.impl.StackHandler");
+                // v0.9.7 严查轮 3 实锤：UnifiedStorage 继承链为 AbstractUnorderedStackHandler implements IStackHandler，
+                // 与 StackHandler 实现类平级（非父子）；从实现类拿方法 invoke 接口实例会抛 IllegalArgumentException。
+                // 必须从 IStackHandler 接口拿 getStackByKey/insert。
+                Class<?> usCls = Class.forName("com.wintercogs.beyonddimensions.api.storage.handler.IStackHandler");
                 Class<?> keyItf = Class.forName("com.wintercogs.beyonddimensions.api.storage.key.IStackKey");
                 bdGetByKey = usCls.getMethod("getStackByKey", keyItf);
                 bdInsert = usCls.getMethod("insert", keyItf, long.class, boolean.class);
@@ -125,7 +128,9 @@ public final class StorageLink {
                 sbCapability = f.get(null);
                 Class<?> wrapperItf = Class.forName("net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper");
                 sbWrapperHandler = wrapperItf.getMethod("getInventoryForInputOutput");
-                Class<?> handlerCls = Class.forName("net.p3pp3rf1y.sophisticatedcore.inventory.InventoryHandler");
+                // v0.9.7 严查轮 3 实锤：getInventoryForInputOutput() 返回 ITrackedContentsItemHandler，
+                // 其插入方法声明在 IItemHandlerSimpleInserter 接口（InventoryHandler 实现类不可保证是返回对象类型）。
+                Class<?> handlerCls = Class.forName("net.p3pp3rf1y.sophisticatedcore.inventory.IItemHandlerSimpleInserter");
                 sbHandlerInsert = handlerCls.getMethod("insertItem", net.minecraft.world.item.ItemStack.class, boolean.class);
                 sbOk = true;
             }
