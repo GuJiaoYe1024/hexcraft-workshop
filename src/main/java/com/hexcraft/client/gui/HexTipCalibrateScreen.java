@@ -62,9 +62,9 @@ public class HexTipCalibrateScreen extends Screen {
                 Component.translatable("hexcraft.tip.calibrate_hint").getString(),
                 bx + 5, by + 3, 0xFF101820, true);
         // 操作说明 + 当前坐标
-        g.drawCenteredString(HexFonts.ui(),
+        HexFonts.centered(g,
                 Component.translatable("hexcraft.config.tip.v060.tipDragHint").getString() + "  (" + HexConfig.TIP_X.get() + ", " + HexConfig.TIP_Y.get() + ")",
-                this.width / 2, areaY() + AREA_H + 12, 0xFF8FA6C8);
+                this.width / 2, areaY() + AREA_H + 12, 0xFF8FA6C8, false);
         // 完成按钮
         g.fill(this.width / 2 - 60, this.height - 46, this.width / 2 + 60, this.height - 26, 0xFF00E5FF);
         g.drawCenteredString(HexFonts.ui(),

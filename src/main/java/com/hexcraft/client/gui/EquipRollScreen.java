@@ -218,32 +218,32 @@ public class EquipRollScreen extends HexScaledScreen {
             // v0.6.5 已拥有角标：重复装备折算卖出价/叠层，提前提示避免困惑
             com.hexcraft.capability.PlayerData.EquipEntry owned = ownedEquip(id);
             if (owned != null) {
-                g.drawCenteredString(HexFonts.ui(),
+                HexFonts.centered(g,
                         Component.translatable("hexcraft.gui.owned_tag", owned.level),
-                        cx, cy + 14, (a << 24) | 0x00FFD28C);
+                        cx, cy + 14, (a << 24) | 0x00FFD28C, false);
             }
-            g.drawCenteredString(HexFonts.ui(), icon, cx, iconY,
-                    (a << 24) | (color & 0x00FFFFFF));
-            g.drawCenteredString(HexFonts.ui(), icon, cx, iconY,
-                    (a * 130 / 255) << 24 | (color & 0x00FFFFFF)); // 双层加粗感
+            HexFonts.centered(g, icon, cx, iconY,
+                    (a << 24) | (color & 0x00FFFFFF), false);
+            HexFonts.centered(g, icon, cx, iconY,
+                    (a * 130 / 255) << 24 | (color & 0x00FFFFFF), false); // 双层加粗感
 
-            g.drawCenteredString(HexFonts.ui(), name, cx, cy + 52, (a << 24) | (color & 0x00FFFFFF));
+            HexFonts.centered(g, name, cx, cy + 52, (a << 24) | (color & 0x00FFFFFF), false);
             g.fill(cardX[i] + 14, cy + 64, cardX[i] + CARD_W - 14, cy + 65, 0x33505F88);
             List<FormattedCharSequence> lines = HexFonts.ui().split(desc, CARD_W - 26);
             int dy = cy + 70;
             for (FormattedCharSequence line : lines) {
-                g.drawCenteredString(HexFonts.ui(), line, cx, dy, (a << 24) | 0x00C8D0E8);
+                HexFonts.centered(g, line, cx, dy, (a << 24) | 0x00C8D0E8, false);
                 dy += 11;
                 if (dy > cy + CARD_H - 8) break;
             }
             // 卖出价标签
-            g.drawCenteredString(HexFonts.ui(), Component.translatable("hexcraft.gui.equip_sell_tag"),
-                    cx, cy + CARD_H - 12, (a << 24) | 0x00FFD28C);
+            HexFonts.centered(g, Component.translatable("hexcraft.gui.equip_sell_tag"),
+                    cx, cy + CARD_H - 12, (a << 24) | 0x00FFD28C, false);
         }
         // v0.6.3 选中提示（确认模式）
         if (selectedIdx >= 0 && com.hexcraft.config.HexConfig.CONFIRM_SELECT.get()) {
-            g.drawCenteredString(HexFonts.ui(), Component.translatable("hexcraft.gui.selected_hint"),
-                    cardX[selectedIdx] + CARD_W / 2, cardY + cards[selectedIdx].dy + CARD_H + 5, 0xFFFFFFFF);
+            HexFonts.centered(g, Component.translatable("hexcraft.gui.selected_hint"),
+                    cardX[selectedIdx] + CARD_W / 2, cardY + cards[selectedIdx].dy + CARD_H + 5, 0xFFFFFFFF, false);
         }
     }
 

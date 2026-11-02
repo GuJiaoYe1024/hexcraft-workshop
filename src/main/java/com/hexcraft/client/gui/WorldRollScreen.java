@@ -33,8 +33,8 @@ public class WorldRollScreen extends HexScaledScreen {
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, border);
             g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xFF1E3A66, 0xFF0B1530);
             g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF4AC7FF);
-            g.drawCenteredString(HexFonts.ui(), this.getMessage(),
-                    getX() + width / 2, getY() + (height - 8) / 2, text);
+            HexFonts.centered(g, this.getMessage(),
+                    getX() + width / 2, getY() + (height - 8) / 2, text, false);
         }
     }
 
@@ -172,8 +172,8 @@ public class WorldRollScreen extends HexScaledScreen {
                 int alpha = 40 + (int) (ease * 215f);
                 drawAnimatedCard(g, i, def, dy, alpha);
             }
-            g.drawCenteredString(HexFonts.ui(), Component.translatable("hexcraft.worldhex.anim_draw"),
-                    centerX, cardY + CARD_H + 26, 0xFF9FB6FF);
+            HexFonts.centered(g, Component.translatable("hexcraft.worldhex.anim_draw"),
+                    centerX, cardY + CARD_H + 26, 0xFF9FB6FF, false);
         } else {
             this.renderWidgets(g, mx, my, pt);
             for (int i = 0; i < 3 && i < msg.options.size(); i++) {
@@ -184,8 +184,8 @@ public class WorldRollScreen extends HexScaledScreen {
             }
             // v0.6.3 选中提示（确认模式）：选中卡底部显示提示条
             if (selectedIdx >= 0 && com.hexcraft.config.HexConfig.CONFIRM_SELECT.get()) {
-                g.drawCenteredString(HexFonts.ui(), Component.translatable("hexcraft.gui.selected_hint"),
-                        cardX[selectedIdx] + CARD_W / 2, cardY + CARD_H - 14, 0xFFFFFFFF);
+                HexFonts.centered(g, Component.translatable("hexcraft.gui.selected_hint"),
+                        cardX[selectedIdx] + CARD_W / 2, cardY + CARD_H - 14, 0xFFFFFFFF, false);
             }
         }
     }
@@ -202,8 +202,8 @@ public class WorldRollScreen extends HexScaledScreen {
         g.fillGradient(x, y, x + CARD_W, y + CARD_H,
                 (alpha * 240 / 255) << 24 | 0x2C2E58, (alpha * 240 / 255) << 24 | 0x0D1220);
         g.fill(x, y, x + CARD_W, y + 16, alpha << 24 | (color & 0x00FFFFFF));
-        g.drawCenteredString(HexFonts.ui(), catLabel(def), cx, y + 4, 0xFF101018);
-        g.drawCenteredString(HexFonts.ui(), "◆", cx, y + 22, color);
+        HexFonts.centered(g, catLabel(def), cx, y + 4, 0xFF101018, false);
+        HexFonts.centered(g, "◆", cx, y + 22, color, false);
         drawCardText(g, idx, def, color, cx, y);
     }
 
@@ -211,17 +211,17 @@ public class WorldRollScreen extends HexScaledScreen {
     private void drawCardText(GuiGraphics g, int idx, WorldHexDefinition def, int color, int cx, int cy) {
         Component name = Component.translatable("hexcraft.worldhex." + def.id + ".name");
         Component desc = Component.translatable("hexcraft.worldhex." + def.id + ".desc");
-        g.drawCenteredString(HexFonts.ui(), name, cx, cy + 42, color);
+        HexFonts.centered(g, name, cx, cy + 42, color, false);
         g.fill(cx - CARD_W / 2 + 14, cy + 56, cx + CARD_W / 2 - 14, cy + 57, 0x33505F88);
         List<FormattedCharSequence> lines = HexFonts.ui().split(desc, CARD_W - 24);
         int dy = cy + 62;
         for (FormattedCharSequence line : lines) {
-            g.drawCenteredString(HexFonts.ui(), line, cx, dy, 0xFFC8D0E8);
+            HexFonts.centered(g, line, cx, dy, 0xFFC8D0E8, false);
             dy += 11;
             if (dy > cy + CARD_H - 6) break;
         }
-        g.drawCenteredString(HexFonts.ui(),
-                Component.translatable("hexcraft.worldhex.cost_xp", msg.drawXp), cx, cy + CARD_H - 4, 0xFF9FB6FF);
+        HexFonts.centered(g,
+                Component.translatable("hexcraft.worldhex.cost_xp", msg.drawXp), cx, cy + CARD_H - 4, 0xFF9FB6FF, false);
     }
 
     private static String catLabel(WorldHexDefinition def) {
@@ -255,9 +255,9 @@ public class WorldRollScreen extends HexScaledScreen {
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, 0xFF << 24 | (border & 0x00FFFFFF));
             g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xF02C2E58, 0xF00D1220);
             g.fill(getX(), getY(), getX() + width, getY() + 16, 0xFF << 24 | (color & 0x00FFFFFF));
-            g.drawCenteredString(HexFonts.ui(), label, getX() + width / 2, getY() + 4, 0xFF101018);
-            g.drawCenteredString(HexFonts.ui(), "◆", getX() + width / 2, getY() + 22,
-                    0xFF << 24 | (color & 0x00FFFFFF));
+            HexFonts.centered(g, label, getX() + width / 2, getY() + 4, 0xFF101018, false);
+            HexFonts.centered(g, "◆", getX() + width / 2, getY() + 22,
+                    0xFF << 24 | (color & 0x00FFFFFF), false);
             // v0.6.3 选中态：底部白色选中条
             if (selected) {
                 g.fill(getX() + 20, getY() + height - 4, getX() + width - 20, getY() + height - 2, 0xFFFFFFFF);

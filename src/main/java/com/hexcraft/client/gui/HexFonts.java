@@ -9,8 +9,11 @@ import org.slf4j.Logger;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.font.FontManager;
 import net.minecraft.client.gui.font.FontSet;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -60,6 +63,20 @@ public final class HexFonts {
             }
         }
         return ui;
+    }
+
+    /** 居中绘制（可关阴影）。GuiGraphics.drawCenteredString 无 shadow 重载且默认开阴影，
+     *  这里用 drawString 六参版 + 手动居中实现等效控制。 */
+    public static void centered(GuiGraphics g, String text, int x, int y, int color, boolean shadow) {
+        g.drawString(ui(), text, x - ui().width(text) / 2, y, color, shadow);
+    }
+
+    public static void centered(GuiGraphics g, Component text, int x, int y, int color, boolean shadow) {
+        g.drawString(ui(), text, x - ui().width(text) / 2, y, color, shadow);
+    }
+
+    public static void centered(GuiGraphics g, FormattedCharSequence text, int x, int y, int color, boolean shadow) {
+        g.drawString(ui(), text, x - ui().width(text) / 2, y, color, shadow);
     }
 
     @SuppressWarnings("unchecked")

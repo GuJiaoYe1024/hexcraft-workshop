@@ -24,8 +24,8 @@ public class EnemyHexScreen extends HexScaledScreen {
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, border);
             g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xFF1E3A66, 0xFF0B1530);
             g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF4AC7FF);
-            g.drawCenteredString(HexFonts.ui(), this.getMessage(),
-                    getX() + width / 2, getY() + (height - 8) / 2, text);
+            HexFonts.centered(g, this.getMessage(),
+                    getX() + width / 2, getY() + (height - 8) / 2, text, false);
         }
     }
 
@@ -51,28 +51,28 @@ public class EnemyHexScreen extends HexScaledScreen {
         // 机制说明（自动换行，最多 420px）
         Component desc = Component.translatable("hexcraft.gui.enemy_hex_desc");
         for (net.minecraft.util.FormattedCharSequence line : HexFonts.ui().split(desc, Math.min(420, this.guiW() - 60))) {
-            g.drawCenteredString(HexFonts.ui(), line, cx, y, 0xFFA9B4CC);
+            HexFonts.centered(g, line, cx, y, 0xFFA9B4CC, false);
             y += 11;
         }
         y += 4;
         // 概率表一行
-        g.drawCenteredString(HexFonts.ui(), Component.translatable("hexcraft.gui.enemy_hex_chance"), cx, y, 0xFFD0D8E8);
+        HexFonts.centered(g, Component.translatable("hexcraft.gui.enemy_hex_chance"), cx, y, 0xFFD0D8E8, false);
         y += 14;
 
         // 池列表标题
         g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.enemy_hex_pool"),
-                cx - 200, y, 0xFF9FB6FF);
+                cx - 200, y, 0xFF9FB6FF, false);
         y += 12;
         String[] poolKeys = {"fury", "swift", "bulwark", "shield", "regen"};
         for (String k : poolKeys) {
             g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.enemy_hex." + k),
-                    cx - 196, y, 0xFFD0D8E8);
+                    cx - 196, y, 0xFFD0D8E8, false);
             y += 12;
         }
         y += 4;
         // 底部提示
         g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.enemy_hex_note"),
-                cx - 200, y, 0xFF8FA6C8);
+                cx - 200, y, 0xFF8FA6C8, false);
 
         this.renderWidgets(g, mx, my, pt);
     }

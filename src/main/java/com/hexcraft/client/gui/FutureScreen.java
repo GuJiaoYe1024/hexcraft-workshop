@@ -33,8 +33,8 @@ public class FutureScreen extends HexScaledScreen {
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, border);
             g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xFF1E3A66, 0xFF0B1530);
             g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF4AC7FF);
-            g.drawCenteredString(HexFonts.ui(), this.getMessage(),
-                    getX() + width / 2, getY() + (height - 8) / 2, text);
+            HexFonts.centered(g, this.getMessage(),
+                    getX() + width / 2, getY() + (height - 8) / 2, text, false);
         }
     }
 
@@ -137,7 +137,7 @@ public class FutureScreen extends HexScaledScreen {
                 hexBy.values().stream().mapToInt(Integer::intValue).sum(),
                 eqBy.values().stream().mapToInt(Integer::intValue).sum());
         for (net.minecraft.util.FormattedCharSequence line : HexFonts.ui().split(desc, Math.min(420, this.guiW() - 60))) {
-            g.drawCenteredString(HexFonts.ui(), line, cx, y, 0xFFA9B4CC);
+            HexFonts.centered(g, line, cx, y, 0xFFA9B4CC, false);
             y += 11;
         }
         y += 6;
@@ -161,17 +161,17 @@ public class FutureScreen extends HexScaledScreen {
             if (ly < listTop - 11 || ly > viewBot) continue; // 视口外行不绘制
             String s = body.get(i);
             if (s.equals("__empty__")) {
-                g.drawCenteredString(HexFonts.ui(), Component.translatable("hexcraft.gui.future_empty"), cx, ly, 0xFF6A7B96);
+                HexFonts.centered(g, Component.translatable("hexcraft.gui.future_empty"), cx, ly, 0xFF6A7B96, false);
             } else if (s.equals("__installed__")) {
                 g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.future_installed"),
-                        cx - 200, ly, 0xFF9FB6FF);
+                        cx - 200, ly, 0xFF9FB6FF, false);
             } else if (s.equals("__missing__")) {
                 g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.future_missing"),
-                        cx - 200, ly, 0xFF9FB6FF);
+                        cx - 200, ly, 0xFF9FB6FF, false);
             } else if (installed.contains(s)) {
-                g.drawString(HexFonts.ui(), Component.literal("• " + s), cx - 200, ly, 0xFFD0D8E8);
+                g.drawString(HexFonts.ui(), Component.literal("• " + s), cx - 200, ly, 0xFFD0D8E8, false);
             } else {
-                g.drawString(HexFonts.ui(), Component.literal("• " + s), cx - 200, ly, 0xFF8FA6C8);
+                g.drawString(HexFonts.ui(), Component.literal("• " + s), cx - 200, ly, 0xFF8FA6C8, false);
             }
         }
         this.lastListTop = listTop;

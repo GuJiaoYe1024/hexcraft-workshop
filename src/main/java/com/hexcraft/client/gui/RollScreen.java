@@ -248,23 +248,23 @@ public class RollScreen extends HexScaledScreen {
 
             // v0.6.5 已拥有角标：重复抽取=叠等级（MAX_HEXTECH_LEVEL 上限），提前提示避免困惑
             if (cards[i].ownedLevel >= 0) {
-                g.drawCenteredString(HexFonts.ui(),
+                HexFonts.centered(g,
                         Component.translatable("hexcraft.gui.owned_tag", cards[i].ownedLevel),
-                        cx, cy + 20, (a << 24) | 0x00FFD28C);
+                        cx, cy + 20, (a << 24) | 0x00FFD28C, false);
             }
 
-            g.drawCenteredString(HexFonts.ui(), Component.literal(cards[i].nameStr), cx, cy + 42, (a << 24) | (color & 0x00FFFFFF));
+            HexFonts.centered(g, Component.literal(cards[i].nameStr), cx, cy + 42, (a << 24) | (color & 0x00FFFFFF), false);
             g.drawCenteredString(HexFonts.ui(), Component.literal(cards[i].nameStr), cx + 1, cy + 43, (a / 3) << 24 | (color & 0x00FFFFFF)); // 名称柔光
             g.fill(cardX[i] + 14, cy + 56, cardX[i] + CARD_W - 14, cy + 57, 0x33505F88);
             int dy = cy + 62;
             for (FormattedCharSequence line : cards[i].descLines) {
-                g.drawCenteredString(HexFonts.ui(), line, cx, dy, (a << 24) | 0x00C8D0E8);
+                HexFonts.centered(g, line, cx, dy, (a << 24) | 0x00C8D0E8, false);
                 dy += 11;
                 if (dy > cy + CARD_H - 6) break;
             }
             // v0.6.2 海克斯卡叠层标签后缀（运行时拼接【叠层：xxx｜xxx｜xxx】）
             if (cards[i].tagSuffix != null) {
-                g.drawCenteredString(HexFonts.ui(), cards[i].tagSuffix, cx, dy + 2, (a << 24) | 0x008FA6C8);
+                HexFonts.centered(g, cards[i].tagSuffix, cx, dy + 2, (a << 24) | 0x008FA6C8, false);
             }
         }
 
@@ -282,13 +282,13 @@ public class RollScreen extends HexScaledScreen {
                 line = line.copy().append(Component.translatable("hexcraft.gui.pity_prismatic",
                         Math.max(0, pP - msg.pityPrismatic)));
             }
-            g.drawCenteredString(HexFonts.ui(), line, centerX, cardY + CARD_H + 5, 0xFFC8D0E8);
+            HexFonts.centered(g, line, centerX, cardY + CARD_H + 5, 0xFFC8D0E8, false);
         }
         // v0.6.3 选中提示（确认模式）：选中卡底部显示提示条
         if (selectedIdx >= 0 && HexConfig.CONFIRM_SELECT.get()) {
             int cx = cardX[selectedIdx] + CARD_W / 2;
-            g.drawCenteredString(HexFonts.ui(), Component.translatable("hexcraft.gui.selected_hint"),
-                    cx, cardY + cards[selectedIdx].dy + CARD_H - 14, 0xFFFFFFFF);
+            HexFonts.centered(g, Component.translatable("hexcraft.gui.selected_hint"),
+                    cx, cardY + cards[selectedIdx].dy + CARD_H - 14, 0xFFFFFFFF, false);
         }
     }
 
@@ -367,11 +367,11 @@ public class RollScreen extends HexScaledScreen {
             }
             // 稀有度缎带
             g.fill(x1, y1, x1 + w2, y1 + 16, (a << 24) | (color & 0x00FFFFFF));
-            g.drawCenteredString(HexFonts.ui(),
-                    label == null ? "" : label, cx, y1 + 4, (a << 24) | 0x00101018);
+            HexFonts.centered(g,
+                    label == null ? "" : label, cx, y1 + 4, (a << 24) | 0x00101018, false);
             // 图标（菱形晶核）
-            g.drawCenteredString(HexFonts.ui(), "◆", cx, y1 + 22,
-                    (a << 24) | (color & 0x00FFFFFF));
+            HexFonts.centered(g, "◆", cx, y1 + 22,
+                    (a << 24) | (color & 0x00FFFFFF), false);
             // v0.6.3 选中态：底部白色选中条
             if (selected) {
                 g.fill(x1 + 20, y1 + h2 - 4, x1 + w2 - 20, y1 + h2 - 2, 0xFFFFFFFF);
@@ -398,8 +398,8 @@ public class RollScreen extends HexScaledScreen {
             g.fill(getX() - 1, yy - 1, getX() + width + 1, yy + height + 1, a << 24 | (col & 0x00FFFFFF));
             g.fill(getX(), yy, getX() + width, yy + height, a * 240 / 255 << 24 | 0x00151B33);
             int textCol = isHover(mx, my, this) ? 0xFFFFFFFF : 0xFFC8D0E8;
-            g.drawCenteredString(HexFonts.ui(), this.getMessage(),
-                    getX() + width / 2, yy + (height - 8) / 2, a << 24 | (textCol & 0x00FFFFFF));
+            HexFonts.centered(g, this.getMessage(),
+                    getX() + width / 2, yy + (height - 8) / 2, a << 24 | (textCol & 0x00FFFFFF), false);
         }
     }
 

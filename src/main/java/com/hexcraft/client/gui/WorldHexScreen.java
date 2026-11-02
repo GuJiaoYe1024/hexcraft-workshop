@@ -47,8 +47,8 @@ public class WorldHexScreen extends HexScaledScreen {
             g.fill(getX(), getY(), getX() + width, getY() + 1, highlight ? 0xFFFFC94A : 0xFF4AC7FF);
             // 当前页左侧竖亮条
             if (highlight) g.fill(getX(), getY() + 3, getX() + 2, getY() + height - 3, 0xFFFFC94A);
-            g.drawCenteredString(HexFonts.ui(), this.getMessage(),
-                    getX() + width / 2, getY() + (height - 8) / 2, text);
+            HexFonts.centered(g, this.getMessage(),
+                    getX() + width / 2, getY() + (height - 8) / 2, text, false);
         }
     }
 
@@ -217,7 +217,7 @@ public class WorldHexScreen extends HexScaledScreen {
         int wMax = ClientDataStore.worldMaxPerCategory;
         Component actText = Component.translatable("hexcraft.gui.world_active_count",
                 actTotal, wMax > 0 ? wMax : "\u221E");
-        g.drawString(HexFonts.ui(), actText, this.guiW() - 30 - HexFonts.ui().width(actText), 16, 0xFF9FB6FF);
+        g.drawString(HexFonts.ui(), actText, this.guiW() - 30 - HexFonts.ui().width(actText), 16, 0xFF9FB6FF, false);
 
         // 左侧栏装饰
         g.fill(SIDEBAR_X - 8, top + 2, SIDEBAR_X + SIDEBAR_W + 8, top + 70, 0xAA0B1530);
@@ -239,9 +239,9 @@ public class WorldHexScreen extends HexScaledScreen {
             g.fill(bx, by + blockH(contentH()) - 1, bx + blockW(), by + blockH(contentH()), 0x882A5DB0);
             // 标题条：分类名（左）+ 激活计数（右）
             Component catTitle = Component.translatable("hexcraft.worldhex.category." + cat);
-            g.drawString(HexFonts.ui(), catTitle, bx + 6, by + 4, 0xFF9FB6FF);
+            g.drawString(HexFonts.ui(), catTitle, bx + 6, by + 4, 0xFF9FB6FF, false);
             g.drawString(HexFonts.ui(), Component.literal(list.size() + "/" + (max > 0 ? max : "∞")),
-                    bx + blockW() - 8 - HexFonts.ui().width(Component.literal("00/00")), by + 4, 0xFF6A7B96);
+                    bx + blockW() - 8 - HexFonts.ui().width(Component.literal("00/00")), by + 4, 0xFF6A7B96, false);
 
             // 条目：只显示名字（稀有度色），悬停才显示介绍（v0.4.5）
             int row = 0;
@@ -254,7 +254,7 @@ public class WorldHexScreen extends HexScaledScreen {
                 if (HexFonts.ui().width(nstr) > nameW()) {
                     nstr = HexFonts.ui().plainSubstrByWidth(nstr, nameW()) + "…";
                 }
-                g.drawString(HexFonts.ui(), nstr, x, y + 3, color);
+                g.drawString(HexFonts.ui(), nstr, x, y + 3, color, false);
                 // hover 提示：名字 + 稀有度类型 + 描述
                 if (mx >= x - 2 && mx <= x + itemW() && my >= y - 1 && my <= y + rowH() - 1) {
                     List<Component> tip = new ArrayList<>();
@@ -268,7 +268,7 @@ public class WorldHexScreen extends HexScaledScreen {
             }
             if (list.isEmpty()) {
                 g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.world_empty"),
-                        bx + 8, eTop + 4, 0xFF6A7B96);
+                        bx + 8, eTop + 4, 0xFF6A7B96, false);
             }
         }
         this.renderWidgets(g, mx, my, pt);
