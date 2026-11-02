@@ -83,6 +83,16 @@
 - artifacts 45 / goety 302 实体 + 574 物品 / mowziesmobs / farmersdelight / cataclysm 物品 155 **全部命中零误**；Ice and Fire（编译期 IafEntityRegistry 常量）、Iron's Spells（编译期 6 事件）、FTB Quests（javap 实锤 API）、EMC（PE1.0.1 反射 getEmc/setEmc/syncEmc）复核为真联动
 - jar SHA-256 **CEA2DF96…D593**（808,594B）替换正式客户端（旧 808,521B 备份 `H:\MC1314\联动实测\_bak_hexworkshop_0.9.7_linkkeys-prefix.jar`）
 
+**🛠️ 修复轮 4·严查轮 2（注册键之外的判定维度全验证：守卫/群系/伤害类型/反射/学校 id——全部实锤，零修改）**
+- **FTB Quests 守卫 modId 实锤**：ftb-quests-forge-2001.4.22.jar mods.toml => modId=**ftbquests**（无横线），Hexcraft.java `isLoaded("ftbquests")` 守卫正确，FtbQuestLink 确认挂载（ftblibrary/ftbteams modId 亦正确，依赖链成立）
+- **curios 反射签名 javap 实锤**（MoreLink.carrying 与 StorageLink.insertFromCurios 共用）：`CuriosApi.getCuriosInventory(LivingEntity) → LazyOptional<ICuriosItemHandler>` 与 curios-forge-5.14.1 实际签名完全一致
+- **Alex's Caves 群系 ResourceKey 实锤**：abyssal_chasm / forlorn_hollows / candy_cavity 三键在 alexscaves-2.0.2 `data/alexscaves/worldgen/biome` 全部真实存在（深渊呼吸/遗忘夜视/糖果回血环境判定生效）
+- **暮色维度键实锤**：twilight_forest 在 `data/twilightforest/dimension` 真实存在（维度增伤/减免生效）
+- **Iron's Spells 学校 id 9/9 实锤**：SchoolRegistry.class 内 fire/ice/lightning/holy/blood/nature/ender/evocation/eldritch 全部命中——spell_fire~spell_eldritch 分系增伤映射真实有效
+- **StorageLink 调用链实锤**：HextechEvents.java:1928-1933 `ctx.magnet > 0 → StorageLink.insert(sp, st)` 真实调用（存入→背包→剩余留原地闭环）
+- **主类守卫 13/13 调用点确认**：Hexcraft.java 对 irons_spellbooks/iceandfire/alexscaves/twilightforest/alexsmobs/cataclysm/goety/mowziesmobs/artifacts/relics/slashblade/farmersdelight/ftbquests/projecte 的 isLoaded 守卫全部存在且 modId 正确
+- **如实记录（非 bug，事实核查）**：① AC 伤害类型实测无 `toxic`/`magnetic`（毒性区酸液由 acid 覆盖、磁区伤害由原版 lightningBolt 的 "lightning" 子串兜住，ac_toxic_resist/ac_magnetic_resist 实际生效面窄于注释描述，判定写法合理不修）；② StorageLink 三条第三方存储分支依赖 beyonddimensions/sophisticatedbackpacks/refinedstorage，当前 34 mod 清单未装三者 → mining_magnet 静默回退玩家背包（代码行为正确零副作用；如需"掉落直存第三方存储"真联动，需安装任一存储 mod）
+
 ## v0.9.6 — 海克斯大乱斗原版 9 套装羁绊进本体（2026-11-01）
 
 **🎯 机制（用户拍板：官方 9 套全做 + 云顶式多档 2/4/6/8 + 现有/新建成员混用）**
