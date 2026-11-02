@@ -1,3 +1,16 @@
+Hexcraft Workshop v0.9.8 - Storage three-brother REAL integration + execute_pct dead-key activated + full re-audit clean
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+FIX ROUND 5 (v0.9.8 - StorageLink REAL LANDING: Beyond Dimensions / Sophisticated Backpacks / Refined Storage):
+- WITH THE 3 STORAGE MODS INSTALLED (user installed them and asked to re-verify), the BD and SB branches were proven BROKEN at runtime: `UnifiedStorage` implements the `IStackHandler` INTERFACE (a sibling of StackHandler, not a subclass), and the old code took the Method from the concrete class but invoked it on the interface instance -> IllegalArgumentException every call -> both branches were permanently and silently OFF. Fixed by resolving the methods from the interfaces (`IStackHandler.insert/getStackByKey` for BD, `IItemHandlerSimpleInserter.insertItem` for SB). Refined Storage branch verified matched (IRSAPI -> NetworkManager -> INetwork.insertItem + Action.PERFORM). The magnet route (minecraft.combatsetting.magnet > 0 -> StorageLink.insert -> backpack/RS -> leftovers stay on the ground) is now truly live end to end.
+
+FIX ROUND 6 (v0.9.8 - execute_pct dead key activated + full re-audit, zero remaining issues):
+- EXECUTE_PCT IS NOW REAL: the v0.8.8 percentage-drain mechanic (hit adds %max-health + %current-health damage, weights EXECUTE_PCT_MAX=0.5 / CUR=1.0) had code and config but NO data source - none of the 760 JSONs carried execute_pct, so it NEVER fired. Per your approved plan: 7 JSONs now mount execute_pct (hex_execute_gold 0.02 / hex_execute_haste 0.03 / hex_execute_shadow 0.05 / hex_executioner 0.02 / hex_executioner_eternal 0.02 / hex_collector 0.01 / equip_collector 0.05), matching the execute threshold-kill family. Verified: token hits 7/7, all JSON valid, new client jar replaced.
+- FULL RE-AUDIT RESULTS (kept going until nothing left): reverse dead keys 0 (the 4 zero-text-reference candidates combat_damage_spur / combat_shield_surge / tick_damage_wax / timed_multi_aspect are stack-driven hexes - the generic stack manager consumes them dynamically by stack.key, HextechEvents:1372); combo-bond effects 331/331 consumed (7 via the eff()/eff.getOrDefault() path, 5 are hex-grant tokens); equipment tokens 0 orphans; FTB quest tokens all inside the 4 recognized keys (bounty/coin_bonus/xp_bonus/random_loot); forge event affixes 17/17 targets actually requested; JSON mods attrs 9/9 actually injected; EMC direct-charge chain, FTB link mounting and tacz branch re-verified clean.
+- BUILD-DEP CLEANUP: Iron's Spells compile-only jar now points at the SAME 3.16.3 the live client runs (was 3.16.2 from an old folder) - compile-time API == runtime API, no mismatch risk.
+
 Hexcraft Workshop v0.9.7 - Real ARAM set MECHANICS, 5 new Origin-Hunt bonds, UI/animation/code polish
 =============================================================================
 

@@ -1,3 +1,20 @@
+## v0.9.8 — 严查轮 3/4：存储三兄弟真落地 + execute_pct 死键落实 + 全量复核（2026-11-02）
+
+**🔧 严查轮 3（用户装好存储 mod 后 StorageLink 落地验证，commit aad1060）**
+- 正式客户端新增 4 个存储 mod（超越维度/精妙背包/精妙核心/精致存储），modId 全匹配守卫（beyonddimensions/sophisticatedbackpacks/sophisticatedcore/refinedstorage）
+- BD/SB 分支 javap 实锤**真 bug**：`UnifiedStorage` 继承链是 `AbstractUnorderedStackHandler implements IStackHandler`（与 StackHandler 实现类**平级、非父子**），原代码从实现类拿 Method 却 invoke 接口实例 → 运行期 IllegalArgumentException → **BD 分支永久静默关闭**；SB 同理（getInventoryForInputOutput() 返回 ITrackedContentsItemHandler，插入方法声明在 IItemHandlerSimpleInserter 接口）
+- 已改从接口拿方法（StorageLink.java：BD 用 IStackHandler.insert/getStackByKey、SB 用 IItemHandlerSimpleInserter.insertItem）；RS 分支全匹配未动；磁吸链路（magnet>0 → StorageLink.insert → 背包/RS → 剩余留原地）端到端真正生效
+
+**🔧 严查轮 4（"看看还有什么要更新修复的"，commit b1642cb + v0.9.8，按用户拍板方案 1）**
+- **execute_pct 死键落实**：v0.8.8 百分比削血机制（命中按目标最大生命%+当前生命%追加伤害，权重 EXECUTE_PCT_MAX=0.5/CUR=1.0）有代码有配置但 **760 个 JSON 无一处挂 execute_pct → 永不触发**；按拍板方案 1 给 7 个 JSON 补挂（hex_execute_gold 0.02 / hex_execute_haste 0.03 / hex_execute_shadow 0.05 / hex_executioner 0.02 / hex_executioner_eternal 0.02 / hex_collector 0.01 / equip_collector 0.05），与 execute 斩杀配套；验证 token 命中 7/7、JSON 全合法
+- 复核无问题项：PE EMC 直充链（getEMC/setEmc(BigInteger)/syncEmc 签名全匹配）、FtbQuestLink 挂载安全与消费键对齐、tacz 分支消费键与 JSON 对齐
+
+**🔧 全量复核（v0.9.8，查到没问题为止）**
+- 反向死键 0：4 个零文本引用候选（combat_damage_spur/combat_shield_surge/tick_damage_wax/timed_multi_aspect）均为叠层海克斯——通用叠层管理器按 stack.key 动态消费（HextechEvents:1372 token.equals(stack.key)），静态脚本误报
+- 组合羁绊 effects 331 键全消费：12 个"未消费"候选全部定性（7 个经 eff()/eff.getOrDefault() 路径消费：iaf_dragon_damage/tf_snow_queen_damage/regen/stand_power/tick_gain/relic_drop/spell_power；5 个 hex_ 前缀为"授予海克斯"token 非效果键）
+- 装备 token 零孤儿；FTB quest token 全部落在 FtbQuestLink 4 键（bounty/coin_bonus/xp_bonus/random_loot）内；锻造词条 FORGE_EVENT_MODS 17 目标键全被请求；JSON mods 属性 9 种全注入
+- **构建依赖对齐**：Iron's Spells compileOnly 由旧目录 3.16.2 改为正式客户端 3.16.3（编译期 API 与运行期一致，消除 mismatch 风险）；构建 21s、jar 808,657B SHA DDAAD817…（替换 0.9.7，旧版备份 _bak_hexworkshop_0.9.7_pre098.jar）
+
 ## v0.9.7 — 大乱斗原版羁绊机制化 + 逆原 5 新羁绊 + 界面/动画/代码优化（2026-11-01）
 
 **🎯 本体：大乱斗 9 套升级为云顶式真实机制（用户拍板：机制化 + 允许新增专属 hook）**
