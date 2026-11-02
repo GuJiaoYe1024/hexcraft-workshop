@@ -7,6 +7,8 @@ BUILT-IN CHINESE FONT (Noto Sans SC, SIL OFL 1.1):
 - ROOT CAUSE: every Hexcraft screen was rendered with the vanilla font (this.font / mc.font), so Chinese fell back to the vanilla unifont bitmap - thin, sparse and hard to read.
 - The mod now ships a subset of Noto Sans SC (Source Han Sans, open-source OFL license): GB2312 full character set (6,763 chars) + every character used by both language files + common symbols = 7,559 glyphs. All Hexcraft interfaces render with it - Chinese is now much clearer and fuller.
 - HOW: assets/hexworkshop/font/hexfont.json (ttf provider, size 11 / oversample 8) + a HexFonts.ui() custom Font that redirects the default font id to the built-in font set. ONLY text drawn by Hexcraft's own screens is affected - chat, vanilla UI and the Force Unicode Font option are untouched.
+- RUNTIME LOADING (two hard parts fixed): the ttf provider resolves "file" as <ns>:font/<rest>, so the physical file lives in font/fonts/ and the declaration is "hexworkshop:fonts/hexfont.ttf"; Forge 1.20.1 remaps classes to srg names at runtime, so the reflection field must use f_94999_ (the official name "fontSets" does not exist at runtime). Log evidence: fontSets size=8 including hexworkshop:hexfont.
+- LOOKS TUNED AFTER YOUR FEEDBACK: grayscale analysis of your screenshots proved the font was already live (52-127 gray levels with anti-aliased edges vs unifont's 13-19 hard-edge levels) - the real pain point was the thin Regular 400 weight at 11px. The built-in font is now Semibold wght=600 for a fuller, smoother look (hexfont.ttf 2,432,148B).
 - LICENSE: the OFL 1.1 license text ships inside the jar (OFL-NotoSansSC.txt).
 - JAR SIZE: 808KB -> 2.3MB (+1.5MB).
 
@@ -14,7 +16,12 @@ ENGLISH TRANSLATION POLISH:
 - Fixed 57 keys that were half-Chinese or untranslated: 51 link-mod config keys (Artifacts / Cataclysm / Farmer's Delight / FTB Quests / Goety / Relics / SlashBlade / Mowzie's Mobs names and tooltips are now fully English) and 6 equipment spell_note entries (spell descriptions translated, e.g. "+3 max mana per level, 40% mana shield").
 - Polished the recharge rate line for readability (Rate: Emerald 64, Copper 2, Iron 1, Gold 8, Diamond 32, Netherite 224).
 - Verified: zh_cn 2,500 keys = en_us 2,500 keys, zero missing/extra, placeholders consistent, both JSON valid.
-- Build 19s, jar 2,321,506B SHA 0665C835... (0.9.9 replaced, backup _bak_hexworkshop_0.9.9_pre0910.jar).
+
+SHADOW PASS (your call: "remove the coin balance shadow, keep the rest as you proposed"):
+- The shadows were NOT a design choice - they are vanilla Minecraft behavior: GuiGraphics.drawString/drawCenteredString default to dropShadow=true and the mod never passed false. unifont's thin strokes hid the shadow; Noto's fuller strokes made it stand out.
+- REMOVED per your spec: coin balance, all content-area body text, standalone screen body text. KEPT: left nav tabs, buttons, screen titles.
+- Implementation: content text now passes shadow=false; drawCenteredString has no 6-arg boolean overload on 1.20.1, so centered text goes through HexFonts.centered(...) (manual centering + no shadow). HexLayoutScreen / HexHealthOverlay / HexTipOverlay titles and HUD keep their original shadow.
+- Build 28s, jar 2,336,167B SHA 1C748C4C... (previous 0.9.10 build replaced, backup _bak_hexworkshop_0.9.10_old.jar).
 
 Hexcraft Workshop v0.9.9 - EMC recharge pricing reworked: exchange rate anchored to real EMC values + forge prices raised
 =============================================================================
