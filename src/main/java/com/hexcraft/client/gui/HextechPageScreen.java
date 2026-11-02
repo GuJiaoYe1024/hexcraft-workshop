@@ -351,13 +351,13 @@ public class HextechPageScreen extends HexScaledScreen {
 
         // 标题（顶左上，发光双层）+ 余额（右对齐内容区右缘，不压标题、不超界面）
         String title = Component.translatable("hexcraft.gui.page_title").getString();
-        g.drawString(this.font, title, x + 12, y + 9, 0xFF1A2340);
-        g.drawString(this.font, title, x + 11, y + 8, 0xFFE8F6FF);
+        g.drawString(HexFonts.ui(), title, x + 12, y + 9, 0xFF1A2340);
+        g.drawString(HexFonts.ui(), title, x + 11, y + 8, 0xFFE8F6FF);
         Component coinText = Component.translatable("hexcraft.gui.coins", ClientDataStore.coins);
-        int coinW = this.font.width(coinText);
+        int coinW = HexFonts.ui().width(coinText);
         int coinRight = cx() + 226;                    // 内容区右缘
         int coinX = Math.max(x + 90, coinRight - coinW); // 不侵入标题区（窄屏右对齐自适应）
-        g.drawString(this.font, coinText, coinX, y + 10, 0xFFFFD700);
+        g.drawString(HexFonts.ui(), coinText, coinX, y + 10, 0xFFFFD700);
         // 余额光点装饰（文字右侧留 5px，不再压住文字）
         g.fill(coinX + coinW + 4, y + 12, coinX + coinW + 6, y + 14, 0xFFFFD700);
 
@@ -372,12 +372,12 @@ public class HextechPageScreen extends HexScaledScreen {
         else renderRecharge(g, y);
         // 自绘列表 hover 提示：最后绘制，盖在列表上方
         if (hoverTip != null && !hoverTip.isEmpty()) {
-            g.renderComponentTooltip(this.font, hoverTip, mx, my);
+            g.renderComponentTooltip(HexFonts.ui(), hoverTip, mx, my);
         }
     }
 
     private void renderOverview(GuiGraphics g, int y) {
-        g.drawString(this.font, Component.translatable("hexcraft.gui.overview_title"), cx() + 4, y + 36, 0xFF9FE4FF);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.overview_title"), cx() + 4, y + 36, 0xFF9FE4FF);
         // 全部内容（基础/隐藏/叠层三框）整体滚动，保证显示全、不出边框
         double s = uiScale();
         g.enableScissor((int) ((cx() + 2) * s), (int) ((y + 46) * s),
@@ -610,7 +610,7 @@ public class HextechPageScreen extends HexScaledScreen {
         // 现改为仅未滚到底时显示、滚到底自动消失，浅色小字叠压风险可接受（与海克斯/装备页 ▽ 同款）。
         int ms = maxAttrScroll();
         if (ms > 0 && attrScroll < ms) {
-            g.drawString(this.font, "\u25BC", cx() + 218, cy() + H - 34 - 10, 0xFF5A6A90);
+            g.drawString(HexFonts.ui(), "\u25BC", cx() + 218, cy() + H - 34 - 10, 0xFF5A6A90);
         }
     }
 
@@ -772,8 +772,8 @@ public class HextechPageScreen extends HexScaledScreen {
     /** v0.9.7 v2-A：羁绊页签——47 条全量图鉴（含未拥有），单列滚动；
      *  组头 原生(16)/新流派(11)/叠层专家(1)/逆原(10)/大乱斗(9)；行色=档位色阶（白银浅金深金），满员=棱彩紫 */
     private void renderBonds(GuiGraphics g, int y) {
-        g.drawString(this.font, Component.translatable("hexcraft.gui.bonds_title"), cx() + 4, y + 36, 0xFF9FE4FF);
-        g.drawString(this.font, Component.translatable("hexcraft.gui.bonds_hint"), cx() + 4, y + 48, 0xFF6FA8FF);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.bonds_title"), cx() + 4, y + 36, 0xFF9FE4FF);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.bonds_hint"), cx() + 4, y + 48, 0xFF6FA8FF);
         int top = y + 62;
         java.util.List<BondRow> rows = bondRows();
         int ms = maxBondScroll();
@@ -786,7 +786,7 @@ public class HextechPageScreen extends HexScaledScreen {
                 lastGroup = br.group;
                 if (gy >= top - 14 && gy <= top + 186) {
                     g.fill(cx() + 4, gy, cx() + 226, gy + 13, 0x33000000);
-                    g.drawString(this.font, Component.translatable("hexcraft.gui.bonds_group" + br.group),
+                    g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.bonds_group" + br.group),
                             cx() + 6, gy + 1, GROUP_COLORS[br.group]);
                 }
                 line++;
@@ -806,11 +806,11 @@ public class HextechPageScreen extends HexScaledScreen {
                     TIER_COLORS[Math.max(0, Math.min(br.tier - 1, TIER_COLORS.length - 1))]));
             // 名称（档位色：未拥有灰、已激活白→银→浅金→深金、满员棱彩紫）+ 状态右对齐
             String nameStr = Component.translatable(br.nameKey()).getString();
-            while (this.font.width(nameStr) > 150 && nameStr.length() > 1) nameStr = nameStr.substring(0, nameStr.length() - 1);
+            while (HexFonts.ui().width(nameStr) > 150 && nameStr.length() > 1) nameStr = nameStr.substring(0, nameStr.length() - 1);
             int rowColor = maxTier ? 0xFFC77DFF
                     : (ownedAny ? TIER_COLORS[Math.max(0, Math.min(br.tier - 1, TIER_COLORS.length - 1))] : 0xFF5A6A90);
-            g.drawString(this.font, nameStr, cx() + 6, ry + 1, rowColor);
-            g.drawString(this.font, status, cx() + 226 - this.font.width(status), ry + 1,
+            g.drawString(HexFonts.ui(), nameStr, cx() + 6, ry + 1, rowColor);
+            g.drawString(HexFonts.ui(), status, cx() + 226 - HexFonts.ui().width(status), ry + 1,
                     maxTier ? 0xFFC77DFF : (ownedAny ? 0xFFE8C36A : 0xFF5A6A90));
             // hover：成员 + 各档 + 下一档缺数 + 棱彩
             int hc = hoverColumn(hoverX, hoverY, ry);
@@ -843,22 +843,22 @@ public class HextechPageScreen extends HexScaledScreen {
 
     /** 充值页渲染：6 材质两行式（标签在上、按钮在下，按钮按金属配色）+ 晶币→绿宝石行 + 规则提示 */
     private void renderRecharge(GuiGraphics g, int y) {
-        g.drawString(this.font, Component.translatable("hexcraft.gui.recharge_title"), cx() + 4, y + 36, 0xFF9FE4FF);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_title"), cx() + 4, y + 36, 0xFF9FE4FF);
         // 汇率合并单行（短名+比例，不超界面）
-        g.drawString(this.font, Component.translatable("hexcraft.gui.recharge_rate"), cx() + 4, y + 48, 0xFF6FA8FF);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_rate"), cx() + 4, y + 48, 0xFF6FA8FF);
         // 分隔线
         g.fill(cx() + 4, y + 58, cx() + 228, y + 59, 0x33505F88);
         // 6 材质标签（每材质块 30px：标签在上，按钮在下；标签用对应金属色）
         int[] tcols = {0xFF55FF55, 0xFFFF8C00, 0xFFD8D8D8, 0xFFFFD700, 0xFF4DE6FF, 0xFFC77DFF};
         int ly = y + 64;
         for (int m = 0; m < 6; m++) {
-            g.drawString(this.font, Component.translatable("hexcraft.gui.recharge_m" + m), cx() + 4, ly, tcols[m]);
+            g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_m" + m), cx() + 4, ly, tcols[m]);
             ly += 30;
         }
         // 晶币 → 绿宝石 标签（金色；按钮行在其下 8px）
-        g.drawString(this.font, Component.translatable("hexcraft.gui.recharge_coin_label"), cx() + 4, y + 64 + 6 * 30 + 6, 0xFFFFD700);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_coin_label"), cx() + 4, y + 64 + 6 * 30 + 6, 0xFFFFD700);
         // 规则提示（短版，单行不超界面）
-        g.drawString(this.font, Component.translatable("hexcraft.gui.recharge_hint"), cx() + 4, y + 64 + 6 * 30 + 34, 0xFF5A6A90);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_hint"), cx() + 4, y + 64 + 6 * 30 + 34, 0xFF5A6A90);
     }
 
     /** v0.9.5：自绘列表 hover 列判定统一（0=未命中行 / 1=左列 / 2=右列），替换 7 处重复行列判断；
@@ -878,14 +878,14 @@ public class HextechPageScreen extends HexScaledScreen {
     private void drawAttrRow(GuiGraphics g, int top, int idx, Component name, String value, int valueColor) {
         int colX = cx() + 6 + (idx % 2 == 0 ? 0 : 112);
         int row = idx / 2;
-        g.drawString(this.font, name, colX, top + row * ROW_H, 0xFFAAB6D8);
-        g.drawString(this.font, value, colX + 66, top + row * ROW_H, valueColor);
+        g.drawString(HexFonts.ui(), name, colX, top + row * ROW_H, 0xFFAAB6D8);
+        g.drawString(HexFonts.ui(), value, colX + 66, top + row * ROW_H, valueColor);
     }
 
     /** 区块标题（跨两列居中） */
     private void drawSectionTitle(GuiGraphics g, int top, int idx, Component name) {
         int row = idx / 2;
-        g.drawString(this.font, name, cx() + 6, top + row * ROW_H, 0xFF9FE4FF);
+        g.drawString(HexFonts.ui(), name, cx() + 6, top + row * ROW_H, 0xFF9FE4FF);
     }
 
     private String fmtEffect(double v, boolean percent) {
@@ -946,11 +946,11 @@ public class HextechPageScreen extends HexScaledScreen {
     private void renderHexes(GuiGraphics g, int y) {
         // v0.6.11 已拥有数量 + 栏位占用/上限（服务端权威 occSlots/hexLimit；满员红色提示）
         // v0.8.0 图鉴统计条：已拥有 / 当前分类可获取总数
-        g.drawString(this.font, Component.translatable("hexcraft.gui.hex_count", ClientDataStore.hexes.size(), totalHexCount()), cx() + 4, y + 68, 0xFF9FE4FF);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.hex_count", ClientDataStore.hexes.size(), totalHexCount()), cx() + 4, y + 68, 0xFF9FE4FF);
         String limStr = ClientDataStore.hexLimit >= Integer.MAX_VALUE ? "\u221E" : String.valueOf(ClientDataStore.hexLimit);
         Component slotText = Component.translatable("hexcraft.gui.hex_slot_bar", ClientDataStore.occSlots, limStr);
         boolean full = ClientDataStore.hexLimit < Integer.MAX_VALUE && ClientDataStore.occSlots == ClientDataStore.hexLimit;
-        g.drawString(this.font, slotText, cx() + 226 - this.font.width(slotText), y + 68, full ? 0xFFFF6B6B : 0xFFFFD28C);
+        g.drawString(HexFonts.ui(), slotText, cx() + 226 - HexFonts.ui().width(slotText), y + 68, full ? 0xFFFF6B6B : 0xFFFFD28C);
         int top = y + 78;
         int bottom = y + 256;
         java.util.List<PlayerData.HexEntry> list = visibleHexes();
@@ -977,15 +977,15 @@ public class HextechPageScreen extends HexScaledScreen {
                 }
                 name = name.copy().append(st.toString());
             }
-            g.drawString(this.font, name, cx() + 6, ly, rarityColor(rk));
+            g.drawString(HexFonts.ui(), name, cx() + 6, ly, rarityColor(rk));
             // 来源角标：联动 mod 内容（原版不标）——TACZ 青色 / 其它联动金色，一眼区分内容来源
             // v0.8.4：角标动态定位（名字后 4px），超右缘则不显示——第二批联动 modid 较长（CATACLYSM/FARMERSDELIGHT 等）固定 x 会溢出
             String src = HextechRegistry.sourceOf(h.id);
             if (!"vanilla".equals(src)) {
-                int tagX = cx() + 6 + this.font.width(name) + 4;
+                int tagX = cx() + 6 + HexFonts.ui().width(name) + 4;
                 String tag = src.toUpperCase(java.util.Locale.ROOT);
-                if (tagX + this.font.width(tag) <= cx() + 226) {
-                    g.drawString(this.font, tag, tagX, ly,
+                if (tagX + HexFonts.ui().width(tag) <= cx() + 226) {
+                    g.drawString(HexFonts.ui(), tag, tagX, ly,
                             "tacz".equals(src) ? 0xFF4DE6FF : 0xFFFFD700);
                 }
             }
@@ -1011,7 +1011,7 @@ public class HextechPageScreen extends HexScaledScreen {
             ly += HEX_ROW_H;
         }
         if (list.isEmpty()) {
-            g.drawString(this.font, Component.translatable("hexcraft.gui.cat_empty"), cx() + 6, top + 4, 0xFF5A6A90);
+            g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.cat_empty"), cx() + 6, top + 4, 0xFF5A6A90);
         }
         // v0.9.3 修正6：滚动提示统一移除（底部不再有「滚动查看更多」文字叠压内容）
     }
@@ -1131,13 +1131,13 @@ public class HextechPageScreen extends HexScaledScreen {
         String forgeText = ClientDataStore.maxForges <= 0
                 ? Component.translatable("hexcraft.gui.forge_done", ClientDataStore.forgesUsed).getString()
                 : Component.translatable("hexcraft.gui.forge_count", ClientDataStore.forgesUsed, ClientDataStore.maxForges).getString();
-        g.drawString(this.font, forgeText, cx() + 4, y + 36, 0xFF9FE4FF);
+        g.drawString(HexFonts.ui(), forgeText, cx() + 4, y + 36, 0xFF9FE4FF);
         // v0.4.4：标题上移 5px（y+81→y+76），避免与下方「白银」分组框顶部重叠
-        g.drawString(this.font, Component.translatable("hexcraft.gui.forged"), cx() + 4, y + 76, 0xFF9FE4FF);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.forged"), cx() + 4, y + 76, 0xFF9FE4FF);
         // v0.4.3：分类分组框（科技风：框体 + 档位色条 + 组名 + 计数），组内两列排布
         java.util.List<ForgeGroup> groups = forgeGroups();
         if (groups.isEmpty()) {
-            g.drawString(this.font, "--", cx() + 6, y + 91, 0xFF3A4668);
+            g.drawString(HexFonts.ui(), "--", cx() + 6, y + 91, 0xFF3A4668);
             return;
         }
         int top = y + 88;
@@ -1161,13 +1161,13 @@ public class HextechPageScreen extends HexScaledScreen {
             // 标题条：左侧档位色条 + 组名（档位色）+ v0.6.5 档位倍率提示 + 右侧词条计数
             g.fill(cx() + 3, ly + 3, cx() + 5, ly + 13, grp.color);
             Component tierNameC = Component.translatable("hexcraft.forge.tier." + grp.tierKey);
-            g.drawString(this.font, tierNameC, cx() + 8, ly + 3, grp.color);
+            g.drawString(HexFonts.ui(), tierNameC, cx() + 8, ly + 3, grp.color);
             // v0.6.5 档位倍率：组名右侧显示实际加成倍率（读运行时配置，与 tooltip 数值一致）
             double tierMultV = com.hexcraft.hextech.HextechRegistry.tierMult(grp.tierIdx);
             String multStr = "×" + fmt(tierMultV);
-            g.drawString(this.font, Component.literal(multStr),
-                    cx() + 8 + this.font.width(tierNameC) + 5, ly + 3, 0xFF7FD8FF);
-            g.drawString(this.font, Component.literal(grp.items.size() + " 条"), cx() + 178, ly + 3, 0xFF6A7B96);
+            g.drawString(HexFonts.ui(), Component.literal(multStr),
+                    cx() + 8 + HexFonts.ui().width(tierNameC) + 5, ly + 3, 0xFF7FD8FF);
+            g.drawString(HexFonts.ui(), Component.literal(grp.items.size() + " 条"), cx() + 178, ly + 3, 0xFF6A7B96);
             // 组内词条两列（组内索引分列，不跨组，标题不再挤占列位）；v0.4.4 行距 12→13 防文字挤压
             for (int i = 0; i < grp.items.size(); i++) {
                 Object[] it = grp.items.get(i);
@@ -1176,14 +1176,14 @@ public class HextechPageScreen extends HexScaledScreen {
                 if (iy < top) continue;
                 if (iy > bottom) break;
                 String nameStr = (String) it[0];
-                g.drawString(this.font, nameStr, colX, iy, 0xFFAAB6D8);
+                g.drawString(HexFonts.ui(), nameStr, colX, iy, 0xFFAAB6D8);
                 // v0.4.5：来源角标按词条名实际宽度动态定位（名字后 4px），不再固定 colX+100 侵入右列词条
                 // v0.9.0 C4：角标改为通用来源 tag（TACZ/IRONS/IAF…），不再写死 TACZ
                 String tagStr = (String) it[1];
                 if (tagStr != null) {
-                    int tagX = colX + this.font.width(nameStr) + 4;
-                    if (tagX + this.font.width(tagStr) <= colX + 110) {
-                        g.drawString(this.font, tagStr, tagX, iy, 0xFF4DE6FF);
+                    int tagX = colX + HexFonts.ui().width(nameStr) + 4;
+                    if (tagX + HexFonts.ui().width(tagStr) <= colX + 110) {
+                        g.drawString(HexFonts.ui(), tagStr, tagX, iy, 0xFF4DE6FF);
                     }
                 }
                 // hover 提示：悬停查看锻造词条具体效果（名称 + 实际加成 + 档位 + 描述 + 来源）
@@ -1282,14 +1282,14 @@ public class HextechPageScreen extends HexScaledScreen {
                 String rk = def != null ? def.rarity.key : "gold";
                 String icon = def != null && def.icon != null ? def.icon : "◆";
                 String nm = Component.translatable("hexcraft.equip." + eq.id + ".name").getString();
-                g.drawString(this.font, icon + " " + nm, cx() + 6, ly, rarityColor(rk));
+                g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 6, ly, rarityColor(rk));
                 // 来源角标：联动装备行尾角标（原版不标）；v0.8.4 动态定位防长 modid 溢出
                 String src = HextechRegistry.sourceOf(eq.id);
                 if (!"vanilla".equals(src)) {
-                    int tagX = cx() + 6 + this.font.width(icon + " " + nm) + 4;
+                    int tagX = cx() + 6 + HexFonts.ui().width(icon + " " + nm) + 4;
                     String tag = src.toUpperCase(java.util.Locale.ROOT);
-                    if (tagX + this.font.width(tag) <= cx() + 228) {
-                        g.drawString(this.font, tag, tagX, ly, 0xFF4DE6FF);
+                    if (tagX + HexFonts.ui().width(tag) <= cx() + 228) {
+                        g.drawString(HexFonts.ui(), tag, tagX, ly, 0xFF4DE6FF);
                     }
                 }
                 // hover 提示：悬停查看装备具体效果（名称 + 描述 + 卖价 + 来源）
@@ -1317,11 +1317,11 @@ public class HextechPageScreen extends HexScaledScreen {
                     hoverTip = tip;
                 }
             } else {
-                g.drawString(this.font, "--", cx() + 6, ly, 0xFF3A4668);
+                g.drawString(HexFonts.ui(), "--", cx() + 6, ly, 0xFF3A4668);
             }
             ly += 16;
         }
-        g.drawString(this.font, Component.translatable("hexcraft.gui.equip_hint"), cx() + 4, y + 200, 0xFF5A6A90);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.equip_hint"), cx() + 4, y + 200, 0xFF5A6A90);
     }
 
     /** v0.6.5 装备图鉴：全部装备（含未拥有）列表，可滚动；列=名称/已拥有 Lv/卖价，来源在悬停提示 */
@@ -1331,7 +1331,7 @@ public class HextechPageScreen extends HexScaledScreen {
         int ownedCnt = 0;
         for (String id : ids) if (ownedEquip(id) != null) ownedCnt++;
         Component gs = Component.translatable("hexcraft.gui.gallery_stat", ownedCnt, ids.size());
-        g.drawString(this.font, gs, cx() + 226 - this.font.width(gs), y + 72, 0xFF9FE4FF);
+        g.drawString(HexFonts.ui(), gs, cx() + 226 - HexFonts.ui().width(gs), y + 72, 0xFF9FE4FF);
         int top = y + 91;
         int bottom = y + 234;
         double s = uiScale();
@@ -1345,16 +1345,16 @@ public class HextechPageScreen extends HexScaledScreen {
             String icon = def != null && def.icon != null ? def.icon : "◆";
             String nm = Component.translatable("hexcraft.equip." + id + ".name").getString();
             g.fill(cx() + 3, ly - 1, cx() + 228, ly + 11, 0x18305080);
-            g.drawString(this.font, icon + " " + nm, cx() + 6, ly, rarityColor(rk));
+            g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 6, ly, rarityColor(rk));
             // 已拥有 Lv 标识
             PlayerData.EquipEntry owned = ownedEquip(id);
             if (owned != null) {
-                g.drawString(this.font, Component.translatable("hexcraft.gui.owned_tag", owned.level).getString(),
+                g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.owned_tag", owned.level).getString(),
                         cx() + 96, ly, 0xFFFFD28C);
             }
             // 卖价
             if (def != null && def.sell > 0) {
-                g.drawString(this.font, def.sell + "◆", cx() + 190, ly, 0xFF8FA6C8);
+                g.drawString(HexFonts.ui(), def.sell + "◆", cx() + 190, ly, 0xFF8FA6C8);
             }
             // hover 提示：名称 + 描述 + 来源 + 卖价 + 叠层标签
             if (def != null && hoverX >= cx() + 3 && hoverX <= cx() + 228 && hoverY >= ly - 1 && hoverY <= ly + 13) {
@@ -1384,7 +1384,7 @@ public class HextechPageScreen extends HexScaledScreen {
         g.disableScissor();
         // 滚动提示（仅内容超高时）
         if (ids.size() * 13 > bottom - top) {
-            g.drawString(this.font, "▽", cx() + 218, bottom - 10, 0xFF5A6A90);
+            g.drawString(HexFonts.ui(), "▽", cx() + 218, bottom - 10, 0xFF5A6A90);
         }
     }
 
@@ -1453,7 +1453,7 @@ public class HextechPageScreen extends HexScaledScreen {
                 g.fillGradient(getX() + 1, getY() + height - 1, getX() + width - 1, getY() + height, 0xFF4FD8FF, 0x227A6BFF); // 底部光带
             }
             int col = selected ? 0xFFFFFFFF : hot ? 0xFFDDE6FF : 0xFF9AA6C8;
-            g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font,
+            g.drawCenteredString(HexFonts.ui(),
                     this.getMessage(), getX() + width / 2, getY() + (height - 8) / 2, col);
         }
     }
@@ -1478,7 +1478,7 @@ public class HextechPageScreen extends HexScaledScreen {
             g.fillGradient(getX(), getY(), getX() + width, getY() + height,
                     hot ? 0x5530A8E0 : 0x331E6FE8, 0xCC10182E);
             int col = hot ? 0xFFFFFFFF : 0xFFC8D8F0;
-            g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font,
+            g.drawCenteredString(HexFonts.ui(),
                     this.getMessage(), getX() + width / 2, getY() + (height - 8) / 2, col);
         }
     }

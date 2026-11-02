@@ -24,7 +24,7 @@ public class EnemyHexScreen extends HexScaledScreen {
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, border);
             g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xFF1E3A66, 0xFF0B1530);
             g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF4AC7FF);
-            g.drawCenteredString(Minecraft.getInstance().font, this.getMessage(),
+            g.drawCenteredString(HexFonts.ui(), this.getMessage(),
                     getX() + width / 2, getY() + (height - 8) / 2, text);
         }
     }
@@ -43,35 +43,35 @@ public class EnemyHexScreen extends HexScaledScreen {
     protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
         int cx = this.guiW() / 2;
         Component title = Component.translatable("hexcraft.gui.enemy_hex_title");
-        g.drawCenteredString(this.font, title, cx, 12, 0xFFFFC94A);
-        int barW = this.font.width(title) + 40;
+        g.drawCenteredString(HexFonts.ui(), title, cx, 12, 0xFFFFC94A);
+        int barW = HexFonts.ui().width(title) + 40;
         g.fillGradient(cx - barW / 2, 24, cx + barW / 2, 25, 0xFFFFC94A, 0xFFC77DFF);
 
         int y = 44;
         // 机制说明（自动换行，最多 420px）
         Component desc = Component.translatable("hexcraft.gui.enemy_hex_desc");
-        for (net.minecraft.util.FormattedCharSequence line : this.font.split(desc, Math.min(420, this.guiW() - 60))) {
-            g.drawCenteredString(this.font, line, cx, y, 0xFFA9B4CC);
+        for (net.minecraft.util.FormattedCharSequence line : HexFonts.ui().split(desc, Math.min(420, this.guiW() - 60))) {
+            g.drawCenteredString(HexFonts.ui(), line, cx, y, 0xFFA9B4CC);
             y += 11;
         }
         y += 4;
         // 概率表一行
-        g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.enemy_hex_chance"), cx, y, 0xFFD0D8E8);
+        g.drawCenteredString(HexFonts.ui(), Component.translatable("hexcraft.gui.enemy_hex_chance"), cx, y, 0xFFD0D8E8);
         y += 14;
 
         // 池列表标题
-        g.drawString(this.font, Component.translatable("hexcraft.gui.enemy_hex_pool"),
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.enemy_hex_pool"),
                 cx - 200, y, 0xFF9FB6FF);
         y += 12;
         String[] poolKeys = {"fury", "swift", "bulwark", "shield", "regen"};
         for (String k : poolKeys) {
-            g.drawString(this.font, Component.translatable("hexcraft.gui.enemy_hex." + k),
+            g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.enemy_hex." + k),
                     cx - 196, y, 0xFFD0D8E8);
             y += 12;
         }
         y += 4;
         // 底部提示
-        g.drawString(this.font, Component.translatable("hexcraft.gui.enemy_hex_note"),
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.enemy_hex_note"),
                 cx - 200, y, 0xFF8FA6C8);
 
         this.renderWidgets(g, mx, my, pt);

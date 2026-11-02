@@ -62,10 +62,10 @@ public class RollScreen extends HexScaledScreen {
                 cards[idx].nameStr = Component.translatable("hexcraft.forge." + id + ".name").getString();
                 String descStr = Component.translatable("hexcraft.forge." + id + ".desc").getString()
                         .replace("{tierName}", tierName).replace("{displayValue}", real);
-                cards[idx].descLines = mc.font.split(Component.literal(descStr), CARD_W - 24);
+                cards[idx].descLines = HexFonts.ui().split(Component.literal(descStr), CARD_W - 24);
             } else {
                 cards[idx].nameStr = Component.translatable("hexcraft.hextech." + id + ".name").getString();
-                cards[idx].descLines = mc.font.split(Component.translatable("hexcraft.hextech." + id + ".desc"), CARD_W - 24);
+                cards[idx].descLines = HexFonts.ui().split(Component.translatable("hexcraft.hextech." + id + ".desc"), CARD_W - 24);
                 com.hexcraft.capability.PlayerData.HexEntry owned = ownedHex(id);
                 cards[idx].ownedLevel = owned == null ? -1 : owned.level;
                 cards[idx].tagSuffix = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(
@@ -217,8 +217,8 @@ public class RollScreen extends HexScaledScreen {
         } else {
             title = Component.translatable("hexcraft.gui.hex_title");
         }
-        g.drawCenteredString(this.font, title, centerX, cardY - 34, 0xFFFFFF);
-        int barW = this.font.width(title) + 40;
+        g.drawCenteredString(HexFonts.ui(), title, centerX, cardY - 34, 0xFFFFFF);
+        int barW = HexFonts.ui().width(title) + 40;
         g.fillGradient(centerX - barW / 2, cardY - 20, centerX + barW / 2, cardY - 19, 0xFF6FB1FF, 0xFF1E6FE8);
 
         // 入场动画：错峰浮入 + 淡入 + 缩放（悬停卡片轻微放大）
@@ -248,23 +248,23 @@ public class RollScreen extends HexScaledScreen {
 
             // v0.6.5 已拥有角标：重复抽取=叠等级（MAX_HEXTECH_LEVEL 上限），提前提示避免困惑
             if (cards[i].ownedLevel >= 0) {
-                g.drawCenteredString(this.font,
+                g.drawCenteredString(HexFonts.ui(),
                         Component.translatable("hexcraft.gui.owned_tag", cards[i].ownedLevel),
                         cx, cy + 20, (a << 24) | 0x00FFD28C);
             }
 
-            g.drawCenteredString(this.font, Component.literal(cards[i].nameStr), cx, cy + 42, (a << 24) | (color & 0x00FFFFFF));
-            g.drawCenteredString(this.font, Component.literal(cards[i].nameStr), cx + 1, cy + 43, (a / 3) << 24 | (color & 0x00FFFFFF)); // 名称柔光
+            g.drawCenteredString(HexFonts.ui(), Component.literal(cards[i].nameStr), cx, cy + 42, (a << 24) | (color & 0x00FFFFFF));
+            g.drawCenteredString(HexFonts.ui(), Component.literal(cards[i].nameStr), cx + 1, cy + 43, (a / 3) << 24 | (color & 0x00FFFFFF)); // 名称柔光
             g.fill(cardX[i] + 14, cy + 56, cardX[i] + CARD_W - 14, cy + 57, 0x33505F88);
             int dy = cy + 62;
             for (FormattedCharSequence line : cards[i].descLines) {
-                g.drawCenteredString(this.font, line, cx, dy, (a << 24) | 0x00C8D0E8);
+                g.drawCenteredString(HexFonts.ui(), line, cx, dy, (a << 24) | 0x00C8D0E8);
                 dy += 11;
                 if (dy > cy + CARD_H - 6) break;
             }
             // v0.6.2 海克斯卡叠层标签后缀（运行时拼接【叠层：xxx｜xxx｜xxx】）
             if (cards[i].tagSuffix != null) {
-                g.drawCenteredString(this.font, cards[i].tagSuffix, cx, dy + 2, (a << 24) | 0x008FA6C8);
+                g.drawCenteredString(HexFonts.ui(), cards[i].tagSuffix, cx, dy + 2, (a << 24) | 0x008FA6C8);
             }
         }
 
@@ -282,12 +282,12 @@ public class RollScreen extends HexScaledScreen {
                 line = line.copy().append(Component.translatable("hexcraft.gui.pity_prismatic",
                         Math.max(0, pP - msg.pityPrismatic)));
             }
-            g.drawCenteredString(this.font, line, centerX, cardY + CARD_H + 5, 0xFFC8D0E8);
+            g.drawCenteredString(HexFonts.ui(), line, centerX, cardY + CARD_H + 5, 0xFFC8D0E8);
         }
         // v0.6.3 选中提示（确认模式）：选中卡底部显示提示条
         if (selectedIdx >= 0 && HexConfig.CONFIRM_SELECT.get()) {
             int cx = cardX[selectedIdx] + CARD_W / 2;
-            g.drawCenteredString(this.font, Component.translatable("hexcraft.gui.selected_hint"),
+            g.drawCenteredString(HexFonts.ui(), Component.translatable("hexcraft.gui.selected_hint"),
                     cx, cardY + cards[selectedIdx].dy + CARD_H - 14, 0xFFFFFFFF);
         }
     }
@@ -367,10 +367,10 @@ public class RollScreen extends HexScaledScreen {
             }
             // 稀有度缎带
             g.fill(x1, y1, x1 + w2, y1 + 16, (a << 24) | (color & 0x00FFFFFF));
-            g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font,
+            g.drawCenteredString(HexFonts.ui(),
                     label == null ? "" : label, cx, y1 + 4, (a << 24) | 0x00101018);
             // 图标（菱形晶核）
-            g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font, "◆", cx, y1 + 22,
+            g.drawCenteredString(HexFonts.ui(), "◆", cx, y1 + 22,
                     (a << 24) | (color & 0x00FFFFFF));
             // v0.6.3 选中态：底部白色选中条
             if (selected) {
@@ -398,7 +398,7 @@ public class RollScreen extends HexScaledScreen {
             g.fill(getX() - 1, yy - 1, getX() + width + 1, yy + height + 1, a << 24 | (col & 0x00FFFFFF));
             g.fill(getX(), yy, getX() + width, yy + height, a * 240 / 255 << 24 | 0x00151B33);
             int textCol = isHover(mx, my, this) ? 0xFFFFFFFF : 0xFFC8D0E8;
-            g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font, this.getMessage(),
+            g.drawCenteredString(HexFonts.ui(), this.getMessage(),
                     getX() + width / 2, yy + (height - 8) / 2, a << 24 | (textCol & 0x00FFFFFF));
         }
     }

@@ -86,9 +86,9 @@ public class HexHealthOverlay {
         int barCol = ratio > 0.5f ? frameCol : (ratio > 0.3f ? 0xFFFFFF00 : 0xFFFF3B30);
         g.fill(x, y + BOX_H - 2, (int) (x + BOX_W * ratio), y + BOX_H, barCol);
         // 标签（左，描边色）
-        g.drawString(Minecraft.getInstance().font, label, x + 2, y + 2, frameCol, true);
+        g.drawString(HexFonts.ui(), label, x + 2, y + 2, frameCol, true);
         // 数值（右对齐，紧凑字号）
-        g.drawString(Minecraft.getInstance().font, value,
-                x + BOX_W - Minecraft.getInstance().font.width(value) - 3, y + 2, textCol, true);
+        g.drawString(HexFonts.ui(), value,
+                x + BOX_W - HexFonts.ui().width(value) - 3, y + 2, textCol, true);
     }
 }

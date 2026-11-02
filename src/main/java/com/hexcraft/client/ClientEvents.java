@@ -1,5 +1,7 @@
 package com.hexcraft.client;
 
+import com.hexcraft.client.gui.HexFonts;
+
 import com.hexcraft.Hexcraft;
 import com.hexcraft.client.gui.HextechPageScreen;
 import net.minecraft.client.Minecraft;
@@ -128,7 +130,7 @@ public class ClientEvents {
             int bg = this.isHoveredOrFocused() ? 0xFF1E3A5F : 0xAA0B1530;
             g.fill(getX(), getY(), getX() + width, getY() + height, bg);
             g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF1E6FE8);
-            g.drawCenteredString(Minecraft.getInstance().font, glyph,
+            g.drawCenteredString(HexFonts.ui(), glyph,
                     getX() + width / 2, getY() + 6, 0xFF9FB6FF);
         }
     }

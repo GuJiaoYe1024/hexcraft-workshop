@@ -149,14 +149,14 @@ public class HexTipOverlay {
                 for (Entry e : QUEUE) {
                     if (shown >= maxOnScreen()) break;
                     String disp = e.count > 1 ? e.text + " ×" + e.count : e.text;
-                    int w = mc.font.width(disp) + 12;
+                    int w = HexFonts.ui().width(disp) + 12;
                     if (w > maxW) maxW = w;
                     int col;
                     if (e.type == TYPE_WARN) col = 0xFFFFD54F;
                     else if (e.type == TYPE_GIFT) col = 0xFF66CCFF;
                     else col = 0xFFFFFFFF;
                     g.fill(x, y, x + w, y + ROW_H, 0x7D000000);
-                    g.drawString(mc.font, disp, x + 5, y + 2, col, true);
+                    g.drawString(HexFonts.ui(), disp, x + 5, y + 2, col, true);
                     y += ROW_H + 2;
                     shown++;
                 }
@@ -164,7 +164,7 @@ public class HexTipOverlay {
             } else if (adjust) {
                 // v0.6.22 拖动校准占位框：队列空时也常驻渲染，保证调整模式永远有可拖目标
                 g.fill(x, y, x + CALIB_W, y + CALIB_H, 0x66000000);
-                g.drawString(mc.font,
+                g.drawString(HexFonts.ui(),
                         Component.translatable("hexcraft.tip.calibrate_hint").getString() + " (" + x + "," + y + ")",
                         x + 5, y + 2, 0xFF66CCFF, true);
                 CUR_RECT = new int[]{x, y, CALIB_W, CALIB_H};

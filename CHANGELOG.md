@@ -1,3 +1,20 @@
+## v0.9.10 — 内置中文字体（Noto Sans SC）+ 英文翻译完善（2026-11-03）
+
+**🔤 内置中文字体（用户拍板「内置一个吧」）**
+- **根因**：海克斯界面全部用 Minecraft 默认字体渲染（this.font/mc.font），中文 fallback 到原版 unifont 位图——细、稀疏，观感难受
+- **内置 Noto Sans SC（思源黑体，SIL OFL 1.1 开源协议）**：子集化（GB2312 全字符 6763 + 两个语言文件全部字符 + 常用符号 = 7559 字符），全部海克斯界面统一渲染，中文明显更清晰饱满
+- **实现**：`assets/hexworkshop/font/hexfont.json`（ttf provider，size 11 / oversample 8）+ `HexFonts.ui()`（自定义 Font，把默认字体 id 重定向到内置字体集）。**只影响海克斯界面自己绘制的文字**——聊天、原版界面、强制 Unicode 字体均不受影响
+- **合规**：OFL 许可证随 jar 分发（OFL-NotoSansSC.txt），字体版权声明保留
+- **jar 增量**：808KB → 2.3MB（+1.5MB）
+
+**🌐 英文翻译完善（用户要求「英文翻译也要做好」）**
+- 修复 **57 处中英混杂/未翻译键**：联动模组开关键 51 处（Artifacts/Cataclysm/Farmer's Delight/FTB Quests/Goety/Relics/SlashBlade/Mowzie's Mobs 名与说明全部纯英文）、装备法术说明 spell_note 6 处补齐英文翻译
+- 润色充值费率英文可读性（Rate: Emerald 64, Copper 2, Iron 1, Gold 8, Diamond 32, Netherite 224）
+- **键集合核验**：zh_cn 2500 = en_us 2500 完全对齐（零缺失零多余），占位符全部一致，JSON 合法
+
+**📦 发布**
+- 构建 19s、jar 2,321,506B SHA 0665C835…（替换 0.9.9，旧版备份 `_bak_hexworkshop_0.9.9_pre0910.jar`）
+
 ## v0.9.9 — EMC 充值定价重做：按 EMC 价值锚定汇率 + 锻造器调价（2026-11-02）
 
 **🎯 充值定价全部按 ProjectE 官方 EMC 价值重锚（用户拍板数值，不再用拍脑袋汇率）**

@@ -111,18 +111,18 @@ public class HexLayoutScreen extends Screen {
         // 背景完全透明：不绘制任何底，游戏画面直接透出 → 框落在哪实际就在哪
         // 顶部标题（左上角小字，半透明底避免看不清）
         String title = Component.translatable("hexcraft.config.v070.layoutTitle").getString();
-        g.fill(4, 4, 4 + mc.font.width(title) + 8, 16, 0xAA101820);
-        g.drawString(mc.font, title, 8, 6, 0xFF00E5FF, true);
+        g.fill(4, 4, 4 + HexFonts.ui().width(title) + 8, 16, 0xAA101820);
+        g.drawString(HexFonts.ui(), title, 8, 6, 0xFF00E5FF, true);
         // 元素切换按钮（顶部右侧横排）
         int btnY = 6;
         int acc = this.width - 12;
         for (int i = ELEM_KEYS.length - 1; i >= 0; i--) {
             String t = Component.translatable(ELEM_KEYS[i]).getString();
-            int bw = mc.font.width(t) + 20;
+            int bw = HexFonts.ui().width(t) + 20;
             int bx = acc - bw;
             int col = i == current ? 0xFF00E5FF : 0xAA2A4A6A;
             g.fill(bx, btnY, bx + bw, btnY + 18, col);
-            g.drawCenteredString(mc.font, t, bx + bw / 2, btnY + 5, 0xFF101820);
+            g.drawCenteredString(HexFonts.ui(), t, bx + bw / 2, btnY + 5, 0xFF101820);
             acc = bx - 6;
         }
         // 三个元素框：直接画在真实屏幕位置（当前元素蓝色可拖，其它灰色占位）
@@ -138,30 +138,30 @@ public class HexLayoutScreen extends Screen {
                 int ex = current == 0 ? HexConfig.TIP_X.get() : (current == 1 ? HexConfig.HP_X.get() : HexConfig.TAB_X.get());
                 int ey = current == 0 ? HexConfig.TIP_Y.get() : (current == 1 ? HexConfig.HP_Y.get() : HexConfig.TAB_Y.get());
                 String xy = "(" + ex + ", " + ey + ")";
-                g.drawString(mc.font, xy, bx + boxW(i) - mc.font.width(xy) - 2, by + 2, 0xFFFFFFFF, true);
+                g.drawString(HexFonts.ui(), xy, bx + boxW(i) - HexFonts.ui().width(xy) - 2, by + 2, 0xFFFFFFFF, true);
             } else {
                 g.fill(bx, by, bx + boxW(i), by + boxH(i), 0x66556688);
             }
             String lab = Component.translatable(ELEM_KEYS[i]).getString();
-            g.drawString(mc.font, lab, bx + 4, by + 3, 0xFF101820, true);
+            g.drawString(HexFonts.ui(), lab, bx + 4, by + 3, 0xFF101820, true);
         }
         // 底部说明 + 当前坐标
         String cur = Component.translatable(ELEM_KEYS[current]).getString();
         int cx = current == 0 ? HexConfig.TIP_X.get() : (current == 1 ? HexConfig.HP_X.get() : HexConfig.TAB_X.get());
         int cy = current == 0 ? HexConfig.TIP_Y.get() : (current == 1 ? HexConfig.HP_Y.get() : HexConfig.TAB_Y.get());
         String hint = Component.translatable("hexcraft.config.v070.layoutHint").getString() + "  " + cur + " (" + cx + ", " + cy + ")";
-        g.fill(4, this.height - 16, 4 + mc.font.width(hint) + 8, this.height - 2, 0xAA101820);
-        g.drawString(mc.font, hint, 8, this.height - 13, 0xFF8FA6C8, true);
+        g.fill(4, this.height - 16, 4 + HexFonts.ui().width(hint) + 8, this.height - 2, 0xAA101820);
+        g.drawString(HexFonts.ui(), hint, 8, this.height - 13, 0xFF8FA6C8, true);
         // 完成按钮（右下角）
         String done = Component.translatable("gui.done").getString();
-        int dw = mc.font.width(done) + 24;
+        int dw = HexFonts.ui().width(done) + 24;
         g.fill(this.width - dw - 6, this.height - 24, this.width - 6, this.height - 6, 0xFF00E5FF);
-        g.drawCenteredString(mc.font, done, this.width - dw / 2 - 6, this.height - 19, 0xFF101820);
+        g.drawCenteredString(HexFonts.ui(), done, this.width - dw / 2 - 6, this.height - 19, 0xFF101820);
         // v0.7.5 重置按钮（完成左侧）：恢复全部元素默认位置
         String rst = Component.translatable("hexcraft.config.v070.layoutReset").getString();
-        int rw = mc.font.width(rst) + 24;
+        int rw = HexFonts.ui().width(rst) + 24;
         g.fill(this.width - dw - rw - 16, this.height - 24, this.width - dw - 6 - 4, this.height - 6, 0xFF8A6AFF);
-        g.drawCenteredString(mc.font, rst, this.width - dw - rw / 2 - 11, this.height - 19, 0xFF101820);
+        g.drawCenteredString(HexFonts.ui(), rst, this.width - dw - rw / 2 - 11, this.height - 19, 0xFF101820);
         super.render(g, mouseX, mouseY, partialTick);
     }
 
@@ -174,7 +174,7 @@ public class HexLayoutScreen extends Screen {
             int acc = this.width - 12;
             for (int i = ELEM_KEYS.length - 1; i >= 0; i--) {
                 String t = Component.translatable(ELEM_KEYS[i]).getString();
-                int bw = mc.font.width(t) + 20;
+                int bw = HexFonts.ui().width(t) + 20;
                 int bx = acc - bw;
                 if (mouseX >= bx && mouseX <= bx + bw && mouseY >= btnY && mouseY <= btnY + 18) {
                     current = i;
@@ -194,7 +194,7 @@ public class HexLayoutScreen extends Screen {
             }
             // 完成按钮（右下角）
             String done = Component.translatable("gui.done").getString();
-            int dw = mc.font.width(done) + 24;
+            int dw = HexFonts.ui().width(done) + 24;
             if (mouseX >= this.width - dw - 6 && mouseX <= this.width - 6
                     && mouseY >= this.height - 24 && mouseY <= this.height - 6) {
                 close();
@@ -202,7 +202,7 @@ public class HexLayoutScreen extends Screen {
             }
             // v0.7.5 重置按钮（完成左侧）：恢复全部元素默认位置
             String rst = Component.translatable("hexcraft.config.v070.layoutReset").getString();
-            int rw = mc.font.width(rst) + 24;
+            int rw = HexFonts.ui().width(rst) + 24;
             if (mouseX >= this.width - dw - rw - 16 && mouseX <= this.width - dw - 10
                     && mouseY >= this.height - 24 && mouseY <= this.height - 6) {
                 resetAll();

@@ -1,3 +1,21 @@
+Hexcraft Workshop v0.9.10 - Built-in Chinese font (Noto Sans SC) + English translation polish
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+BUILT-IN CHINESE FONT (Noto Sans SC, SIL OFL 1.1):
+- ROOT CAUSE: every Hexcraft screen was rendered with the vanilla font (this.font / mc.font), so Chinese fell back to the vanilla unifont bitmap - thin, sparse and hard to read.
+- The mod now ships a subset of Noto Sans SC (Source Han Sans, open-source OFL license): GB2312 full character set (6,763 chars) + every character used by both language files + common symbols = 7,559 glyphs. All Hexcraft interfaces render with it - Chinese is now much clearer and fuller.
+- HOW: assets/hexworkshop/font/hexfont.json (ttf provider, size 11 / oversample 8) + a HexFonts.ui() custom Font that redirects the default font id to the built-in font set. ONLY text drawn by Hexcraft's own screens is affected - chat, vanilla UI and the Force Unicode Font option are untouched.
+- LICENSE: the OFL 1.1 license text ships inside the jar (OFL-NotoSansSC.txt).
+- JAR SIZE: 808KB -> 2.3MB (+1.5MB).
+
+ENGLISH TRANSLATION POLISH:
+- Fixed 57 keys that were half-Chinese or untranslated: 51 link-mod config keys (Artifacts / Cataclysm / Farmer's Delight / FTB Quests / Goety / Relics / SlashBlade / Mowzie's Mobs names and tooltips are now fully English) and 6 equipment spell_note entries (spell descriptions translated, e.g. "+3 max mana per level, 40% mana shield").
+- Polished the recharge rate line for readability (Rate: Emerald 64, Copper 2, Iron 1, Gold 8, Diamond 32, Netherite 224).
+- Verified: zh_cn 2,500 keys = en_us 2,500 keys, zero missing/extra, placeholders consistent, both JSON valid.
+- Build 19s, jar 2,321,506B SHA 0665C835... (0.9.9 replaced, backup _bak_hexworkshop_0.9.9_pre0910.jar).
+
 Hexcraft Workshop v0.9.9 - EMC recharge pricing reworked: exchange rate anchored to real EMC values + forge prices raised
 =============================================================================
 

@@ -47,7 +47,7 @@ public class WorldHexScreen extends HexScaledScreen {
             g.fill(getX(), getY(), getX() + width, getY() + 1, highlight ? 0xFFFFC94A : 0xFF4AC7FF);
             // 当前页左侧竖亮条
             if (highlight) g.fill(getX(), getY() + 3, getX() + 2, getY() + height - 3, 0xFFFFC94A);
-            g.drawCenteredString(Minecraft.getInstance().font, this.getMessage(),
+            g.drawCenteredString(HexFonts.ui(), this.getMessage(),
                     getX() + width / 2, getY() + (height - 8) / 2, text);
         }
     }
@@ -209,7 +209,7 @@ public class WorldHexScreen extends HexScaledScreen {
 
         // 标题
         Component title = Component.translatable("hexcraft.gui.world_hex_title");
-        g.drawCenteredString(this.font, title, centerX, 12, 0xFFFFFF);
+        g.drawCenteredString(HexFonts.ui(), title, centerX, 12, 0xFFFFFF);
         g.fillGradient(centerX - 120, 24, centerX + 120, 25, 0xFFFFC94A, 0xFFC77DFF);
 
         // v0.6.16 顶部状态行：右上角显示已激活总数/每类上限（抽取/取消后即时刷新）
@@ -217,7 +217,7 @@ public class WorldHexScreen extends HexScaledScreen {
         int wMax = ClientDataStore.worldMaxPerCategory;
         Component actText = Component.translatable("hexcraft.gui.world_active_count",
                 actTotal, wMax > 0 ? wMax : "\u221E");
-        g.drawString(this.font, actText, this.guiW() - 30 - this.font.width(actText), 16, 0xFF9FB6FF);
+        g.drawString(HexFonts.ui(), actText, this.guiW() - 30 - HexFonts.ui().width(actText), 16, 0xFF9FB6FF);
 
         // 左侧栏装饰
         g.fill(SIDEBAR_X - 8, top + 2, SIDEBAR_X + SIDEBAR_W + 8, top + 70, 0xAA0B1530);
@@ -239,9 +239,9 @@ public class WorldHexScreen extends HexScaledScreen {
             g.fill(bx, by + blockH(contentH()) - 1, bx + blockW(), by + blockH(contentH()), 0x882A5DB0);
             // 标题条：分类名（左）+ 激活计数（右）
             Component catTitle = Component.translatable("hexcraft.worldhex.category." + cat);
-            g.drawString(this.font, catTitle, bx + 6, by + 4, 0xFF9FB6FF);
-            g.drawString(this.font, Component.literal(list.size() + "/" + (max > 0 ? max : "∞")),
-                    bx + blockW() - 8 - this.font.width(Component.literal("00/00")), by + 4, 0xFF6A7B96);
+            g.drawString(HexFonts.ui(), catTitle, bx + 6, by + 4, 0xFF9FB6FF);
+            g.drawString(HexFonts.ui(), Component.literal(list.size() + "/" + (max > 0 ? max : "∞")),
+                    bx + blockW() - 8 - HexFonts.ui().width(Component.literal("00/00")), by + 4, 0xFF6A7B96);
 
             // 条目：只显示名字（稀有度色），悬停才显示介绍（v0.4.5）
             int row = 0;
@@ -251,10 +251,10 @@ public class WorldHexScreen extends HexScaledScreen {
                 int color = rarityColor(d.rarity);
                 Component name = Component.translatable("hexcraft.worldhex." + d.id + ".name");
                 String nstr = name.getString();
-                if (this.font.width(nstr) > nameW()) {
-                    nstr = this.font.plainSubstrByWidth(nstr, nameW()) + "…";
+                if (HexFonts.ui().width(nstr) > nameW()) {
+                    nstr = HexFonts.ui().plainSubstrByWidth(nstr, nameW()) + "…";
                 }
-                g.drawString(this.font, nstr, x, y + 3, color);
+                g.drawString(HexFonts.ui(), nstr, x, y + 3, color);
                 // hover 提示：名字 + 稀有度类型 + 描述
                 if (mx >= x - 2 && mx <= x + itemW() && my >= y - 1 && my <= y + rowH() - 1) {
                     List<Component> tip = new ArrayList<>();
@@ -262,12 +262,12 @@ public class WorldHexScreen extends HexScaledScreen {
                     tip.add(Component.translatable("hexcraft.worldhex.tierstyle." + d.rarity)
                             .withStyle(c -> c.withColor(0xFF6A7B96)));
                     tip.add(Component.translatable("hexcraft.worldhex." + d.id + ".desc"));
-                    g.renderComponentTooltip(this.font, tip, mx, my);
+                    g.renderComponentTooltip(HexFonts.ui(), tip, mx, my);
                 }
                 row++;
             }
             if (list.isEmpty()) {
-                g.drawString(this.font, Component.translatable("hexcraft.gui.world_empty"),
+                g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.world_empty"),
                         bx + 8, eTop + 4, 0xFF6A7B96);
             }
         }
