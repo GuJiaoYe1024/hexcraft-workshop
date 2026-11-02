@@ -51,14 +51,18 @@ public final class MoreLink {
 
     // ================= 实体注册键 path 集合（namespace 在事件内校验 = modid） =================
 
-    /** 末地灾变（cataclysm）：主力战斗生物（排除投射物/环境体） */
+    /** 末地灾变（cataclysm）：主力战斗生物（排除投射物/环境体）。
+     *  v0.9.7 严查实锤（L_Enders_Cataclysm-3.31 en_us lang 逐键核对）：leviathan→the_leviathan(+baby)、
+     *  black_steel_golem 无此实体（已删）；补 3.31 实有 boss/战斗生物（royal_draugr/nameless_sorcerer/scylla/
+     *  the_harbinger/the_prowler/the_watcher/storm_serpent/symbiocto/onyx/wadjet/urchinkin/drowned_host） */
     private static final Set<String> CATACLYSM = Set.of(
-            "ignis", "ancient_remnant", "ancient_ancient_remnant", "leviathan", "aptrgangr",
-            "coralssus", "ignited_berserker", "ignited_revenant", "deepling", "deepling_brute",
-            "deepling_angler", "deepling_priest", "deepling_warlock", "draugr", "elite_draugr",
-            "cindaria", "clawdian", "koboleton", "kobolediator", "coral_golem", "ender_golem",
+            "ignis", "ancient_remnant", "ancient_ancient_remnant", "the_leviathan", "the_baby_leviathan",
+            "aptrgangr", "coralssus", "ignited_berserker", "ignited_revenant", "deepling", "deepling_brute",
+            "deepling_angler", "deepling_priest", "deepling_warlock", "draugr", "elite_draugr", "royal_draugr",
+            "drowned_host", "cindaria", "clawdian", "koboleton", "kobolediator", "coral_golem", "ender_golem",
             "ender_guardian", "endermaptera", "maledictus", "amethyst_crab", "lionfish",
-            "hippocamtus", "modern_remnant", "black_steel_golem");
+            "hippocamtus", "modern_remnant", "nameless_sorcerer", "scylla", "the_harbinger",
+            "the_prowler", "the_watcher", "storm_serpent", "symbiocto", "onyx", "wadjet", "urchinkin");
     /** 巫术（goety）：亡灵/仆从/巫术生物（去除投射物、药水云等无实体战斗体） */
     private static final Set<String> GOETY = Set.of(
             "apostle", "black_beast", "black_wolf", "hostile_black_wolf", "bone_lord",
@@ -94,10 +98,11 @@ public final class MoreLink {
             "power_glove", "rooted_boots", "running_shoes", "scarf_of_invisibility", "shock_pendant",
             "snorkel", "snowshoes", "steadfast_spikes", "superstitious_hat", "thorn_pendant",
             "umbrella", "universal_attractor", "vampiric_glove", "villager_hat", "whoopee_cushion");
-    /** 遗物（relics）：物品 namespace = relics */
+    /** 遗物（relics）：物品 namespace = relics。
+     *  v0.9.7 严查实锤（relics-1.20.1-0.8.0.13 en_us lang 逐键核对）：endless_star 无此物品（已换 enders_hand） */
     private static final List<String> RELIC_DROPS = List.of(
             "relic_experience_bottle", "shadow_glaive", "magic_mirror", "rage_glove",
-            "holy_locket", "infinity_ham", "chorus_inhibitor", "endless_star");
+            "holy_locket", "infinity_ham", "chorus_inhibitor", "enders_hand");
 
     /** 掉落表：modid → (物品 path, 权重) */
     private static final Map<String, List<String[]>> DROPS = new java.util.LinkedHashMap<>();
@@ -106,7 +111,8 @@ public final class MoreLink {
                 new String[]{"witherite_ingot", "2"}, new String[]{"ancient_metal_ingot", "2"}));
         DROPS.put("goety", java.util.List.<String[]>of(new String[]{"animation_core", "3"}));
         DROPS.put("mowziesmobs", java.util.List.<String[]>of(new String[]{"naga_fang", "3"}));
-        DROPS.put("slashblade", java.util.List.<String[]>of(new String[]{"proud_soul", "3"}));
+        // v0.9.7 严查实锤：SlashBlade-1.20.1-0.1.2 物品注册键为 proudsoul（无下划线，lang 键 item.slashblade.proudsoul 实测）
+        DROPS.put("slashblade", java.util.List.<String[]>of(new String[]{"proudsoul", "3"}));
         DROPS.put("farmersdelight", java.util.List.of(
                 new String[]{"bacon", "2"}, new String[]{"cabbage", "1"}));
     }

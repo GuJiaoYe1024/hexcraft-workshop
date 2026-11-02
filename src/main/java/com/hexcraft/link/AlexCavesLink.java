@@ -64,7 +64,7 @@ public class AlexCavesLink {
     private static final Set<String> RADIATION = Set.of(
             "nucleeper", "radgill", "gammaroach", "brainiac", "raycat");
     private static final Set<String> TOXIC = Set.of(
-            "corrodent", "underzealot", "watcher", "forsaken", "gossamer_worm", "gossamer_worm_part");
+            "corrodent", "underzealot", "watcher", "forsaken", "gossamer_worm");
     private static final Set<String> DARK = Set.of(
             "vesper", "watcher", "forsaken", "gloomoth", "corrodent");
     private static final Set<String> DEEP = Set.of(

@@ -47,27 +47,32 @@ public class AlexMobsLink {
 
     private static boolean registered = false;
 
-    /** AM 生物 EntityType 注册键 path（namespace 在事件内校验） */
+    /** AM 生物 EntityType 注册键 path（namespace 在事件内校验）。
+     *  v0.9.7 严查实锤（alexsmobs-1.22.9 en_us lang 117 实体键逐项核对）：删除不存在实体（lion/hippo/black_bear/
+     *  polar_bear/red_panda/urial/squirrel/badger/panda_bear/cave_centipede/cave_crawler/termite/mosquito/scorpion/
+     *  dragonfly/ostrich/cardinal/great_hammerhead/shark/great_whale/squid/deep_sea_creature）；
+     *  键名修正（rhino→rhinoceros、centipede→centipede_head、vulture→soul_vulture）；
+     *  补实有生物（leafcutter_ant 切叶蚁、warped_mosco 亡灵蚊、frilled_shark 皱鳃鲨、seagull 海鸥、jerboa 跳鼠、
+     *  kangaroo 袋鼠、mantis_shrimp 螳螂虾、tasmanian_devil 袋獾、dropbear、potoo、skreecher、soul_vulture） */
     private static final Set<String> BEAST = Set.of(
-            "gorilla", "crocodile", "capuchin_monkey", "tiger", "lion", "hippo", "rhino",
-            "elephant", "moose", "warped_toad", "komodo_dragon", "grizzly_bear", "black_bear",
-            "polar_bear", "snow_leopard", "maned_wolf", "raccoon", "red_panda", "mungus",
-            "platypus", "seal", "sea_bear", "urial", "emu", "gazelle", "bison", "squirrel",
-            "skunk", "badger", "tusklin", "panda_bear");
+            "gorilla", "crocodile", "capuchin_monkey", "tiger", "rhinoceros", "elephant", "moose",
+            "warped_toad", "komodo_dragon", "grizzly_bear", "snow_leopard", "maned_wolf", "raccoon",
+            "mungus", "platypus", "seal", "sea_bear", "emu", "gazelle", "bison", "skunk", "tusklin",
+            "kangaroo", "tasmanian_devil", "dropbear", "potoo", "jerboa", "gelada_monkey", "anteater");
     private static final Set<String> VENOM = Set.of(
-            "cave_centipede", "cave_crawler", "komodo_dragon", "warped_toad", "tarantula_hawk",
-            "cockroach", "termite", "mosquito", "crimson_mosquito", "fly", "scorpion", "centipede");
+            "centipede_head", "komodo_dragon", "warped_toad", "tarantula_hawk",
+            "cockroach", "crimson_mosquito", "fly", "leafcutter_ant", "warped_mosco", "rattlesnake");
     private static final Set<String> FLYING = Set.of(
-            "dragonfly", "crow", "vulture", "bald_eagle", "roadrunner", "ostrich", "sunbird",
-            "toucan", "hummingbird", "blue_jay", "cardinal", "fly", "crimson_mosquito",
-            "tarantula_hawk", "skelewag", "great_hammerhead");
+            "crow", "vulture", "bald_eagle", "roadrunner", "sunbird",
+            "toucan", "hummingbird", "blue_jay", "fly", "crimson_mosquito",
+            "tarantula_hawk", "skelewag", "soul_vulture", "seagull");
     private static final Set<String> AQUATIC = Set.of(
-            "orca", "shark", "hammerhead_shark", "great_whale", "cachalot_whale", "giant_squid",
+            "orca", "hammerhead_shark", "frilled_shark", "cachalot_whale", "giant_squid",
             "mimic_octopus", "lobster", "seal", "sea_bear", "catfish", "flying_fish",
-            "mudskipper", "shoebill", "squid", "deep_sea_creature");
+            "mudskipper", "shoebill");
     private static final Set<String> TITAN = Set.of(
-            "elephant", "rhino", "hippo", "great_whale", "cachalot_whale", "orca",
-            "shark", "hammerhead_shark", "giant_squid");
+            "elephant", "rhinoceros", "cachalot_whale", "orca",
+            "hammerhead_shark", "frilled_shark", "giant_squid");
 
     /** 主类守卫调用：仅 isLoaded("alexsmobs") 为真时执行 */
     public static void init() {

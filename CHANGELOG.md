@@ -72,6 +72,17 @@
 - **死键落实（不删内容，补消费）**：goldmine/scholar 6 个 quest 海克斯 + 1 件装备 JSON 统一改名 coin_bonus/xp_bonus（effect() 双入口加别名兜底防历史引用）；blade_drop 补 onKill 拔刀剑掉落 roll（DROPS 表 slashblade→proud_soul 此前从未被调用）；armor_gain/speed_gain 补 PlayerData 属性注入通道（护甲/移速直注，应用前统一移除重建防叠乘）；combat_damage_spur / combat_shield_surge / timed_multi_aspect **复核为活键**（通用叠层管理器按 stack.key 同名匹配结算每层效果，此前静态脚本误报为死键——用户"死键删了其实有用"教训成立，本批零删除）
 - lang zh/en 各 +3 键（quest_reward + config v097×2）；jar SHA-256 **41CABCBC…98F5**（808,521B）替换正式客户端（旧 802,200B 备份 `H:\MC1314\联动实测\_bak_hexworkshop_0.9.7_ui-emc-ftb-prefix.jar`）
 
+**🛠️ 修复轮 4（严查所有：联动判定键 vs 真实注册键全量比对，实锤修 bug）**
+- **比对方法**：逐个解包 13 个联动 mod 的 en_us.json 提取真实 `entity.<id>.*` / `item.<id>.*` 注册键（slashblade 15 / cataclysm 97 / relics 30 / twilightforest 81 / alexsmobs 117 / alexscaves 81 / artifacts 45 / goety 302+574 / mowziesmobs 19+49 / farmersdelight 95 / cataclysm item 155），与代码集合逐项差集——实锤多处**判定键 ≠ 实际注册键 = 效果永不触发**的真 bug
+- **slashblade（死键修复纠正）**：上一轮 blade_drop 补的 DROPS 写 `proud_soul`，真实物品键是 **`proudsoul`**（无下划线，item.slashblade.proudsoul 实测）→ 已改，拔刀剑掉落真正可掉出
+- **cataclysm（3.31 全量核对）**：`leviathan` 实际键 **`the_leviathan`**（+`the_baby_leviathan`）；`black_steel_golem` 无此实体（死条目已删）；补 3.31 实有 boss/战斗实体 royal_draugr / nameless_sorcerer / scylla / the_harbinger / the_prowler / the_watcher / storm_serpent / symbiocto / onyx / wadjet / urchinkin / drowned_host（共 41 键全命中）
+- **alexsmobs（117 键重建 5 组）**：删除不存在实体 25 个（lion/hippo/black_bear/polar_bear/red_panda/urial/squirrel/badger/panda_bear/cave_centipede/cave_crawler/termite/mosquito/scorpion/centipede/dragonfly/ostrich/cardinal/great_hammerhead/shark/great_whale/squid/deep_sea_creature）；键名修正 rhino→**rhinoceros**、centipede→**centipede_head**、vulture→**soul_vulture**；补实有生物 leafcutter_ant / warped_mosco / frilled_shark / seagull / jerboa / kangaroo / mantis_shrimp / tasmanian_devil / dropbear / potoo / skreecher / gelada_monkey / anteater / rattlesnake（57 键全命中）
+- **alexscaves**：`gossamer_worm_part` 无此实体（已删，gossamer_worm 本体保留）
+- **relics**：`endless_star` 无此物品（已换 **`enders_hand`**）
+- **twilightforest**：12 个 boss 键（naga/lich/hydra/minoshroom/alpha_yeti/snow_queen/ur_ghast/knight_phantom/ice_crystal/troll/giant_miner/armored_giant）全对；`plateau_boss` 为 **TF 终焉 boss 未实装**（4.3.2508 无此实体），判定保留待实装后自动生效，如实记录不臆造替代键
+- artifacts 45 / goety 302 实体 + 574 物品 / mowziesmobs / farmersdelight / cataclysm 物品 155 **全部命中零误**；Ice and Fire（编译期 IafEntityRegistry 常量）、Iron's Spells（编译期 6 事件）、FTB Quests（javap 实锤 API）、EMC（PE1.0.1 反射 getEmc/setEmc/syncEmc）复核为真联动
+- jar SHA-256 **CEA2DF96…D593**（808,594B）替换正式客户端（旧 808,521B 备份 `H:\MC1314\联动实测\_bak_hexworkshop_0.9.7_linkkeys-prefix.jar`）
+
 ## v0.9.6 — 海克斯大乱斗原版 9 套装羁绊进本体（2026-11-01）
 
 **🎯 机制（用户拍板：官方 9 套全做 + 云顶式多档 2/4/6/8 + 现有/新建成员混用）**
