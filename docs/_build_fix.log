@@ -1,0 +1,40 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. See https://docs.gradle.org/8.1.1/userguide/gradle_daemon.html#sec:disabling_the_daemon.
+Daemon will be stopped at the end of the build 
+
+> Configure project :
+files(...) dependencies are not deobfuscated. Use a flatDir repository instead: https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:flat_dir_resolver
+Cannot deobfuscate dependency of type DefaultSelfResolvingDependency_Decorated, using obfuscated version!
+files(...) dependencies are not deobfuscated. Use a flatDir repository instead: https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:flat_dir_resolver
+Cannot deobfuscate dependency of type DefaultSelfResolvingDependency_Decorated, using obfuscated version!
+
+> Task :compileJava
+H:\MC1314\MOD\src\main\java\com\hexcraft\Hexcraft.java:32: ����: [removal] FMLJavaModLoadingContext �е� get() �ѹ�ʱ, �ұ��Ϊ��ɾ��
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+                                                   ^
+H:\MC1314\MOD\src\main\java\com\hexcraft\Hexcraft.java:41: ����: [removal] ModLoadingContext �е� get() �ѹ�ʱ, �ұ��Ϊ��ɾ��
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, HexConfig.COMMON_SPEC, "hexworkshop-common.toml");
+                         ^
+H:\MC1314\MOD\src\main\java\com\hexcraft\Hexcraft.java:42: ����: [removal] ModLoadingContext �е� get() �ѹ�ʱ, �ұ��Ϊ��ɾ��
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, HexConfig.CLIENT_SPEC, "hexworkshop-client.toml");
+                         ^
+3 ������
+
+> Task :processResources UP-TO-DATE
+> Task :classes
+> Task :jar
+> Task :downloadMcpConfig
+> Task :extractSrg UP-TO-DATE
+> Task :createMcpToSrg UP-TO-DATE
+> Task :reobfJar
+> Task :jarJar SKIPPED
+> Task :reobfJarJar SKIPPED
+> Task :assemble
+> Task :compileTestJava NO-SOURCE
+> Task :processTestResources NO-SOURCE
+> Task :testClasses UP-TO-DATE
+> Task :test NO-SOURCE
+> Task :check UP-TO-DATE
+> Task :build
+
+BUILD SUCCESSFUL in 39s
+7 actionable tasks: 4 executed, 3 up-to-date

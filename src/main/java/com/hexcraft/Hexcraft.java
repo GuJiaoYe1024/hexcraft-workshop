@@ -75,6 +75,10 @@ public class Hexcraft {
                 || net.minecraftforge.fml.ModList.get().isLoaded("ftbquests")) {
             com.hexcraft.link.MoreLink.init();
         }
+        // v0.9.7 FTB Quests 真联动：任务完成事件监听（compileOnly 依赖，未安装时本分支不执行）
+        if (net.minecraftforge.fml.ModList.get().isLoaded("ftbquests")) {
+            com.hexcraft.link.FtbQuestLink.init();
+        }
         // v0.8.3 ProjectE 等价交换联动（EMC A：充值页 EMC⇄晶币；EMC C：等价交换海克斯）：仅安装时挂载
         if (net.minecraftforge.fml.ModList.get().isLoaded("projecte")) {
             com.hexcraft.link.EmcLink.init();

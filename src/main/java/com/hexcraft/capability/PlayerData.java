@@ -395,6 +395,25 @@ public class PlayerData {
             for (HextechDefinition.ModSpec mod : def.mods) {
                 applyOne(player, mod.attr, "hex:" + e.id + "#" + idx++, mod.perLevel * e.level * hexPower);
             }
+            // v0.9.7 尼渊 DLC 死键落实：armor_gain（护甲直注）/ speed_gain（移速直注）——
+            // 属性型事件键（每级 +值 护甲/移速），经本通道注入（应用前由开头 USED_ATTRIBUTES 统一移除重建，防叠乘）
+            if (def.event != null) {
+                for (String token : def.event.split(",")) {
+                    int ci = token.indexOf(':');
+                    if (ci <= 0) continue;
+                    String k = token.substring(0, ci);
+                    if (!k.equals("armor_gain") && !k.equals("speed_gain")) continue;
+                    try {
+                        double v = Double.parseDouble(token.substring(ci + 1));
+                        if (v <= 0) continue;
+                        if (k.equals("armor_gain")) {
+                            applyOne(player, Attributes.ARMOR, "hex:" + e.id + "#ag" + idx++, v * e.level);
+                        } else {
+                            applyOne(player, Attributes.MOVEMENT_SPEED, "hex:" + e.id + "#sg" + idx++, v * e.level);
+                        }
+                    } catch (Exception ignored) { }
+                }
+            }
             // 成长属性：stack_attr:键:倍率 / stack_attr_onhit:键:倍率 / stack_attr_onhurt:键:倍率 → 乘法叠加（每层 × 等级）
             // v0.6.8 追溯钳制：应用时按全局叠层上限（permanentStackGlobalCap，默认 200）截断——
             // 旧版本（0.6.2 之前无上限）积累的存量叠层（实测 290/886/1292 层）此前不受限，是护甲/生命/攻击上千的根因

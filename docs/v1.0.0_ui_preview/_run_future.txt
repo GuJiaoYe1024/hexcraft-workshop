@@ -1,0 +1,6 @@
+[shot.py:lint] {}
+[shot.py] status=pass  blocker=0 error=0 warning=0  elapsed=4.02s
+  desktop  H:\MC1314\MOD\docs\v1.0.0_ui_preview\_shots\v1.0.0界面预览_desktop.jpg
+findings 0 条
+mediaMode: reduced-motion=on —— 动画类元素拍到的是静态终态，属预期；要核对动效重跑加 --motion normal
+reportPath: H:\MC1314\MOD\docs\v1.0.0_ui_preview\_shots\report.json   ← 需要 evidence/hint 细节时 Read 这个文件，**不要重跑脚本**

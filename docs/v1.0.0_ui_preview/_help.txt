@@ -1,0 +1,62 @@
+usage: shot.py [-h] [--outdir OUTDIR] [--desktop DESKTOP] [--mobile MOBILE]
+               [--only {desktop,mobile,both}] [--scale SCALE]
+               [--motion {reduce,normal}] [--format-report {summary,json}]
+               [--exec-path EXEC_PATH] [--format {jpg,png}]
+               [--jpeg-quality JPEG_QUALITY] [--max-width MAX_WIDTH]
+               [--slice-over-kb SLICE_OVER_KB]
+               [--slice-over-height SLICE_OVER_HEIGHT]
+               [--slice-height SLICE_HEIGHT] [--include INCLUDE]
+               [--eval EVAL_CODE] [--eval-file EVAL_FILE] [--at AT]
+               [--at-wait AT_WAIT] [--auto-fix] [--no-auto-fix]
+               src
+
+positional arguments:
+  src                   本地 HTML 路径或 URL
+
+options:
+  -h, --help            show this help message and exit
+  --outdir OUTDIR       截图输出目录，默认 <src 所在目录>/_shots
+  --desktop DESKTOP
+  --mobile MOBILE
+  --only {desktop,mobile,both}
+  --scale SCALE         device scale factor（清晰度倍率）
+  --motion {reduce,normal}
+                        动效模式。reduce（默认）让 CSS 动画停在终态，截图有确定性，但页面里 @media
+                        (prefers-reduced-motion) 分支会生效；要核对动画/过场/入场效果本身用 normal
+  --format-report {summary,json}
+                        stdout 形态。summary（默认）打短摘要 + report.json
+                        路径，完整报告始终落盘；json 则把完整报告也打到 stdout（老行为）
+  --exec-path EXEC_PATH
+                        显式指定 chromium 可执行文件路径（覆盖 fallback 扫描）
+  --format {jpg,png}    截图格式，默认 jpg（体积小、模型读图不易崩）；无损需求用 png
+  --jpeg-quality JPEG_QUALITY
+                        JPEG 质量 (1-100)，默认 80
+  --max-width MAX_WIDTH
+                        降到此宽度（保留纵横比），默认 1000；0 表示不降。Pillow 缺失时自动跳过
+  --slice-over-kb SLICE_OVER_KB
+                        主图字节超过此值（KB）时额外切片输出，默认 800；0 关闭该判定
+  --slice-over-height SLICE_OVER_HEIGHT
+                        主图**像素高度**超过此值时额外切片输出，默认 4000。**这个数字必须 ≤ 模型 Read
+                        工具的图片单边硬上限（当前实测 4000px）**——超过 4000px 的图会被 Read
+                        直接过滤（`oversized image ...
+                        filtered`）。字节或高度任一超阈值即触发切片。**局限**：切片只沿 Y 轴。宽度维度不检查——依赖
+                        --max-width（默认 1000）保证宽度不超 Read 上限；若手动传 `--max-width
+                        0` 且原始页面宽 > 4000px，主图仍会被 Read 过滤，本脚本不做处置。
+  --slice-height SLICE_HEIGHT
+                        切片时每片的像素高度，默认 3200。**留 800px 余量给 device-scale-factor
+                        放大**——scale=1.25 时 3200 * 1.25 = 4000，正好卡 Read
+                        上限；再大会二次撞墙。
+  --include INCLUDE     逗号分隔要输出的模块：screenshots / lint / structure。默认全开
+  --eval EVAL_CODE      页面稳态后注入执行的 JS 代码。会被包在 `async () => { … }` 里，可用 await /
+                        return；返回值 JSON 化后进
+                        shots.<view>.eval.result。用于状态验证（换数据集重渲染、切 hash
+                        视图、点按钮等），不用于任意 REPL 探测。仅 playwright 引擎支持。
+  --eval-file EVAL_FILE
+                        从文件读取 --eval 代码；与 --eval 二选一。
+  --at AT               逗号分隔的滚动位置，按顺序连续滚过去，各截一张视口图（<name>_<视口>_at<序号>）。位置写法：像素
+                        1200 / 整页比例 40% / selector #sec-2（滚到元素顶部）/ selector@比例
+                        #sec-2@50%（长段落滚过一半）。重复同一位置可看随时间的变化，倒序写可看倒回状态。在 --eval
+                        之后执行，仅 playwright 引擎支持。
+  --at-wait AT_WAIT     --at 每个位置滚到后等待多少毫秒再截图，默认 800
+  --auto-fix            自动修复明确的 HTML 属性问题并复查一次（默认开）
+  --no-auto-fix         仅检查，不改源码

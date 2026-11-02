@@ -63,6 +63,15 @@
   - **荆棘装甲**（逆原壁垒 tier.bulwark 满档，手游尖刺防御原型）：受近战攻击反弹比例伤害（区别于 thorns 固定值反伤）
 - lang 2491→**2496 键/语言**（新增 5 个 effect 键）；jar SHA-256 **BCE048DD…308515**（802,119B）替换四个部署点，四副本哈希一致
 
+**🛠️ 修复轮 3（同版本重建，用户实测反馈轮：UI 自适应 / 护甲真值 / EMC 余额直充 / FTB 真联动 + 死键落实）**
+- **视频设置「界面尺寸」全档位自适应（用户点名"老早就说要适应"）**：HexGuiScale 重写——倍率 = 配置倍率 × 界面尺寸档位自适应系数（min(guiScaledW/352, guiScaledH/348) 自动收缩、clamp 0.75~2.0、×0.92 屏占比），强制平滑字体下 3/4 不再超屏、1/2 不再过小，全部 HexScaledScreen 子类自动受益；同时修复界面尺寸 1/2 档与海克斯界面交互错位
+- **护甲显示真值**：HUD 护甲行不再写死 20/20，显示玩家实际护甲值（比值条仍按 ÷20 视觉基准）
+- **EMC 通道改为玩家 EMC 余额直充（否掉折算主手物品方案）**：C2SExchangeCoin material=6 分支重写——只认玩家自身 EMC 余额（ProjectE IKnowledgeProvider 反射 getEmc/setEmc/syncEmc），16/32/64/128/256 五档批量充值，余额不足/通道不可用/成功三种提示，不再动主手物品；汇率 4→**1024**（钻石 EMC 8192 ÷ 1024 = 8 晶币，与充值页 1 钻 8 晶币对齐，消除 256 倍失衡；用户质疑"1 钻 8 晶币能换 2048？"已归零）
+- **全金属锭等材料 EMC 换算表**：稳定值可直接排版——圆石 1 / 铁锭 256 / 金锭 2048 / 钻石 8192；绿宝石/铜锭/下界合金锭标注「游戏内实时查询为准」（ProjectE 映射按配方动态计算、无静态表，杜绝拍脑袋数值）
+- **FTB Quests 假联动 → 真联动（用户："都联动了还假联动吗？"）**：新增 FtbQuestLink 监听 **ObjectCompletedEvent.QUEST**（architectury Event；build.gradle compileOnly 依赖 ftb-quests/ftb-library/ftb-teams/architectury 四本地 jar，与 Ice and Fire / Iron's Spells 同模式，不打包）——任务完成时按玩家 hex_quest_* 海克斯等级结算：bounty 悬赏晶币 + coin_bonus 财源倍率 + xp_bonus 学识倍率 + random_loot 概率随机礼物 + 基础 20 晶币/20 经验每级（QUEST_REWARD_BASE_COINS/XP 可配）；任务完成即「多领」，滚动提示展示；FTB 未安装零副作用（主类 isLoaded 守卫）
+- **死键落实（不删内容，补消费）**：goldmine/scholar 6 个 quest 海克斯 + 1 件装备 JSON 统一改名 coin_bonus/xp_bonus（effect() 双入口加别名兜底防历史引用）；blade_drop 补 onKill 拔刀剑掉落 roll（DROPS 表 slashblade→proud_soul 此前从未被调用）；armor_gain/speed_gain 补 PlayerData 属性注入通道（护甲/移速直注，应用前统一移除重建防叠乘）；combat_damage_spur / combat_shield_surge / timed_multi_aspect **复核为活键**（通用叠层管理器按 stack.key 同名匹配结算每层效果，此前静态脚本误报为死键——用户"死键删了其实有用"教训成立，本批零删除）
+- lang zh/en 各 +3 键（quest_reward + config v097×2）；jar SHA-256 **41CABCBC…98F5**（808,521B）替换正式客户端（旧 802,200B 备份 `H:\MC1314\联动实测\_bak_hexworkshop_0.9.7_ui-emc-ftb-prefix.jar`）
+
 ## v0.9.6 — 海克斯大乱斗原版 9 套装羁绊进本体（2026-11-01）
 
 **🎯 机制（用户拍板：官方 9 套全做 + 云顶式多档 2/4/6/8 + 现有/新建成员混用）**

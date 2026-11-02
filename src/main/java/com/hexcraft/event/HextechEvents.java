@@ -148,6 +148,10 @@ public class HextechEvents {
     /** 汇总某玩家某种事件效果的倍率×等级之和（支持成长性 stack_growth：层数倍增）；装备 event 并入 */
     public static double effect(PlayerData data, String effect) {
         if (data == null) return 0;
+        // v0.9.7 死键落实兼容层：历史键名别名（goldmine→coin_bonus 财源 / scholar→xp_bonus 学识）。
+        // 内容层（FTB 联动 JSON）已统一改为新键；此处兜底保证任何历史/第三方引用仍能命中，杜绝死键复现。
+        if ("goldmine".equals(effect)) effect = "coin_bonus";
+        else if ("scholar".equals(effect)) effect = "xp_bonus";
         double sum = effect(data.getHexes(), effect);
         for (PlayerData.EquipEntry eq : data.getEquipment()) {
             HextechDefinition def = HextechRegistry.getEquip(eq.id);
@@ -177,6 +181,9 @@ public class HextechEvents {
 
     public static double effect(List<PlayerData.HexEntry> hexes, String effect) {
         double sum = 0;
+        // v0.9.7 别名兜底（同上）：直接调用本入口的历史键名同样归一化
+        if ("goldmine".equals(effect)) effect = "coin_bonus";
+        else if ("scholar".equals(effect)) effect = "xp_bonus";
         for (PlayerData.HexEntry e : hexes) {
             HextechDefinition def = HextechRegistry.get(e.id);
             // v0.6.4 联机客户端兜底：客户端 Registry 只有 static 内置（数据包仅服务端加载），缺失时读服务端同步缓存
@@ -822,6 +829,40 @@ public class HextechEvents {
             if (hn != null && hn.toLowerCase(java.util.Locale.ROOT).contains("air")) return true;
         } catch (Exception ignored) { }
         return false;
+    }
+
+    /** v0.9.7 FTB Quests 真联动复用：随机馈赠公共入口（逻辑与击杀馈赠一致：全物品池抽取 →
+     *  防御性重 roll → 掉落物发放 → 滚动提示；供 FtbQuestLink 在任务完成结算时调用） */
+    public static void giftToRandom(ServerPlayer sp, double rate) {
+        if (rate <= 0 || sp == null) return;
+        if (sp.getRandom().nextFloat() >= (float) Math.min(1.0, rate)) return;
+        java.util.List<net.minecraft.world.item.Item> pool = randomGiftPool();
+        if (pool.isEmpty()) return;
+        net.minecraft.world.item.Item item = null;
+        for (int tries = 0; tries < 8; tries++) {
+            net.minecraft.world.item.Item cand = pool.get(sp.getRandom().nextInt(pool.size()));
+            if (cand == null || isAirLike(cand)) continue;
+            item = cand;
+            break;
+        }
+        if (item == null || isAirLike(item)) return;
+        int n = 1 + sp.getRandom().nextInt(1 + (int) Math.round(rate));
+        net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(item, n);
+        net.minecraft.world.entity.item.ItemEntity ent = new net.minecraft.world.entity.item.ItemEntity(
+                sp.level(), sp.getX(), sp.getY() + 0.5, sp.getZ(), st);
+        ent.setPickUpDelay(10);
+        ent.setNoGravity(false);
+        sp.level().addFreshEntity(ent);
+        try {
+            net.minecraft.resources.ResourceLocation rl2 = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item);
+            LOGGER.info("[Hexcraft][Gift] quest-reward dropped {} x{} near {}",
+                    rl2 == null ? "?" : rl2.toString(), n, sp.getName().getString());
+        } catch (Exception ignored) { }
+        net.minecraft.network.chat.MutableComponent tipMsg = net.minecraft.network.chat.Component.translatable(
+                "message.hexcraft.random_loot",
+                net.minecraft.network.chat.Component.literal(st.getHoverName().getString()), n);
+        tipMsg.append(net.minecraft.network.chat.Component.translatable("message.hexcraft.random_loot_dropped"));
+        com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, tipMsg, 2);
     }
 
     /** 击杀者识别：直接玩家；或 TACZ 等模组弹射物（软联动，反射读取持有者） */

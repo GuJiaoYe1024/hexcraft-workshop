@@ -2,5 +2,5 @@
   "rarity": "GOLD",
   "weight": 8,
   "source": "ftbquests",
-  "event": "scholar:0.50,random_loot:0.15"
+  "event": "xp_bonus:0.50,random_loot:0.15"
 }

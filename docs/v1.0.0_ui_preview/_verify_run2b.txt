@@ -1,0 +1,16 @@
+eitem with viewBox svg: 7
+enemyAutoBar: 1
+enemyAutoLab: 1
+rcgGrid: 1
+rcg cards: 7
+rcgMask: 1
+forgePool: 1
+fpool: 4
+coinVal: 1
+leftDraws: 1
+attr title hints: 59
+hd clickable: 16
+exp stopPropagation: 16
+HEX_POOL items: 0
+drawOnce def: 1
+hidden tip map: 1

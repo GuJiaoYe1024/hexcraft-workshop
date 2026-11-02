@@ -59,11 +59,12 @@ public class HexHealthOverlay {
         row(g, x, y, Component.translatable("hexcraft.hud.hp").getString(),
                 String.format("%.0f/%.0f", cur, max), ratio, 0xFF00E5FF, hpCol);
 
-        // 护甲行
+        // 护甲行（v0.9.8 修复：原硬编码「N/20」误导——海克斯叠甲可远超 20，改显示真实护甲值；
+        // 比例条仍按 20 为满格的原版视觉基准，超过 20 条满）
         int armor = mc.player.getArmorValue();
         float armorRatio = Math.min(1.0f, armor / 20.0f);
         row(g, x, y + BOX_H + ROW_GAP, Component.translatable("hexcraft.hud.armor").getString(),
-                armor + "/20", armorRatio, 0xFF00C8FF, 0xFFFFFFFF);
+                String.valueOf(armor), armorRatio, 0xFF00C8FF, 0xFFFFFFFF);
 
         // 饱食行（含饱和度小字）
         FoodData food = mc.player.getFoodData();

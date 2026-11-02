@@ -1,0 +1,20 @@
+# -*- coding: utf-8 -*-
+import re, io
+p = r"H:\MC1314\MOD\docs\v1.0.0_ui_preview\_dom2.txt"
+s = io.open(p, encoding='utf-8').read()
+print("eitem with viewBox svg:", len(re.findall(r'class="ic"><svg viewBox="0 0 24 24"', s)))
+print("enemyAutoBar:", s.count('id="enemyAutoBar"'))
+print("enemyAutoLab:", s.count('id="enemyAutoLab"'))
+print("rcgGrid:", s.count('id="rcgGrid"'))
+print("rcg cards:", len(re.findall(r'class="rcg" onclick="openRcg', s)))
+print("rcgMask:", s.count('id="rcgMask"'))
+print("forgePool:", s.count('id="forgePool"'))
+print("fpool:", len(re.findall(r'class="fpool"', s)))
+print("coinVal:", s.count('id="coinVal"'))
+print("leftDraws:", s.count('id="leftDraws"'))
+print("attr title hints:", s.count('title="'))
+print("hd clickable:", s.count('class="hd" onclick="toggleFold'))
+print("exp stopPropagation:", s.count('event.stopPropagation();toggleFold'))
+print("HEX_POOL items:", s.count('"rar":"'))
+print("drawOnce def:", s.count('function drawOnce'))
+print("hidden tip map:", s.count('htip['))

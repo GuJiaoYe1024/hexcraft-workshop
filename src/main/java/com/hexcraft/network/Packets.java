@@ -462,28 +462,34 @@ public class Packets {
                 PlayerData data = ModCapabilities.get(sp);
                 if (data == null) return;
                 int[] rates = {30, 1, 2, 4, 8, 64}; // 绿宝石/铜/铁/金/钻石/下界合金
-                // v0.8.3 EMC 通道：material=6（ProjectE 已装时，主手物品按 EMC 折算晶币；dir 必须 0）
+                // v0.9.8 EMC 通道重构（material=6，dir 必须 0）：玩家 EMC 余额直充——按档位晶币数
+                // 从 ProjectE 玩家自身 EMC 余额（IKnowledgeProvider）扣减，加晶币；不再折算/销毁主手物品。
+                // 档位与材质通道五档批量同节奏：16/32/64/128/256 晶币；所需 EMC = 晶币 × 汇率（emc_bargain 加成抵减）。
                 if (m.material == 6) {
                     if (m.dir != 0) return;
                     if (!net.minecraftforge.fml.ModList.get().isLoaded("projecte")) return;
-                    net.minecraft.world.item.ItemStack held = sp.getMainHandItem();
-                    if (held.isEmpty()) {
-                        sp.displayClientMessage(Component.translatable("message.hexcraft.emc_no_item"), true);
+                    int coins = m.count;
+                    boolean valid = false;
+                    for (int c : new int[]{16, 32, 64, 128, 256}) if (c == coins) { valid = true; break; }
+                    if (!valid) return;
+                    double rate = Math.max(1.0, com.hexcraft.config.HexConfig.EMC_COIN_RATE.get());
+                    double bonus = Math.min(5.0, HextechEvents.effect(data, "emc_bargain"));
+                    long needEmc = (long) Math.ceil((double) coins * rate / (1.0 + bonus));
+                    long balance = com.hexcraft.link.EmcLink.getPlayerEMC(sp);
+                    if (balance < 0) {
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.emc_unavailable"), true);
                         return;
                     }
-                    long emc = com.hexcraft.link.EmcLink.getEMCValue(held);
-                    if (emc <= 0) {
-                        sp.displayClientMessage(Component.translatable("message.hexcraft.emc_no_value"), true);
+                    if (balance < needEmc) {
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.emc_insufficient", needEmc, balance), true);
                         return;
                     }
-                    int gained = com.hexcraft.link.EmcLink.coinsForEMC(sp, emc * held.getCount());
-                    if (gained <= 0) {
-                        sp.displayClientMessage(Component.translatable("message.hexcraft.emc_no_value"), true);
+                    if (!com.hexcraft.link.EmcLink.spendPlayerEMC(sp, needEmc)) {
+                        sp.displayClientMessage(Component.translatable("message.hexcraft.emc_unavailable"), true);
                         return;
                     }
-                    data.addCoins(gained);
-                    held.setCount(0);
-                    sp.displayClientMessage(Component.translatable("message.hexcraft.emc_exchanged", gained), true);
+                    data.addCoins(coins);
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.emc_exchanged", coins), true);
                     HextechEvents.sync(sp);
                     return;
                 }

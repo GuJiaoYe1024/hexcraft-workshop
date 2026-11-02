@@ -1,0 +1,4 @@
+total keys: 2496
+hex_ prefixed: 1390
+tacz-ish: hexcraft.config.linked.enableTaczContent | hexcraft.config.linked.enableTaczEquip | hexcraft.config.linked.enableTaczForge | hexcraft.config.linked.enableTaczHextech | hexcraft.config.sub.tacz
+cataclysm-ish: hexcraft.config.linked.enableCataclysmContent | hexcraft.config.linked.enableCataclysmEquip | hexcraft.config.linked.enableCataclysmHextech | hexcraft.config.sub.cataclysm | hexcraft.config.tip.linked.enableCataclysmContent

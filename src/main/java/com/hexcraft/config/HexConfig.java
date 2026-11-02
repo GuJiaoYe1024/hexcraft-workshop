@@ -150,8 +150,11 @@ public class HexConfig {
     /** Alex's Mobs 联动效果全局倍率（默认 1.0） */
     public static final ForgeConfigSpec.DoubleValue AM_EFFECT_MULT;
     // ---- v0.8.3 ProjectE EMC 数值（服务端生效） ----
-    /** EMC 折算晶币汇率：多少 EMC 换 1 晶币（默认 4：与充值页钻石等价——钻石 EMC 8192 / 4 = 2048 晶币 = 充值页钻石兑换价） */
+    /** EMC 折算晶币汇率：多少 EMC 换 1 晶币（默认 1024：与充值页材质通道完全对齐——钻石 EMC 8192 ÷ 1024 = 8 晶币 = 充值页 1 钻石 8 晶币；v0.9.8 修正原默认 4 造成的 256 倍失衡） */
     public static final ForgeConfigSpec.DoubleValue EMC_COIN_RATE;
+    // ---- v0.9.7 FTB Quests 真联动：任务完成奖励基准 ----
+    public static final ForgeConfigSpec.IntValue QUEST_REWARD_BASE_COINS;
+    public static final ForgeConfigSpec.IntValue QUEST_REWARD_BASE_XP;
     // ---- v0.6.22 防卡顿机制（服务端：提示广播节流） ----
     /** 服务端滚动提示广播节流（默认开启：同一玩家同一文本 500ms 内只发 1 次，狂刷的击杀/入账提示自动去重合并，降低网络与客户端渲染压力） */
     public static final ForgeConfigSpec.BooleanValue PERF_TIP_THROTTLE;
@@ -360,8 +363,11 @@ public class HexConfig {
         TF_EFFECT_MULT = b.comment("暮色森林联动效果全局倍率（默认 1.0）").translation("hexcraft.config.v060.tfEffectMult").defineInRange("tfEffectMult", 1.0, 0.0, 10.0);
         // v0.6.22 Alex's Mobs 联动效果倍率（服务端生效；未安装该 mod 时无实际效果）
         AM_EFFECT_MULT = b.comment("Alex's Mobs 联动效果全局倍率（默认 1.0）").translation("hexcraft.config.v060.amEffectMult").defineInRange("amEffectMult", 1.0, 0.0, 10.0);
-        // v0.8.3 ProjectE EMC 数值（服务端生效）
-        EMC_COIN_RATE = b.comment("EMC 折算晶币汇率：多少 EMC 换 1 晶币（默认 4；钻石 EMC 8192 ÷ 4 = 2048 晶币，与充值页钻石兑换价一致。EMC 通道与等价交换海克斯共用此汇率）").translation("hexcraft.config.v060.emcCoinRate").defineInRange("emcCoinRate", 4.0, 1.0, 1000000.0);
+        // v0.8.3 ProjectE EMC 数值（服务端生效；v0.9.8 汇率默认值 4 → 1024：钻石 8192 EMC ÷ 1024 = 8 晶币，与充值页材质通道 1 钻石 8 晶币完全对齐，消除原 256 倍失衡）
+        EMC_COIN_RATE = b.comment("EMC 折算晶币汇率：多少 EMC 换 1 晶币（默认 1024：钻石 EMC 8192 ÷ 1024 = 8 晶币，与充值页 1 钻石 8 晶币完全对齐。EMC 通道与等价交换海克斯共用此汇率）").translation("hexcraft.config.v060.emcCoinRate").defineInRange("emcCoinRate", 1024.0, 1.0, 1000000.0);
+        // ---- v0.9.7 FTB Quests 真联动：任务完成奖励基准（每 1 级 quest 海克斯，叠加 bounty/coin_bonus/xp_bonus 加成） ----
+        QUEST_REWARD_BASE_COINS = b.comment("FTB Quests 任务完成联动奖励：每 1 级 quest 海克斯的基础晶币（再叠加 bounty 悬赏晶币 / coin_bonus 财源倍率）").translation("hexcraft.config.v097.questRewardBaseCoins").defineInRange("questRewardBaseCoins", 20, 0, 100000);
+        QUEST_REWARD_BASE_XP = b.comment("FTB Quests 任务完成联动奖励：每 1 级 quest 海克斯的基础经验值（再叠加 xp_bonus 学识倍率）").translation("hexcraft.config.v097.questRewardBaseXp").defineInRange("questRewardBaseXp", 20, 0, 100000);
         // v0.6.22 防卡顿：服务端滚动提示广播节流（默认开启：同玩家同文本 500ms 内只广播 1 次，
         // 狂刷提示自动去重合并，降低联机网络与客户端渲染压力）
         PERF_TIP_THROTTLE = b.comment("提示广播节流（服务端生效，默认开启：同玩家同文本 500ms 内只发 1 条，击杀/入账狂刷时自动去重，防联机卡顿）").translation("hexcraft.config.v060.perfTipThrottle").define("perfTipThrottle", true);

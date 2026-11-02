@@ -1,0 +1,12 @@
+fmod cards: 16
+enter-draw buttons (should be 0): 0
+eitem rows: 7
+bhex icons: 12
+unique bond icons: 1
+forge-btn: 4
+forgeResult: 1
+worldDraw btn: 1
+enemyDraw btn: 1
+enemyProgBar: 0
+worldDrawRes: 1
+enemyDrawRes: 1

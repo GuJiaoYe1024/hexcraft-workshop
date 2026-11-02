@@ -54,6 +54,58 @@ public final class EmcLink {
         }
     }
 
+    // ================= v0.9.8 玩家 EMC 余额直充（替代主手物品折算） =================
+    // 接口已实查（ProjectE-1.20.1-PE1.0.1）：ProjectEAPI.getTransmutationProxy()
+    //   -> ITransmutationProxy.getKnowledgeProviderFor(UUID)
+    //   -> IKnowledgeProvider.getEmc() : BigInteger / setEmc(BigInteger) / syncEmc(ServerPlayer)
+
+    /** 获取玩家 EMC 知识提供者（IKnowledgeProvider）；未装 projecte 或反射失败返回 null */
+    private static Object knowledgeFor(ServerPlayer sp) {
+        if (sp == null) return null;
+        try {
+            Class<?> api = Class.forName("moze_intel.projecte.api.ProjectEAPI");
+            java.lang.reflect.Method getProxy = api.getMethod("getTransmutationProxy");
+            Object proxy = getProxy.invoke(null);
+            java.lang.reflect.Method getKp = proxy.getClass().getMethod("getKnowledgeProviderFor", java.util.UUID.class);
+            return getKp.invoke(proxy, sp.getUUID());
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** 玩家当前 EMC 余额（未装 projecte / 获取失败返回 -1 表示不可用） */
+    public static long getPlayerEMC(ServerPlayer sp) {
+        Object kp = knowledgeFor(sp);
+        if (kp == null) return -1;
+        try {
+            Object v = kp.getClass().getMethod("getEmc").invoke(kp);
+            if (v instanceof java.math.BigInteger bi) {
+                return bi.signum() > 0 ? bi.longValue() : 0;
+            }
+            return v instanceof Number n ? n.longValue() : 0;
+        } catch (Throwable t) {
+            return -1;
+        }
+    }
+
+    /** 从玩家 EMC 余额扣减 amount（余额不足返回 false，不扣）；成功后同步 ProjectE 客户端显示 */
+    public static boolean spendPlayerEMC(ServerPlayer sp, long amount) {
+        Object kp = knowledgeFor(sp);
+        if (kp == null || amount <= 0) return false;
+        try {
+            Object v = kp.getClass().getMethod("getEmc").invoke(kp);
+            java.math.BigInteger emc = v instanceof java.math.BigInteger bi ? bi : java.math.BigInteger.ZERO;
+            java.math.BigInteger need = java.math.BigInteger.valueOf(amount);
+            if (emc.compareTo(need) < 0) return false;
+            java.math.BigInteger rest = emc.subtract(need);
+            kp.getClass().getMethod("setEmc", java.math.BigInteger.class).invoke(kp, rest);
+            kp.getClass().getMethod("syncEmc", ServerPlayer.class).invoke(kp, sp);
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     /** EMC 折算晶币（向下取整）：emc / EMC_COIN_RATE × (1 + emc_bargain) */
     public static int coinsForEMC(ServerPlayer sp, long emc) {
         if (emc <= 0) return 0;

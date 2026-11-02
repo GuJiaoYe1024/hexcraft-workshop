@@ -3,5 +3,5 @@
   "weight": 8,
   "source": "ftbquests",
   "mods": [],
-  "event": "goldmine:0.25,scholar:0.25"
+  "event": "coin_bonus:0.25,xp_bonus:0.25"
 }

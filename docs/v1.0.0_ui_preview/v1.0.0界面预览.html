@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>海克斯工坊 v1.0.0 界面预览</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 21 7v10l-9 5-9-5V7z' fill='none' stroke='%23c9a6ff' stroke-width='1.6'/%3E%3Cpath d='M12 8 16 10v4l-4 2-4-2v-4z' fill='%23c9a6ff'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0b0e17; --panel:#141a2a; --panel2:#1a2236; --panel3:#202a42;
+    --line:#2a3350; --line2:#39456a;
+    --text:#e8ecf6; --dim:#9aa4bd; --faint:#6b7590;
+    --violet:#c9a6ff; --blue:#8fd3ff; --green:#7ee0a3; --gold:#f0c987; --amber:#e0a44c;
+    --t-white:#e8ecf6; --t-silver:#b8c2d9; --t-gold:#d9c08a; --t-deep:#c99a4a; --t-prism:#c9a6ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font-family:'Microsoft YaHei','PingFang SC',system-ui,sans-serif;font-size:14px;line-height:1.5;min-width:320px}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  .app{display:flex;flex-direction:column;height:100vh;min-height:560px}
+  /* ===== 顶栏 ===== */
+  .topbar{display:flex;align-items:center;gap:10px;padding:0 14px;height:56px;background:linear-gradient(180deg,#161d30,#10151f);border-bottom:1px solid var(--line);flex:none}
+  .logo{width:30px;height:30px;flex:none}
+  .brand{font-size:16px;font-weight:700;letter-spacing:2px;color:var(--violet);white-space:nowrap}
+  .brand small{font-size:10px;color:var(--faint);font-weight:400;letter-spacing:0;margin-left:6px}
+  .topbar .spacer{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);font-size:13px;color:var(--dim);white-space:nowrap}
+  .pill b{color:var(--gold);font-weight:600}
+  .coin{color:var(--gold)}
+  /* ===== 主体 ===== */
+  .body{display:flex;flex:1;min-height:0}
+  /* 左侧导航 */
+  .nav{width:184px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:10px 8px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+  .nav .group{font-size:11px;color:var(--faint);margin:8px 4px 2px;letter-spacing:1px}
+  .nav button{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border-radius:7px;font-size:13px;color:var(--dim);text-align:left;transition:background .15s,color .15s}
+  .nav button:hover{background:var(--panel3);color:var(--text)}
+  .nav button.on{background:var(--panel3);color:var(--violet);box-shadow:inset 2px 0 0 var(--violet)}
+  .nav .tag{font-size:9px;padding:1px 6px;border-radius:8px;background:#33294d;color:var(--violet);margin-left:auto}
+  .nav .tag.w{background:#24324a;color:var(--blue)}
+  .nav .tag.e{background:#3d2f1e;color:var(--gold)}
+  /* 主区 */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+  .draw-top{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden;background:var(--panel2)}
+  .seg button{padding:6px 12px;font-size:13px;color:var(--dim);background:none}
+  .seg button.on{background:var(--violet);color:#14101f;font-weight:600}
+  .draw-info{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn{padding:6px 14px;border-radius:7px;font-size:13px;border:1px solid var(--line2);background:var(--panel2);color:var(--dim)}
+  .btn:hover{border-color:var(--violet);color:var(--violet)}
+  .btn.primary{background:linear-gradient(180deg,#7b5cbf,#5b3f96);border-color:#8f6fd4;color:#fff;font-weight:600}
+  .btn.primary:hover{border-color:var(--violet);color:#fff;filter:brightness(1.1)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  /* 抽卡区 */
+  .stage{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:16px}
+  .cards{display:flex;gap:16px;justify-content:center;align-items:stretch}
+  .card{width:248px;max-width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;position:relative;transition:transform .15s,box-shadow .15s,border-color .15s;cursor:pointer}
+  .card:hover{transform:translateY(-4px);border-color:var(--t-prism);box-shadow:0 10px 28px -12px rgba(201,166,255,.5)}
+  .card.silver{box-shadow:0 0 0 1px var(--t-silver),0 8px 24px -14px rgba(184,194,217,.4)}
+  .card.gold{box-shadow:0 0 0 1px var(--t-gold),0 8px 24px -14px rgba(217,192,138,.45)}
+  .card.deep{box-shadow:0 0 0 1px var(--t-deep),0 8px 26px -12px rgba(201,154,74,.5)}
+  .card.prism{box-shadow:0 0 0 1px var(--t-prism),0 8px 30px -10px rgba(201,166,255,.55)}
+  .card .rar{position:absolute;top:10px;right:12px;font-size:10px;padding:2px 8px;border-radius:8px;background:#2a3350;color:var(--dim)}
+  .card.silver .rar{color:var(--t-silver)} .card.gold .rar{color:var(--t-gold)} .card.deep .rar{color:var(--t-deep)} .card.prism .rar{color:var(--t-prism)}
+  .card .hex{width:46px;height:46px;align-self:center}
+  .card h3{font-size:15px;text-align:center}
+  .card .bonds{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+  .badge{font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--line2);color:var(--dim);background:var(--panel)}
+  .card .desc{font-size:12px;color:var(--dim);min-height:34px}
+  .card .meta{font-size:11px;color:var(--faint);border-top:1px solid var(--line);padding-top:6px}
+  .card .own{position:absolute;top:10px;left:12px;font-size:10px;color:var(--green);border:1px solid #2c4a39;padding:2px 6px;border-radius:8px;background:#14241c}
+  .stage h2{font-size:15px;color:var(--blue)}
+  /* 属性/世界/敌方/联动 通用内容区 */
+  .content{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;flex:1;min-width:220px}
+  .panel h3{font-size:14px;color:var(--blue);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .panel h3 .hl{color:var(--violet)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px}
+  .kv b{color:var(--text);font-weight:600;text-align:right}
+  .kv span{color:var(--dim)}
+  .list{display:flex;flex-direction:column;gap:6px}
+  .wrow{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+  .wrow .nm{font-size:13px;color:var(--text)}
+  .wrow .desc{font-size:12px;color:var(--dim);flex:1}
+  .wrow .cost{font-size:12px;color:var(--gold);white-space:nowrap}
+  .wrow.on{border-color:var(--violet);box-shadow:inset 0 0 0 1px rgba(201,166,255,.3)}
+  .chip{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--panel3);color:var(--dim);white-space:nowrap}
+  /* 羁绊图鉴 */
+  .bondrow{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;transition:border-color .15s}
+  .bondrow:hover{border-color:var(--violet)}
+  .bondrow .hex{width:26px;height:26px;flex:none}
+  .bondrow .nm{font-size:13px;font-weight:600}
+  .bondrow .tier{font-size:10px;padding:2px 8px;border-radius:8px;border:1px solid;white-space:nowrap}
+  .bondrow .tier.t1{color:var(--t-silver);border-color:var(--t-silver)}
+  .bondrow .tier.t2{color:var(--t-gold);border-color:var(--t-gold)}
+  .bondrow .tier.t3{color:var(--t-deep);border-color:var(--t-deep)}
+  .bondrow .tier.t4{color:var(--t-prism);border-color:var(--t-prism);background:rgba(201,166,255,.08)}
+  .bondrow .bar{flex:1;height:5px;border-radius:3px;background:var(--panel3);overflow:hidden;max-width:160px}
+  .bondrow .bar i{display:block;height:100%;background:var(--violet);border-radius:3px}
+  .bondrow .cnt{font-size:12px;color:var(--dim);white-space:nowrap}
+  .bondrow .mec{font-size:11px;color:var(--faint);margin-left:auto;white-space:nowrap}
+  /* 覆盖层 */
+  .mask{position:fixed;inset:0;background:rgba(5,8,14,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .mask.open{display:flex}
+  .sheet{width:560px;max-width:100%;max-height:86vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:20px;position:relative}
+  .sheet h2{font-size:17px;color:var(--violet);margin-bottom:4px}
+  .sheet .sub{font-size:12px;color:var(--dim);margin-bottom:12px}
+  .sheet .close{position:absolute;top:12px;right:14px;font-size:18px;color:var(--dim);padding:4px}
+  .sheet .close:hover{color:var(--text)}
+  .tierline{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);margin-bottom:6px}
+  .tierline .t{font-size:12px;font-weight:600;width:74px;flex:none}
+  .tierline .t.eff{font-size:12px;color:var(--dim)}
+  .member{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 9px;border-radius:7px;background:var(--panel3);color:var(--dim);margin:0 5px 5px 0}
+  .member.have{color:var(--green);border:1px solid #2c4a39;background:#14241c}
+  .prismtip{margin-top:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--t-prism);background:rgba(201,166,255,.07);font-size:13px;color:var(--t-prism)}
+  /* 勾选池 */
+  .poolgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}
+  .pool{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:13px;color:var(--dim);cursor:pointer}
+  .pool.on{border-color:var(--violet);color:var(--text);background:var(--panel3)}
+  .pool .ck{width:16px;height:16px;border:1px solid var(--line2);border-radius:4px;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;color:#14101f;background:var(--panel3)}
+  .pool.on .ck{background:var(--violet);border-color:var(--violet)}
+  /* 充值中心 v2：材质⇄晶币兑换（贴合游戏内 HextechPageScreen 现有玩法） */
+  .rcg-asset{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:14px 18px;border:1px solid var(--line2);border-radius:12px;background:linear-gradient(120deg,rgba(201,166,255,.10),rgba(13,18,30,.4) 55%),var(--panel2)}
+  .rcg-asset .lab{font-size:11px;color:var(--faint);letter-spacing:1px}
+  .rcg-asset .coin-big{font-size:32px;font-weight:800;color:var(--gold);line-height:1.1;text-shadow:0 0 20px rgba(240,201,135,.35)}
+  .rcg-asset .asset-kv{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--dim);padding-left:18px;border-left:1px solid var(--line2)}
+  .rcg-asset .asset-kv b{color:var(--text);font-weight:600}
+  .rcg-sec{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:12px 14px;margin-top:14px}
+  .rcg-sec-h{font-size:13px;color:var(--text);font-weight:600;margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
+  .rcg-sec-h span{font-size:11px;color:var(--faint);font-weight:400}
+  .rcg-rows{display:flex;flex-direction:column;gap:6px}
+  .rcg-row{display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  .rcg-row .mats{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text);width:104px;flex:none}
+  .rcg-row .mats i{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .rcg-row .rte{font-size:12px;color:var(--dim);flex:1}
+  .rcg-row .btns{display:flex;gap:6px;flex-wrap:wrap}
+  .xb{padding:4px 10px;border-radius:6px;border:1px solid var(--line2);background:var(--panel3);color:var(--dim);font-size:12px}
+  .xb:hover{border-color:var(--violet);color:var(--violet)}
+  .rcg-emc{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px;border:1px dashed #7f7fff;border-radius:8px;background:rgba(127,127,255,.06)}
+  .rcg-emc .emc-item{font-size:13px;color:var(--text)}
+  .rcg-emc .emc-rate{font-size:12px;color:var(--gold);font-weight:600}
+  .rcg-detail{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .rcg-detail .hl{color:var(--gold)}
+  .rcg-detail .preview{font-size:12px;color:var(--faint);border-top:1px dashed var(--line2);padding-top:8px}
+  @media (max-width:600px){.rcg-row{flex-wrap:wrap}.rcg-row .rte{flex:none;width:100%}}
+  .forge-pool{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  .fpool{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+  .fpool .h{font-size:13px;color:var(--gold)}
+  .fpool span{font-size:12px;color:var(--dim)}
+  @media (max-width:600px){.forge-pool{grid-template-columns:1fr}}
+  .count{font-size:13px;color:var(--dim);margin-bottom:10px}
+  .count b{color:var(--violet)}
+  /* 提示 */
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--panel3);border:1px solid var(--line2);color:var(--text);padding:9px 18px;border-radius:9px;font-size:13px;opacity:0;pointer-events:none;transition:all .25s;z-index:80;box-shadow:0 10px 30px -12px #000}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast b{color:var(--violet)}
+  .note{font-size:11px;color:var(--faint);border:1px dashed var(--line);border-radius:8px;padding:8px 12px}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  /* 自选池锁定 */
+  .seg button.lock{position:relative;color:var(--faint)}
+  .seg button.lock::after{content:"锁";position:absolute;top:-7px;right:-4px;font-size:8px;color:#e0a44c;border:1px solid #5c4726;border-radius:7px;padding:0 4px;background:#251d0e}
+  .seg button.lock:hover{color:var(--faint)}
+  /* 属性双列 */
+  .attrgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:13px}
+  .attrgrid .it{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:6px;background:var(--panel2);border:1px solid var(--line)}
+  .attrgrid .it b{color:var(--text);font-weight:600}
+  .attrgrid .it b.g{color:var(--gold)}
+  .attrgrid .it b.v{color:var(--violet)}
+  .attrgrid .it span{color:var(--faint);font-size:11px}
+  /* 联动 mod 卡 */
+  .fmod{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .fmod .hd{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .fmod .hd b{font-size:14px;color:var(--text)}
+  .fmod .hd .cnt{font-size:12px;color:var(--faint)}
+  .fmod .chips{display:flex;gap:5px;flex-wrap:wrap}
+  .fmod .chips span{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--panel3);color:var(--dim);border:1px solid var(--line)}
+  .fmod.off{opacity:.62}
+  .fmod.off .chips span{color:var(--faint)}
+  /* 敌方机制 */
+  .mechbox{padding:10px 12px;border-radius:8px;border:1px solid var(--t-deep);background:rgba(224,164,76,.07);font-size:13px;color:var(--text)}
+  .mechbox b{color:var(--gold)}
+  .prog{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .prog .track{flex:1;height:9px;border-radius:5px;background:var(--panel3);overflow:hidden;border:1px solid var(--line)}
+  .prog .track i{display:block;height:100%;background:linear-gradient(90deg,#e0a44c,#c99a4a);border-radius:5px}
+  .prog .lab{font-size:12px;color:var(--gold);white-space:nowrap}
+  /* 羁绊详情增强 */
+  .srcchip{display:inline-flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+  .srcchip span{font-size:11px;padding:3px 9px;border-radius:7px;border:1px solid var(--line2);color:var(--dim);background:var(--panel2)}
+  .mechdesc{padding:10px 12px;border-radius:8px;border:1px solid var(--t-prism);background:rgba(201,166,255,.06);font-size:13px;color:var(--text);margin-bottom:12px}
+  .mechdesc b{color:var(--violet)}
+  .sec-t{font-size:13px;color:var(--blue);margin:12px 0 6px}
+  /* ===== 稀有度流光 ===== */
+  .card{--rc:#e8ecf6;--rc-soft:rgba(232,236,246,.35)}
+  .card.silver{--rc:#b8c2d9;--rc-soft:rgba(184,194,217,.4)}
+  .card.gold{--rc:#d9c08a;--rc-soft:rgba(217,192,138,.45)}
+  .card.deep{--rc:#c99a4a;--rc-soft:rgba(201,154,74,.5)}
+  .card.prism{--rc:#c9a6ff;--rc-soft:rgba(201,166,255,.55)}
+  .card{border-color:var(--rc);animation:rarBreath 3s ease-in-out infinite}
+  @keyframes rarBreath{0%,100%{box-shadow:0 0 0 1px var(--rc),0 6px 22px -14px var(--rc-soft)}50%{box-shadow:0 0 0 2px var(--rc),0 6px 36px -8px var(--rc-soft)}}
+  .card::after{content:"";position:absolute;inset:0;border-radius:12px;pointer-events:none;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.14) 50%,transparent 60%);background-size:220% 100%;animation:shimmer 2.8s linear infinite}
+  @keyframes shimmer{0%{background-position:180% 0}100%{background-position:-80% 0}}
+  @media (prefers-reduced-motion: reduce){.card,.card::after,.glowdot{animation:none!important}}
+  /* 卡面图案 */
+  .art{position:relative;height:150px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 120% at 50% 10%,rgba(255,255,255,.05),rgba(0,0,0,.28)),var(--bg);border:1px solid var(--line)}
+  .art svg{width:92px;height:92px}
+  .art .ttl{position:absolute;left:0;right:0;bottom:0;padding:4px 10px;font-size:11px;color:var(--dim);background:linear-gradient(180deg,transparent,rgba(5,8,14,.75));text-align:center}
+  .glowdot{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:60%;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--rc),transparent);animation:shimmer 2.8s linear infinite}
+  /* 联动网格 + 搜索筛选 */
+  .fsearch{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+  .fsearch input{flex:1;min-width:180px;padding:7px 12px;border-radius:7px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font-size:13px;font-family:inherit;outline:none}
+  .fsearch input:focus{border-color:var(--violet)}
+  .fseg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+  .fseg button{padding:6px 12px;font-size:13px;color:var(--dim);background:none}
+  .fseg button.on{background:var(--blue);color:#10151f;font-weight:600}
+  .fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media (max-width:1100px){.fgrid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:767px){.fgrid{grid-template-columns:1fr}}
+  .fmod{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;display:flex;flex-direction:column;gap:8px}
+  .fmod .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .fmod .hd b{font-size:14px;color:var(--text)}
+  .fmod .hd .cnt{font-size:12px;color:var(--faint)}
+  .fmod.off{opacity:1}
+  .fmod.off .hd b{color:var(--faint)}
+  .fmod .act{display:flex;gap:6px;margin-left:auto}
+  .fmod .act .btn{padding:4px 10px;font-size:12px}
+  .fmod .fold{display:flex;flex-direction:column;gap:4px;border-top:1px dashed var(--line);padding-top:8px}
+  .lnk{display:flex;gap:8px;font-size:12px;padding:4px 6px;border-radius:6px;align-items:baseline}
+  .lnk b{color:var(--text);white-space:nowrap}
+  .lnk span{color:var(--dim);line-height:1.45}
+  .lnk:hover{background:var(--panel3)}
+  .fmod .exp{margin-left:auto;font-size:11px;color:var(--faint);padding:2px 6px;border-radius:6px;border:1px solid var(--line2);background:none}
+  .fmod .exp:hover{color:var(--violet);border-color:var(--violet)}
+  /* 装备/锻造图案 */
+  .eitem{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+  .eitem .ic{width:40px;height:40px;flex:none;border-radius:9px;background:var(--panel3);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--gold)}
+  .eitem svg{width:26px;height:26px}
+  .eitem .nm{font-size:14px;color:var(--text);font-weight:600}
+  .eitem .desc{font-size:12px;color:var(--dim)}
+  .eitem:hover{background:var(--panel3)}
+  .forge-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .forge-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font-size:13px}
+  .forge-btn:hover{border-color:var(--violet);color:var(--violet)}
+  .forge-btn svg{width:20px;height:20px;color:var(--gold)}
+  /* 图鉴分组色徽章 */
+  .bhex{width:26px;height:26px;flex:none}
+  .g0{color:#c9a6ff}.g1{color:#8fd3ff}.g2{color:#7ee0a3}.g3{color:#f0c987}.g4{color:#ffb37a}
+  /* 详情覆盖层海克斯 */
+  .sheet .rarline{display:flex;gap:6px;align-items:center;margin:6px 0 10px}
+  .sheet .rarline .dot{width:12px;height:12px;border-radius:50%;background:var(--rc,#c9a6ff);box-shadow:0 0 10px var(--rc,#c9a6ff)}
+  .sheet .effectbox{padding:10px 12px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);font-size:13px;color:var(--text);margin-bottom:8px}
+  @media (max-width:767px){
+    .app{height:auto;min-height:100vh}
+    .topbar{flex-wrap:wrap;height:auto;padding:8px 12px;gap:6px}
+    .body{flex-direction:column}
+    .nav{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);padding:6px}
+    .nav .group{display:none}
+    .nav button{width:auto;white-space:nowrap;flex:none;font-size:12px;padding:7px 10px}
+    .cards{flex-direction:column;align-items:center}
+    .card{width:100%;max-width:340px}
+    .draw-top{flex-direction:column;align-items:flex-start}
+    .draw-info{margin-left:0}
+    .poolgrid{grid-template-columns:1fr}
+    .wrow{flex-wrap:wrap}
+    .bondrow .bar{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7z" fill="none" stroke="#c9a6ff" stroke-width="1.4"/><path d="M12 8 16 10v4l-4 2-4-2v-4z" fill="#c9a6ff"/></svg>
+    <div class="brand">海克斯工坊<small>v1.0.0 界面预览</small></div>
+    <div class="spacer"></div>
+    <div class="pill">晶币 <b class="coin" id="coinVal">12,480</b></div>
+    <div class="pill">叠层 <b>1,024 / ∞</b></div>
+    <button class="pill" onclick="toast('设置页在 v1.0.0 落地')"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align:-2px"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 4.9a8.6 8.6 0 0 0 0-2.8l2-1.5-2-3.4-2.3 1a8.7 8.7 0 0 0-2.4-1.4L15.4 3h-4l-.3 2.3a8.7 8.7 0 0 0-2.4 1.4l-2.3-1-2 3.4 2 1.5a8.6 8.6 0 0 0 0 2.8l-2 1.5 2 3.4 2.3-1a8.7 8.7 0 0 0 2.4 1.4l.3 2.3h4l.3-2.3a8.7 8.7 0 0 0 2.4-1.4l2.3 1 2-3.4-2-1.5z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg> 设置</button>
+  </header>
+  <div class="body">
+    <nav class="nav" id="nav"></nav>
+    <main class="main">
+      <!-- ===== 视图：海克斯抽取 ===== -->
+      <section class="view" id="v-draw">
+        <div class="draw-top">
+          <div class="seg" id="modeSeg">
+            <button data-mode="total" class="on">单一总池</button>
+            <button data-mode="cat">三大分类池</button>
+            <button data-mode="pick" class="lock" title="需拥有 30 个海克斯解锁">自选池</button>
+          </div>
+          <div class="draw-info">
+            <span class="pill">当前池 <b id="poolLabel">全部海克斯</b></span>
+            <span class="pill">剩余 <b id="leftDraws">23 次</b></span>
+            <button class="btn" id="rerollBtn">重投（150 晶币）</button>
+            <button class="btn primary" id="drawBtn">再抽一次</button>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="cards" id="drawCards"></div>
+          <div class="note">v1.0.0 预览：三张卡为大尺寸卡面，稀有度整卡流光（白→银→浅金→深金→棱彩紫），卡面含羁绊徽记图案；点击卡面弹出详情（效果 / 稀有度 / 来源池 / 详细介绍）。池模式：单一总池 / 三大分类池 / 自选 3~10 个池。被跳过的海克斯本会话不再出现。</div>
+        </div>
+      </section>
+      <!-- ===== 视图：属性 ===== -->
+      <section class="view" id="v-attr" hidden>
+        <div class="content">
+          <div class="row">
+            <div class="panel"><h3>基础属性</h3><div class="kv"><b title="最大生命上限，受龙血、不灭之躯等海克斯加成">生命值</b><span title="受装备与羁绊加成">1,024</span><b title="物理减伤来源，护甲越高受到的近战/箭矢伤害越低">护甲</b><span title="抗硬直与击退能力">120</span><b title="减少被控制（冰冻/麻痹）时间">韧性</b><span title="基础韧性值，叠层可提升">60</span><b title="基础攻击力，近战与远程伤害基础">攻击</b><span title="含锻造力量增幅加成">72</span><b title="每秒攻击次数，攻速越高出刀越快">攻速</b><span title="受攻速增幅影响">1.8</span><b title="移动速度（格/秒），疾风之靴等装备可提升">移速</b><span title="基础移速">0.32</span><b title="影响暴击率与掉落品质">幸运</b><span title="幸运值越高暴击/稀有掉落概率越大">25</span></div></div>
+            <div class="panel"><h3>装备锻造</h3><div class="kv"><b title="锻造器白银档产出：每级攻击力 +6">力量增幅</b><span title="12 级 = 攻击 +72">Lv 12</span><b title="锻造器白银档产出：每级护甲 +4">防御增幅</b><span title="9 级 = 护甲 +36">Lv 9</span><b title="锻造器黄金档产出：每级最大生命 +15%">生命增幅</b><span title="15% = 生命上限 ×1.15">Lv 15%</span><b title="锻造器棱彩档产出：每级攻速 +3%">攻速增幅</b><span title="3% = 每秒攻击次数 ×1.03">Lv 3%</span></div></div>
+            <div class="panel"><h3>战斗叠层</h3><div class="kv"><b title="连续战斗叠加的层数，上限随叠层专家羁绊档位解锁">当前叠层</b><span title="叠层专家 10 件满员后叠层无上限">1,024 / ∞（已解锁）</span><b title="每 1 层叠层提供 +0.4% 伤害加成">每层伤害</b><span title="1,024 层 = 伤害 +409.6%">+0.4%</span><b title="叠层专家羁绊：10 件满员解锁叠层无上限 ∞，棱彩满档">叠层专家</b><span class="hl">10 件满员 · 棱彩</span></div></div>
+          </div>
+          <div class="panel"><h3>隐藏属性 <span class="chip">由海克斯 / 羁绊机制提供</span></h3><div class="attrgrid" id="hiddenAttrs"></div>
+            <div class="note" style="margin-top:10px">隐藏属性不在基础面板显示，只有持有对应海克斯或羁绊时激活；数值随叠层/档位动态变化（v1.0.0 预览为示意值）。</div>
+          </div>
+        </div>
+      </section>
+      <!-- ===== 视图：世界海克斯（合并） ===== -->
+      <section class="view" id="v-world" hidden>
+        <div class="content">
+          <div class="row">
+            <div class="panel"><h3>世界海克斯 <span class="chip">全服生效</span></h3><div class="list" id="worldList"></div></div>
+            <div class="panel" style="max-width:300px"><h3>抽取世界海克斯</h3>
+              <div class="kv"><b>首抽费用</b><span>300 晶币</span><b>费用递增</b><span>每次 +10%</span></div>
+              <button class="btn primary" style="width:100%;margin-top:10px" onclick="worldDraw()">抽取世界海克斯</button>
+              <div id="worldDrawRes" style="margin-top:10px"></div>
+              <button class="btn" style="width:100%;margin-top:8px" onclick="switchView('enemy')">前往敌方海克斯 →</button>
+            </div>
+          </div>
+          <div class="note">v1.0.0 合并方案：原「海克斯工坊主界面」与「世界海克斯界面（K 键 / 背包第二页签）」合并为同一个大界面——世界海克斯、敌方海克斯、联动总览全部收进左侧导航，不再单独开界面。世界海克斯全服生效，抽取结果即时展示并加入生效列表。</div>
+        </div>
+      </section>
+      <!-- ===== 视图：敌方海克斯 ===== -->
+      <section class="view" id="v-enemy" hidden>
+        <div class="content">
+          <div class="mechbox"><b>敌方海克斯</b>：与世界海克斯完全分开、独立生效——它<u>只强化敌对生物（怪物）</u>的数值与机制，纯提升世界难度，不作用于玩家。获取方式两条：①<b>自动新增</b>——玩家每拥有 10 个海克斯，自动新增 1 个敌方海克斯；②<b>主动抽取</b>——消耗晶币手动抽取一个加入世界。</div>
+          <div class="panel"><h3>当前生效 <span class="chip">怪物强化</span></h3>
+            <div class="prog"><div class="track"><i id="enemyAutoBar" style="width:30%"></i></div><div class="lab" id="enemyAutoLab">玩家拥有 23 个海克斯 → 自动敌对 2 个（每 10 个 +1）· 距下个 3/10</div></div>
+            <button class="btn primary" style="margin-top:10px" onclick="enemyDraw()">主动抽取敌方海克斯（消耗 500 晶币）</button>
+            <div id="enemyDrawRes" style="margin-top:10px"></div>
+            <div class="list" style="margin-top:12px" id="enemyList"></div>
+          </div>
+        </div>
+      </section>
+      <!-- ===== 视图：羁绊图鉴 ===== -->
+      <section class="view" id="v-bonds" hidden>
+        <div class="content">
+          <div class="draw-top" style="border:none;padding:0">
+            <div class="seg" id="bondGroupSeg">
+              <button data-g="all" class="on">全部</button>
+              <button data-g="0">原生</button>
+              <button data-g="1">新流派</button>
+              <button data-g="2">叠层专家</button>
+              <button data-g="3">逆原</button>
+              <button data-g="4">大乱斗</button>
+            </div>
+            <span class="pill" style="margin-left:auto">47 条 · 含未拥有</span>
+          </div>
+          <div class="list" id="bondList"></div>
+          <div class="note">v1.0.0 图鉴化：摘要列表 → 点击羁绊弹出详情覆盖层（5 档效果逐档展示 / 成员已拥有高亮 / 连锁进度 / 满员棱彩 ×2 提示）。</div>
+        </div>
+      </section>
+      <!-- ===== 视图：锻造器 / 装备 / 充值 / 联动总览 ===== -->
+      <section class="view" id="v-forge" hidden>
+        <div class="content"><div class="panel"><h3>锻造器</h3><div class="kv"><b>白银锻造</b><span>50 晶币</span><b>黄金锻造</b><span>150 晶币</span><b>棱彩锻造</b><span>400 晶币</span><b>随机锻造</b><span>随机档位</span></div><div class="forge-row" style="margin-top:10px"><button class="forge-btn" onclick="forgeDraw('rand')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 5l3-3 2 2-3 3M8 12l6-6 3 3-6 6M5 15l6-6"/><path d="M4 20c2.5-2.5 5-1.5 6-1M10 19l6 1" stroke-width="1.2"/></svg>随机锻造</button><button class="forge-btn" onclick="forgeDraw('silver')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4c3 2.5 3.5 6 2 9l-4 6-4-6c-1.5-3-1-6.5 2-9z" stroke-width="1.1"/><path d="M10 9l4 3M12 8l1.5 3" stroke-width="1"/></svg>白银</button><button class="forge-btn" onclick="forgeDraw('gold')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.5 20 7v10l-8 4.5-8-4.5V7z"/><path d="M12 6 16.5 8.5V13.5L12 16 7.5 13.5V8.5z" stroke-width="1"/></svg>黄金</button><button class="forge-btn" onclick="forgeDraw('prism')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 21 7v10l-9 5-9-5V7z"/><path d="M12 6.5 17.5 9v6L12 17.5 6.5 15V9z" stroke-width="1"/><circle cx="12" cy="12" r="1.6" stroke-width="1"/></svg>棱彩</button></div><div id="forgePool" class="forge-pool"></div><div id="forgeResult" style="margin-top:10px"></div></div></div>
+      </section>
+      <section class="view" id="v-equip" hidden>
+        <div class="content"><div class="panel"><h3>装备</h3><div class="list" id="equipList"></div></div></div>
+      </section>
+      <section class="view" id="v-recharge" hidden>
+        <div class="content"><div class="panel" style="max-width:820px"><h3>充值 · 材质⇄晶币兑换</h3>
+            <div class="rcg-asset">
+              <div class="asset-coin"><div class="lab">当前晶币</div><div class="coin-big" id="rcgCoinBig">12,480</div></div>
+              <div class="asset-kv"><span><b>兑换通道</b>　材质 → 晶币 / 晶币 → 绿宝石 / EMC → 晶币</span><span><b>规则</b>　与游戏内现有充值玩法一致 · 按服务端费率结算</span></div>
+            </div>
+            <div class="rcg-sec"><div class="rcg-sec-h">材质 → 晶币<span>6 种材质按费率兑换，即时到账</span></div>
+              <div class="rcg-rows" id="rcgMatRows"></div>
+            </div>
+            <div class="rcg-sec"><div class="rcg-sec-h">晶币 → 绿宝石<span>30 晶币 = 1 绿宝石</span></div>
+              <div class="rcg-rows" id="rcgBackRows"></div>
+            </div>
+            <div class="rcg-sec"><div class="rcg-sec-h">EMC 通道 → 晶币<span>需安装 ProjectE · 1024 EMC = 1 晶币（钻石 8192 EMC = 8 晶币，与材质通道完全对齐）</span></div>
+              <div class="rcg-emc">
+                <div class="rcg-row"><span class="mats"><i style="background:#7f7fff"></i>玩家 EMC 余额</span><span class="rte" id="emcBal">42,240 EMC</span><span class="btns" id="emcBtns"></span></div>
+                <div class="emc-rate">从玩家自身 EMC 余额直接充值（v0.9.8 起不再折算/销毁手上物品）· emc_bargain 加成可抵减所需 EMC · 数值以游戏内实时结算为准</div>
+              </div>
+              <div class="emc-table" id="emcTable"></div>
+            </div>
+            <div class="note" style="margin-top:12px">与游戏内现有充值界面一致：6 种材质（绿宝石/铜锭/铁锭/金锭/钻石/下界合金锭）按费率兑换晶币，晶币可换回绿宝石；EMC 通道读取玩家自身 ProjectE 余额直充晶币，附常用材料 EMC 换算表（铁/金/钻石为 ProjectE 稳定值，其余以游戏内实时查询为准）。v1.0.0 预览为模拟流程，不产生真实物品/晶币变动。</div>
+          </div></div>
+        <div class="mask" id="rcgMask" onclick="if(event.target===this)closeRcg()"><div class="sheet"><h2>确认兑换</h2><div class="sub">模拟流程 · 不产生真实物品变动</div><div class="rcg-detail">
+            <div class="kv"><b>兑换方向</b><span id="rcgDir"></span></div>
+            <div class="kv"><b>数量</b><span id="rcgCnt"></span></div>
+            <div class="kv"><b>兑换结果</b><span class="hl" id="rcgRes"></span></div>
+            <div class="preview" id="rcgPrev"></div>
+          </div><div class="row" style="margin-top:14px"><button class="btn" onclick="closeRcg()">取消</button><button class="btn primary" onclick="confirmRcg()">确认兑换</button></div></div></div>
+      </section>
+      <section class="view" id="v-future" hidden>
+        <div class="content">
+          <div class="note">v1.0.0 联动总览：只查看已支持/可支持的联动 mod——<b>哪些已启用、哪些未启用</b>，以及各 mod 的联动海克斯与效果。联动 mod 持续新增时，此页以网格扩展，支持搜索与状态筛选。</div>
+          <div class="fsearch">
+            <input id="linkSearch" type="text" placeholder="搜索联动海克斯 / 效果关键词…">
+            <div class="fseg" id="linkStateSeg">
+              <button data-s="all" class="on">全部</button>
+              <button data-s="ok">已安装</button>
+              <button data-s="off">未安装</button>
+            </div>
+          </div>
+          <div class="fgrid" id="futureList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<!-- ===== 覆盖层：羁绊详情 ===== -->
+<div class="mask" id="bondMask" onclick="if(event.target===this)closeBond()">
+  <div class="sheet" id="bondSheet"></div>
+</div>
+<!-- ===== 覆盖层：自选池 ===== -->
+<div class="mask" id="poolMask" onclick="if(event.target===this)closePool()">
+  <div class="sheet" id="poolSheet"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  /* ===== 数据（羁绊名称为真实设计，数值为预览示例） ===== */
+  var BONDS=[
+    {g:0,n:"深渊守望",t:4,m:"原生 · 12 成员 3/6/8/10/12",have:9,total:12,src:"原生 · 海克斯工坊本体",mechDesc:"深渊系最强输出档：满档飞升——持续战斗 8 秒后进入飞升状态，期间全伤害加成。飞升是 v1.0.0 新增专属机制（ascend），战斗中后期自动触发。",tiers:[["3 件","暗黑伤害 +15%"],["6 件","暗黑伤害 +30%"],["8 件","暗黑伤害 +50%"],["10 件","濒死守护 +20%"],["12 件","飞升：持续战斗 8 秒全伤加成"]],members:["深渊使徒","深渊领主","暗域行者","噬魂者","深渊召唤师","虚空注视者","深渊祭司","深渊仆从","深渊守卫","深渊支配者","暗影编织者","深渊巨口"],mech:"专属机制：飞升（满档）"},
+    {g:0,n:"不灭之躯",t:4,m:"原生 · 12 成员 3/6/8/10/12",have:12,total:12,src:"原生 · 海克斯工坊本体",mechDesc:"满档金刚不坏：单次伤害超过最大生命 10% 的部分减免 30%。配合叠层护盾（ironbody）是最肉羁绊，高难世界保命核心。",tiers:[["3 件","过载护盾 +10%"],["6 件","过载护盾 +20%"],["8 件","低血护盾 ×2"],["10 件","濒死守护 +20%"],["12 件","金刚不坏：单次伤害超 10% 生命部分减免 30%"]],members:["不灭战体","永世征伐","再生之躯","永恒壁垒","不死意志","不朽之魂","钢铁之躯","不屈斗士","圣盾卫士","玄武守护","永夜肉身","重生者"],mech:"专属机制：金刚不坏（满档）"},
+    {g:0,n:"灾厄猎手",t:4,m:"原生 · 12 成员 3/6/8/10/12",have:7,total:12,src:"原生 · 海克斯工坊本体",mechDesc:"满档闪电链（chain_lightning）：命中时概率电击附近敌人并造成 50% 溅射伤害，v1.0.0 新增专属机制，群战清怪核心。",tiers:[["3 件","灾变伤害 +15%"],["6 件","灾变伤害 +30%"],["8 件","处决 +15%"],["10 件","灾变伤害 +75%"],["12 件","闪电链：命中概率电击附近敌人 50% 伤害"]],members:["灾厄使者","灾厄骑士","猎魔人","追猎者","毁灭猎手","终末追击者","死兆猎手","灾厄之眼","猎杀时刻","末日使者","天灾行者","亡者猎手"],mech:"专属机制：闪电链（满档）"},
+    {g:1,n:"连击流",t:2,m:"新流派 · 10 成员 2/4/6/8/10",have:6,total:10,src:"新流派 · v0.9.7 机制化",mechDesc:"混档机制：双子射击 + 狂暴，攻速流核心。档位越高双子射击触发越频繁，配合枪械/连击系海克斯输出翻倍。",tiers:[["2 件","双子射击 +5%"],["4 件","双子射击 +10%"],["6 件","狂暴 +10%"],["8 件","双子射击 +20%"],["10 件","双子射击 +25%"]],members:["攻速狂人","连击大师","双枪猎手","弹幕射手","疾风连打","连招王","速射专家","连击新星","枪林弹雨","无限连击"],mech:"混档机制：双子射击 + 狂暴"},
+    {g:1,n:"燃烧流",t:2,m:"新流派 · 10 成员 2/4/6/8/10",have:4,total:10,src:"新流派 · v0.9.7 机制化",mechDesc:"混档机制：引燃链 + 吸血。燃烧目标受击叠层，吸血按燃烧层数结算，续航与持续伤害兼顾（燃愈不爆炸）。",tiers:[["2 件","引燃链 +10%"],["4 件","引燃链 +20%"],["6 件","引燃链 +35%"],["8 件","引燃链 +50%"],["10 件","吸血 +15%"]],members:["烈焰行者","燃尽者","薪火相传","灼烧专家","烈焰信徒","余烬操控者","火种守卫","燃烧使徒","烈火金刚","永燃之魂"],mech:"混档机制：引燃链 + 吸血（燃愈不爆炸）"},
+    {g:1,n:"斩杀流",t:2,m:"新流派 · 10 成员 2/4/6/8/10",have:3,total:10,src:"新流派 · v0.9.7 机制化",mechDesc:"混档机制：处决 + 狂暴。处决总封顶 20% 最大生命，配合处决系海克斯快速清场，BOSS 战主力输出羁绊。",tiers:[["2 件","处决 +5%"],["4 件","处决 +10%"],["6 件","狂暴 +10%"],["8 件","处决 +20%"],["10 件","处决 +25%"]],members:["处刑人","斩杀者","断头台","灭杀专家","收割者","处决大师","一击必杀","终焉行刑官","死亡判决","绝命一击"],mech:"混档机制：处决 + 狂暴"},
+    {g:1,n:"经济流",t:2,m:"新流派 · 10 成员 2/4/6/8/10",have:8,total:10,src:"新流派 · v0.9.7 机制化",mechDesc:"混档机制：晶币加成 + 悬赏。悬赏目标额外掉落晶币，前期发育核心，配合世界海克斯的晶币规则收益最大化。",tiers:[["2 件","晶币加成 +10%"],["4 件","晶币加成 +20%"],["6 件","悬赏 ×3"],["8 件","晶币加成 +35%"],["10 件","晶币加成 +70%"]],members:["生财有道","点石成金","聚宝盆","财神附体","商人","理财大师","幸运星","富贵逼人","摇钱树","金币雨"],mech:"混档机制：晶币 + 悬赏"},
+    {g:3,n:"壁垒",t:4,m:"逆原 · 9 成员 1/3/5/7/9",have:9,total:9,src:"逆原 · 原点猎场 DLC",mechDesc:"满档荆棘装甲（thorn_armor）：近战反弹比例伤害，配合过载护盾走反伤流，克制高攻速近战怪物。",tiers:[["1 件","过载护盾 +15%"],["3 件","过载护盾 +25%"],["5 件","低血护盾 ×2"],["7 件","过载护盾 +55%"],["9 件","荆棘装甲：近战反弹比例伤害"]],members:["重装壁垒","铁壁","城塞卫士","盾卫","坚不可摧","不动要塞","荆棘之墙","反击堡垒","玄武重装"],mech:"专属机制：荆棘装甲（满档）"},
+    {g:3,n:"力场",t:4,m:"逆原 · 9 成员 1/3/5/7/9",have:5,total:9,src:"逆原 · 原点猎场 DLC",mechDesc:"满档引力场：持续吸附并减速周围敌人，把近战怪控在射程内，配合远程/枪械羁绊站桩输出。",tiers:[["1 件","韧性 +10%"],["3 件","韧性 +20%"],["5 件","受击硬直减免"],["7 件","韧性 +40%"],["9 件","引力场：吸附附近敌人并减速"]],members:["力场守卫","重力操控者","磁场掌控","立场护盾","空间稳定器","引力核心","斥力大师","场域支配者","力场主宰"],mech:"专属机制：引力场（满档）"},
+    {g:2,n:"叠层专家",t:4,m:"叠层专家 · 10 成员 2/4/6/8/10",have:10,total:10,src:"叠层专家 · 机制系",mechDesc:"梯级解锁叠层上限：2/4/6/8/10 件分别解锁 400/600/800/1,000/∞。满员棱彩 ×2 后叠层不设上限，是长期养成终极羁绊。",tiers:[["2 件","叠层上限 400"],["4 件","叠层上限 600"],["6 件","叠层上限 800"],["8 件","叠层上限 1,000"],["10 件","叠层无上限 ∞"]],members:["叠层大师","积攒专家","永世征伐","叠甲龙","层叠核心","蓄力者","聚变体","叠层领主","万层之躯","叠层主宰"],mech:"机制系：个人叠层梯级解锁（满档 ∞）"},
+    {g:4,n:"炮竹",t:2,m:"大乱斗 · 8 成员 2/4/6/8",have:6,total:8,src:"大乱斗 · ARAM 借鉴",mechDesc:"双子射击连发（官方飞弹弹射），大乱斗枪械流专属，攻速拉满后弹幕密集清怪。",tiers:[["2 件","双子射击 +10%"],["4 件","双子射击 +20%"],["6 件","枪械增伤 +40%"],["8 件","枪械增伤 +50%"]],members:["鞭炮","窜天猴","二踢脚","烟花","礼炮","爆竹","冲天炮","五彩炮"],mech:"机制系：双子射击连发（官方飞弹弹射）"}
+  ];
+  var WORLD=[
+    {n:"战争意志",desc:"全体玩家伤害 +5%（全服生效）",cost:"生效中",on:true},
+    {n:"黄金时代",desc:"全体玩家晶币获取 +20%",cost:"生效中",on:true},
+    {n:"远古回响",desc:"经验需求 ×1.5（当前世界规则）",cost:"生效中",on:true}
+  ];
+  var ENEMY=[
+    {n:"铁甲之躯",desc:"怪物护甲 +30%，箭矢与近战伤害减免",cost:"怪物强化",on:true},
+    {n:"狂怒血脉",desc:"怪物攻击 +15%，血量低于 30% 时攻速翻倍",cost:"怪物强化",on:true},
+    {n:"重生之躯",desc:"怪物死亡后 30% 概率原地重生（50% 生命）",cost:"怪物强化",on:true},
+    {n:"分裂魔咒",desc:"大型怪物死亡时分裂 2 只小型怪",cost:"怪物强化",on:true},
+    {n:"诅咒之躯",desc:"玩家被击后 5 秒内受伤 +20%（可叠加）",cost:"怪物强化",on:true}
+  ];
+  var FUTURE=[
+    {n:'TACZ 枪械',pre:'tacz',count:46,ok:true,names:[{n:'突击者',d:'每级 近距枪伤 +10%、连杀增伤 +6%'},{n:'凌空射击',d:'每级：未落地时射击，枪械伤害 +25%'},{n:'弹药背包',d:'每级 击杀后为当前枪械补充 15% 弹药'},{n:'弹药补给站',d:'每级 击杀有 20% 几率直接补满当前枪械弹药'},{n:'破甲穿射',d:'子弹穿透 +22%，远程伤害 +12%。'},{n:'持续射击',d:'每级：持续射击增伤——连续命中每枪叠 1 层连续射击层数…'}]},
+    {n:'铁魔法书',pre:'irons',count:39,ok:true,names:[{n:'奥术专注',d:'每级 法术强度 +10%（Iron\'s Spells 联动）'},{n:'秘法打击',d:'法术强度 +10%。'},{n:'大法师之魂',d:'每级 法术强度 +30%、冷却 -8%、施法消耗 -10%'},{n:'执政官裁决',d:'法术处决概率 +12%，法术穿透 +18%，双倍施法概率 +10%。'},{n:'魔力屏障',d:'每级 受法术伤害时 35% 由魔力抵扣'},{n:'血之契约',d:'每级 鲜血学派法术伤害 +30%、法术吸血 +12%'}]},
+    {n:'冰与火传说',pre:'iaf',count:30,ok:true,names:[{n:'翼蛇猎手',d:'每级 对翼蛇伤害 +20%（冰与火之歌联动）'},{n:'龙息掌握',d:'每级 对龙族伤害 +30%，受到龙息伤害 -50%'},{n:'独眼克星',d:'每级 对独眼巨人伤害 +15%'},{n:'远古龙裔',d:'火龙伤害 +12%，冰龙伤害 +12%，闪电龙伤害 +12%。'},{n:'屠龙学徒',d:'每级 对冰与火龙族生物伤害 +8%'},{n:'龙血飞升',d:'击杀龙族增益 +25%，龙族伤害 +20%，龙族抗性 +20%。'}]},
+    {n:'艾利克斯洞穴',pre:'ac',count:30,ok:true,names:[{n:'深渊呼吸',d:'深渊峡谷群系水下不消耗氧气（Alex\'s Caves 联动）'},{n:'智核猎手',d:'每级 对智核体伤害 +35%（Alex\'s Caves 联动）'},{n:'智者壁垒',d:'智囊生物伤害 +10%，低血护盾 2。'},{n:'糖果甜心',d:'每级 对糖果区生物伤害 +15%，糖果洞穴每 5 秒回 1 生命'},{n:'糖心嗜好',d:'糖果生物伤害 +18%，击杀糖果生物治疗 2。'},{n:'洞窟探勘者',d:'掉落加成 +25%，挖掘时运 +20%，经验加成 +20%。'}]},
+    {n:'暮色森林',pre:'tf',count:28,ok:true,names:[{n:'王殒之怒',d:'每级 击杀暮色 BOSS 后 30 秒内全伤害 +35%'},{n:'逐王猎手',d:'每级 对全部暮色 BOSS 伤害 +20%'},{n:'王殒回生',d:'每级 击杀暮色 BOSS 回复 4 点生命'},{n:'首领霸主',d:'首领伤害 +30%，击杀首领治疗 3。'},{n:'王威抵御',d:'每级 受到暮色 BOSS 伤害 -20%'},{n:'弑王者',d:'每级 对全部暮色 BOSS 伤害 +40%，受 BOSS 伤害 -30%'}]},
+    {n:'艾利克斯生物',pre:'am',count:26,ok:true,names:[{n:'万兽之王',d:'对全部 Alex\'s Mobs 生物伤害 +40%，受其伤害 -20%'},{n:'巅顶掠食者',d:'巅峰之力 +30%，首领生物伤害 +18%，标记概率 +15%。'},{n:'深海猎手',d:'每级 对水生类（鲨/鲸/鱿/海豹等）伤害 +12%'},{n:'江河猎手',d:'水生生物伤害 +18%，吸血 +8%。'},{n:'猛兽克星',d:'每级 对走兽类（虎/狮/象/鹿/狼/熊等）伤害 +12%'},{n:'驯兽师',d:'野兽伤害 +10%，近战伤害 +10%。'}]},
+    {n:'拔刀剑',pre:'blade',count:20,ok:false,names:[{n:'噬血牙',d:'流血伤害 +20%，处决概率 +8%。'},{n:'嗜血锋',d:'吸血 +8%。'},{n:'居合一闪',d:'手持拔刀剑击杀后 5 秒内，下一击伤害每级 +60%'},{n:'拔刀之韵',d:'攻击速度每层 +2%，回声概率 +12%。'},{n:'一闪居合',d:'近战伤害 +15%，暴击率 +8%。'},{n:'居合斩',d:'近战伤害 +12%，暴击率 +5%。收刀蓄势，一击制胜。'}]},
+    {n:'灾变 Cataclysm',pre:'cataclysm',count:19,ok:true,names:[{n:'深渊凝视',d:'标记概率 +25%，首领增伤 +20%，暴击率 +10%。'},{n:'远古狂怒',d:'对灾变生物伤害 +22%，近战伤害 +15%。'},{n:'焦土斥候',d:'对灾变生物伤害 +12%。'},{n:'末地灾变猎手',d:'每级 对末地灾变生物伤害 +30%（Cataclysm 联动）'},{n:'首领印记',d:'标记概率 +18%，首领增伤 +18%。'},{n:'废墟韧性',d:'生命回复 +0.5/秒。'}]},
+    {n:'等价交换',pre:'emc',count:19,ok:true,names:[{n:'炼金涌动',d:'晶币加成 +20%，兑换加成 +10%。'},{n:'等价光环',d:'EMC 折算折扣 +45%。'},{n:'商贾之道',d:'每级 EMC 兑换晶币汇率 +25%（ProjectE 联动）'},{n:'空白碎片',d:'吸血 +6%，生命回复 +0.4/秒。'},{n:'闭环循环',d:'EMC 转化效率 +30%，掉落双倍，晶币加成 +20%。'},{n:'凝聚之心',d:'吸血 +8%，生命回复 +0.5/秒。'}]},
+    {n:'农夫乐事',pre:'farmer',count:19,ok:false,names:[{n:'见习厨师',d:'厨师精通 +2 级。'},{n:'盛宴桌',d:'农夫料理强化 +4，农夫掉落 +20%。'},{n:'丰饶餐桌',d:'击杀掉落食物 3，掉落加成 +25%。'},{n:'农家小灶',d:'每级 食用食物额外回复 2 生命（农夫乐事联动）'},{n:'大厨技艺',d:'药水强度 +4，击杀食物 +4，生命回复 +1/秒。'},{n:'料理传说',d:'厨师精通 +4 级，回复药水效果 +1，击杀治疗 2。'}]},
+    {n:'遗物',pre:'relic',count:19,ok:false,names:[{n:'神盾握持',d:'遗物守护 +20%，低血护盾 2。'},{n:'远古祝福',d:'药水强度 +4，生命回复 +0.5/秒。'},{n:'遗物共鸣',d:'遗物力量 +15%，回声概率 +12%。'},{n:'耐久回响',d:'回声概率 +15%，低血减伤 +10%。'},{n:'残片之力',d:'遗物力量 +8%。'},{n:'遗物守护者',d:'遗物守护 +35%，遗物力量 +20%。'}]},
+    {n:'神器 Artifacts',pre:'artifact',count:19,ok:false,names:[{n:'古董之力',d:'近战伤害 +15%，暴击率 +10%。'},{n:'血印',d:'神器汲血 2，吸血 +8%。'},{n:'浴血圣器',d:'神器汲血 3，吸血 +12%，流血伤害 +20%。'},{n:'积蓄之力',d:'神器狂暴 +28%，神器掉落加成 +18%，击杀治疗 1。'},{n:'咒刃',d:'流血伤害 +25%，处决概率 +10%。'},{n:'神器汲血',d:'击杀回血 +4，狂暴几率 +20%。'}]},
+    {n:'FTB 任务',pre:'quest',count:19,ok:false,names:[{n:'任务达人',d:'每级 击杀晶币 +35%、经验 +40%（FTB Quests 联动）'},{n:'悬赏引子',d:'赏金 +4。'},{n:'冠军赏格',d:'赏金 +8，经验加成 +25%，晶币加成 +20%。'},{n:'契约赏金',d:'赏金 +6，晶币加成 +15%。'},{n:'宝箱嘉奖',d:'掉落加成 +30%，随机战利品 +20%。'},{n:'日常委托',d:'经验加成 +12%，晶币加成 +10%。'}]},
+    {n:'邪恶魔典',pre:'goety',count:19,ok:false,names:[{n:'巫术猎手',d:'每级 对巫术系生物伤害 +30%（Goety 联动）'},{n:'黑仪式',d:'巫术掉落加成 +22%，对亡灵生物伤害 +20%，处决概率 +10%。'},{n:'咒矢',d:'对亡灵生物伤害 +12%。'},{n:'黑魂收集者',d:'每级 击杀巫术生物 15% 概率掉落灵魂核心'},{n:'巫术交易',d:'巫术掉落加成 +18%，晶币加成 +15%。'},{n:'巫妖密议',d:'对亡灵生物伤害 +25%，灵魂收集 +2，连杀加成 +20%。'}]},
+    {n:'莫瑞兹生物',pre:'mowzie',count:19,ok:false,names:[{n:'远古战利品',d:'巨兽掉落加成 +18%，首领增伤 +15%。'},{n:'猎兽大师',d:'每级 对 Mowzie\'s Mobs 生物伤害 +30%'},{n:'野兽共鸣',d:'首领增伤 +20%，近战伤害 +15%。'},{n:'野性本能',d:'暴击率 +15%，攻击速度每层 +2%。'},{n:'狂怒爪击',d:'连杀狂潮 +18%，攻击速度每层 +2%。'},{n:'冰霜抗性',d:'每级 受 Mowzie\'s Mobs 生物伤害减免 20%'}]}
+  ];
+  var HIDDEN=[
+    {n:"双子射击",v:"+18%",src:"连击流 6 件",k:"g"},
+    {n:"狂暴",v:"+25%",src:"斩杀流 6 件",k:"g"},
+    {n:"引燃链",v:"+12%",src:"燃烧流 4 件",k:"g"},
+    {n:"吸血",v:"+8%",src:"燃烧流 8 件",k:"g"},
+    {n:"处决",v:"6%（总封顶 20%）",src:"斩杀流 2 件",k:"g"},
+    {n:"过载盾",v:"+15%",src:"壁垒 1 件",k:""},
+    {n:"暗黑伤害",v:"+30%",src:"深渊守望 6 件",k:"v"},
+    {n:"灾变伤害",v:"+12%",src:"灾厄猎手 3 件",k:"v"},
+    {n:"闪电链",v:"触发 25% · 50% 溅射",src:"灾厄猎手满档",k:"v"},
+    {n:"荆棘装甲",v:"反弹 15%",src:"壁垒满档",k:""},
+    {n:"飞升",v:"已激活",src:"深渊守望满档",k:"v"},
+    {n:"晶币加成",v:"+35%",src:"经济流 8 件",k:"g"},
+    {n:"悬赏",v:"×3",src:"经济流 6 件",k:"g"},
+    {n:"叠层伤害",v:"+0.4% / 层",src:"当前 1,024 层",k:"v"}
+  ];
+  var PICK_UNLOCK={need:30,have:23};
+  var EQUIP=[
+    {n:"猎鹰之眼",desc:"远程伤害 +8% · Lv 6",ico:'<circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M7.6 9.6C9.9 7.9 14.1 7.9 16.4 9.6c-2.3 1.7-6.5 1.7-8.8 0z" fill="none" stroke="currentColor" stroke-width="1"/>'},
+    {n:"圣盾",desc:"护甲 +12 · Lv 4",ico:'<path d="M12 3 18.5 6v5.5c0 3.6-2.6 6.3-6.5 8-3.9-1.7-6.5-4.4-6.5-8V6z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.3"/>'},
+    {n:"疾风之靴",desc:"移速 +0.05 · Lv 3",ico:'<path d="M4 19c2-4.5 5.5-7.5 9.5-8.2M13.5 10.8l4.5-4.6M17 6h1.6V7.6M13.8 10.5l-1.2 2.4c-.6 1.2-.3 2.4.9 2.8 1.1.4 2.3-.2 2.4-1.4l.3-2.6z" fill="none" stroke="currentColor" stroke-width="1.3"/>'},
+    {n:"魔晶护符",desc:"法术强度 +10% · Lv 5",ico:'<path d="M12 3.5 17.5 7v7L12 17.5 6.5 14V7z" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="11" r="2.2" fill="currentColor"/>'},
+    {n:"血月之刃",desc:"吸血 +6% · Lv 4",ico:'<path d="M5.5 18.5 14 10l2 2-8.5 8.5z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M15 9l2.5-2.5-2-2L13 7z" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="17.5" cy="15.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.2"/>'},
+    {n:"重力核心",desc:"韧性 +18 · Lv 2",ico:'<circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/><path d="M3.5 12H7M17 12h3.5M12 3.5V7M12 17v3.5" fill="none" stroke="currentColor" stroke-width="1"/>'}
+  ];
+  var POOLS=[
+    {id:"base",n:"原版海克斯（本体）",cat:"本体"},
+    {id:"cataclysm",n:"联动 · 灾变 Cataclysm",cat:"联动"},
+    {id:"tacz",n:"联动 · TACZ 枪械",cat:"联动"},
+    {id:"iaf",n:"联动 · 冰与火",cat:"联动"},
+    {id:"blade",n:"联动 · 拔刀剑",cat:"联动"},
+    {id:"goety",n:"联动 · 邪恶魔典",cat:"联动"},
+    {id:"snow",n:"联动 · 冰雪女王",cat:"联动"},
+    {id:"niyuan",n:"逆原 · 原点猎场 DLC",cat:"逆原"},
+    {id:"aram",n:"大乱斗 · ARAM 9 套",cat:"大乱斗"}
+  ];
+  var CARDS=[
+    {n:"深渊使徒",rar:"prism",art:"void",tier:"棱彩",bonds:["深渊守望"],src:"深渊守望 · 12 成员",desc:"暗黑伤害 +25%，击杀刷新深渊能量",full:"持有后暗黑系伤害 +25%；击杀敌人刷新深渊能量，能量满时下一次攻击释放深渊冲击。作为深渊守望羁绊核心成员，满档飞升期间全伤害再加成。"},
+    {n:"燃尽者",rar:"gold",art:"flame",tier:"黄金",bonds:["燃烧流"],src:"燃烧流 · 10 成员",desc:"引燃链 +20%，燃烧目标受击叠加",full:"持有后引燃链 +20%，燃烧目标每次受击叠加 1 层灼烧，灼烧层数按攻速结算伤害；吸血按层数回血，续航与持续伤害兼备。"},
+    {n:"处刑人",rar:"silver",art:"blade",tier:"白银",bonds:["斩杀流"],src:"斩杀流 · 10 成员",desc:"处决 +5%，低血目标概率直接斩杀",full:"持有后处决概率 +5%（总封顶 20% 最大生命）；生命低于 30% 的敌人有概率被直接处决，配合狂暴快速清场。"}
+  ];
+  var curMode="total", pickSel=[], curBond=null;
+  var hexSvg='<svg class="hex" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7z" fill="none" stroke="CUR" stroke-width="1.3"/><path d="M12 8.5 15.5 10.5v3l-3.5 2-3.5-2v-3z" fill="CUR" opacity=".85"/></svg>';
+  function colorOf(r){return r==="prism"?"#c9a6ff":r==="deep"?"#c99a4a":r==="gold"?"#d9c08a":r==="silver"?"#b8c2d9":"#e8ecf6"}
+  /* ===== 导航（海克斯界面 + 世界海克斯界面 合并） ===== */
+  var NAV=[
+    {id:"draw",n:"海克斯",tag:"抽取",ico:'<path d="M12 2 21 7v10l-9 5-9-5V7z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M12 8 16 10v4l-4 2-4-2v-4z" fill="currentColor" opacity=".8"/>'},
+    {id:"world",n:"世界海克斯",tag:"w",w:true,ico:'<circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4.5 12h15M12 4.5c2.2 2 3.4 4.6 3.4 7.5S14.2 17.5 12 19.5c-2.2-2-3.4-4.6-3.4-7.5S9.8 6.5 12 4.5z" fill="none" stroke="currentColor" stroke-width="1.1"/>'},
+    {id:"enemy",n:"敌方海克斯",tag:"e",ico:'<path d="M12 2.5 20 7v7l-8 5-8-5V7z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9.5 9.5v3l-2 1v-4.5zm5 0v3l2 1v-4.5z" fill="currentColor" opacity=".75"/>'},
+    {id:"bonds",n:"羁绊",tag:"47",ico:'<path d="M12 3 19 6.5v7L12 17l-7-3.5v-7z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M12 7.5 15 9v3l-3 1.5L9 12V9z" fill="currentColor" opacity=".75"/>'},
+    {id:"attr",n:"属性",ico:'<circle cx="12" cy="6.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M12 10.5c2.6 0 4.5 1.9 4.5 4.5v4h-9v-4c0-2.6 1.9-4.5 4.5-4.5z" fill="none" stroke="currentColor" stroke-width="1.3"/>'},
+    {id:"forge",n:"锻造器",ico:'<path d="M7 8V4h10v4l-3 4v6h-4v-6z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M5 20h14" fill="none" stroke="currentColor" stroke-width="1.4"/>'},
+    {id:"equip",n:"装备",ico:'<path d="M12 3l4.5 2v4c0 4-2.3 6.8-4.5 8-2.2-1.2-4.5-4-4.5-8V5z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M12 8l1.6-1.4v3.6" fill="none" stroke="currentColor" stroke-width="1.1"/>'},
+    {id:"recharge",n:"充值",ico:'<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M12 8.2v7.6M9.4 10.4h5.2M9.4 13.4h5.2" fill="none" stroke="currentColor" stroke-width="1.1"/>'},
+    {id:"future",n:"联动总览",ico:'<rect x="4.5" y="4.5" width="6" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="13.5" y="13.5" width="6" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 10.5v0.5c0 1 0.5 1.5 1.5 1.5h1.5" fill="none" stroke="currentColor" stroke-width="1.1"/>'}
+  ];
+  function renderNav(){
+    var el=document.getElementById("nav"),h='<div class="group">海克斯工坊</div>';
+    NAV.forEach(function(v,i){h+='<button data-v="'+v.id+'"'+(i===0?' class="on"':'')+'><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">'+v.ico+'</svg>'+v.n+(v.tag?'<span class="tag'+(v.w?" w":"")+'">'+v.tag+'</span>':'')+'</button>'});
+    el.innerHTML=h;
+  }
+  function switchView(id){
+    document.querySelectorAll(".nav button").forEach(function(b){b.classList.toggle("on",b.dataset.v===id)});
+    document.querySelectorAll(".view").forEach(function(v){v.hidden=v.id!=="v-"+id});
+  }
+  document.getElementById("nav").addEventListener("click",function(e){var b=e.target.closest("button");if(b)switchView(b.dataset.v)});
+  /* ===== 抽卡 ===== */
+  var curCards=CARDS;
+  function bondIcon(b){
+    var cmap={eye:["<circle cx='12' cy='12' r='5.5'/><circle cx='12' cy='12' r='1.5' fill='none'/>","<path d='M7.5 9.5C9.8 7.8 14.2 7.8 16.5 9.5c-2.3 1.7-6.7 1.7-9 0z'/>"],
+      shield:["<path d='M12 3 18.5 6v5.5c0 3.6-2.6 6.3-6.5 8-3.9-1.7-6.5-4.4-6.5-8V6z'/>","<path d='M9 12l2 2 4-4'/>"],
+      bolt:["<path d='M13 3 5 13h6l-1 8 9-11h-6z'/>","<path d='M12 10h4l-3 4' stroke-width='1'/>"],
+      guns:["<path d='M4 13h4l2-2h3l1 2h4l2 1h-4l-1-1h-2l-1 1H6l-1-1H4z'/>","<path d='M4 16h4l2-2h3l1 2h4l2 1h-4l-1-1h-2l-1 1H6l-1-1H4z'/>"],
+      flame:["<path d='M12 20.5c-4.2 0-5.8-2.7-5.8-4.8 0-2.1 1.6-3.7 3.2-5.3.4 1.5 1.3 2.6 2.7 3.4-.3-3 1.7-5.4 3.8-7-.6 3 1.1 5.2 2.1 7.6.5 1.3-.2 2.7-1.6 3.5 1.7-.3 2.7 1 2.7 2.3 0 1.5-1.9 2.8-4.7 2.8z'/>","<path d='M10.8 17.5c.9.7 1.8.7 2.6.2'/>"],
+      blade:["<path d='M5.5 18.5 13.5 10.5l1.6 1.6-8 8z'/><path d='M14.4 10.9l1.9-1.9-1.6-1.6-1.9 1.9'/>","<path d='M3.5 20.5c1.6-.4 3-.2 4.2.8'/>"],
+      coin:["<circle cx='12' cy='12' r='6.5'/><circle cx='12' cy='12' r='4'/>","<path d='M12 8.5v7M10 10l2-1.5 2 1.5'/>"],
+      tower:["<path d='M9 20h6M10 17l-1-9h6l-1 9M12 8l-1.5-3h3z'/>","<path d='M8 20h8'/>"],
+      grav:["<circle cx='12' cy='12' r='6'/><circle cx='12' cy='12' r='2.5'/>","<path d='M3 12h4M17 12h4M12 3v4M12 17v4' stroke-width='1'/>"],
+      stack:["<rect x='7' y='4' width='10' height='5' rx='1'/><rect x='8' y='10' width='8' height='4' rx='1'/><rect x='9' y='15' width='6' height='3' rx='1'/>","<path d='M12 9v1M12 14v1' stroke-width='1'/>"],
+      firework:["<path d='M12 4v8M8 5l3 3M16 5l-3 3M12 12l-4-4M12 12l4-4'/>","<circle cx='12' cy='4.5' r='1'/><path d='M9.5 12.5c.8 2 2 3.5 3.5 4.5-1.5-.5-2.8-1.5-3.5-4.5z'/>"]};
+    var c=cmap[b]||[["<path d='M12 2 21 7v10l-9 5-9-5V7z'/>","<path d='M12 8 16 10v4l-4 2-4-2v-4z'/>"]];
+    return '<svg class="bhex" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><g stroke-width="1.3">'+c[0]+'</g><g fill="currentColor" stroke="none" opacity=".9">'+c[1]+'</g></svg>';
+  }
+  function artSvg(art,color){
+    var s='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="'+color+'" stroke-width="1.2">';
+    if(art==="void"){s+='<path d="M12 2 21 7v10l-9 5-9-5V7z"/><circle cx="12" cy="12" r="6.2"/><path d="M9.6 9.2c2 1.4 2 4.2 0 5.6M14.4 9.2c-2 1.4-2 4.2 0 5.6" stroke-width="1"/><circle cx="12" cy="12" r="1" fill="'+color+'" stroke="none"/>';}
+    else if(art==="flame"){s+='<path d="M12 20.5c-4.2 0-5.8-2.7-5.8-4.8 0-2.1 1.6-3.7 3.2-5.3.4 1.5 1.3 2.6 2.7 3.4-.3-3 1.7-5.4 3.8-7-.6 3 1.1 5.2 2.1 7.6.5 1.3-.2 2.7-1.6 3.5 1.7-.3 2.7 1 2.7 2.3 0 1.5-1.9 2.8-4.7 2.8z" stroke-width="1.1"/><path d="M10.8 17.5c.9.7 1.8.7 2.6.2" stroke-width="1"/>';}
+    else if(art==="blade"){s+='<path d="M5.5 18.5 13.5 10.5l1.6 1.6-8 8z" fill="'+color+'" opacity=".85"/><path d="M14.4 10.9l1.9-1.9-1.6-1.6-1.9 1.9" fill="'+color+'" opacity=".6"/><path d="M3.5 20.5c1.6-.4 3-.2 4.2.8" stroke-width="1"/>';}
+    else if(art==="gun"){s+='<path d="M2.5 12h5l2-3h3.5l1.2 3H17l2.5 2h-4.2l-1-2.2H9.5l-1.8 2.2H3z" fill="'+color+'" opacity=".8"/><path d="M17 9.8l3-.8v1.8l-1.5 1.2h-1.6z" fill="'+color+'" opacity=".5"/>';}
+    else if(art==="dragon"){s+='<path d="M3.5 15.5c2.5-6.5 6.5-8.8 8.5-10 2 1.2 6 3.5 8.5 10-3-2-5.2-3-8.5-3s-5.5 1-8.5 3z" stroke-width="1.1"/><path d="M12 5.5v6M12 11.5c-2 1.8-3 3-3.5 5M12 11.5c2 1.8 3 3 3.5 5" stroke-width="1"/>';}
+    else if(art==="shield"){s+='<path d="M12 3 18.5 6v5.5c0 3.6-2.6 6.3-6.5 8-3.9-1.7-6.5-4.4-6.5-8V6z"/><path d="M9 12l2 2 4-4" stroke-width="1.4"/>';}
+    else if(art==="bolt"){s+='<path d="M13 3 5 13h6l-1 8 9-11h-6z" fill="'+color+'" opacity=".85"/><path d="M12 10h4l-3 4" stroke-width="1.2"/>';}
+    else if(art==="stack"){s+='<path d="M12 4 19 7.5 12 11 5 7.5z" stroke-width="1.1"/><path d="M5 11.5 12 15l7-3.5" stroke-width="1.1"/><path d="M5 15.5 12 19l7-3.5" stroke-width="1.1"/><path d="M5 12v7" stroke-dasharray="1.4 1.4" stroke-width="1" opacity=".5"/>';}
+    else if(art==="coin"){s+='<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="5" stroke-dasharray="2.4 1.6" stroke-width="1"/><path d="M10.4 12.8l1.2 1.2 2.4-2.6" stroke-width="1.3"/>';}
+    else if(art==="firework"){s+='<path d="M12 3v7" stroke-width="1.4"/><circle cx="12" cy="13" r="1.4" fill="'+color+'" stroke="none"/><path d="M12 14.5c-3.4 1.4-5 3.4-5.2 6.5 2.6-1.2 4.2-2.8 5.2-5.2.9 2.4 2.6 4 5.2 5.2-.2-3.1-1.8-5.1-5.2-6.5z" opacity=".85"/>';}
+    else if(art==="grav"){s+='<path d="M12 4c3.4 0 5.5 3.6 5.5 8s-2.1 8-5.5 8-5.5-3.6-5.5-8 2.1-8 5.5-8z"/><path d="M12 5.2c1.9 1 2.6 3.9 2.6 6.8s-.7 5.8-2.6 6.8" stroke-width="1"/><path d="M12 5.2c-1.9 1-2.6 3.9-2.6 6.8s.7 5.8 2.6 6.8" stroke-width="1"/>';}
+    else{s+='<path d="M12 2 21 7v10l-9 5-9-5V7z"/><path d="M12 8 16 10v4l-4 2-4-2v-4z" fill="'+color+'" opacity=".8"/>';}
+    return s+'</svg>';
+  }
+  function renderCardsFrom(pool){
+    var el=document.getElementById("drawCards"),h="";
+    pool.forEach(function(c){
+      var col=colorOf(c.rar);
+      h+='<div class="card '+c.rar+'" onclick="openHexCard(\''+c.n+'\')">'
+        +'<span class="own">已拥有</span><span class="rar">'+c.tier+'</span>'
+        +'<div class="art">'+artSvg(c.art,col)+'<div class="glowdot"></div><div class="ttl">'+c.bonds[0]+'</div></div>'
+        +'<h3>'+c.n+'</h3><div class="bonds">'+c.bonds.map(function(b){return '<span class="badge">'+b+'</span>'}).join("")+'</div>'
+        +'<p class="desc">'+c.desc+'</p><div class="meta">'+c.src+' · 点击卡面查看详情</div></div>';
+    });
+    el.innerHTML=h;
+  }
+  function renderCards(){renderCardsFrom(curCards)}
+  function openHexCard(name){
+    var c=curCards.filter(function(x){return x.n===name})[0];if(!c)return;
+    var col=colorOf(c.rar);
+    var h='<button class="close" onclick="closeBond()">✕</button><h2>'+c.n+'</h2>'
+      +'<div class="rarline"><span class="dot" style="background:'+col+';box-shadow:0 0 10px '+col+'"></span>'+c.tier+' 稀有度 · '+c.src+'</div>'
+      +'<div class="effectbox"><b>效果：</b>'+c.desc+'</div>'
+      +'<div class="effectbox"><b>详细介绍：</b>'+c.full+'</div>'
+      +'<div style="margin-bottom:10px"><div style="font-size:13px;color:var(--blue);margin-bottom:6px">所属羁绊 / 池</div>'
+      +c.bonds.map(function(b){return '<span class="badge">'+b+'</span>'}).join("")+'</div>'
+      +'<div class="note">数值为 v1.0.0 预览示意，以实际游戏为准。</div>'
+      +'<div class="steps"><button class="btn primary" style="margin-left:auto" onclick="closeBond()">关闭</button></div>';
+    document.getElementById("bondSheet").innerHTML=h;
+    document.getElementById("bondMask").classList.add("open");
+  }
+  /* ===== 池模式 ===== */
+  function renderPoolLabel(){
+    var label={total:"全部海克斯",cat:"本体 / 联动 / 逆原 三池",pick:"自选池（"+pickSel.length+" 个）"}[curMode];
+    document.getElementById("poolLabel").textContent=label||"全部海克斯";
+    if(curMode==="pick"&&pickSel.length===0){pickSel=["base","niyuan","aram"]}
+  }
+  document.getElementById("modeSeg").addEventListener("click",function(e){
+    var b=e.target.closest("button");if(!b)return;
+    if(b.dataset.mode==="pick"&&PICK_UNLOCK.have<PICK_UNLOCK.need){
+      toast('自选池需拥有 <b>'+PICK_UNLOCK.need+'</b> 个海克斯解锁（当前 '+PICK_UNLOCK.have+' 个）');
+      return;
+    }
+    document.querySelectorAll("#modeSeg button").forEach(function(x){x.classList.toggle("on",x===b)});
+    curMode=b.dataset.mode;curCards=CARDS;renderCards();renderPoolLabel();
+    if(curMode==="pick"){openPool()}
+    toast('池模式：'+(b.textContent));
+  });
+  /* 自选池面板 */
+  function openPool(){
+    var el=document.getElementById("poolSheet");
+    el.innerHTML='<button class="close" onclick="closePool()">✕</button><h2>自选池</h2><div class="sub">勾选 3~10 个池，抽取只从勾选池出牌（v1.0.0 新增模式）</div>'
+      +'<div class="count">已勾选 <b id="poolCount">'+pickSel.length+'</b> / 3~10</div><div class="poolgrid">'
+      +POOLS.map(function(p){return '<div class="pool'+(pickSel.indexOf(p.id)>=0?" on":"")+'" data-id="'+p.id+'"><span class="ck">'+(pickSel.indexOf(p.id)>=0?"✓":"")+'</span>'+p.n+'<span class="chip">'+p.cat+'</span></div>'}).join("")
+      +'</div><div class="steps"><button class="btn" onclick="pickAll(true)">一键全选</button><button class="btn" onclick="pickAll(false)">清空</button><button class="btn primary" id="poolOk" style="margin-left:auto" onclick="closePool()">确定</button></div>';
+    document.getElementById("poolMask").classList.add("open");
+    el.querySelectorAll(".pool").forEach(function(p){
+      p.addEventListener("click",function(){
+        var id=p.dataset.id,i=pickSel.indexOf(id);
+        if(i>=0){pickSel.splice(i,1);p.classList.remove("on");p.querySelector(".ck").textContent=""}
+        else{pickSel.push(id);p.classList.add("on");p.querySelector(".ck").textContent="✓"}
+        var c=document.getElementById("poolCount");c.textContent=pickSel.length;
+        var ok=pickSel.length>=3&&pickSel.length<=10;
+        document.getElementById("poolOk").disabled=!ok;
+        if(!ok)toast('需勾选 3~10 个池（当前 '+pickSel.length+' 个）');
+      });
+    });
+    document.getElementById("poolOk").disabled=!(pickSel.length>=3&&pickSel.length<=10);
+  }
+  function closePool(){document.getElementById("poolMask").classList.remove("open")}
+  function pickAll(on){pickSel=on?POOLS.map(function(p){return p.id}):[];openPool()}
+  /* ===== 抽卡（真实重抽） ===== */
+  var HEX_POOL=[
+    {n:"深渊使徒",rar:"prism",art:"void",tier:"棱彩",bonds:["深渊守望"],src:"原生 · 海克斯工坊本体",desc:"暗黑伤害 +25%，击杀刷新深渊能量",full:"深渊守望系核心：暗黑伤害 +25%，击杀刷新深渊能量，配合 6 件档暗黑伤害 +30%，是深渊系主 C。"},
+    {n:"燃尽者",rar:"gold",art:"flame",tier:"浅金",bonds:["燃烧流"],src:"原生 · 海克斯工坊本体",desc:"引燃链 +20%，燃烧目标受击叠加",full:"燃烧流核心：引燃链 +20%，燃烧目标受击叠加层数，配合吸血机制持续作战。"},
+    {n:"处刑人",rar:"silver",art:"blade",tier:"白银",bonds:["斩杀流"],src:"斩杀流 · 10 成员",desc:"处决 +5%，低血目标概率直接斩杀",full:"持有后处决概率 +5%（总封顶 20% 最大生命）；生命低于 30% 的敌人有概率被直接处决，配合狂暴快速清场。"},
+    {n:"铁壁",rar:"deep",art:"shield",tier:"深金",bonds:["壁垒"],src:"原生 · 海克斯工坊本体",desc:"护甲 +25，低血时护盾 ×2",full:"壁垒系成员：护甲 +25，生命低于 30% 时护盾翻倍，纯防御向生存核心。"},
+    {n:"磁暴",rar:"prism",art:"bolt",tier:"棱彩",bonds:["力场"],src:"逆原 · 力场系",desc:"闪电链触发 +20%，命中溅射 50%",full:"力场系核心：命中概率触发闪电链，溅射范围伤害 +50%，群战清怪主力。"},
+    {n:"叠层主宰",rar:"deep",art:"stack",tier:"深金",bonds:["叠层专家"],src:"叠层专家 · 机制系",desc:"叠层获取 +15%，叠层伤害 +0.4%/层",full:"叠层专家系：叠层获取 +15%，配合 10 件满员叠层无上限 ∞，长期养成终极羁绊。"},
+    {n:"连击王",rar:"gold",art:"guns",tier:"浅金",bonds:["连击流"],src:"原生 · 海克斯工坊本体",desc:"双子射击 +18%，连击增伤 +6%",full:"连击流核心：攻击概率触发双子射击 +18%，连续命中叠加增伤。"},
+    {n:"聚宝",rar:"gold",art:"coin",tier:"浅金",bonds:["经济流"],src:"原生 · 海克斯工坊本体",desc:"晶币加成 +20%，悬赏 ×3",full:"经济流核心：晶币加成 +20%，悬赏目标额外掉落晶币，前期发育首选。"},
+    {n:"炮竹",rar:"silver",art:"firework",tier:"白银",bonds:["炮竹"],src:"逆原 · 炮竹系",desc:"爆炸范围 +25%，击杀爆炸概率 30%",full:"炮竹系：爆炸范围 +25%，击杀有 30% 概率引发二次爆炸，快乐清场流。"},
+    {n:"不灭战体",rar:"deep",art:"shield",tier:"深金",bonds:["不灭之躯"],src:"原生 · 海克斯工坊本体",desc:"生命 +40，过载护盾 +20%",full:"不灭之躯系：生命 +40，过载护盾 +20%，12 件满档金刚不坏减免超大伤害。"},
+    {n:"狂怒猎手",rar:"gold",art:"blade",tier:"浅金",bonds:["斩杀流"],src:"斩杀流 · 10 成员",desc:"狂暴 +25%，低血攻速翻倍",full:"斩杀流成员：生命低于 50% 时狂暴 +25%，低血攻速翻倍，配合处刑人快速收割。"},
+    {n:"引力核心",rar:"prism",art:"grav",tier:"棱彩",bonds:["力场"],src:"逆原 · 力场系",desc:"引力牵引 +30%，聚怪范围 +20%",full:"力场系核心：命中后引力牵引周围敌人 +30%，聚怪后配合磁暴闪电链输出最大化。"}
+  ];
+  function drawOnce(type){
+    if(leftDraws<=0){toast('剩余抽取次数已用完（预览演示：刷新页面重置）');return}
+    if(type==="reroll"){
+      if(COIN<150){toast('晶币不足：重投需 150 晶币');return}
+      COIN-=150;renderCoin();
+    }
+    var pool=HEX_POOL.slice(),got=[];
+    for(var k=0;k<3&&pool.length;k++){
+      var i=Math.floor(Math.random()*pool.length);
+      got.push(pool.splice(i,1)[0]);
+    }
+    leftDraws--;document.getElementById("leftDraws").textContent=leftDraws;
+    renderCardsFrom(got);
+    toast(type==="reroll"?'重投成功：<b>消耗 150 晶币</b>，三张新卡已就位':'再抽一次：<b>新三张卡已展示</b>');
+  }
+  document.getElementById("rerollBtn").onclick=function(){drawOnce("reroll")};
+  document.getElementById("drawBtn").onclick=function(){drawOnce("draw")};
+  /* ===== 羁绊图鉴 ===== */
+  function renderBonds(g){
+    var list=BONDS.filter(function(b){return g==="all"||b.g===Number(g)});
+    var el=document.getElementById("bondList"),h="";
+    list.forEach(function(b){
+      var pct=Math.round(b.have/b.total*100);
+      var tc=["t1","t2","t3","t4"][Math.min(3,b.t)];
+      var bc=["#c9a6ff","#8fd3ff","#7ee0a3","#f0c987","#ffb37a"][b.g||0];
+      var icmap={深渊守望:"eye",不灭之躯:"shield",灾厄猎手:"bolt",连击流:"guns",燃烧流:"flame",斩杀流:"blade",经济流:"coin",壁垒:"tower",力场:"grav",叠层专家:"stack",炮竹:"firework"};
+      var ic=icmap[b.n]||"hex";
+      h+='<div class="bondrow" data-id="'+b.n+'" onclick="openBond(\''+b.n+'\')">'
+        +'<span style="color:'+bc+';display:inline-flex">'+bondIcon(ic)+'</span>'
+        +'<div><div class="nm">'+b.n+'</div><div style="font-size:11px;color:var(--faint)">'+b.m+'</div></div>'
+        +'<span class="tier '+tc+'">档 '+b.t+'</span>'
+        +'<div class="bar"><i style="width:'+pct+'%"></i></div>'
+        +'<span class="cnt">'+b.have+'/'+b.total+'</span>'
+        +'<span class="mec">'+b.mech+'</span></div>';
+    });
+    el.innerHTML=h||'<div class="note">该分组暂无羁绊</div>';
+  }
+  document.getElementById("bondGroupSeg").addEventListener("click",function(e){
+    var b=e.target.closest("button");if(!b)return;
+    document.querySelectorAll("#bondGroupSeg button").forEach(function(x){x.classList.toggle("on",x===b)});
+    renderBonds(b.dataset.g);
+  });
+  function openBond(name){
+    var b=BONDS.filter(function(x){return x.n===name})[0];if(!b)return;curBond=b;
+    var h='<button class="close" onclick="closeBond()">✕</button><h2>'+b.n+'</h2><div class="sub">'+b.m+' · 已拥有 '+b.have+'/'+b.total+'</div>';
+    h+='<div class="srcchip"><span>来源：'+b.src+'</span><span>机制系：'+b.mech+'</span></div>';
+    h+='<div class="mechdesc"><b>机制详解：</b>'+b.mechDesc+'</div>';
+    h+='<div class="sec-t">档位效果</div>';
+    b.tiers.forEach(function(t){h+='<div class="tierline"><span class="t">'+t[0]+'</span><span class="t eff">'+t[1]+'</span></div>'});
+    h+='<div class="sec-t">成员（已拥有高亮）</div><div>'
+      +b.members.map(function(m,i){return '<span class="member'+(i<b.have?" have":"")+'">'+m+'</span>'}).join("")+'</div>';
+    if(b.have===b.total)h+='<div class="prismtip">满员棱彩：本羁绊全部效果 ×2（prismaticMult）</div>';
+    else h+='<div class="note" style="margin-top:10px">获取：未拥有的成员可通过海克斯抽取 / 合成获得；叠层专家系羁绊需叠层达到对应上限逐步解锁。</div>';
+    h+='<div class="steps"><button class="btn primary" style="margin-left:auto" onclick="closeBond()">关闭</button></div>';
+    document.getElementById("bondSheet").innerHTML=h;
+    document.getElementById("bondMask").classList.add("open");
+  }
+  function closeBond(){document.getElementById("bondMask").classList.remove("open")}
+  /* ===== 列表渲染 ===== */
+  function renderLinkList(){
+    var q=document.getElementById("linkSearch").value.trim().toLowerCase();
+    var s=document.getElementById("linkStateSeg").querySelector("button.on").dataset.s;
+    var f="";
+    FUTURE.forEach(function(m){
+      if((s==="ok"&&!m.ok)||(s==="off"&&m.ok))return;
+      if(q&&m.names.every(function(x){return (x.n+" "+x.d).toLowerCase().indexOf(q)<0}))return;
+      f+='<div class="fmod'+(m.ok?"":" off")+'">'
+        +'<div class="hd" onclick="toggleFold(this)" role="button" title="点击展开/收起">'
+        +'<svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7z" fill="none" stroke="'+(m.ok?"#7ee0a3":"#6b7590")+'" stroke-width="1.3"/></svg><b>'+m.n+'</b><span class="cnt">'+m.count+' 项 · '+(m.ok?"已安装":"未安装")+'</span>'
+        +'<button class="exp" onclick="event.stopPropagation();toggleFold(this)">展开 '+m.names.length+' 个</button></div>'
+        +'<div class="fold" hidden>'+m.names.map(function(x){return '<div class="lnk"><b>'+x.n+'</b><span>'+x.d+'</span></div>'}).join("")+'</div></div>';
+    });
+    document.getElementById("futureList").innerHTML=f||'<div class="note" style="grid-column:1/-1">没有匹配的联动海克斯</div>';
+  }
+  function toggleFold(btn){
+    var card=btn.closest(".fmod"),fold=card.querySelector(".fold");
+    if(!fold)return;
+    var open=fold.hidden;
+    fold.hidden=!open;
+    var exp=card.querySelector(".exp");
+    exp.textContent=open?"收起":("展开 "+card.querySelectorAll(".lnk").length+" 个");
+    card.classList.toggle("open",open);
+  }
+  /* ===== 世界海克斯抽取 ===== */
+  var WORLD_POOL=[
+    {n:"暗夜降临",desc:"怪物生成率 +25%（全服生效）"},
+    {n:"无尽寒冬",desc:"全体怪物生命 +15%（全服生效）"},
+    {n:"钢铁浪潮",desc:"全体怪物护甲 +12（全服生效）"},
+    {n:"晶币风暴",desc:"全体玩家晶币获取 +40%（全服生效）"},
+    {n:"丰收之季",desc:"全体玩家经验获取 +30%（全服生效）"}
+  ];
+  var worldCost=300;
+  function worldDraw(){
+    var used=WORLD.map(function(x){return x.n}),left=WORLD_POOL.filter(function(x){return used.indexOf(x.n)<0});
+    if(!left.length){toast('世界海克斯已全部生效');return}
+    if(COIN<worldCost){toast('晶币不足：本次需 '+worldCost+' 晶币');return}
+    var fee=worldCost;
+    COIN-=worldCost;renderCoin();
+    var pick=left[Math.floor(Math.random()*left.length)];
+    WORLD.unshift({n:pick.n,desc:pick.desc,cost:"生效中",on:true});
+    document.getElementById("worldList").innerHTML=WORLD.map(function(x){return '<div class="wrow on"><span class="chip">'+x.cost+'</span><span class="nm">'+x.n+'</span><span class="desc">'+x.desc+'</span></div>'}).join("");
+    var col=["#d9c08a","#c99a4a","#c9a6ff"][Math.floor(Math.random()*3)];
+    document.getElementById("worldDrawRes").innerHTML='<div class="card gold" style="padding:10px"><span class="rar">世界海克斯</span><h3>'+pick.n+'</h3><p class="desc">'+pick.desc+'</p><div class="meta">消耗 '+worldCost+' 晶币（递增 +10%）</div></div>';
+    worldCost=Math.round(worldCost*1.1);
+    toast('抽取世界海克斯：<b>'+pick.n+'</b>（已全服生效，-'+fee+' 晶币）');
+  }
+  /* ===== 全局资源 ===== */
+  var COIN=12480,leftDraws=23;
+  function renderCoin(){var c=document.getElementById("coinVal");if(c)c.textContent=COIN.toLocaleString();var b=document.getElementById("rcgCoinBig");if(b)b.textContent=COIN.toLocaleString();}
+  /* ===== 敌方海克斯（独立机制） ===== */
+  var ENEMY_POOL=[
+    {n:"寒霜之躯",desc:"怪物攻击附带减速，玩家移速 -10%"},
+    {n:"狂暴之魂",desc:"怪物攻击 +25%，生成速度 +20%"},
+    {n:"巨石外壳",desc:"怪物受伤减免 15%，生命 +10%"},
+    {n:"毒素光环",desc:"玩家进入 8 格内持续中毒（每秒 1 点）"}
+  ];
+  var playerHex=23; /* 玩家已拥有海克斯数 */
+  function renderEnemyProg(){
+    var auto=Math.floor(playerHex/10),rest=playerHex%10;
+    document.getElementById("enemyAutoBar").style.width=(rest/10*100)+"%";
+    document.getElementById("enemyAutoLab").textContent="玩家拥有 "+playerHex+" 个海克斯 → 自动敌对 "+auto+" 个（每 10 个 +1）· 距下个 "+rest+"/10";
+  }
+  function enemyDraw(){
+    if(COIN<500){toast('晶币不足：主动抽取需 500 晶币');return}
+    COIN-=500;renderCoin();
+    var used=ENEMY.map(function(x){return x.n}),left=ENEMY_POOL.filter(function(x){return used.indexOf(x.n)<0});
+    if(!left.length){toast('敌方海克斯已全部生效');return}
+    var pick=left[Math.floor(Math.random()*left.length)];
+    ENEMY.push({n:pick.n,desc:pick.desc,cost:"主动抽取",on:true});
+    document.getElementById("enemyDrawRes").innerHTML='<div class="card prism" style="padding:10px"><span class="rar">敌对海克斯 · 主动抽取</span><h3>'+pick.n+'</h3><p class="desc">'+pick.desc+'</p><div class="meta">消耗 500 晶币 · 只强化怪物</div></div>';
+    toast('主动抽取敌对海克斯：<b>'+pick.n+'</b>（世界难度提升）');
+    renderLists();
+  }
+  /* ===== 锻造器抽取 ===== */
+  var FORGE_POOL={
+    silver:[["锋利 III","攻击 +4"],["坚固 II","护甲 +3"],["轻快 I","攻速 +1%"],["坚韧 I","韧性 +5"]],
+    gold:[["锋利 VI","攻击 +12"],["荆棘","近战反弹 8%"],["嗜血","吸血 +5%"],["鹰眼","远程伤害 +10%"]],
+    prism:[["灵魂行者","全属性 +8%"],["雷暴","闪电链触发 +10%"],["永世征伐","叠层上限 +200"],["龙血","生命 +60、攻速 +4%"]]
+  };
+  var forgeCost={silver:50,gold:150,prism:400,rand:0};
+  function forgeDraw(t){
+    var pool=FORGE_POOL.silver.concat(FORGE_POOL.gold).concat(FORGE_POOL.prism),cost=forgeCost[t];
+    if(t==="rand"){cost=[50,150,400][Math.floor(Math.random()*3)];pool=FORGE_POOL.silver.concat(FORGE_POOL.gold).concat(FORGE_POOL.prism);}
+    else{pool=FORGE_POOL[t];}
+    if(COIN<cost){toast('晶币不足：本档锻造需 '+cost+' 晶币');return}
+    COIN-=cost;renderCoin();
+    var p=pool[Math.floor(Math.random()*pool.length)];
+    var col={silver:"#b8c2d9",gold:"#d9c08a",prism:"#c9a6ff"}[t]||"#e8ecf6";
+    var lab={silver:"白银锻造 · 50 晶币",gold:"黄金锻造 · 150 晶币",prism:"棱彩锻造 · 400 晶币",rand:"随机锻造 · 随机档位费用"}[t];
+    document.getElementById("forgeResult").innerHTML='<div class="card" style="padding:10px;--rc:'+col+'"><span class="rar">锻造结果</span><h3>'+p[0]+'</h3><p class="desc">'+p[1]+'</p><div class="meta">'+lab+' · 已扣除 '+cost+' 晶币</div></div>';
+    toast('锻造成功：<b>'+p[0]+'</b>（-'+cost+' 晶币）');
+  }
+  function renderForgePool(){
+    var h="";
+    var rows=[["白银锻造","silver"],["黄金锻造","gold"],["棱彩锻造","prism"]];
+    rows.forEach(function(r){
+      h+='<div class="fpool"><b class="h">'+r[0]+'</b>'+FORGE_POOL[r[1]].map(function(x){return '<span>'+x[0]+' · '+x[1]+'</span>'}).join("")+'</div>';
+    });
+    document.getElementById("forgePool").innerHTML=h;
+  }
+  /* ===== 充值：材质⇄晶币兑换（贴合游戏内 HextechPageScreen 现有玩法） ===== */
+  var MATS=[
+    {n:"绿宝石",r:30,c:"#55ff55"},
+    {n:"铜锭",r:1,c:"#ff8c00"},
+    {n:"铁锭",r:2,c:"#d8d8d8"},
+    {n:"金锭",r:4,c:"#ffd700"},
+    {n:"钻石",r:8,c:"#4de6ff"},
+    {n:"下界合金锭",r:64,c:"#c77dff"}
+  ],EX_COUNTS=[1,32,64,128,256],rcgCur=null;
+  /* v0.9.8 EMC 通道：玩家 EMC 余额直充。汇率 1024 EMC=1 晶币（与材质通道对齐：钻石 8192 EMC = 8 晶币）。
+     材料 EMC 为 ProjectE 默认映射值：铁/金/钻石为跨源稳定值；绿宝石/铜锭/下界合金锭标默认值，以游戏内实时查询为准 */
+  var EMC_RATE=1024,EMC_COINS=[16,32,64,128,256],PLAYER_EMC=42240,
+      EMC_MATS=[
+        {n:"绿宝石",emc:512},
+        {n:"铜锭",emc:64},
+        {n:"铁锭",emc:256},
+        {n:"金锭",emc:2048},
+        {n:"钻石",emc:8192},
+        {n:"下界合金锭",emc:57344}
+      ];
+  function exBtns(mat,dir){return EX_COUNTS.map(function(c){return '<button class="xb" onclick="openRcg('+mat+','+dir+','+c+')">×'+c+'</button>'}).join("")}
+  function renderRcg(){
+    var h="";
+    MATS.forEach(function(m,i){
+      h+='<div class="rcg-row"><span class="mats"><i style="background:'+m.c+'"></i>'+m.n+'</span><span class="rte">1 '+m.n.replace("锭","")+' = '+m.r+' 晶币</span><span class="btns">'+exBtns(i,0)+'</span></div>';
+    });
+    document.getElementById("rcgMatRows").innerHTML=h;
+    document.getElementById("rcgBackRows").innerHTML='<div class="rcg-row"><span class="mats"><i style="background:#55ff55"></i>绿宝石</span><span class="rte">30 晶币 = 1 绿宝石</span><span class="btns">'+exBtns(0,1)+'</span></div>';
+    /* EMC 通道：五档批量（16/32/64/128/256 晶币）+ 材料 EMC 换算表 */
+    document.getElementById("emcBtns").innerHTML=EMC_COINS.map(function(c){
+      var need=c*EMC_RATE;
+      return '<button class="xb" title="消耗 '+need.toLocaleString()+' EMC" onclick="openEmc('+c+')">'+c+'◆</button>'
+    }).join("");
+    var t='<div class="rcg-sec-h" style="margin-top:8px">常用材料 EMC 换算表<span>EMC ÷ 1024 = 晶币 · 游戏内实时查询为准</span></div>';
+    t+='<div class="rcg-rows">';
+    EMC_MATS.forEach(function(m){
+      var coins=(m.emc/EMC_RATE).toFixed(m.emc%EMC_RATE?2:0);
+      t+='<div class="rcg-row"><span class="mats"><i style="background:#7f7fff"></i>'+m.n+'</span><span class="rte">'+m.emc.toLocaleString()+' EMC</span><span class="btns" style="color:#7f7fff">≈ '+coins+' 晶币</span></div>';
+    });
+    document.getElementById("emcTable").innerHTML=t+='</div>';
+  }
+  function openRcg(mat,dir,c){
+    rcgCur={mat:mat,dir:dir,c:c};var m=MATS[mat];
+    document.getElementById("rcgDir").textContent=dir===0?('材质 → 晶币（'+m.n+'）'):'晶币 → 绿宝石';
+    document.getElementById("rcgCnt").textContent='×'+c;
+    if(dir===0){document.getElementById("rcgRes").textContent='+'+(c*m.r).toLocaleString()+' 晶币';document.getElementById("rcgPrev").textContent='兑换后晶币：'+(COIN+c*m.r).toLocaleString()+'（当前 '+COIN.toLocaleString()+'）';}
+    else{var cost=c*30;document.getElementById("rcgRes").textContent=c+' 绿宝石（消耗 '+cost.toLocaleString()+' 晶币）';document.getElementById("rcgPrev").textContent='兑换后晶币：'+(COIN-cost).toLocaleString()+'（当前 '+COIN.toLocaleString()+'）';}
+    document.getElementById("rcgMask").classList.add("open");
+  }
+  function closeRcg(){document.getElementById("rcgMask").classList.remove("open")}
+  function confirmRcg(){
+    var q=rcgCur,m=MATS[q.mat];
+    if(q.dir===0){COIN+=q.c*m.r;toast('兑换成功：<b>+'+(q.c*m.r).toLocaleString()+' 晶币</b>（'+m.n+' ×'+q.c+'）');}
+    else{var cost=q.c*30;if(COIN<cost){toast('晶币不足：需要 '+cost.toLocaleString()+' 晶币');return;}COIN-=cost;toast('兑换成功：<b>+'+q.c+' 绿宝石</b>');}
+    renderCoin();closeRcg();
+  }
+  function openEmc(c){
+    var need=c*EMC_RATE;
+    if(PLAYER_EMC<need){toast('EMC 余额不足：需要 <b>'+need.toLocaleString()+' EMC</b>（当前 '+PLAYER_EMC.toLocaleString()+'）');return;}
+    PLAYER_EMC-=need;COIN+=c;
+    document.getElementById("emcBal").textContent=PLAYER_EMC.toLocaleString()+' EMC';
+    renderCoin();
+    toast('EMC 直充：<b>+'+c+' 晶币</b>（-'+need.toLocaleString()+' EMC，从玩家自身余额扣除）');
+  }
+  function renderLists(){
+    var w="",i;
+    for(i=0;i<WORLD.length;i++)w+='<div class="wrow'+(WORLD[i].on?" on":"")+'><span class="chip">'+WORLD[i].cost+'</span><span class="nm">'+WORLD[i].n+'</span><span class="desc">'+WORLD[i].desc+'</span></div>';
+    document.getElementById("worldList").innerHTML=w||'<div class="note">暂无世界海克斯</div>';
+    var e="";
+    for(i=0;i<ENEMY.length;i++)e+='<div class="wrow'+(ENEMY[i].on?" on":"")+'><span class="chip">'+ENEMY[i].cost+'</span><span class="nm">'+ENEMY[i].n+'</span><span class="desc">'+ENEMY[i].desc+'</span></div>';
+    document.getElementById("enemyList").innerHTML=e||'<div class="note">暂无敌方海克斯</div>';
+    renderLinkList();
+    var q="";
+    for(i=0;i<EQUIP.length;i++)q+='<div class="eitem"><div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor">'+EQUIP[i].ico+'</svg></div><div><div class="nm">'+EQUIP[i].n+'</div><div class="desc">'+EQUIP[i].desc+'</div></div></div>';
+    document.getElementById("equipList").innerHTML=q;
+    var ha="",htip={
+      "双子射击":"连击流：攻击时概率额外射出一发子弹（6 件激活 +18%）",
+      "引燃链":"燃烧流：命中后点燃附近敌人，引燃链随档位提升",
+      "处决":"斩杀流：低血目标概率被直接处决，总封顶 20% 最大生命",
+      "暗黑伤害":"深渊守望：深渊系伤害加成（6 件 +30%）",
+      "闪电链":"灾厄猎手：命中概率触发闪电链，50% 溅射范围伤害",
+      "飞升":"深渊守望满档：战斗 8 秒后全伤害加成，位移刷新",
+      "悬赏":"经济流：悬赏目标额外掉落晶币（6 件 ×3）",
+      "狂暴":"斩杀流：低血时攻击大幅提升（6 件 +25%）",
+      "吸血":"燃烧流：吸血按燃烧层数结算，续航核心",
+      "过载盾":"壁垒：超出生命上限部分转为护盾（1 件 +15%）",
+      "灾变伤害":"灾厄猎手：对灾变生物增伤（3 件 +12%）",
+      "荆棘装甲":"壁垒满档：近战反弹 15% 伤害",
+      "晶币加成":"经济流：击杀/掉落晶币提升（8 件 +35%）",
+      "叠层伤害":"战斗叠层：每层叠层 +0.4% 伤害（当前 1,024 层）"
+    };
+    HIDDEN.forEach(function(x){
+      ha+='<div class="it"><b class="'+(x.k==="g"?"g":x.k==="v"?"v":"")+'" title="'+(htip[x.n]||"隐藏属性：持有对应海克斯或羁绊时激活")+'">'+x.n+' '+x.v+'</b><span>'+x.src+'</span></div>';
+    });
+    document.getElementById("hiddenAttrs").innerHTML=ha;
+  }
+  document.getElementById("linkSearch").addEventListener("input",renderLinkList);
+  document.getElementById("linkStateSeg").addEventListener("click",function(e){
+    var b=e.target.closest("button");if(!b)return;
+    document.querySelectorAll("#linkStateSeg button").forEach(function(x){x.classList.toggle("on",x===b)});
+    renderLinkList();
+  });
+  /* ===== Toast ===== */
+  var toastTimer;
+  function toast(msg){
+    var t=document.getElementById("toast");t.innerHTML=msg;t.classList.add("show");
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove("show")},2200);
+  }
+  /* ===== 初始化 ===== */
+  renderNav();renderCards();renderPoolLabel();renderBonds("all");renderLists();renderEnemyProg();renderRcg();renderForgePool();
+</script>
+</body>
+</html>

@@ -2,5 +2,5 @@
     "rarity": "GOLD",
     "weight": 8,
     "source": "ftbquests",
-    "event": "goldmine:0.35,scholar:0.40"
+    "event": "coin_bonus:0.35,xp_bonus:0.40"
 }

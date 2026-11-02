@@ -1,0 +1,131 @@
+{
+  "src": "H:\\MC1314\\MOD\\docs\\v1.0.0_ui_preview\\v1.0.0界面预览.html",
+  "url": "file:///H:/MC1314/MOD/docs/v1.0.0_ui_preview/v1.0.0%E7%95%8C%E9%9D%A2%E9%A2%84%E8%A7%88.html",
+  "outdir": "H:\\MC1314\\MOD\\docs\\v1.0.0_ui_preview\\_shots",
+  "include": [
+    "lint",
+    "screenshots",
+    "structure"
+  ],
+  "shots": {
+    "desktop": {
+      "screenshot": "H:\\MC1314\\MOD\\docs\\v1.0.0_ui_preview\\_shots\\v1.0.0界面预览_desktop.jpg",
+      "screenshotBytes": 42080,
+      "truncated": false,
+      "structure": {
+        "title": "海克斯工坊 v1.0.0 界面预览",
+        "firstH1": "",
+        "viewport": {
+          "w": 1414,
+          "h": 760
+        },
+        "fullpage": {
+          "w": 1414,
+          "h": 760
+        },
+        "counts": {
+          "section": 9,
+          "h1": 0,
+          "h2": 0,
+          "img": 0,
+          "canvas": 0,
+          "svg": 50,
+          "links": 0,
+          "buttons": 48
+        }
+      },
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "horizontalOverflow": [],
+      "resourceErrors": [],
+      "reportSource": "cdp"
+    },
+    "mobile": {
+      "screenshot": "H:\\MC1314\\MOD\\docs\\v1.0.0_ui_preview\\_shots\\v1.0.0界面预览_mobile.jpg",
+      "screenshotBytes": 67149,
+      "truncated": false,
+      "structure": {
+        "title": "海克斯工坊 v1.0.0 界面预览",
+        "firstH1": "",
+        "viewport": {
+          "w": 492,
+          "h": 704
+        },
+        "fullpage": {
+          "w": 492,
+          "h": 1358
+        },
+        "counts": {
+          "section": 9,
+          "h1": 0,
+          "h2": 0,
+          "img": 0,
+          "canvas": 0,
+          "svg": 50,
+          "links": 0,
+          "buttons": 48
+        }
+      },
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "horizontalOverflow": [],
+      "resourceErrors": [],
+      "reportSource": "cdp"
+    }
+  },
+  "engine": "chrome_cli",
+  "chromiumExec": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+  "engineDegraded": true,
+  "engineDegradedReason": "playwright 未装",
+  "elapsedSec": 7.66,
+  "schemaVersion": 2,
+  "status": "pass",
+  "engineInfo": {
+    "name": "chrome_cli",
+    "degraded": true,
+    "degradedReasons": [
+      "playwright 未装"
+    ]
+  },
+  "input": {
+    "original": "H:\\MC1314\\MOD\\docs\\v1.0.0_ui_preview\\v1.0.0界面预览.html",
+    "resolvedPath": "H:\\MC1314\\MOD\\docs\\v1.0.0_ui_preview\\v1.0.0界面预览.html",
+    "baseUrl": "file:///H:/MC1314/MOD/docs/v1.0.0_ui_preview/v1.0.0%E7%95%8C%E9%9D%A2%E9%A2%84%E8%A7%88.html",
+    "protocol": "file",
+    "cwd": "H:\\MC1314\\MOD",
+    "mediaMode": {
+      "reducedMotion": true
+    }
+  },
+  "artifacts": {
+    "screenshots": [
+      {
+        "viewport": "desktop",
+        "path": "H:\\MC1314\\MOD\\docs\\v1.0.0_ui_preview\\_shots\\v1.0.0界面预览_desktop.jpg",
+        "size": 42080,
+        "visualCoverage": {
+          "complete": true,
+          "reason": null
+        }
+      },
+      {
+        "viewport": "mobile",
+        "path": "H:\\MC1314\\MOD\\docs\\v1.0.0_ui_preview\\_shots\\v1.0.0界面预览_mobile.jpg",
+        "size": 67149,
+        "visualCoverage": {
+          "complete": true,
+          "reason": null
+        }
+      }
+    ]
+  },
+  "summary": {
+    "blocker": 0,
+    "error": 0,
+    "warning": 0,
+    "info": 0
+  },
+  "findings": [],
+  "prioritizedActions": [],
+  "reportPath": "H:\\MC1314\\MOD\\docs\\v1.0.0_ui_preview\\_shots\\report.json"
+}

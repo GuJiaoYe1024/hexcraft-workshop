@@ -174,13 +174,21 @@ public class HextechPageScreen extends HexScaledScreen {
                     Component.translatable("hexcraft.gui.recharge_coin", c), 0xFFFFD700,
                     b -> sendExchange(1, 0, c)));
         }
-        // v0.8.3 EMC 通道（ProjectE 已装时显示）：主手物品按 EMC 折算晶币（一次整组；服务端按 4 EMC=1 晶币 × 汇率加成结算）
+        // v0.9.8 EMC 通道（ProjectE 已装时显示）：玩家 EMC 余额直充——五档批量（16/32/64/128/256 晶币），
+        // 点按从玩家自身 EMC 余额按汇率扣减加晶币（不再折算/销毁主手物品）；tooltip 显示所需 EMC
         if (net.minecraftforge.fml.ModList.get().isLoaded("projecte")) {
             int ey = cy2 + 22;
-            long emc = com.hexcraft.link.EmcLink.getEMCValue(this.minecraft.player.getMainHandItem());
-            this.addRenderableWidget(new HexButton(cx() + 4, ey + 12, 150, 12,
-                    Component.translatable("hexcraft.gui.emc_exchange", emc > 0 ? emc : 0), 0xFF7F7FFF,
-                    b -> sendExchange(0, 6, 1)));
+            int[] emcCoins = {16, 32, 64, 128, 256};
+            double rate = Math.max(1.0, com.hexcraft.config.HexConfig.EMC_COIN_RATE.get());
+            for (int i = 0; i < emcCoins.length; i++) {
+                final int c = emcCoins[i];
+                long needEmc = (long) Math.ceil((double) c * rate);
+                HexButton eb = new HexButton(cx() + 4 + i * 40, ey + 12, 36, 12,
+                        Component.translatable("hexcraft.gui.recharge_coin", c), 0xFF7F7FFF,
+                        b -> sendExchange(0, 6, c));
+                eb.setTooltip(Tooltip.create(Component.translatable("hexcraft.gui.emc_need", needEmc)));
+                this.addRenderableWidget(eb);
+            }
         }
     }
 

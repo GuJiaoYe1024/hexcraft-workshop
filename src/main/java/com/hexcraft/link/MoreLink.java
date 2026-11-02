@@ -41,7 +41,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *  relic_power / relic_ward / relic_drop                  遗物（curios/背包持有时生效）
  *  blade_damage / blade_burst / blade_drop                拔刀剑（主手持有时生效）
  *  farmer_drop / farmer_chef                              农夫乐事（击杀掉食物 / 进食回血）
- *  quest 系列（ftb_quest 前缀）复用 goldmine/scholar/random_loot 现有键，见 JSON。
+ *  quest 系列（hex_quest_ 前缀）：击杀侧复用 coin_bonus/xp_bonus/random_loot 等键；
+ *  任务完成真联动由 FtbQuestLink 监听 FTB Quests 事件按 quest 海克斯等级结算（bounty/coin_bonus/xp_bonus/random_loot）。
+ *  v0.9.7 死键落实：goldmine→coin_bonus、scholar→xp_bonus（JSON 已统一改键，effect() 加别名兜底）。
  */
 public final class MoreLink {
 
@@ -297,9 +299,15 @@ public final class MoreLink {
             double vamp = eff(sp, "artifact_vamp");
             if (vamp > 0 && sp.isAlive()) sp.heal(2.0f * (float) vamp);
         }
-        // 拔刀剑：击杀触发连击窗口
-        if (isBladeHeld(sp) && eff(sp, "blade_burst") > 0) {
-            BLADE_BURST.put(sp.getUUID(), sp.tickCount + BURST_TICKS);
+        // 拔刀剑：主手持刀击杀任意生物——刀之魂掉落（blade_drop 落实 v0.9.7：
+        // 此前 DROPS 表有 slashblade 行但 onKill 从未调用，hex_blade_katana/loot/treasure_edge 的 blade_drop 为死键）
+        // + 连击窗口（blade_burst 原逻辑保留）
+        if (isBladeHeld(sp)) {
+            double bd = eff(sp, "blade_drop");
+            if (bd > 0) rollDrop(sp, event.getEntity(), "slashblade", bd);
+            if (eff(sp, "blade_burst") > 0) {
+                BLADE_BURST.put(sp.getUUID(), sp.tickCount + BURST_TICKS);
+            }
         }
         // 遗物击杀掉落（任意生物，低概率）
         if (carrying(sp, "relics", null)) {

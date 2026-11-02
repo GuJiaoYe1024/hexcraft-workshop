@@ -1,0 +1,5 @@
+has hex_tacz_aggressive.name: True
+has hex_cataclysm_bane.name: True
+sample aggressive: 突击者
+sample bane: 末地灾变猎手
+sample abyssal breath: 深渊呼吸
