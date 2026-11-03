@@ -556,20 +556,30 @@ public class HextechPageScreen extends HexScaledScreen {
                         java.util.List<Object> tip = new java.util.ArrayList<>();
                         tip.add(Component.translatable(cr.nameKey()).withStyle(t -> t.withColor(0xFFFFD28C)));
                         if (cr.members() != null && cr.members().length > 0) {
+                            // v0.9.10 成员行拆行：每行 6 个名字，收窄悬浮窗宽度，避免 12 名一行撑爆
                             StringBuilder members = new StringBuilder();
+                            int per = 0;
                             for (int mi = 0; mi < cr.members().length; mi++) {
-                                if (mi > 0) members.append("  ");
+                                if (per > 0) members.append("  ");
                                 members.append(Component.translatable("hexcraft.hextech." + cr.members()[mi] + ".name").getString());
+                                per++;
+                                if (per == 6) {
+                                    tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                                    members.setLength(0);
+                                    per = 0;
+                                }
                             }
-                            tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                            if (members.length() > 0) {
+                                tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                            }
                         }
                         for (int t = 0; t < cr.tierCounts().length; t++) {
                             String en = Component.translatable("hexcraft.effect." + cr.effects()[t]).getString();
                             int pct = (int) Math.round(cr.values()[t] * 100);
                             int tierColor = t < cr.tier() ? 0xFFFFD700 : 0xFFAAB6D8;
-                            // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘
+                            // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘；件数不带括号
                             tip.add(new HexFonts.ColLine(
-                                    new String[]{"档" + (t + 1), "（" + cr.tierCounts()[t] + "件）", en, "+" + pct + "%"},
+                                    new String[]{"档" + (t + 1), cr.tierCounts()[t] + "件", en, "+" + pct + "%"},
                                     tierColor));
                         }
                         if (!maxTier) tip.add(Component.literal("再　" + (cr.tierCounts()[cr.tier()] - cr.have()) + "　件激活档　" + (cr.tier() + 1))
@@ -820,20 +830,30 @@ public class HextechPageScreen extends HexScaledScreen {
                 java.util.List<Object> tip = new java.util.ArrayList<>();
                 tip.add(Component.translatable(br.nameKey()).withStyle(t -> t.withColor(0xFFFFD28C)));
                 if (br.members().length > 0) {
+                    // v0.9.10 成员行拆行：每行 6 个名字，收窄悬浮窗宽度
                     StringBuilder members = new StringBuilder();
+                    int per = 0;
                     for (int mi = 0; mi < br.members().length; mi++) {
-                        if (mi > 0) members.append("  ");
+                        if (per > 0) members.append("  ");
                         members.append(Component.translatable("hexcraft.hextech." + br.members()[mi] + ".name").getString());
+                        per++;
+                        if (per == 6) {
+                            tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                            members.setLength(0);
+                            per = 0;
+                        }
                     }
-                    tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                    if (members.length() > 0) {
+                        tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                    }
                 }
                 for (int t = 0; t < br.tierCounts().length; t++) {
                     String en = Component.translatable("hexcraft.effect." + br.effects()[t]).getString();
                     int pct = (int) Math.round(br.values()[t] * 100);
                     int slotColor = t < br.tier ? 0xFFFFD700 : 0xFFAAB6D8;
-                    // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘
+                    // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘；件数不带括号
                     tip.add(new HexFonts.ColLine(
-                            new String[]{"档" + (t + 1), "（" + br.tierCounts()[t] + "件）", en, "+" + pct + "%"},
+                            new String[]{"档" + (t + 1), br.tierCounts()[t] + "件", en, "+" + pct + "%"},
                             slotColor));
                 }
                 if (!maxTier) tip.add(Component.literal("再　" + (br.tierCounts()[br.tier()] - br.have) + "　件激活档　" + (br.tier() + 1))

@@ -98,7 +98,7 @@ public final class HexFonts {
     public static void tooltip(GuiGraphics g, java.util.List<?> rows, int mx, int my) {
         if (rows == null || rows.isEmpty()) return;
         int u = ui().width("件");
-        int gap = Math.max(1, (int) (u * 0.6f));
+        int gap = Math.max(1, (int) (u * 0.4f));
         // 收集分栏行：列数、非右对齐列最大宽、右对齐列（每行最后一列）最大宽
         int ncol = 0;
         for (Object r : rows) {
@@ -132,7 +132,7 @@ public final class HexFonts {
                 w = Math.max(w, ui().width((Component) r));
             }
         }
-        int h = rows.size() * 11 + 6;
+        int h = rows.size() * 9 + 6;
         int sx = mx + 10;
         int sy = my - 4;
         int gw = g.guiWidth();
@@ -158,7 +158,7 @@ public final class HexFonts {
             } else {
                 g.drawString(ui(), (Component) r, sx, ly, 0xFFFFFFFF, false);
             }
-            ly += 11;
+            ly += 9;
         }
     }
 
