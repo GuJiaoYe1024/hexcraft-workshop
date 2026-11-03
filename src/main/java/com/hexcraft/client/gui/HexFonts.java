@@ -80,15 +80,13 @@ public final class HexFonts {
     }
 
     /** 列对齐行（tooltip 档位行专用，v0.9.10 用户选定分栏方向）：
-     *  各行按固定列 x 坐标渲染，数值列右对齐（colXs[i]<0 表示该列右对齐到行尾）。
-     *  列宽单位 u=1 汉字宽，由调用方按 ui().width("件") 计算，自适应字号。 */
+     *  各列按内容最大宽度自动分栏：列间固定间隙 0.6u（u=1 汉字宽），
+     *  最后一列（数值）右对齐到「分栏区右缘」，不随悬浮窗总宽漂移。 */
     public static final class ColLine {
         public final String[] cols;
-        public final int[] colXs;
         public final int color;
-        public ColLine(String[] cols, int[] colXs, int color) {
+        public ColLine(String[] cols, int color) {
             this.cols = cols;
-            this.colXs = colXs;
             this.color = color;
         }
     }
@@ -99,16 +97,37 @@ public final class HexFonts {
      *  rows 每项为 Component（普通行）或 ColLine（固定列对齐行，档位行用）。 */
     public static void tooltip(GuiGraphics g, java.util.List<?> rows, int mx, int my) {
         if (rows == null || rows.isEmpty()) return;
+        int u = ui().width("件");
+        int gap = Math.max(1, (int) (u * 0.6f));
+        // 收集分栏行：列数、非右对齐列最大宽、右对齐列（每行最后一列）最大宽
+        int ncol = 0;
+        for (Object r : rows) {
+            if (r instanceof ColLine cl) ncol = Math.max(ncol, cl.cols.length);
+        }
+        int[] colW = new int[ncol];
+        int rightW = 0;
+        for (Object r : rows) {
+            if (r instanceof ColLine cl) {
+                for (int i = 0; i < cl.cols.length - 1; i++) {
+                    colW[i] = Math.max(colW[i], ui().width(cl.cols[i]));
+                }
+                rightW = Math.max(rightW, ui().width(cl.cols[cl.cols.length - 1]));
+            }
+        }
+        // 分栏布局：列起点累加，数值右缘 = 分栏区右缘 + 间隙 + 数值最大宽（固定基准）
+        int[] colX = new int[ncol];
+        int colAreaW = 0;
+        for (int i = 0; i < ncol; i++) {
+            if (i > 0) colAreaW += gap;
+            colX[i] = colAreaW;
+            colAreaW += colW[i];
+        }
+        int numRight = colAreaW + gap + rightW;
+        // 总宽：普通行（成员/再行）与分栏行取最大
         int w = 0;
         for (Object r : rows) {
             if (r instanceof ColLine cl) {
-                int rw = 0;
-                for (int i = 0; i < cl.cols.length; i++) {
-                    if (cl.colXs[i] >= 0) {
-                        rw = Math.max(rw, cl.colXs[i] + ui().width(cl.cols[i]));
-                    }
-                }
-                w = Math.max(w, rw);
+                w = Math.max(w, numRight);
             } else {
                 w = Math.max(w, ui().width((Component) r));
             }
@@ -129,11 +148,11 @@ public final class HexFonts {
         for (Object r : rows) {
             if (r instanceof ColLine cl) {
                 for (int i = 0; i < cl.cols.length; i++) {
-                    if (cl.colXs[i] < 0) {
+                    if (i == cl.cols.length - 1) {
                         int vw = ui().width(cl.cols[i]);
-                        g.drawString(ui(), cl.cols[i], sx + w - vw - 2, ly, cl.color, false);
+                        g.drawString(ui(), cl.cols[i], sx + numRight - vw, ly, cl.color, false);
                     } else {
-                        g.drawString(ui(), cl.cols[i], sx + cl.colXs[i], ly, cl.color, false);
+                        g.drawString(ui(), cl.cols[i], sx + colX[i], ly, cl.color, false);
                     }
                 }
             } else {

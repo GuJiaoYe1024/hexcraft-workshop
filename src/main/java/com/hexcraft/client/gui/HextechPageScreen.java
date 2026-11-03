@@ -567,11 +567,10 @@ public class HextechPageScreen extends HexScaledScreen {
                             String en = Component.translatable("hexcraft.effect." + cr.effects()[t]).getString();
                             int pct = (int) Math.round(cr.values()[t] * 100);
                             int tierColor = t < cr.tier() ? 0xFFFFD700 : 0xFFAAB6D8;
-                            // v0.9.10 分栏对齐：档号/件数/效果名固定列，数值右对齐（不再用空格拼接）
-                            int cu = HexFonts.ui().width("件");
+                            // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘
                             tip.add(new HexFonts.ColLine(
                                     new String[]{"档" + (t + 1), "（" + cr.tierCounts()[t] + "件）", en, "+" + pct + "%"},
-                                    new int[]{0, 3 * cu, 8 * cu, -1}, tierColor));
+                                    tierColor));
                         }
                         if (!maxTier) tip.add(Component.literal("再　" + (cr.tierCounts()[cr.tier()] - cr.have()) + "　件激活档　" + (cr.tier() + 1))
                                 .withStyle(t -> t.withColor(0xFFFF6B6B)));
@@ -832,11 +831,10 @@ public class HextechPageScreen extends HexScaledScreen {
                     String en = Component.translatable("hexcraft.effect." + br.effects()[t]).getString();
                     int pct = (int) Math.round(br.values()[t] * 100);
                     int slotColor = t < br.tier ? 0xFFFFD700 : 0xFFAAB6D8;
-                    // v0.9.10 分栏对齐：档号/件数/效果名固定列，数值右对齐（不再用空格拼接）
-                    int cu = HexFonts.ui().width("件");
+                    // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘
                     tip.add(new HexFonts.ColLine(
                             new String[]{"档" + (t + 1), "（" + br.tierCounts()[t] + "件）", en, "+" + pct + "%"},
-                            new int[]{0, 3 * cu, 8 * cu, -1}, slotColor));
+                            slotColor));
                 }
                 if (!maxTier) tip.add(Component.literal("再　" + (br.tierCounts()[br.tier()] - br.have) + "　件激活档　" + (br.tier() + 1))
                         .withStyle(t -> t.withColor(0xFFFF6B6B)));
