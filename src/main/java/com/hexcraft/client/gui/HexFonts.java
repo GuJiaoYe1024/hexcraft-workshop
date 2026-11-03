@@ -79,16 +79,41 @@ public final class HexFonts {
         g.drawString(ui(), text, x - ui().width(text) / 2, y, color, shadow);
     }
 
+    /** 列对齐行（tooltip 档位行专用，v0.9.10 用户选定分栏方向）：
+     *  各行按固定列 x 坐标渲染，数值列右对齐（colXs[i]<0 表示该列右对齐到行尾）。
+     *  列宽单位 u=1 汉字宽，由调用方按 ui().width("件") 计算，自适应字号。 */
+    public static final class ColLine {
+        public final String[] cols;
+        public final int[] colXs;
+        public final int color;
+        public ColLine(String[] cols, int[] colXs, int color) {
+            this.cols = cols;
+            this.colXs = colXs;
+            this.color = color;
+        }
+    }
+
     /** 自绘 tooltip（v0.9.10 用户要求：悬浮窗介绍内容不带阴影）。
      *  MC 的 renderComponentTooltip 文字强制带阴影，无法关闭，这里改为自绘：
-     *  深蓝半透明背景 + 细边框 + 文字无阴影，并自动防止超出屏幕。 */
-    public static void tooltip(GuiGraphics g, java.util.List<Component> lines, int mx, int my) {
-        if (lines == null || lines.isEmpty()) return;
+     *  深蓝半透明背景 + 细边框 + 文字无阴影，并自动防止超出屏幕。
+     *  rows 每项为 Component（普通行）或 ColLine（固定列对齐行，档位行用）。 */
+    public static void tooltip(GuiGraphics g, java.util.List<?> rows, int mx, int my) {
+        if (rows == null || rows.isEmpty()) return;
         int w = 0;
-        for (Component c : lines) {
-            w = Math.max(w, ui().width(c));
+        for (Object r : rows) {
+            if (r instanceof ColLine cl) {
+                int rw = 0;
+                for (int i = 0; i < cl.cols.length; i++) {
+                    if (cl.colXs[i] >= 0) {
+                        rw = Math.max(rw, cl.colXs[i] + ui().width(cl.cols[i]));
+                    }
+                }
+                w = Math.max(w, rw);
+            } else {
+                w = Math.max(w, ui().width((Component) r));
+            }
         }
-        int h = lines.size() * 11 + 6;
+        int h = rows.size() * 11 + 6;
         int sx = mx + 10;
         int sy = my - 4;
         int gw = g.guiWidth();
@@ -101,8 +126,19 @@ public final class HexFonts {
         g.fill(sx - 3, sy - 3, sx - 2, sy + h + 3, 0xFF30466B);
         g.fill(sx + w + 2, sy - 3, sx + w + 3, sy + h + 3, 0xFF30466B);
         int ly = sy;
-        for (Component c : lines) {
-            g.drawString(ui(), c, sx, ly, 0xFFFFFFFF, false);
+        for (Object r : rows) {
+            if (r instanceof ColLine cl) {
+                for (int i = 0; i < cl.cols.length; i++) {
+                    if (cl.colXs[i] < 0) {
+                        int vw = ui().width(cl.cols[i]);
+                        g.drawString(ui(), cl.cols[i], sx + w - vw - 2, ly, cl.color, false);
+                    } else {
+                        g.drawString(ui(), cl.cols[i], sx + cl.colXs[i], ly, cl.color, false);
+                    }
+                }
+            } else {
+                g.drawString(ui(), (Component) r, sx, ly, 0xFFFFFFFF, false);
+            }
             ly += 11;
         }
     }

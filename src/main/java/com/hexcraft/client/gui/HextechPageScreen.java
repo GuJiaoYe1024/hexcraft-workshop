@@ -78,7 +78,7 @@ public class HextechPageScreen extends HexScaledScreen {
     /** 自绘列表 hover 提示：鼠标位置与当前命中行的提示内容（render 每帧重置，末尾绘制） */
     private int hoverX;
     private int hoverY;
-    private java.util.List<net.minecraft.network.chat.Component> hoverTip = null;
+    private java.util.List<Object> hoverTip = null;
     /** 海克斯页分类过滤：0=全部 1=战斗 2=生存 3=成长 4=经济 5=枪械 6=附魔 7=矿物 8=趣味 */
     private int hexCat = 0;
     private static final String[] HEX_CATS = {"all", "combat", "survive", "growth", "economy", "gun", "enchant", "mining", "fun"};
@@ -404,7 +404,7 @@ public class HextechPageScreen extends HexScaledScreen {
             int hc = hoverColumn(hoverX, hoverY, rowY); // v0.9.5 hover 列判定去重
             boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
             if (hc != 0 && hitOwnCol) {
-                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                java.util.List<Object> tip = new java.util.ArrayList<>();
                 tip.add(Component.translatable("hexcraft.stat." + key).withStyle(c -> c.withColor(0xFF9FE4FF)));
                 tip.add(Component.translatable("hexcraft.stat.hint." + key).withStyle(c -> c.withColor(0xFFAAB6D8)));
                 hoverTip = tip;
@@ -427,7 +427,7 @@ public class HextechPageScreen extends HexScaledScreen {
                 int hc = hoverColumn(hoverX, hoverY, rowY); // v0.9.5 hover 列判定去重
                 boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
                 if (hc != 0 && hitOwnCol) {
-                    java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                    java.util.List<Object> tip = new java.util.ArrayList<>();
                     tip.add(Component.translatable("hexcraft.effect." + r[0]).withStyle(c -> c.withColor(0xFF9FE4FF)));
                     // v0.8.6 具体效果说明：每个隐藏属性写明实际机制 + 当前数值（替换旧的通用来源套话）
                     tip.add(Component.translatable("hexcraft.effect.hint." + r[0], r[1]).withStyle(c -> c.withColor(0xFFAAB6D8)));
@@ -464,7 +464,7 @@ public class HextechPageScreen extends HexScaledScreen {
                     int hc = hoverColumn(hoverX, hoverY, rowY); // v0.9.5 hover 列判定去重
                     boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
                     if (hc != 0 && hitOwnCol) {
-                        java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                        java.util.List<Object> tip = new java.util.ArrayList<>();
                         tip.add(Component.translatable("hexcraft.hextech." + h.id + ".name").withStyle(c -> c.withColor(0xFF9FE4FF)));
                         tip.add(Component.translatable("hexcraft.hextech." + h.id + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
                         tip.add(Component.literal("当前 " + h.stacks + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
@@ -485,7 +485,7 @@ public class HextechPageScreen extends HexScaledScreen {
                     int hc = hoverColumn(hoverX, hoverY, rowY); // v0.9.5 hover 列判定去重
                     boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
                     if (hc != 0 && hitOwnCol) {
-                        java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                        java.util.List<Object> tip = new java.util.ArrayList<>();
                         tip.add(Component.translatable("hexcraft.equip." + e.id + ".name").withStyle(c -> c.withColor(0xFF9FE4FF)));
                         tip.add(Component.translatable("hexcraft.equip." + e.id + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
                         tip.add(Component.literal("当前 " + e.stacks + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
@@ -507,7 +507,7 @@ public class HextechPageScreen extends HexScaledScreen {
                     boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
                     if (hc != 0 && hitOwnCol) {
                         String bid = "hex_" + bs.key; // 战伤突进→hex_combat_damage_spur，与 stackNameOf 的 probe 兜底一致
-                        java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                        java.util.List<Object> tip = new java.util.ArrayList<>();
                         tip.add(Component.literal(stackNameOf(bs.key)).withStyle(c -> c.withColor(0xFF9FE4FF)));
                         if (ClientDataStore.hexDef(bid) != null) {
                             tip.add(Component.translatable("hexcraft.hextech." + bid + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
@@ -553,7 +553,7 @@ public class HextechPageScreen extends HexScaledScreen {
                     int hc = hoverColumn(hoverX, hoverY, rowY);
                     boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
                     if (hc != 0 && hitOwnCol) {
-                        java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                        java.util.List<Object> tip = new java.util.ArrayList<>();
                         tip.add(Component.translatable(cr.nameKey()).withStyle(t -> t.withColor(0xFFFFD28C)));
                         if (cr.members() != null && cr.members().length > 0) {
                             StringBuilder members = new StringBuilder();
@@ -567,10 +567,13 @@ public class HextechPageScreen extends HexScaledScreen {
                             String en = Component.translatable("hexcraft.effect." + cr.effects()[t]).getString();
                             int pct = (int) Math.round(cr.values()[t] * 100);
                             int tierColor = t < cr.tier() ? 0xFFFFD700 : 0xFFAAB6D8;
-                            tip.add(Component.literal("档" + (t + 1) + "　　（" + cr.tierCounts()[t] + "　件）：" + en + "　　+" + pct + "%")
-                                    .withStyle(st -> st.withColor(tierColor)));
+                            // v0.9.10 分栏对齐：档号/件数/效果名固定列，数值右对齐（不再用空格拼接）
+                            int cu = HexFonts.ui().width("件");
+                            tip.add(new HexFonts.ColLine(
+                                    new String[]{"档" + (t + 1), "（" + cr.tierCounts()[t] + "件）", en, "+" + pct + "%"},
+                                    new int[]{0, 3 * cu, 8 * cu, -1}, tierColor));
                         }
-                        if (!maxTier) tip.add(Component.literal("再　　" + (cr.tierCounts()[cr.tier()] - cr.have()) + "　件激活档　　" + (cr.tier() + 1))
+                        if (!maxTier) tip.add(Component.literal("再　" + (cr.tierCounts()[cr.tier()] - cr.have()) + "　件激活档　" + (cr.tier() + 1))
                                 .withStyle(t -> t.withColor(0xFFFF6B6B)));
                         if (stackMaster) tip.add(Component.literal("叠层上限梯级：2　件　400　→　4　件　600　→　6　件　800　→　8　件　1000　→　10　件　∞（棱彩）")
                                 .withStyle(t -> t.withColor(0xFF9FE4FF)));
@@ -596,7 +599,7 @@ public class HextechPageScreen extends HexScaledScreen {
                 int hc = hoverColumn(hoverX, hoverY, rowY); // v0.9.5 hover 列判定去重
                 boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
                 if (hc != 0 && hitOwnCol) {
-                    java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                    java.util.List<Object> tip = new java.util.ArrayList<>();
                     tip.add(Component.translatable("hexcraft.gui.combo.stack_tier").withStyle(t -> t.withColor(0xFF9FE4FF)));
                     tip.add(Component.literal("拥有 " + comboStacks + " 件叠层海克斯 → 叠层获取/上限 " + (comboStacks >= 4 ? "+40%" : "+20%")).withStyle(t -> t.withColor(0xFFAAB6D8)));
                     hoverTip = tip;
@@ -815,7 +818,7 @@ public class HextechPageScreen extends HexScaledScreen {
             // hover：成员 + 各档 + 下一档缺数 + 棱彩
             int hc = hoverColumn(hoverX, hoverY, ry);
             if (hc != 0) {
-                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                java.util.List<Object> tip = new java.util.ArrayList<>();
                 tip.add(Component.translatable(br.nameKey()).withStyle(t -> t.withColor(0xFFFFD28C)));
                 if (br.members().length > 0) {
                     StringBuilder members = new StringBuilder();
@@ -829,10 +832,13 @@ public class HextechPageScreen extends HexScaledScreen {
                     String en = Component.translatable("hexcraft.effect." + br.effects()[t]).getString();
                     int pct = (int) Math.round(br.values()[t] * 100);
                     int slotColor = t < br.tier ? 0xFFFFD700 : 0xFFAAB6D8;
-                    tip.add(Component.literal("档" + (t + 1) + "　　（" + br.tierCounts()[t] + "　件）：" + en + "　　+" + pct + "%")
-                            .withStyle(st -> st.withColor(slotColor)));
+                    // v0.9.10 分栏对齐：档号/件数/效果名固定列，数值右对齐（不再用空格拼接）
+                    int cu = HexFonts.ui().width("件");
+                    tip.add(new HexFonts.ColLine(
+                            new String[]{"档" + (t + 1), "（" + br.tierCounts()[t] + "件）", en, "+" + pct + "%"},
+                            new int[]{0, 3 * cu, 8 * cu, -1}, slotColor));
                 }
-                if (!maxTier) tip.add(Component.literal("再　　" + (br.tierCounts()[br.tier()] - br.have) + "　件激活档　　" + (br.tier() + 1))
+                if (!maxTier) tip.add(Component.literal("再　" + (br.tierCounts()[br.tier()] - br.have) + "　件激活档　" + (br.tier() + 1))
                         .withStyle(t -> t.withColor(0xFFFF6B6B)));
                 if (maxTier) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.prismatic_bonus").getString())
                         .withStyle(t -> t.withColor(0xFFC77DFF)));
@@ -991,7 +997,7 @@ public class HextechPageScreen extends HexScaledScreen {
             }
             // hover 提示：悬停查看海克斯具体效果（名称 + 稀有度 + 描述 + 来源）
             if (hoverX >= cx() + 4 && hoverX <= cx() + 210 && hoverY >= ly - 1 && hoverY <= ly + HEX_ROW_H - 2) {
-                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                java.util.List<Object> tip = new java.util.ArrayList<>();
                 tip.add(name.copy().withStyle(c -> c.withColor(rarityColor(rk))));
                 // v0.8.5 稀有度行（白银/黄金/棱彩），一眼看出品质档位
                 tip.add(Component.translatable("hexcraft.rarity." + rk).withStyle(c -> c.withColor(rarityColor(rk))));
@@ -1190,7 +1196,7 @@ public class HextechPageScreen extends HexScaledScreen {
                 // v0.6.2：lang 模板占位符动态渲染——{name}/{mult}/{displayValue}/{tierName} 运行时按档位倍率填充，
                 // 修改 forgeMultiplierSilver/Gold/Prismatic 配置后 tooltip 数值自动跟随（无需改 lang）
                 if (hoverX >= colX && hoverX <= colX + 110 && hoverY >= iy - 1 && hoverY <= iy + 12) {
-                    java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                    java.util.List<Object> tip = new java.util.ArrayList<>();
                     String stat = (String) it[2];
                     String real = forgeValueText(stat, grp.tierIdx);
                     String tierName = Component.translatable("hexcraft.forge.tier." + grp.tierKey).getString();
@@ -1300,7 +1306,7 @@ public class HextechPageScreen extends HexScaledScreen {
                         eqName = eqName.append("  ×" + eq.stacks + "层");
                         if (ClientDataStore.permStackCap < eq.stacks) eqName = eqName.append("(生效" + ClientDataStore.permStackCap + ")");
                     }
-                    java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                    java.util.List<Object> tip = new java.util.ArrayList<>();
                     tip.add(eqName.withStyle(c -> c.withColor(rarityColor(rk))));
                     tip.add(Component.translatable("hexcraft.equip." + eq.id + ".desc"));
                     // v0.6.2 装备叠层标签后缀（心之钢等）
@@ -1363,7 +1369,7 @@ public class HextechPageScreen extends HexScaledScreen {
                     if (owned.level > 0) eqName = eqName.append("  Lv." + owned.level);
                     if (owned.stacks > 0) eqName = eqName.append("  ×" + owned.stacks + "层");
                 }
-                java.util.List<net.minecraft.network.chat.Component> tip = new java.util.ArrayList<>();
+                java.util.List<Object> tip = new java.util.ArrayList<>();
                 tip.add(eqName.withStyle(c -> c.withColor(rarityColor(rk))));
                 tip.add(Component.translatable("hexcraft.equip." + id + ".desc"));
                 String eqTag = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(def,
