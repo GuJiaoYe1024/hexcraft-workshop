@@ -3,6 +3,7 @@ package com.hexcraft.client.gui;
 import com.hexcraft.config.HexConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.food.FoodData;
 import net.minecraftforge.client.event.RenderGuiEvent;
@@ -41,6 +42,9 @@ public class HexHealthOverlay {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         if (!HexConfig.HP_ENABLED.get()) return;
+        // v0.9.10 修复：海克斯界面等 Screen 打开时隐藏 HUD，避免生命/护甲/饱食数值叠在界面上
+        // （聊天界面例外，与原版聊天时 HUD 可见行为一致）
+        if (mc.screen != null && !(mc.screen instanceof ChatScreen)) return;
         int sw = mc.getWindow().getGuiScaledWidth();
         int sh = mc.getWindow().getGuiScaledHeight();
         // v0.7.4 坐标语义统一：0~4000 = 全屏比例坐标（与布局画布同一公式，所见即所得）
