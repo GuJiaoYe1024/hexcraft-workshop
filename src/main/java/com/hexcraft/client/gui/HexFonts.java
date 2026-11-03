@@ -79,6 +79,34 @@ public final class HexFonts {
         g.drawString(ui(), text, x - ui().width(text) / 2, y, color, shadow);
     }
 
+    /** 自绘 tooltip（v0.9.10 用户要求：悬浮窗介绍内容不带阴影）。
+     *  MC 的 renderComponentTooltip 文字强制带阴影，无法关闭，这里改为自绘：
+     *  深蓝半透明背景 + 细边框 + 文字无阴影，并自动防止超出屏幕。 */
+    public static void tooltip(GuiGraphics g, java.util.List<Component> lines, int mx, int my) {
+        if (lines == null || lines.isEmpty()) return;
+        int w = 0;
+        for (Component c : lines) {
+            w = Math.max(w, ui().width(c));
+        }
+        int h = lines.size() * 11 + 6;
+        int sx = mx + 10;
+        int sy = my - 4;
+        int gw = g.guiWidth();
+        int gh = g.guiHeight();
+        if (sx + w + 6 > gw) sx = Math.max(0, gw - w - 10);
+        if (sy + h + 6 > gh) sy = Math.max(0, gh - h - 10);
+        g.fill(sx - 3, sy - 3, sx + w + 3, sy + h + 3, 0xF0101A2E);
+        g.fill(sx - 3, sy - 3, sx + w + 3, sy - 2, 0xFF30466B);
+        g.fill(sx - 3, sy + h + 2, sx + w + 3, sy + h + 3, 0xFF30466B);
+        g.fill(sx - 3, sy - 3, sx - 2, sy + h + 3, 0xFF30466B);
+        g.fill(sx + w + 2, sy - 3, sx + w + 3, sy + h + 3, 0xFF30466B);
+        int ly = sy;
+        for (Component c : lines) {
+            g.drawString(ui(), c, sx, ly, 0xFFFFFFFF, false);
+            ly += 11;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private static Map<ResourceLocation, FontSet> fontSets() {
         try {

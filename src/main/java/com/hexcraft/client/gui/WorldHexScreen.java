@@ -262,7 +262,7 @@ public class WorldHexScreen extends HexScaledScreen {
                     tip.add(Component.translatable("hexcraft.worldhex.tierstyle." + d.rarity)
                             .withStyle(c -> c.withColor(0xFF6A7B96)));
                     tip.add(Component.translatable("hexcraft.worldhex." + d.id + ".desc"));
-                    g.renderComponentTooltip(HexFonts.ui(), tip, mx, my);
+                    HexFonts.tooltip(g, tip, mx, my);
                 }
                 row++;
             }

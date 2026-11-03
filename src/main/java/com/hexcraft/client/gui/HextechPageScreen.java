@@ -372,7 +372,7 @@ public class HextechPageScreen extends HexScaledScreen {
         else renderRecharge(g, y);
         // 自绘列表 hover 提示：最后绘制，盖在列表上方
         if (hoverTip != null && !hoverTip.isEmpty()) {
-            g.renderComponentTooltip(HexFonts.ui(), hoverTip, mx, my);
+            HexFonts.tooltip(g, hoverTip, mx, my);
         }
     }
 
@@ -567,12 +567,12 @@ public class HextechPageScreen extends HexScaledScreen {
                             String en = Component.translatable("hexcraft.effect." + cr.effects()[t]).getString();
                             int pct = (int) Math.round(cr.values()[t] * 100);
                             int tierColor = t < cr.tier() ? 0xFFFFD700 : 0xFFAAB6D8;
-                            tip.add(Component.literal("档" + (t + 1) + "（" + cr.tierCounts()[t] + "件）：" + en + " +" + pct + "%")
+                            tip.add(Component.literal("档" + (t + 1) + " （" + cr.tierCounts()[t] + " 件）：" + en + " +" + pct + "%")
                                     .withStyle(st -> st.withColor(tierColor)));
                         }
-                        if (!maxTier) tip.add(Component.literal("再 " + (cr.tierCounts()[cr.tier()] - cr.have()) + " 件激活档" + (cr.tier() + 1))
+                        if (!maxTier) tip.add(Component.literal("再 " + (cr.tierCounts()[cr.tier()] - cr.have()) + " 件激活档 " + (cr.tier() + 1))
                                 .withStyle(t -> t.withColor(0xFFFF6B6B)));
-                        if (stackMaster) tip.add(Component.literal("叠层上限梯级：2件400 → 4件600 → 6件800 → 8件1000 → 10件∞（棱彩）")
+                        if (stackMaster) tip.add(Component.literal("叠层上限梯级：2 件 400 → 4 件 600 → 6 件 800 → 8 件 1000 → 10 件 ∞（棱彩）")
                                 .withStyle(t -> t.withColor(0xFF9FE4FF)));
                         if (maxTier && stackMaster) tip.add(Component.literal("叠层上限已解锁：∞").withStyle(t -> t.withColor(0xFFC77DFF)));
                         if (maxTier) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.prismatic_bonus").getString())
@@ -829,10 +829,10 @@ public class HextechPageScreen extends HexScaledScreen {
                     String en = Component.translatable("hexcraft.effect." + br.effects()[t]).getString();
                     int pct = (int) Math.round(br.values()[t] * 100);
                     int slotColor = t < br.tier ? 0xFFFFD700 : 0xFFAAB6D8;
-                    tip.add(Component.literal("档" + (t + 1) + "（" + br.tierCounts()[t] + "件）：" + en + " +" + pct + "%")
+                    tip.add(Component.literal("档" + (t + 1) + " （" + br.tierCounts()[t] + " 件）：" + en + " +" + pct + "%")
                             .withStyle(st -> st.withColor(slotColor)));
                 }
-                if (!maxTier) tip.add(Component.literal("再 " + (br.tierCounts()[br.tier()] - br.have) + " 件激活档" + (br.tier() + 1))
+                if (!maxTier) tip.add(Component.literal("再 " + (br.tierCounts()[br.tier()] - br.have) + " 件激活档 " + (br.tier() + 1))
                         .withStyle(t -> t.withColor(0xFFFF6B6B)));
                 if (maxTier) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.prismatic_bonus").getString())
                         .withStyle(t -> t.withColor(0xFFC77DFF)));
