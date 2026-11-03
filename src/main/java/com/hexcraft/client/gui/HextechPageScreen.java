@@ -153,7 +153,7 @@ public class HextechPageScreen extends HexScaledScreen {
 
     /** 充值页：6 种材质（绿宝石+全部金属锭）→ 晶币，晶币 → 绿宝石；五档批量 ×1/×32/×64/×128/×256 */
     private void initRecharge() {
-        // 6 材质两行式：每块 26px 行距（标签在上、按钮在下留出间距；按钮按对应金属锭配色）
+        // 6 材质两行式：每块 30px 行距（标签在上、按钮在下留出间距；按钮按对应金属锭配色）
         int[] cols = {0xFF55FF55, 0xFFFF8C00, 0xFFD8D8D8, 0xFFFFD700, 0xFF4DE6FF, 0xFFC77DFF};
         int by = cy() + 64;
         for (int m = 0; m < 6; m++) {
@@ -161,14 +161,14 @@ public class HextechPageScreen extends HexScaledScreen {
             int col = cols[m];
             for (int i = 0; i < RECHARGE_COUNTS.length; i++) {
                 final int c = RECHARGE_COUNTS[i];
-                this.addRenderableWidget(new HexButton(cx() + 4 + i * 40, by + 12, 36, 12,
+                this.addRenderableWidget(new HexButton(cx() + 4 + i * 40, by + 15, 36, 12,
                         Component.translatable("hexcraft.gui.recharge_gem", c), col,
                         b -> sendExchange(0, mat, c)));
             }
-            by += 26;
+            by += 30;
         }
         // 晶币 → 绿宝石（与上面材质行对齐；标签与按钮间距 8px）
-        int cy2 = cy() + 64 + 6 * 26 + 16;
+        int cy2 = cy() + 64 + 6 * 30 + 16;
         for (int i = 0; i < RECHARGE_COUNTS.length; i++) {
             final int c = RECHARGE_COUNTS[i];
             this.addRenderableWidget(new HexButton(cx() + 4 + i * 40, cy2, 36, 12,
@@ -177,9 +177,8 @@ public class HextechPageScreen extends HexScaledScreen {
         }
         // v0.9.9 EMC 通道（ProjectE 已装时显示）：玩家 EMC 余额直充——档位 100 晶币起步（100/200/400/800），
         // 点按从玩家自身 EMC 余额按汇率 256（=1 铁锭）扣减加晶币（不再折算/销毁主手物品）；tooltip 显示所需 EMC
-        // v0.9.10 布局修复：EMC 按钮行上移（原 ey=cy2+22 按钮底 cy+306 超出 300 高界面 6px）
         if (net.minecraftforge.fml.ModList.get().isLoaded("projecte")) {
-            int ey = cy2 + 24;
+            int ey = cy2 + 22;
             int[] emcCoins = {100, 200, 400, 800};
             double rate = Math.max(1.0, com.hexcraft.config.HexConfig.EMC_COIN_RATE.get());
             for (int i = 0; i < emcCoins.length; i++) {
@@ -842,25 +841,24 @@ public class HextechPageScreen extends HexScaledScreen {
         }
     }
 
-    /** 充值页渲染：6 材质两行式（标签在上、按钮在下，按钮按金属配色）+ 晶币→绿宝石行 + 规则提示
-     *  布局与 initRecharge 同步（v0.9.10：材质行距 30→26，规则提示下移到底部，EMC 按钮不再超界） */
+    /** 充值页渲染：6 材质两行式（标签在上、按钮在下，按钮按金属配色）+ 晶币→绿宝石行 + 规则提示 */
     private void renderRecharge(GuiGraphics g, int y) {
         g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_title"), cx() + 4, y + 36, 0xFF9FE4FF, false);
         // 汇率合并单行（短名+比例，不超界面）
         g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_rate"), cx() + 4, y + 48, 0xFF6FA8FF, false);
         // 分隔线
         g.fill(cx() + 4, y + 58, cx() + 228, y + 59, 0x33505F88);
-        // 6 材质标签（每材质块 26px：标签在上，按钮在下；标签用对应金属色）
+        // 6 材质标签（每材质块 30px：标签在上，按钮在下；标签用对应金属色）
         int[] tcols = {0xFF55FF55, 0xFFFF8C00, 0xFFD8D8D8, 0xFFFFD700, 0xFF4DE6FF, 0xFFC77DFF};
         int ly = y + 64;
         for (int m = 0; m < 6; m++) {
             g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_m" + m), cx() + 4, ly, tcols[m], false);
-            ly += 26;
+            ly += 30;
         }
         // 晶币 → 绿宝石 标签（金色；按钮行在其下 8px）
-        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_coin_label"), cx() + 4, y + 64 + 6 * 26 + 6, 0xFFFFD700, false);
-        // 规则提示（短版，单行不超界面；EMC 按钮行之下）
-        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_hint"), cx() + 4, y + 64 + 6 * 26 + 68, 0xFF5A6A90, false);
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_coin_label"), cx() + 4, y + 64 + 6 * 30 + 6, 0xFFFFD700, false);
+        // 规则提示（短版，单行不超界面）
+        g.drawString(HexFonts.ui(), Component.translatable("hexcraft.gui.recharge_hint"), cx() + 4, y + 64 + 6 * 30 + 34, 0xFF5A6A90, false);
     }
 
     /** v0.9.5：自绘列表 hover 列判定统一（0=未命中行 / 1=左列 / 2=右列），替换 7 处重复行列判断；
