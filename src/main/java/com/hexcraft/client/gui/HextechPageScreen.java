@@ -556,14 +556,14 @@ public class HextechPageScreen extends HexScaledScreen {
                         java.util.List<Object> tip = new java.util.ArrayList<>();
                         tip.add(Component.translatable(cr.nameKey()).withStyle(t -> t.withColor(0xFFFFD28C)));
                         if (cr.members() != null && cr.members().length > 0) {
-                            // v0.9.10 成员行拆行：每行 6 个名字，收窄悬浮窗宽度，避免 12 名一行撑爆
+                            // v0.9.10 成员行拆行：每行 4 个名字（用户拍板 2026-11-03），收窄悬浮窗宽度
                             StringBuilder members = new StringBuilder();
                             int per = 0;
                             for (int mi = 0; mi < cr.members().length; mi++) {
                                 if (per > 0) members.append("  ");
                                 members.append(Component.translatable("hexcraft.hextech." + cr.members()[mi] + ".name").getString());
                                 per++;
-                                if (per == 6) {
+                                if (per == 4) {
                                     tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
                                     members.setLength(0);
                                     per = 0;
@@ -830,14 +830,14 @@ public class HextechPageScreen extends HexScaledScreen {
                 java.util.List<Object> tip = new java.util.ArrayList<>();
                 tip.add(Component.translatable(br.nameKey()).withStyle(t -> t.withColor(0xFFFFD28C)));
                 if (br.members().length > 0) {
-                    // v0.9.10 成员行拆行：每行 6 个名字，收窄悬浮窗宽度
+                    // v0.9.10 成员行拆行：每行 4 个名字（用户拍板 2026-11-03），收窄悬浮窗宽度
                     StringBuilder members = new StringBuilder();
                     int per = 0;
                     for (int mi = 0; mi < br.members().length; mi++) {
                         if (per > 0) members.append("  ");
                         members.append(Component.translatable("hexcraft.hextech." + br.members()[mi] + ".name").getString());
                         per++;
-                        if (per == 6) {
+                        if (per == 4) {
                             tip.add(Component.literal(members.toString()).withStyle(t -> t.withColor(0xFFAAB6D8)));
                             members.setLength(0);
                             per = 0;
