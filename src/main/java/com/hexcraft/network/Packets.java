@@ -360,11 +360,7 @@ public class Packets {
                     return;
                 }
                 int tier = HextechRegistry.randomTier();
-                int price = discounted(data, switch (tier) {
-                    case 0 -> HexConfig.FORGE_BASIC_PRICE.get();
-                    case 1 -> HexConfig.FORGE_GOLD_PRICE.get();
-                    default -> HexConfig.FORGE_PRISMATIC_PRICE.get();
-                });
+                int price = discounted(data, HexConfig.FORGE_RANDOM_PRICE.get());
                 int limit = HexConfig.MAX_FORGES.get();
                 if (limit > 0 && data.getForgesUsed() >= limit) {
                     sp.displayClientMessage(Component.translatable("message.hexcraft.forge_limit"), true);

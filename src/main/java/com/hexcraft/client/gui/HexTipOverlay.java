@@ -156,7 +156,7 @@ public class HexTipOverlay {
                     else if (e.type == TYPE_GIFT) col = 0xFF66CCFF;
                     else col = 0xFFFFFFFF;
                     g.fill(x, y, x + w, y + ROW_H, 0x7D000000);
-                    g.drawString(HexFonts.ui(), disp, x + 5, y + 2, col, true);
+                    g.drawString(HexFonts.ui(), disp, x + 5, y + 2, col, false);
                     y += ROW_H + 2;
                     shown++;
                 }
@@ -166,7 +166,7 @@ public class HexTipOverlay {
                 g.fill(x, y, x + CALIB_W, y + CALIB_H, 0x66000000);
                 g.drawString(HexFonts.ui(),
                         Component.translatable("hexcraft.tip.calibrate_hint").getString() + " (" + x + "," + y + ")",
-                        x + 5, y + 2, 0xFF66CCFF, true);
+                        x + 5, y + 2, 0xFF66CCFF, false);
                 CUR_RECT = new int[]{x, y, CALIB_W, CALIB_H};
             }
         }

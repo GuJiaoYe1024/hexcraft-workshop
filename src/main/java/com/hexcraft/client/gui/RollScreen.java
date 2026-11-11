@@ -217,7 +217,7 @@ public class RollScreen extends HexScaledScreen {
         } else {
             title = Component.translatable("hexcraft.gui.hex_title");
         }
-        g.drawCenteredString(HexFonts.ui(), title, centerX, cardY - 34, 0xFFFFFF);
+        HexFonts.centered(g, title, centerX, cardY - 34, 0xFFFFFF, false);
         int barW = HexFonts.ui().width(title) + 40;
         g.fillGradient(centerX - barW / 2, cardY - 20, centerX + barW / 2, cardY - 19, 0xFF6FB1FF, 0xFF1E6FE8);
 
@@ -254,7 +254,7 @@ public class RollScreen extends HexScaledScreen {
             }
 
             HexFonts.centered(g, Component.literal(cards[i].nameStr), cx, cy + 42, (a << 24) | (color & 0x00FFFFFF), false);
-            g.drawCenteredString(HexFonts.ui(), Component.literal(cards[i].nameStr), cx + 1, cy + 43, (a / 3) << 24 | (color & 0x00FFFFFF)); // 名称柔光
+            HexFonts.centered(g, Component.literal(cards[i].nameStr), cx + 1, cy + 43, (a / 3) << 24 | (color & 0x00FFFFFF), false); // 名称柔光（保留半透明偏移光效，仅关 MC 阴影）
             g.fill(cardX[i] + 14, cy + 56, cardX[i] + CARD_W - 14, cy + 57, 0x33505F88);
             int dy = cy + 62;
             for (FormattedCharSequence line : cards[i].descLines) {

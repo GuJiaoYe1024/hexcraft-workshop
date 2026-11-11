@@ -700,50 +700,41 @@ public class HextechEvents {
             // 随机馈赠：random_loot 击杀随机获得 1 件随机物品（全物品池：原版+全部模组物品，过滤空气与技术物品）
             double rl = effect(data, "random_loot");
             if (rl > 0 && killer.getRandom().nextFloat() < (float) Math.min(1.0, rl)) {
-                java.util.List<net.minecraft.world.item.Item> pool = randomGiftPool();
-                if (!pool.isEmpty()) {
-                    // v0.6.19 防御性重 roll：池内偶发空气/占位条目时重抽（最多 8 次），实例 + 注册路径 + hoverName 三重检查
-                    net.minecraft.world.item.Item item = null;
-                    for (int tries = 0; tries < 8; tries++) {
-                        net.minecraft.world.item.Item cand = pool.get(killer.getRandom().nextInt(pool.size()));
-                        if (cand == null || isAirLike(cand)) continue;
-                        item = cand;
-                        break;
-                    }
-                    if (item != null) {
-                        // v0.6.19 终极兜底：送物品/发提示前再核一次，任何"空气类"条目一律跳过该次馈赠——
-                        // 宁可少送一次也绝不让"空气"字样进入任何提示文本
-                        if (isAirLike(item)) {
-                            LOGGER.warn("[Hexcraft][Gift] skipped air-like item {}", net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item));
-                        } else {
-                            int n = 1 + killer.getRandom().nextInt(1 + (int) Math.round(rl));
-                            net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(item, n);
-                            // v0.7.0 馈赠改掉落物发放（不再直接塞入玩家背包）：
-                            // 在击杀者脚边生成真实物品实体，由玩家自己走近拾取（自动吸入背包）。
-                            // 根治"直接入包路径下提示文本显示空气"的问题——掉落物形式文本永远携带真实物品名；
-                            // 背包满时物品自然留在原地等待拾取，不再丢失。
-                            net.minecraft.world.entity.item.ItemEntity ent = new net.minecraft.world.entity.item.ItemEntity(
-                                    killer.level(), killer.getX(), killer.getY() + 0.5, killer.getZ(), st);
-                            ent.setPickUpDelay(10); // 短暂拾取延迟，防止与击杀同帧重复叠加
-                            ent.setNoGravity(false);
-                            killer.level().addFreshEntity(ent);
-                            // v0.6.16 取证日志：记录实际物品注册 id 与 hoverName（再遇"空气"可从日志精确定位）
-                            try {
-                                net.minecraft.resources.ResourceLocation rl2 = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item);
-                                LOGGER.info("[Hexcraft][Gift] dropped {} x{} near {} (hoverName='{}')",
-                                        rl2 == null ? "?" : rl2.toString(), n, killer.getName().getString(),
-                                        st.getHoverName().getString());
-                            } catch (Exception ignored) { }
-                            // v0.7.0 提示走滚动通道（gift 蓝），带实际物品名与数量 + 掉落拾取说明
-                            // v0.7.5 物品名改纯文本参数：hoverName 组件序列化后客户端 fromJson 偶发失败
-                            // （mod 物品自定义 chat 类型）→ 整条提示静默丢失（"馈赠文本没了"根因候选）；
-                            // 用服务端已翻译的纯文本字符串参数，彻底规避序列化/反序列化问题。
-                            net.minecraft.network.chat.MutableComponent tipMsg = net.minecraft.network.chat.Component.translatable(
-                                    "message.hexcraft.random_loot",
-                                    net.minecraft.network.chat.Component.literal(st.getHoverName().getString()), n);
-                            tipMsg.append(net.minecraft.network.chat.Component.translatable("message.hexcraft.random_loot_dropped"));
-                            com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, tipMsg, 2); // 2=馈赠(gift)蓝
-                        }
+                // v0.9.11 加权选物品（原版/模组概率走配置 randomGiftVanillaChance），防御性重 roll 已并入 pickGiftItem
+                net.minecraft.world.item.Item item = pickGiftItem(killer.getRandom());
+                if (item != null) {
+                    // v0.6.19 终极兜底：送物品/发提示前再核一次，任何"空气类"条目一律跳过该次馈赠——
+                    // 宁可少送一次也绝不让"空气"字样进入任何提示文本
+                    if (isAirLike(item)) {
+                        LOGGER.warn("[Hexcraft][Gift] skipped air-like item {}", net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item));
+                    } else {
+                        int n = 1 + killer.getRandom().nextInt(1 + (int) Math.round(rl));
+                        net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(item, n);
+                        // v0.7.0 馈赠改掉落物发放（不再直接塞入玩家背包）：
+                        // 在击杀者脚边生成真实物品实体，由玩家自己走近拾取（自动吸入背包）。
+                        // 根治"直接入包路径下提示文本显示空气"的问题——掉落物形式文本永远携带真实物品名；
+                        // 背包满时物品自然留在原地等待拾取，不再丢失。
+                        net.minecraft.world.entity.item.ItemEntity ent = new net.minecraft.world.entity.item.ItemEntity(
+                                killer.level(), killer.getX(), killer.getY() + 0.5, killer.getZ(), st);
+                        ent.setPickUpDelay(10); // 短暂拾取延迟，防止与击杀同帧重复叠加
+                        ent.setNoGravity(false);
+                        killer.level().addFreshEntity(ent);
+                        // v0.6.16 取证日志：记录实际物品注册 id 与 hoverName（再遇"空气"可从日志精确定位）
+                        try {
+                            net.minecraft.resources.ResourceLocation rl2 = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item);
+                            LOGGER.info("[Hexcraft][Gift] dropped {} x{} near {} (hoverName='{}')",
+                                    rl2 == null ? "?" : rl2.toString(), n, killer.getName().getString(),
+                                    st.getHoverName().getString());
+                        } catch (Exception ignored) { }
+                        // v0.7.0 提示走滚动通道（gift 蓝），带实际物品名与数量 + 掉落拾取说明
+                        // v0.7.5 物品名改纯文本参数：hoverName 组件序列化后客户端 fromJson 偶发失败
+                        // （mod 物品自定义 chat 类型）→ 整条提示静默丢失（"馈赠文本没了"根因候选）；
+                        // 用服务端已翻译的纯文本字符串参数，彻底规避序列化/反序列化问题。
+                        net.minecraft.network.chat.MutableComponent tipMsg = net.minecraft.network.chat.Component.translatable(
+                                "message.hexcraft.random_loot",
+                                net.minecraft.network.chat.Component.literal(st.getHoverName().getString()), n);
+                        tipMsg.append(net.minecraft.network.chat.Component.translatable("message.hexcraft.random_loot_dropped"));
+                        com.hexcraft.network.Packets.S2CTipMessage.sendTo(killer, tipMsg, 2); // 2=馈赠(gift)蓝
                     }
                 }
             }
@@ -815,6 +806,31 @@ public class HextechEvents {
         return GIFT_POOL;
     }
 
+    /** v0.9.11 随机馈赠加权选物品（击杀/任务两条路径共用）：按配置 randomGiftVanillaChance 决定从
+     *  原版子池还是其他模组子池抽取；选中子池为空时回退整池；保留防御性重 roll（最多 8 次，跳过空气占位）。
+     *  全部判定读配置，不写死概率。 */
+    private static net.minecraft.world.item.Item pickGiftItem(net.minecraft.util.RandomSource random) {
+        java.util.List<net.minecraft.world.item.Item> pool = randomGiftPool();
+        if (pool.isEmpty()) return null;
+        java.util.List<net.minecraft.world.item.Item> vanilla = new java.util.ArrayList<>();
+        java.util.List<net.minecraft.world.item.Item> other = new java.util.ArrayList<>();
+        for (net.minecraft.world.item.Item it : pool) {
+            net.minecraft.resources.ResourceLocation k = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(it);
+            if (k != null && "minecraft".equals(k.getNamespace())) vanilla.add(it);
+            else other.add(it);
+        }
+        java.util.List<net.minecraft.world.item.Item> target =
+                random.nextFloat() < com.hexcraft.config.HexConfig.RANDOM_GIFT_VANILLA_CHANCE.get().floatValue()
+                        ? vanilla : other;
+        if (target.isEmpty()) target = pool; // 子池为空（极端整合包）回退整池，保证馈赠不卡死
+        for (int tries = 0; tries < 8; tries++) {
+            net.minecraft.world.item.Item cand = target.get(random.nextInt(target.size()));
+            if (cand == null || isAirLike(cand)) continue;
+            return cand;
+        }
+        return null;
+    }
+
     /** v0.6.19 空气类判定（随机馈赠专用）：实例为 AIR、注册路径含 air/empty、hoverName 含 air（不区分大小写）
      *  任一命中即视为空气占位（v0.6.19 加宽：hoverName 从精确等于"Air"放宽为包含，覆盖 "xx air" 等变体） */
     private static boolean isAirLike(net.minecraft.world.item.Item it) {
@@ -836,15 +852,8 @@ public class HextechEvents {
     public static void giftToRandom(ServerPlayer sp, double rate) {
         if (rate <= 0 || sp == null) return;
         if (sp.getRandom().nextFloat() >= (float) Math.min(1.0, rate)) return;
-        java.util.List<net.minecraft.world.item.Item> pool = randomGiftPool();
-        if (pool.isEmpty()) return;
-        net.minecraft.world.item.Item item = null;
-        for (int tries = 0; tries < 8; tries++) {
-            net.minecraft.world.item.Item cand = pool.get(sp.getRandom().nextInt(pool.size()));
-            if (cand == null || isAirLike(cand)) continue;
-            item = cand;
-            break;
-        }
+        // v0.9.11 加权选物品（原版/模组概率走配置），防御性重 roll 已并入 pickGiftItem
+        net.minecraft.world.item.Item item = pickGiftItem(sp.getRandom());
         if (item == null || isAirLike(item)) return;
         int n = 1 + sp.getRandom().nextInt(1 + (int) Math.round(rate));
         net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(item, n);

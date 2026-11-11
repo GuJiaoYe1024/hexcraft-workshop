@@ -48,9 +48,9 @@ public class HexTipCalibrateScreen extends Screen {
         // 半透明全屏底
         g.fill(0, 0, this.width, this.height, 0xCC000000);
         // 标题
-        g.drawCenteredString(HexFonts.ui(),
+        HexFonts.centered(g,
                 Component.translatable("hexcraft.config.v060.tipDragCanvas").getString(),
-                this.width / 2, areaY() - 34, 0xFFFFFFFF);
+                this.width / 2, areaY() - 34, 0xFFFFFFFF, false);
         // 模拟屏幕区
         g.fill(areaX() - 1, areaY() - 1, areaX() + AREA_W + 1, areaY() + AREA_H + 1, 0xFF00E5FF);
         g.fill(areaX(), areaY(), areaX() + AREA_W, areaY() + AREA_H, 0xAA101828);
@@ -60,16 +60,16 @@ public class HexTipCalibrateScreen extends Screen {
         g.fill(bx, by, bx + BOX_W, by + BOX_H, 0xFF66CCFF);
         g.drawString(HexFonts.ui(),
                 Component.translatable("hexcraft.tip.calibrate_hint").getString(),
-                bx + 5, by + 3, 0xFF101820, true);
+                bx + 5, by + 3, 0xFF101820, false);
         // 操作说明 + 当前坐标
         HexFonts.centered(g,
                 Component.translatable("hexcraft.config.tip.v060.tipDragHint").getString() + "  (" + HexConfig.TIP_X.get() + ", " + HexConfig.TIP_Y.get() + ")",
                 this.width / 2, areaY() + AREA_H + 12, 0xFF8FA6C8, false);
         // 完成按钮
         g.fill(this.width / 2 - 60, this.height - 46, this.width / 2 + 60, this.height - 26, 0xFF00E5FF);
-        g.drawCenteredString(HexFonts.ui(),
+        HexFonts.centered(g,
                 Component.translatable("gui.done").getString(),
-                this.width / 2, this.height - 41, 0xFF101820);
+                this.width / 2, this.height - 41, 0xFF101820, false);
         super.render(g, mouseX, mouseY, partialTick);
     }
 

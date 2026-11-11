@@ -209,7 +209,7 @@ public class WorldHexScreen extends HexScaledScreen {
 
         // 标题
         Component title = Component.translatable("hexcraft.gui.world_hex_title");
-        g.drawCenteredString(HexFonts.ui(), title, centerX, 12, 0xFFFFFF);
+        HexFonts.centered(g, title, centerX, 12, 0xFFFFFF, false);
         g.fillGradient(centerX - 120, 24, centerX + 120, 25, 0xFFFFC94A, 0xFFC77DFF);
 
         // v0.6.16 顶部状态行：右上角显示已激活总数/每类上限（抽取/取消后即时刷新）

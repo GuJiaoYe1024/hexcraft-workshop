@@ -99,7 +99,7 @@ public class FutureScreen extends HexScaledScreen {
     protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
         int cx = this.guiW() / 2;
         Component title = Component.translatable("hexcraft.gui.future_title");
-        g.drawCenteredString(HexFonts.ui(), title, cx, 12, 0xFFFFC94A);
+        HexFonts.centered(g, title, cx, 12, 0xFFFFC94A, false);
         int barW = HexFonts.ui().width(title) + 40;
         g.fillGradient(cx - barW / 2, 24, cx + barW / 2, 25, 0xFFFFC94A, 0xFFC77DFF);
 

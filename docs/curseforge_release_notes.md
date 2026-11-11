@@ -1,3 +1,35 @@
+Hexcraft Workshop v0.9.11 - Weighted random gifts + font icon fallback + text shadows removed + fake-link fix
+=============================================================================
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+WEIGHTED FTB RANDOM GIFTS (player feedback: the FTB-linked hex is too strong and can grant items you cannot obtain at your current stage):
+- ROOT CAUSE: HextechEvents.randomGiftPool() iterated every item in ForgeRegistries.ITEMS (all mods included), only filtering out air/barrier/command/structure technical items. A quest hex with random_loot could therefore drop late-game items from Cataclysm, TACZ or Alex's Caves.
+- NEW CONFIGURABLE WEIGHT (you insisted it must be configurable, never hardcoded): HexConfig now has a DoubleValue RANDOM_GIFT_VANILLA_CHANCE (default 0.85, range 0.0-1.0, translation key hexcraft.config.v060.randomGiftVanillaChance).
+- NEW SHARED METHOD pickGiftItem(RandomSource): the pool is split by namespace into a vanilla sub-pool and an "other mods" sub-pool. The config chance rolls which sub-pool is drawn from (85% vanilla / 15% other); if the chosen sub-pool is empty it falls back to the whole pool, and up to 8 defensive re-rolls skip air-like items. Both the kill path and giftToRandom now use this one method - no hardcoded values.
+
+FONT ICON FALLBACK (option A: reference provider):
+- ROOT CAUSE: HexFonts reflects into FontManager and redirects the default font to the built-in hexfont (a subset Noto Sans SC TTF). The equipment JSON uses 43 icon characters but the TTF only contains one ("diamond"), so the other 42 (including the drumstick) rendered as missing-glyph boxes.
+- FIX: hexfont.json now adds {"type":"reference","id":"minecraft:default"} after the ttf provider, so missing glyphs automatically fall back to the vanilla font. JSON-only change, no Java touched; the file now has 2 providers.
+
+TEXT SHADOWS REMOVED (you said the shadows strain your eyes; roll animations and UI effects are NOT included):
+- Every drawCenteredString now goes through HexFonts.centered(..., false) and drawString calls that explicitly passed true now pass false.
+- UI effects are fully preserved: the HextechPageScreen title keeps its two-pass embossed look (both passes just get false, the double-draw structure is unchanged) and RollScreen keeps its soft name glow (the translucent offset glow stays, only the MC shadow is off). Cloth Config is untouched; 12 files changed.
+
+FAKE-LINK / DEAD-KEY AUDIT FIX (you asked to turn every fake link into a real one, never to delete them):
+- Machine audit of every JSON event field found 260 distinct tokens. The 6 with no Java literal were verified to be consumed either via colon-prefixed startsWith or by the generic stack engine (matching stack.key) - all real.
+- The ONLY true gap: FtbQuestLink's quest-completion path handled only bounty/coin_bonus/xp_bonus/random_loot; loot_bonus had a kill-path implementation but was not consumed on quest completion.
+- FIXED INTO A REAL LINK: FtbQuestLink now aggregates lootBonus and has a case "loot_bonus". On quest completion, with probability nextFloat() < min(1, lootBonus), it spawns 1-2 emeralds at the player's side (same rule as the kill path) and sends a new message key message.hexcraft.quest_loot_bonus via S2CTipMessage; both language files updated.
+
+READ-ONLY HEALTH CHECK FIXES (each approved by you):
+- Added 6 missing lang keys (both Chinese and English): 5 effect.hint entries (equip_power/relic_drop/spell_mana_max/stand_power/tf_snow_queen_damage) plus worldhex.tierstyle.silver.
+- Merged the duplicate key hexcraft.effect.ac_deep_resist (two different values, the second silently overwrote; there is only one consumer, so it is now a single entry).
+- Updated stale numbers to measured values: 695 hexes (350 vanilla + 345 linked across 14 mods); forge pool 16 normal attributes + 5 spell attributes + 17 event affixes; forge prices 100/200/450, random forge 175; 41 built-in world hexes (45 with the 4 data-pack ones).
+- Workspace cleanup: historical build/libs jars kept as you asked; preview temp files, backups and the handoff doc were moved into a categorized "recycle bin", and the repo now has zero untracked entries.
+
+RELEASE:
+- Build 39s, jar 2,413,903B SHA256 4F1DCEA9... (the first build exposed 3 compile errors: pickGiftItem wrongly used java.util.Random instead of RandomSource and a boxed Double-to-float cast; fixed following the project's existing conventions, then the build succeeded).
+
 Hexcraft Workshop v0.9.10 - Built-in Chinese font (Noto Sans SC) + English translation polish
 =============================================================================
 

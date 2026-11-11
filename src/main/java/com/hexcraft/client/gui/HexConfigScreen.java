@@ -411,6 +411,10 @@ public class HexConfigScreen {
                 doubleEntryEntry(eb, "v060.executePctMaxWeight", HexConfig.EXECUTE_PCT_MAX_WEIGHT, 0.0, 3.0, 0.5),
                 doubleEntryEntry(eb, "v060.executePctCurWeight", HexConfig.EXECUTE_PCT_CUR_WEIGHT, 0.0, 3.0, 1.0)
         )).build());
+        // v0.9.11 随机馈赠来源概率（玩家反馈平衡：85% 原版 / 15% 模组，可在配置界面调整）
+        cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.gift"), List.of(
+                doubleEntryEntry(eb, "v060.randomGiftVanillaChance", HexConfig.RANDOM_GIFT_VANILLA_CHANCE, 0.0, 1.0, 0.85)
+        )).build());
     }
 
     /** v0.6.16 HUD 优化分组：开关类条目（滚动提示开关 / 拖动模式 / 队列上限 / 合并 / 血条开关 / 属性安全钳）；

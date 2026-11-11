@@ -150,7 +150,7 @@ public class WorldRollScreen extends HexScaledScreen {
         Component title = chosenId != null
                 ? Component.translatable("hexcraft.gui.got", chosenName)
                 : Component.translatable("hexcraft.gui.world_hex_title");
-        g.drawCenteredString(HexFonts.ui(), title, centerX, cardY - 34, 0xFFFFFF);
+        HexFonts.centered(g, title, centerX, cardY - 34, 0xFFFFFF, false);
         int barW = HexFonts.ui().width(title) + 40;
         g.fillGradient(centerX - barW / 2, cardY - 20, centerX + barW / 2, cardY - 19, 0xFFFFC94A, 0xFFC77DFF);
 

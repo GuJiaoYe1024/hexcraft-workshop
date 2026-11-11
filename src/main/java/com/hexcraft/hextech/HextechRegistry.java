@@ -417,9 +417,9 @@ public class HextechRegistry {
         return all;
     }
 
-    /** v0.6.0 校准版：锻造词条单总池——三档一律返回全量 13 条（无独占词条）；
+    /** 锻造词条单总池：三档共用同一词条池（当前 = 21 项属性词条 + 最多 17 项事件词条，事件词条按来源已装/开关过滤）；
      *  档位强度由 FORGE_TIER_MULT 倍率（×1/×2/×3）与 forgeWeight 权重共同区分。
-     *  v0.6.9 棱彩档额外加入「栏位扩展」特殊词条（slot_boost，非属性，选中解锁 1 个海克斯栏位）。 */
+     *  棱彩档（tier=2）额外加入「栏位扩展」特殊词条（slot_boost，非属性，选中解锁 1 个海克斯栏位）。 */
     public static List<String> forgePool(int tier) {
         return FORGE_CACHE.computeIfAbsent(tier, t -> List.copyOf(buildForgePool(t)));
     }

@@ -1,3 +1,32 @@
+## v0.9.11 — FTB 随机馈赠加权 + 字体图标回退 + 全量去文字阴影 + 假联动修复（2026-11-11）
+
+**⚖️ FTB Quests 随机馈赠加权（玩家「秋千葵」反馈：附属海克斯太强、容易开到现阶段得不到的物品）**
+- **根因**：`HextechEvents.randomGiftPool()` 遍历 ForgeRegistries.ITEMS 全部物品（含所有模组），仅过滤空气/屏障/命令方块等技术物品；带 random_loot 的 quest 海克斯完成任务时从全物品池随机掉东西，Cataclysm/TACZ/Alex's Caves 等后期物品都可能出现
+- **新增概率权重（用户拍板：可配置、绝不写死）**：`HexConfig` 新增 DoubleValue `RANDOM_GIFT_VANILLA_CHANCE`（默认 **0.85**，范围 0.0–1.0，translation key `hexcraft.config.v060.randomGiftVanillaChance`）
+- **新增公共方法 `pickGiftItem(RandomSource)`**：物品池按命名空间拆 vanilla / other 两子池，按配置概率 roll 选子池（原版 85% / 其他模组 15%），子池为空回退整池，子池内保留 8 次防御性重 roll 跳过 isAirLike；击杀路径与 giftToRandom 两处旧内联循环均替换为该方法，两路径共用、无写死数值
+
+**🔣 字体图标丢失修复（方案甲：reference 回退）**
+- **根因**：`HexFonts` 反射 FontManager 把默认字体重定向到内置 hexfont（Noto Sans SC 子集 TTF），装备 JSON 用 43 个图标字符而 TTF 仅含「◆」1 个，其余 42 个（含 🍗）渲染为缺字方块
+- **修复**：`hexfont.json` 在 ttf provider 后加 `{"type":"reference","id":"minecraft:default"}`，缺字自动回退原版字体，只改 JSON 不动 Java，现共 2 个 provider
+
+**🌑 全量去除文字阴影（用户：看着眼花；抽卡动画/界面特效不包含）**
+- 所有 drawCenteredString 改 `HexFonts.centered(..., false)`，drawString 显式 true 改 false
+- **界面特效全部保留**：HextechPageScreen 标题双绘浮雕（双绘结构不变，两笔各加 false）、RollScreen 名称柔光（半透明偏移光效保留，仅关 MC 阴影）；Cloth Config 不动；共改 12 个文件
+
+**🔧 假联动/死键审计修复（用户：禁止直接清理，全部做成真联动）**
+- 机器审计 data 下全部 JSON event 字段共 260 个 distinct token，逐一核实：6 个无 Java 字面量者经带冒号 startsWith 或通用叠层引擎（stack.key 匹配）真实消费，均成立
+- **唯一真实缺口**：`FtbQuestLink` 任务完成路径原只处理 bounty/coin_bonus/xp_bonus/random_loot，`loot_bonus` 仅在击杀路径有实现、任务完成路径无消费
+- **修复成真联动**：FtbQuestLink 加 lootBonus 聚合 + case "loot_bonus"，任务完成时按 `nextFloat() < min(1, lootBonus)` 概率在玩家身边 spawnAtLocation 1–2 颗绿宝石（与击杀路径同规则），经 S2CTipMessage 发新键 `message.hexcraft.quest_loot_bonus` 提示，中英 lang 同步
+
+**📋 只读体检修复（用户逐条拍板）**
+- 补全 **6 个缺失 lang key**（中英双补）：5 个 effect.hint（equip_power/relic_drop/spell_mana_max/stand_power/tf_snow_queen_damage）+ worldhex.tierstyle.silver
+- 合并重复 key `hexcraft.effect.ac_deep_resist`（两处值不同、后者静默覆盖；同一 key 仅一个消费点，合并为一条）
+- 过时数字更新到实测最新：海克斯 **695**（原版 350 + 联动 345，14 个 mod）；锻造 **16 普通属性 + 5 法术 + 17 事件词条**；锻造价格 **100/200/450、随机锻造 175**；内置世界海克斯 **41**（+数据包 4 合计 45）
+- 工作区卫生：build/libs 历史 jar 按用户要求保留；预览临时文件/备份/交接文档移入「回收站」分类，全仓库未跟踪条目归零
+
+**📦 发布**
+- 构建 39s、jar 2,413,903B SHA256 4F1DCEA9…（首次构建暴露 3 个编译错误：pickGiftItem 误用 java.util.Random 而非 RandomSource、装箱 Double 转 float，已按项目惯例修复后构建成功）
+
 ## v0.9.10 — 内置中文字体（Noto Sans SC）+ 英文翻译完善 + 界面观感打磨（2026-11-03）
 
 **🔤 内置中文字体（用户拍板「内置一个吧」）**

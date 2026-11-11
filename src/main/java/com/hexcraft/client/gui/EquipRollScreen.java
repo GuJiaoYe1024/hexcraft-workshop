@@ -183,7 +183,7 @@ public class EquipRollScreen extends HexScaledScreen {
         } else {
             title = Component.translatable("hexcraft.gui.equip_title");
         }
-        g.drawCenteredString(HexFonts.ui(), title, centerX, cardY - 34, 0xFFFFFF);
+        HexFonts.centered(g, title, centerX, cardY - 34, 0xFFFFFF, false);
         int barW = HexFonts.ui().width(title) + 40;
         g.fillGradient(centerX - barW / 2, cardY - 20, centerX + barW / 2, cardY - 19, 0xFFC77DFF, 0xFF7A6BFF);
 

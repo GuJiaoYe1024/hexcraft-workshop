@@ -351,8 +351,8 @@ public class HextechPageScreen extends HexScaledScreen {
 
         // 标题（顶左上，发光双层）+ 余额（右对齐内容区右缘，不压标题、不超界面）
         String title = Component.translatable("hexcraft.gui.page_title").getString();
-        g.drawString(HexFonts.ui(), title, x + 12, y + 9, 0xFF1A2340);
-        g.drawString(HexFonts.ui(), title, x + 11, y + 8, 0xFFE8F6FF);
+        g.drawString(HexFonts.ui(), title, x + 12, y + 9, 0xFF1A2340, false);
+        g.drawString(HexFonts.ui(), title, x + 11, y + 8, 0xFFE8F6FF, false);
         Component coinText = Component.translatable("hexcraft.gui.coins", ClientDataStore.coins);
         int coinW = HexFonts.ui().width(coinText);
         int coinRight = cx() + 226;                    // 内容区右缘
@@ -1477,8 +1477,8 @@ public class HextechPageScreen extends HexScaledScreen {
                 g.fillGradient(getX() + 1, getY() + height - 1, getX() + width - 1, getY() + height, 0xFF4FD8FF, 0x227A6BFF); // 底部光带
             }
             int col = selected ? 0xFFFFFFFF : hot ? 0xFFDDE6FF : 0xFF9AA6C8;
-            g.drawCenteredString(HexFonts.ui(),
-                    this.getMessage(), getX() + width / 2, getY() + (height - 8) / 2, col);
+            HexFonts.centered(g,
+                    this.getMessage(), getX() + width / 2, getY() + (height - 8) / 2, col, false);
         }
     }
 
@@ -1502,8 +1502,8 @@ public class HextechPageScreen extends HexScaledScreen {
             g.fillGradient(getX(), getY(), getX() + width, getY() + height,
                     hot ? 0x5530A8E0 : 0x331E6FE8, 0xCC10182E);
             int col = hot ? 0xFFFFFFFF : 0xFFC8D8F0;
-            g.drawCenteredString(HexFonts.ui(),
-                    this.getMessage(), getX() + width / 2, getY() + (height - 8) / 2, col);
+            HexFonts.centered(g,
+                    this.getMessage(), getX() + width / 2, getY() + (height - 8) / 2, col, false);
         }
     }
 }

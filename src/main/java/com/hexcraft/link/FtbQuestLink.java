@@ -50,7 +50,7 @@ public final class FtbQuestLink {
             if (data == null) continue;
             // 仅汇总 ftbquests 来源海克斯（hex_quest_ 前缀），避免其他来源海克斯干扰任务奖励
             int level = 0;
-            double bounty = 0, coin = 0, xp = 0, loot = 0;
+            double bounty = 0, coin = 0, xp = 0, loot = 0, lootBonus = 0;
             for (PlayerData.HexEntry e : data.getHexes()) {
                 if (!e.id.startsWith("hex_quest_")) continue;
                 HextechDefinition def = HextechRegistry.get(e.id);
@@ -66,6 +66,8 @@ public final class FtbQuestLink {
                             case "coin_bonus" -> coin += v * e.level;
                             case "xp_bonus" -> xp += v * e.level;
                             case "random_loot" -> loot += v * e.level;
+                            // v0.9.11 修复假联动：loot_bonus（掉落加成）此前任务完成路径无消费
+                            case "loot_bonus" -> lootBonus += v * e.level;
                             default -> { }
                         }
                     } catch (Exception ignored) { }
@@ -79,6 +81,13 @@ public final class FtbQuestLink {
             if (coins > 0) data.addCoins(coins);
             if (xpPts > 0) sp.giveExperiencePoints(xpPts);
             if (loot > 0) HextechEvents.giftToRandom(sp, loot);
+            // v0.9.11 loot_bonus 真联动：任务完成时按概率额外掉 1-2 颗绿宝石（规则与击杀路径一致，概率走聚合值不写死）
+            if (lootBonus > 0 && sp.getRandom().nextFloat() < (float) Math.min(1.0, lootBonus)) {
+                int n = 1 + sp.getRandom().nextInt(2);
+                sp.spawnAtLocation(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EMERALD, n), 0.5F);
+                Packets.S2CTipMessage.sendTo(sp,
+                        Component.translatable("message.hexcraft.quest_loot_bonus", n), 0);
+            }
             if (coins > 0 || xpPts > 0) {
                 Packets.S2CTipMessage.sendTo(sp,
                         Component.translatable("message.hexcraft.quest_reward", coins, xpPts), 0);

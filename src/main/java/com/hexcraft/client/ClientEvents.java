@@ -130,8 +130,8 @@ public class ClientEvents {
             int bg = this.isHoveredOrFocused() ? 0xFF1E3A5F : 0xAA0B1530;
             g.fill(getX(), getY(), getX() + width, getY() + height, bg);
             g.fill(getX(), getY(), getX() + width, getY() + 1, 0xFF1E6FE8);
-            g.drawCenteredString(HexFonts.ui(), glyph,
-                    getX() + width / 2, getY() + 6, 0xFF9FB6FF);
+            HexFonts.centered(g, glyph,
+                    getX() + width / 2, getY() + 6, 0xFF9FB6FF, false);
         }
     }
 }

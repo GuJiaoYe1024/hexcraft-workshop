@@ -30,6 +30,7 @@ public class HexConfig {
     public static final ForgeConfigSpec.IntValue FORGE_BASIC_PRICE;
     public static final ForgeConfigSpec.IntValue FORGE_GOLD_PRICE;
     public static final ForgeConfigSpec.IntValue FORGE_PRISMATIC_PRICE;
+    public static final ForgeConfigSpec.IntValue FORGE_RANDOM_PRICE;
     public static final ForgeConfigSpec.IntValue MAX_FORGES;
     public static final ForgeConfigSpec.IntValue REFUND_SILVER;
     public static final ForgeConfigSpec.IntValue REFUND_GOLD;
@@ -206,6 +207,8 @@ public class HexConfig {
     public static final ForgeConfigSpec.EnumValue<DuplicateRule> FORGE_DUPLICATE_RULE;
     // v0.6.5 随机馈赠低价值过滤（服务端生效；默认关闭=保持全物品池）
     public static final ForgeConfigSpec.BooleanValue RANDOM_GIFT_FILTER_LOW;
+    // v0.9.11 随机馈赠来源概率（服务端生效；原版物品概率，其余为其他模组物品）
+    public static final ForgeConfigSpec.DoubleValue RANDOM_GIFT_VANILLA_CHANCE;
     // ---- 死亡保留（以客户端配置为主，v0.4.11）：主菜单即可设置并保存，进世界即生效 ----
     public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_HEXES;
     public static final ForgeConfigSpec.BooleanValue KEEP_DEATH_FORGES;
@@ -243,6 +246,7 @@ public class HexConfig {
         FORGE_BASIC_PRICE = b.comment("基础锻造器价格(晶币；v0.9.9 按 EMC 价值调价：50→100)").translation("hexcraft.config.eco.forgeBasicPrice").defineInRange("forgeBasicPrice", 100, 0, 100000);
         FORGE_GOLD_PRICE = b.comment("黄金锻造器价格(晶币；v0.9.9 按 EMC 价值调价：150→200)").translation("hexcraft.config.eco.forgeGoldPrice").defineInRange("forgeGoldPrice", 200, 0, 100000);
         FORGE_PRISMATIC_PRICE = b.comment("棱彩锻造器价格(晶币；v0.9.9 按 EMC 价值调价：400→450)").translation("hexcraft.config.eco.forgePrismaticPrice").defineInRange("forgePrismaticPrice", 450, 0, 100000);
+        FORGE_RANDOM_PRICE = b.comment("随机锻造器价格(晶币)").translation("hexcraft.config.eco.forgeRandomPrice").defineInRange("forgeRandomPrice", 175, 0, 100000);
         MAX_FORGES = b.comment("锻造总次数上限（0=无限制，默认无限制）").translation("hexcraft.config.eco.forgeLimit").defineInRange("forgeLimit", 0, 0, 100000);
         REFUND_SILVER = b.comment("满级重复抽到白银海克斯的晶币补偿").translation("hexcraft.config.eco.refundSilver").defineInRange("refundSilver", 10, 0, 10000);
         REFUND_GOLD = b.comment("满级重复抽到黄金海克斯的晶币补偿").translation("hexcraft.config.eco.refundGold").defineInRange("refundGold", 30, 0, 10000);
@@ -327,6 +331,8 @@ public class HexConfig {
         FORGE_DUPLICATE_RULE = b.comment("同词条锻造叠加规则：STACK=无上限叠加（默认）；BEST_ONLY=同名词条仅保留最高档位（低档重复自动回收）").translation("hexcraft.config.v060.forgeDuplicateRule").defineEnum("forgeDuplicateRule", DuplicateRule.STACK);
         // v0.6.5 随机馈赠低价值过滤（服务端生效；默认关闭保持全物品池）
         RANDOM_GIFT_FILTER_LOW = b.comment("随机馈赠过滤低价值物品（服务端生效，默认关闭=保持原版+全部模组全物品池；开启后过滤泥土/圆石/原木/羊毛/陶瓦等建材装饰类原版低价值物品，模组物品不判定）").translation("hexcraft.config.v060.randomGiftFilterLow").define("randomGiftFilterLow", false);
+        // v0.9.11 随机馈赠来源概率（玩家反馈平衡：FTB 任务馈赠易开出当前阶段得不到的模组后期物品）
+        RANDOM_GIFT_VANILLA_CHANCE = b.comment("随机馈赠抽到原版（minecraft）物品的概率（默认 0.85=85% 原版，其余 15% 为其他模组物品；击杀馈赠与任务馈赠共用；0=全部模组物品，1=全部原版物品；选中子池为空时自动回退整池）").translation("hexcraft.config.v060.randomGiftVanillaChance").defineInRange("randomGiftVanillaChance", 0.85, 0.0, 1.0);
         // v0.6.7 倍率上限收紧：原上限 20 倍会让「锻造条数 × 档位倍率 × 增幅乘区」相乘轻松上千，属数值爆炸源；
         // 收紧到 5 倍（已改超限配置会被 Forge 自动钳制到新上限），默认值 1/2/3 不变
         FORGE_MULT_SILVER = b.comment("白银锻造倍率（服务端生效，默认 1.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultSilver").defineInRange("forgeMultiplierSilver", 1.0, 0.1, 5.0);
