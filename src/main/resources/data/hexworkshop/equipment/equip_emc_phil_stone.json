@@ -7,11 +7,11 @@
   "mods": [
     {
       "attr": "max_health",
-      "perLevel": 60.0
+      "perLevel": 27.0
     },
     {
       "attr": "attack_damage",
-      "perLevel": 2.0
+      "perLevel": 1.0
     }
   ],
   "event": "emc_bargain:0.30,emc_transmute:0.15"

@@ -196,7 +196,8 @@ public class IronsSpellLink {
 
             double mul = 1.0 + power + school;
             if (execute > 0 && victim.getHealth() <= victim.getMaxHealth() * HexConfig.IRONS_EXECUTE_THRESHOLD.get()) {
-                mul *= (1.0 + Math.min(0.2, execute)); // v0.9.1 法术处决增伤封顶 20%
+                // v0.9.12 法术处决增伤与近战处决共用同一上限：默认 20%，斩杀流满档 40%
+                mul *= (1.0 + Math.min(HextechEvents.executeCapFor(ModCapabilities.get(sp)), execute));
             }
             if (pen > 0) mul *= (1.0 + Math.min(1.0, pen));
 

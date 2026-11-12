@@ -1,7 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 7,
-  "event": "stack_attr:attack_damage:0.02",
+  "event": "stack_attr:attack_damage:0.001",
   "mods": [
     {
       "attr": "armor",

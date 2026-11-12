@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "artifacts",
   "mods": [],
-  "event": "regen:0.5"
+  "event": "regen:0.5,loot_bonus:0.02"
 }

@@ -1,7 +1,7 @@
-{
-  "rarity": "GOLD",
-  "weight": 8,
-  "source": "artifacts",
-  "mods": [],
-  "event": "equip_power:0.18,echo:0.15"
-}
+{
+  "rarity": "GOLD",
+  "weight": 8,
+  "source": "artifacts",
+  "mods": [],
+  "event": "equip_power:0.025,echo:0.15"
+}

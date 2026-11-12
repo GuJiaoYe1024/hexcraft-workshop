@@ -1,5 +1,5 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "stack_attr_onhit:0.01"
+  "event": "stack_chance:0.01"
 }

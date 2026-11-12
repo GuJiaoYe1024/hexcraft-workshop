@@ -1,6 +1,6 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "mobi_power:0.15,tacz_strafe:1",
+  "event": "mobi_power:0.105,tacz_strafe:1",
   "source": "dlc_niyuan"
 }

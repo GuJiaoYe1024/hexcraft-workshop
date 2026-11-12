@@ -2,5 +2,5 @@
   "rarity": "PRISMATIC",
   "weight": 4,
   "mods": [],
-  "event": "execute:0.04,collector:2,execute_pct:0.01"
+  "event": "execute:0.02,collector:2,execute_pct:0.005"
 }

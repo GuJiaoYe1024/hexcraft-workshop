@@ -29,13 +29,25 @@ public class PlayerData {
             Attributes.KNOCKBACK_RESISTANCE, Attributes.ATTACK_KNOCKBACK,
             Attributes.ARMOR_TOUGHNESS);
 
-    /** 成长属性映射（stack_attr 的简写键 → Attribute，乘法叠加） */
-    private static final Map<String, Attribute> STACK_ATTRS = Map.of(
-            "hp", Attributes.MAX_HEALTH, "atk", Attributes.ATTACK_DAMAGE,
-            "armor", Attributes.ARMOR, "spd", Attributes.MOVEMENT_SPEED,
-            "aspd", Attributes.ATTACK_SPEED, "luck", Attributes.LUCK,
-            "knockback", Attributes.ATTACK_KNOCKBACK, "resist", Attributes.KNOCKBACK_RESISTANCE,
-            "tough", Attributes.ARMOR_TOUGHNESS);
+    /** 成长属性映射（stack_attr 的键 → Attribute，乘法叠加）。
+     *  简写与全名双写同义（v0.9.12 体检修复：数据里 atk/attack_damage、hp/max_health 混用，
+     *  旧版只认简写导致 13 处三段式叠层键静默无效、层数照涨收益为 0）。 */
+    private static final Map<String, Attribute> STACK_ATTRS = Map.ofEntries(
+            Map.entry("hp", Attributes.MAX_HEALTH), Map.entry("max_health", Attributes.MAX_HEALTH),
+            Map.entry("atk", Attributes.ATTACK_DAMAGE), Map.entry("attack_damage", Attributes.ATTACK_DAMAGE),
+            Map.entry("armor", Attributes.ARMOR), Map.entry("spd", Attributes.MOVEMENT_SPEED),
+            Map.entry("movement_speed", Attributes.MOVEMENT_SPEED),
+            Map.entry("aspd", Attributes.ATTACK_SPEED), Map.entry("attack_speed", Attributes.ATTACK_SPEED),
+            Map.entry("luck", Attributes.LUCK),
+            Map.entry("knockback", Attributes.ATTACK_KNOCKBACK),
+            Map.entry("resist", Attributes.KNOCKBACK_RESISTANCE),
+            Map.entry("knockback_resistance", Attributes.KNOCKBACK_RESISTANCE),
+            Map.entry("tough", Attributes.ARMOR_TOUGHNESS));
+
+    /** 叠层键第二段是否为可用的成长属性名（供 HextechEvents.hasStackAttr3 判定"真有效"，避免写错键静默空转） */
+    public static boolean isValidStackAttrKey(String key) {
+        return key != null && STACK_ATTRS.containsKey(key);
+    }
 
     private int coins;
     private int forgesUsed;
@@ -181,22 +193,32 @@ public class PlayerData {
     public void setPityPrismatic(int n) { pityPrismatic = Math.max(0, n); }
 
     // ================= v0.6.9 海克斯栏位体系 =================
-    /** 栏位扩展海克斯 id（持有每级 +1 栏位，不占用普通栏位额度） */
+    /** 栏位扩展锻造词条 id（棱彩锻造器词条，与海克斯数据无关；海克斯侧改由 event 键 slot_boost 声明） */
     public static final String SLOT_BOOST_HEX = "hex_slot_boost";
 
-    /** 当前占用栏位数（排除栏位扩展海克斯本身） */
+    /** v0.9.12 数据化：海克斯是否声明 slot_boost（声明者自身不占栏位，并按 值 × 等级 扩栏位） */
+    public static boolean grantsSlotBoost(String hexId) {
+        com.hexcraft.hextech.HextechDefinition d = com.hexcraft.hextech.HextechRegistry.resolveDef(hexId);
+        return d != null && com.hexcraft.event.HextechEvents.declaresKey(d, "slot_boost");
+    }
+
+    /** 当前占用栏位数（排除声明 slot_boost 的海克斯本身） */
     public int occupiedSlots() {
         int n = 0;
-        for (HexEntry e : hexes) if (!e.id.equals(SLOT_BOOST_HEX)) n++;
+        for (HexEntry e : hexes) if (!grantsSlotBoost(e.id)) n++;
         return n;
     }
 
-    /** 有效栏位上限：配置基础上限 + 栏位扩展海克斯等级和 + 棱彩锻造器解锁数；配置 0=无限制 */
+    /** 有效栏位上限：配置基础上限 + 栏位扩展海克斯 slot_boost 值 × 等级 + 棱彩锻造器解锁数；配置 0=无限制 */
     public int hexSlotLimit() {
         int base = com.hexcraft.config.HexConfig.HEX_SLOT_COUNT.get();
         if (base <= 0) return Integer.MAX_VALUE;
         int extra = slotBoost;
-        for (HexEntry e : hexes) if (e.id.equals(SLOT_BOOST_HEX)) extra += e.level;
+        for (HexEntry e : hexes) {
+            com.hexcraft.hextech.HextechDefinition d = com.hexcraft.hextech.HextechRegistry.resolveDef(e.id);
+            if (d == null) continue;
+            extra += (int) Math.round(com.hexcraft.event.HextechEvents.tokenValueOf(d, "slot_boost") * e.level);
+        }
         return base + extra;
     }
 
@@ -275,8 +297,8 @@ public class PlayerData {
                 return refundFor(def.rarity);
             }
         }
-        // v0.6.9 栏位体系：栏位扩展海克斯不占用普通栏位（抽到即解锁，可叠级）
-        if (id.equals(SLOT_BOOST_HEX)) {
+        // v0.6.9 栏位体系：声明 slot_boost 的海克斯不占用普通栏位（抽到即解锁，可叠级）；v0.9.12 改数据键判定
+        if (grantsSlotBoost(id)) {
             hexes.add(new HexEntry(id, 1));
             return 0;
         }
@@ -352,7 +374,14 @@ public class PlayerData {
      *  兼容属性修复类 MOD（如 AttributeFix 提升属性上限）：全部使用原版 AttributeModifier 标准 API、
      *  稳定 UUID + 先 remove 再 add，不写死上限、不依赖属性原值，属性上限由 AttributeFix 等统一接管；
      *  数值经 sanitize 消毒，极端锻造叠加也不会产生 NaN/Infinity 导致崩坏。 */
+    /**
+     * @param level 世界维度（世界海克斯叠层上限加成按维度生效）；为 null 时退回档位值
+     */
     public void applyModifiers(ServerPlayer player) {
+        applyModifiers(player, player == null ? null : player.serverLevel());
+    }
+
+    public void applyModifiers(ServerPlayer player, net.minecraft.server.level.ServerLevel level) {
         for (Attribute a : USED_ATTRIBUTES) {
             AttributeInstance inst = player.getAttribute(a);
             if (inst == null) continue;
@@ -368,30 +397,32 @@ public class PlayerData {
         double hexPower = 1 + Math.min(HextechEvents.effect(this, "hex_power"), 2.0);
         double forgePower = 1 + Math.min(HextechEvents.effect(this, "forge_power"), 2.0);
         double equipPower = 1 + Math.min(HextechEvents.effect(this, "equip_power"), 2.0);
+        // v0.9.12 性能：叠层上限在同一次重建内恒定，提到两个循环外算一次。
+        // 旧实现每个海克斯、每件装备各调一次 stackCapFor → 每次都要新建成员集合并逐条判定羁绊档位，20 件即 20 次全量扫描。
+        int cfgCap = com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get();
+        int pCap = cfgCap > 0 ? cfgCap : HextechEvents.permanentStackCapFor(this, level);
         int idx = 0;
         for (HexEntry e : hexes) {
             HextechDefinition def = HextechRegistry.get(e.id);
             if (def == null) continue;
-            // 六神装：每装备 1 件装备提供属性（黄金，数值克制；与装备联动；加成系数由配置 EQUIP_COUNT_MULT 控制，默认 1.0）
-            if (e.id.equals("hex_equip_count")) {
+            // v0.9.12 数据化：装备件数联动加成（equip_count_atk / equip_count_armor / equip_count_hp）——值 × 等级 × 已装备件数 × 配置倍率
+            double ecAtk = com.hexcraft.event.HextechEvents.tokenValueOf(def, "equip_count_atk");
+            double ecArmor = com.hexcraft.event.HextechEvents.tokenValueOf(def, "equip_count_armor");
+            double ecHp = com.hexcraft.event.HextechEvents.tokenValueOf(def, "equip_count_hp");
+            if (ecAtk > 0 || ecArmor > 0 || ecHp > 0) {
                 int n = equipment.size();
                 if (n > 0) {
                     double cm = com.hexcraft.config.HexConfig.EQUIP_COUNT_MULT.get();
-                    double rate = e.level;
-                    applyOne(player, Attributes.ATTACK_DAMAGE, "hex:equip_count#atk" + idx++, 0.5 * rate * n * cm);
-                    applyOne(player, Attributes.ARMOR, "hex:equip_count#armor" + idx++, 0.5 * rate * n * cm);
-                    applyOne(player, Attributes.MAX_HEALTH, "hex:equip_count#hp" + idx++, 2.0 * rate * n * cm);
+                    double scale = e.level * n * cm;
+                    if (ecAtk > 0) applyOne(player, Attributes.ATTACK_DAMAGE, "hex:equip_count#atk" + idx++, ecAtk * scale);
+                    if (ecArmor > 0) applyOne(player, Attributes.ARMOR, "hex:equip_count#armor" + idx++, ecArmor * scale);
+                    if (ecHp > 0) applyOne(player, Attributes.MAX_HEALTH, "hex:equip_count#hp" + idx++, ecHp * scale);
                 }
-                continue;
             }
-            // v0.9.1 属性转化（ARAM 借鉴）：每级将 10% 护甲转化为攻击力（按当前护甲点结算）
-            if (e.id.equals("hex_stat_converter")) {
-                double conv = HextechEvents.effect(this, "stat_converter");
-                if (conv > 0) {
-                    applyOne(player, Attributes.ATTACK_DAMAGE, "hex:stat_converter#atk" + idx++, player.getArmorValue() * conv);
-                }
-                continue;
-            }
+            // v0.9.1 属性转化（ARAM 借鉴）：每级将 10% 护甲转化为攻击力。
+            // v0.9.12 修复：结算移到两个循环之后（见下方 stat_converter 段）——旧实现此处读 player.getArmorValue()
+            // 时护甲修正正被逐项移除重建，读到的是残值，转化结果取决于遍历顺序。此处只保留"跳过自身 mods"语义。
+            if (e.id.equals("hex_stat_converter")) continue;
             for (HextechDefinition.ModSpec mod : def.mods) {
                 applyOne(player, mod.attr, "hex:" + e.id + "#" + idx++, mod.perLevel * e.level * hexPower);
             }
@@ -419,9 +450,14 @@ public class PlayerData {
             // 旧版本（0.6.2 之前无上限）积累的存量叠层（实测 290/886/1292 层）此前不受限，是护甲/生命/攻击上千的根因
             // v0.6.16 双叠层拆分：stack_attr_onhurt 读受击独立层 hurtStacks，stack_attr/stack_attr_onhit 读 stacks
             // v0.6.16 叠层上限配置化：0=无限制（玩家配 0 时跳过钳制，否则 min 会把层数截成 0）
-            int pCap = com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get();
-            long cappedStacks = pCap > 0 ? Math.min(e.stacks, pCap) : e.stacks;
-            long cappedHurtStacks = pCap > 0 ? Math.min(e.hurtStacks, pCap) : e.hurtStacks;
+            // v0.9.12 叠层上限配置化；配置 0 的语义本是"按机制决定"（HexConfig 注释写明默认 200，
+            // 个人凑齐羁绊满档解锁无上限），但旧代码在 0 时直接跳过钳制，导致永久叠层实际无上限、与战斗叠层上限口径分裂。
+            // 现统一按叠层专家档位 200/400/600/800/1000/∞ 生效；配置 >0 时房主锁死为固定值。
+            // v0.9.12 性能：pCap 已提到循环外统一计算。
+            long cappedStacks = Math.min(e.stacks, pCap);
+            long cappedHurtStacks = Math.min(e.hurtStacks, pCap);
+            // 叠层结算只看层数：stack_attr 三段式（如 stack_attr:armor:0.0015）本身就是击杀叠层键，
+            // 不需要额外 stack 块，457 层这类层数是正常叠出来的，不是绕过
             if ((cappedStacks > 0 || cappedHurtStacks > 0) && def.event != null) {
                 for (String token : def.event.split(",")) {
                     String[] parts = token.split(":");
@@ -431,8 +467,9 @@ public class PlayerData {
                             if (a != null && cappedStacks > 0) {
                                 try {
                                     double rate = Double.parseDouble(parts[2]);
+                                    // v0.9.12 叠层按来源吃增幅：海克斯叠层乘海克斯增幅乘区
                                     applyOneMulti(player, a, "hex:" + e.id + "#stk" + idx++,
-                                            rate * e.level * cappedStacks);
+                                            rate * e.level * cappedStacks * hexPower);
                                 } catch (Exception ignored) { }
                             }
                         } else if (token.startsWith("stack_attr_onhurt:")) {
@@ -440,8 +477,9 @@ public class PlayerData {
                             if (a != null && cappedHurtStacks > 0) {
                                 try {
                                     double rate = Double.parseDouble(parts[2]);
+                                    // v0.9.12 叠层按来源吃增幅：受击叠层同属海克斯，乘海克斯增幅乘区
                                     applyOneMulti(player, a, "hex:" + e.id + "#hrstk" + idx++,
-                                            rate * e.level * cappedHurtStacks);
+                                            rate * e.level * cappedHurtStacks * hexPower);
                                 } catch (Exception ignored) { }
                             }
                         }
@@ -476,8 +514,8 @@ public class PlayerData {
                 applyOne(player, mod.attr, "equip:" + eq.id + "#" + idx++, mod.perLevel * eq.level * equipPower);
             }
             // v0.6.8 追溯钳制（同上）：装备成长叠层同样按全局上限截断；v0.6.16 配置 0=无限制时跳过
-            int pCap = com.hexcraft.config.HexConfig.PERMANENT_STACK_CAP.get();
-            long cappedEqStacks = pCap > 0 ? Math.min(eq.stacks, pCap) : eq.stacks;
+            // v0.9.12 性能：与海克斯共用循环外算好的 pCap，不再逐件重算
+            long cappedEqStacks = Math.min(eq.stacks, pCap);
             if (cappedEqStacks > 0 && def.event != null) {
                 for (String token : def.event.split(",")) {
                     String[] parts = token.split(":");
@@ -488,14 +526,25 @@ public class PlayerData {
                             if (a != null) {
                                 try {
                                     double rate = Double.parseDouble(parts[2]);
+                                    // v0.9.12 叠层按来源吃增幅：装备叠层乘装备增幅乘区
                                     applyOneMulti(player, a, "equipstk:" + eq.id + "#" + idx++,
-                                            rate * eq.level * cappedEqStacks);
+                                            rate * eq.level * cappedEqStacks * equipPower);
                                 } catch (Exception ignored) { }
                             }
                         }
                     }
                 }
             }
+        }
+        // v0.9.12 属性转化延迟结算：护甲与全部 mods 注入完成后才读护甲值，保证转化基数是最终护甲
+        for (HexEntry e : hexes) {
+            if (!"hex_stat_converter".equals(e.id)) continue;
+            double conv = HextechEvents.effect(this, "stat_converter");
+            if (conv > 0) {
+                double armor = player.getArmorValue();
+                applyOne(player, Attributes.ATTACK_DAMAGE, "hex:stat_converter#atk" + idx++, armor * conv);
+            }
+            break;
         }
         // v0.6.16 玩家属性显示安全钳（默认 0=关闭）：高数值整合包中玩家属性被堆到极大时，
         // 部分血量 HUD mod 渲染溢出（屏幕中央黄/红异常竖条）。开启后把玩家自身
@@ -617,11 +666,12 @@ public class PlayerData {
             CompoundTag c = (CompoundTag) t;
             String hid = c.getString("id");
             // v0.5.0 存档消毒：删除/改版后不存在的海克斯自动丢弃（旧档不残留、界面不报错）
-            if (com.hexcraft.hextech.HextechRegistry.get(hid) == null) { dropHex++; continue; }
+            com.hexcraft.hextech.HextechDefinition ddef = com.hexcraft.hextech.HextechRegistry.get(hid);
+            if (ddef == null) { dropHex++; continue; }
             HexEntry e = new HexEntry(hid, c.getInt("level"));
             e.stacks = c.getInt("stacks");
             e.hurtStacks = c.getInt("hurtStacks"); // v0.6.16 旧档缺省 0
-            if (e.id.equals("hex_stack_drake")) e.stacks = 0; // 叠角龙自身不叠层（旧档残留层数一次性清零）
+            if (!ddef.selfStack) e.stacks = 0; // v0.9.12 增幅类自身不叠层（旧档残留清零，数据驱动不写死 id）
             hexes.add(e);
         }
         forges.clear();
@@ -667,9 +717,10 @@ public class PlayerData {
         this.hexes.clear();
         for (HexEntry e : old.hexes) {
             // v0.5.0 存档消毒：已删除海克斯不复制（重生/登录恢复同样自动清理）
-            if (com.hexcraft.hextech.HextechRegistry.get(e.id) == null) continue;
+            com.hexcraft.hextech.HextechDefinition ddef = com.hexcraft.hextech.HextechRegistry.get(e.id);
+            if (ddef == null) continue;
             HexEntry ne = new HexEntry(e.id, e.level);
-            ne.stacks = e.id.equals("hex_stack_drake") ? 0 : e.stacks; // 叠角龙自身不叠层
+            ne.stacks = ddef.selfStack ? e.stacks : 0; // v0.9.12 增幅类自身不叠层（数据驱动）
             ne.hurtStacks = e.hurtStacks; // v0.6.16 受击独立叠层随重生保留（永久叠层性质）
             this.hexes.add(ne);
         }

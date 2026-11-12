@@ -302,6 +302,8 @@ public class HexConfigScreen {
     private static void dlcCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
         ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.dlc"));
         cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.dlc")).build());
+        // 统一说明：讲清内置 DLC 与外接 DLC 的关系与各自入口（不搬开关结构）
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.dlc.unified_intro")).build());
         // 客户端也扫描一次本地 packs 目录（服务端在 AddReloadListenerEvent 扫描）
         com.hexcraft.dlc.DlcManager.scan();
         cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.dlc.hint")).build());
@@ -329,7 +331,6 @@ public class HexConfigScreen {
             if (!p.dependencies.isEmpty()) {
                 dlcTips.add(Component.translatable("hexcraft.config.dlc.deps", String.join(", ", p.dependencies)));
             }
-            dlcTips.add(Component.translatable("hexcraft.config.dlc.note"));
             cat.addEntry(eb.startBooleanToggle(
                             Component.translatable("hexcraft.config.dlc.toggle", title),
                             p.enabled)
@@ -409,7 +410,9 @@ public class HexConfigScreen {
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.execute"), List.of(
                 doubleEntryEntry(eb, "v060.executeThreshold", HexConfig.EXECUTE_THRESHOLD, 0.01, 0.2, 0.15),
                 doubleEntryEntry(eb, "v060.executePctMaxWeight", HexConfig.EXECUTE_PCT_MAX_WEIGHT, 0.0, 3.0, 0.5),
-                doubleEntryEntry(eb, "v060.executePctCurWeight", HexConfig.EXECUTE_PCT_CUR_WEIGHT, 0.0, 3.0, 1.0)
+                doubleEntryEntry(eb, "v060.executePctCurWeight", HexConfig.EXECUTE_PCT_CUR_WEIGHT, 0.0, 3.0, 1.0),
+                doubleEntryEntry(eb, "v0912.executeCap", HexConfig.EXECUTE_CAP, 0.05, 0.4, 0.2),
+                doubleEntryEntry(eb, "v0912.executeCapBreak", HexConfig.EXECUTE_CAP_BREAK, 0.0, 1.0, 0.0)
         )).build());
         // v0.9.11 随机馈赠来源概率（玩家反馈平衡：85% 原版 / 15% 模组，可在配置界面调整）
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.gift"), List.of(

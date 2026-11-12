@@ -24,9 +24,8 @@ public class ClientPacketHandler {
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen instanceof com.hexcraft.client.gui.HextechPageScreen) {
             com.hexcraft.client.gui.HextechPageScreen old = (com.hexcraft.client.gui.HextechPageScreen) mc.screen;
-            int t = old.currentTab();
             com.hexcraft.client.gui.HextechPageScreen fresh = new com.hexcraft.client.gui.HextechPageScreen();
-            fresh.setInitialTab(t);
+            fresh.copyViewStateFrom(old);
             mc.setScreen(fresh);
         }
         ClientDataStore.requestPendingSync = false;
@@ -39,9 +38,8 @@ public class ClientPacketHandler {
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen instanceof com.hexcraft.client.gui.HextechPageScreen) {
             com.hexcraft.client.gui.HextechPageScreen old = (com.hexcraft.client.gui.HextechPageScreen) mc.screen;
-            int t = old.currentTab();
             com.hexcraft.client.gui.HextechPageScreen fresh = new com.hexcraft.client.gui.HextechPageScreen();
-            fresh.setInitialTab(t);
+            fresh.copyViewStateFrom(old);
             mc.setScreen(fresh);
         }
     }
@@ -54,9 +52,8 @@ public class ClientPacketHandler {
             mc.setScreen(new com.hexcraft.client.gui.WorldHexScreen());
         } else if (mc.screen instanceof com.hexcraft.client.gui.HextechPageScreen) {
             com.hexcraft.client.gui.HextechPageScreen old = (com.hexcraft.client.gui.HextechPageScreen) mc.screen;
-            int t = old.currentTab();
             com.hexcraft.client.gui.HextechPageScreen fresh = new com.hexcraft.client.gui.HextechPageScreen();
-            fresh.setInitialTab(t);
+            fresh.copyViewStateFrom(old);
             mc.setScreen(fresh);
         }
     }
@@ -99,9 +96,8 @@ public class ClientPacketHandler {
         // hexes / forging / equipment / all → 海克斯工坊主界面重建（各页签从 Registry 与 ClientDataStore 实时读取）
         if (mc.screen instanceof com.hexcraft.client.gui.HextechPageScreen) {
             com.hexcraft.client.gui.HextechPageScreen old = (com.hexcraft.client.gui.HextechPageScreen) mc.screen;
-            int t = old.currentTab();
             com.hexcraft.client.gui.HextechPageScreen fresh = new com.hexcraft.client.gui.HextechPageScreen();
-            fresh.setInitialTab(t);
+            fresh.copyViewStateFrom(old);
             mc.setScreen(fresh);
         } else if (mc.screen instanceof com.hexcraft.client.gui.WorldHexScreen) {
             mc.setScreen(new com.hexcraft.client.gui.WorldHexScreen());

@@ -110,6 +110,10 @@ public class WorldHexScreen extends HexScaledScreen {
     private Button drawBtn;
     private final List<Button> cancelBtns = new ArrayList<>();
     private int lastCostVer = -1;
+    /** 悬停提示：循环内只记录，等全部内容与控件画完后在 renderOverlay 里统一绘制 */
+    private List<Component> pendingTip = null;
+    private int pendingTipX;
+    private int pendingTipY;
 
     public WorldHexScreen() {
         super(Component.translatable("hexcraft.gui.world_hex_title"));
@@ -162,7 +166,7 @@ public class WorldHexScreen extends HexScaledScreen {
                 String id = d.id;
                 int bw = Math.min(BTN_W, itemW() - NAME_MIN_W - 4);
                 cancelBtns.add(new WBtn(x + itemW() - bw, y, bw, Math.min(20, rowH()),
-                        Component.translatable("hexcraft.gui.world_cancel", ClientDataStore.worldCancelCoin),
+                        Component.translatable("hexcraft.gui.world_delete"),
                         b -> {
                             Packets.C2SCancelWorldHex p = new Packets.C2SCancelWorldHex();
                             p.id = id;
@@ -198,10 +202,11 @@ public class WorldHexScreen extends HexScaledScreen {
 
     @Override
     protected void renderScaled(GuiGraphics g, int mx, int my, float pt) {
-        // v0.6.16 数据变化（列表/费用/上限任意一项）→ 重建按钮（即时反映，含费用实时刷新）
+        this.pendingTip = null;
+        // v0.9.12 数据变化（列表/费用/上限任意一项）→ 重建按钮；不再强制回到顶部，
+        // 避免玩家正在浏览下方分类时被一次同步打断（滚动位置由 mouseScrolled 统一钳制）
         if (ClientDataStore.costVersion != lastCostVer) {
             lastCostVer = ClientDataStore.costVersion;
-            this.scrollY = 0;
             buildWidgets();
         }
         int centerX = this.guiW() / 2;
@@ -218,6 +223,14 @@ public class WorldHexScreen extends HexScaledScreen {
         Component actText = Component.translatable("hexcraft.gui.world_active_count",
                 actTotal, wMax > 0 ? wMax : "\u221E");
         g.drawString(HexFonts.ui(), actText, this.guiW() - 30 - HexFonts.ui().width(actText), 16, 0xFF9FB6FF, false);
+
+        // 抽取按钮右侧空白处：删除所需条件说明（跟随按钮随滚动偏移，窄屏放不下则省略）
+        Component delCond = Component.translatable("hexcraft.gui.world_delete_cond", ClientDataStore.worldCancelCoin);
+        int condX = centerX + 160 + 8;
+        int condY = 34 - this.scrollY + (22 - 8) / 2;
+        if (condX + HexFonts.ui().width(delCond) <= this.guiW() - 10) {
+            g.drawString(HexFonts.ui(), delCond, condX, condY, 0xFFFFD28C, false);
+        }
 
         // 左侧栏装饰
         g.fill(SIDEBAR_X - 8, top + 2, SIDEBAR_X + SIDEBAR_W + 8, top + 70, 0xAA0B1530);
@@ -255,14 +268,16 @@ public class WorldHexScreen extends HexScaledScreen {
                     nstr = HexFonts.ui().plainSubstrByWidth(nstr, nameW()) + "…";
                 }
                 g.drawString(HexFonts.ui(), nstr, x, y + 3, color, false);
-                // hover 提示：名字 + 稀有度类型 + 描述
+                // hover 提示：名字 + 稀有度类型 + 描述（只记录，延迟到浮层绘制，避免被后续区块/按钮覆盖）
                 if (mx >= x - 2 && mx <= x + itemW() && my >= y - 1 && my <= y + rowH() - 1) {
                     List<Component> tip = new ArrayList<>();
                     tip.add(name.copy().withStyle(c -> c.withColor(color)));
                     tip.add(Component.translatable("hexcraft.worldhex.tierstyle." + d.rarity)
                             .withStyle(c -> c.withColor(0xFF6A7B96)));
                     tip.add(Component.translatable("hexcraft.worldhex." + d.id + ".desc"));
-                    HexFonts.tooltip(g, tip, mx, my);
+                    this.pendingTip = tip;
+                    this.pendingTipX = mx;
+                    this.pendingTipY = my;
                 }
                 row++;
             }
@@ -271,7 +286,29 @@ public class WorldHexScreen extends HexScaledScreen {
                         bx + 8, eTop + 4, 0xFF6A7B96, false);
             }
         }
+        // v0.9.12 滚动指示条：内容超出可视区时，右侧画一条按滚动比例定位的细条，
+        // 让玩家一眼看出「下面还有内容」，避免以为界面就这么多
+        int totalH = totalContentH();
+        int viewH = this.guiH();
+        if (totalH > viewH - 20) {
+            int barX = this.guiW() - 8;
+            int barTop = 30;
+            int barH = viewH - 46;
+            int maxScroll = Math.max(1, totalH - viewH + 20);
+            int thumbH = Math.max(18, barH * viewH / Math.max(viewH, totalH));
+            int thumbY = barTop + (barH - thumbH) * Math.min(maxScroll, this.scrollY) / maxScroll;
+            g.fill(barX, barTop, barX + 3, barTop + barH, 0x332A5DB0);
+            g.fill(barX, thumbY, barX + 3, thumbY + thumbH, 0xFF4AC7FF);
+        }
         this.renderWidgets(g, mx, my, pt);
+    }
+
+    /** v0.9.12 悬停浮层：控件与区块都画完后统一绘制，提示不再被删除按钮或相邻区块压住 */
+    @Override
+    protected void renderOverlay(GuiGraphics g, int mx, int my) {
+        if (this.pendingTip != null && !this.pendingTip.isEmpty()) {
+            HexFonts.tooltip(g, this.pendingTip, this.pendingTipX, this.pendingTipY, this.guiW(), this.guiH());
+        }
     }
 
     private static int rarityColor(String key) {

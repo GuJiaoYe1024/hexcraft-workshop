@@ -3,5 +3,5 @@
   "weight": 6,
   "source": "irons_spellbooks",
   "mods": [],
-  "event": "spell_execute:0.12,spell_pen:0.18,spell_double:0.10"
+  "event": "spell_execute:0.06,spell_pen:0.18,spell_double:0.10"
 }

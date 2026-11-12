@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "farmersdelight",
   "mods": [],
-  "event": "regen:0.5,food_on_hit:1"
+  "event": "regen:0.4,fire_resist:0.15"
 }

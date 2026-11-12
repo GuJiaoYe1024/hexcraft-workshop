@@ -6,7 +6,7 @@
   "mods": [
     {
       "attr": "attack_speed",
-      "perLevel": 1.2
+      "perLevel": 0.84
     }
   ],
   "event": "melee_power:0.6,spell_power:0.15"

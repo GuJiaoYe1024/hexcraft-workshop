@@ -3,5 +3,5 @@
   "weight": 8,
   "source": "slashblade",
   "mods": [],
-  "event": "bleed_damage:0.2,execute:0.08"
+  "event": "bleed_damage:0.2,execute:0.04"
 }

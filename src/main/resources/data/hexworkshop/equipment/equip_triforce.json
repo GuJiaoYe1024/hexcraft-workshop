@@ -6,15 +6,15 @@
   "mods": [
     {
       "attr": "attack_damage",
-      "perLevel": 18.2
+      "perLevel": 8
     },
     {
       "attr": "attack_speed",
-      "perLevel": 0.52
+      "perLevel": 0.364
     },
     {
       "attr": "movement_speed",
-      "perLevel": 0.03
+      "perLevel": 0.011
     }
   ],
   "event": "echo:0.4"

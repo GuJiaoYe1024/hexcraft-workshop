@@ -48,6 +48,8 @@ public abstract class HexScaledScreen extends Screen {
         g.pose().pushPose();
         g.pose().scale((float) s, (float) s, 1);
         this.renderScaled(g, (int) (mx / s), (int) (my / s), pt);
+        // v0.9.12 悬停浮层：所有自绘内容与控件都画完之后再画，避免被按钮/区块/计数覆盖
+        this.renderOverlay(g, (int) (mx / s), (int) (my / s));
         g.pose().popPose();
     }
 
@@ -55,6 +57,10 @@ public abstract class HexScaledScreen extends Screen {
 
     /** 子类绘制主体：在逻辑坐标系中布局（用 guiW()/guiH()），坐标已被缩放还原为逻辑值 */
     protected abstract void renderScaled(GuiGraphics g, int mx, int my, float pt);
+
+    /** 悬停浮层：在全部自绘内容与按钮之后绘制，保证提示不被任何控件或区块覆盖 */
+    protected void renderOverlay(GuiGraphics g, int mx, int my) {
+    }
 
     /** 在逻辑坐标系中渲染全部按钮（替代子类原 super.render 调用，避免背景二次绘制） */
     protected final void renderWidgets(GuiGraphics g, int mx, int my, float pt) {

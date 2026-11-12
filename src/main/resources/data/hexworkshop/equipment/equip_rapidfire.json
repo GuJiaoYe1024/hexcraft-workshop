@@ -6,11 +6,11 @@
   "mods": [
     {
       "attr": "attack_speed",
-      "perLevel": 0.78
+      "perLevel": 0.546
     },
     {
       "attr": "movement_speed",
-      "perLevel": 0.04
+      "perLevel": 0.014
     }
   ],
   "event": "ranged_power:0.6"

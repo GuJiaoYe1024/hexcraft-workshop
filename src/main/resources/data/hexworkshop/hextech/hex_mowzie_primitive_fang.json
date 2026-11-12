@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "mowziesmobs",
   "mods": [],
-  "event": "crit:0.10"
+  "event": "crit:0.10,rampage:0.02"
 }

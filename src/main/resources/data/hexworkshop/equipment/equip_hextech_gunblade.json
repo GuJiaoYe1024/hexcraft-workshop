@@ -1,13 +1,13 @@
-{
-  "rarity": "PRISMATIC",
-  "weight": 9,
-  "icon": "⚙",
-  "sell": 1000,
-  "event": "lifesteal:0.35,splash:0.5",
-  "mods": [
-    {
-      "attr": "attack_damage",
-      "perLevel": 28.0
-    }
-  ]
+{
+  "rarity": "PRISMATIC",
+  "weight": 9,
+  "icon": "⚙",
+  "sell": 1000,
+  "event": "lifesteal:0.35,splash:0.5",
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 12.5
+    }
+  ]
 }

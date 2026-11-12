@@ -1,3 +1,247 @@
+Hexcraft Workshop v0.9.12 - 54 vanilla-behavior hexes + attribute page display polish + unified DLC intro + stacking system overhaul + Stack Peak combo + full audit
+==============================================================================================================================
+
+COMBO SYSTEM AUDIT: TEXTS NOW MATCH IMPLEMENTATION, RATIO BONUSES CUT 75 PERCENT
+================================================================================
+- stack_growth was consumed as a global damage multiplier while its text said stack acquisition rate. Stack Master used it in all five tiers, so a full 10-piece set was a hidden +100 percent to all damage. It now feeds a dedicated stackGainMult path for the hit, hurt and tick stacking channels only; the damage stage no longer reads it.
+- ascend was nested inside the kill-streak rampage if-block, so Ascension only worked during the 5 second rampage window. It now runs on its own 8 second sustained-combat timer.
+- goety_soul had no consumer at all in seven tiers, three in Pact of the Underworld and four in the summoner set, so those tiers were dead. It now adds undead damage next to Smite.
+- twin_shot only resolved in the gun branch while the combo members are mostly melee. It now sits in the shared hit stage as a chance for double damage.
+- execute values of 0.25 exceeded the 0.2 cap and were silently truncated. The combo value is now 0.2.
+- tick_gain is a marker field used to select tick-stacking hexes and was wrongly supplied as a value in Stackloop tier 3, which did nothing. It is now stack_chance.
+- Five effect keys had no tooltip at all: ascend, ironbody, thorn_armor, chain_lightning, goety_soul. Bilingual hints added, lang keys 2680 to 2685.
+
+RATIO TYPE COMBO BONUSES CUT TO ONE QUARTER, 213 VALUES
+======================================================
+- 29 ratio effect keys lowered to 25 percent of their old value: melee, gun, spell, crit, every mod-specific damage bonus, overshield, last stand, ironbody, ascend, frost bite, fire chain, chain lightning, lifesteal, full-health crit, twin shot, stack growth, stack chance and equip power.
+- Untouched: drop and coin keys coin_bonus, bounty, relic_drop, farmer_drop; flat point keys shield_low, kill_heal, regen, stand_power; and the stack cap key stack_cap.
+- Prismatic full-tier multiplier 2.0 to 1.0 across all 48 combos, so a full set no longer doubles everything at once.
+- Measured on a real save with 14 active combos, every ratio contribution is exactly minus 75 percent: melee 0.60 to 0.15, overshield 0.70 to 0.175, last stand 0.30 to 0.075, equip power 0.23 to 0.0575, stack growth 0.40 to 0.10, execute 0.05 to 0.0125.
+- That save goes from 1690 health and 155 attack to about 1545 and 140, and real output drops further because the hidden stack_growth multiplier is gone.
+
+EQUIPMENT BASE HEALTH AND ATTACK LOWERED ABOUT 55 PERCENT
+==========================================================
+- All 48 equipment entries with health or attack were lowered to roughly 55 percent: prismatic health 110 to 50 and 120 to 54; gold health 80 to 36, 78 to 35, 60 to 27, 54 to 24, 50 to 22, 40 to 18, 25 to 11.
+- Attack: 30 to 13.5, 28 to 12.5, 18.2 to 8, 13.5 to 6, 3 to 1.5, 2.5 to 1, 2 to 1, 1.5 to 0.5.
+- A typical mid-game set of Warmog, Sunfire and Heartsteel drops from 330 health to 150; Gunblade and Shieldbow drop from 56 attack to 25.
+- 37 equipment descriptions updated in both languages; language keys stay at 2685 each.
+
+EQUIP_POWER SOURCES CUT TO TIER TWO, 15 ENTRIES
+===============================================
+- The nine Niyuan resonance entries go from 0.05 to 0.36 down to 0.01 to 0.08.
+- The six equipment resonance entries go from 0.015 to 0.16 down to 0.003 to 0.04.
+- On the test save the five held sources drop from 0.85 to 0.20, so the equipment multiplier falls from 1.85 to 1.2575 once the combo contribution is included.
+- Measured estimate: health 1690 to about 520 to 620, attack 155 to about 56.
+
+EQUIPMENT BASE ARMOR AND MOVE SPEED CUT BY HALF
+===============================================
+- Armor on 14 equipment entries halved: 60 to 30, 39 to 19.5, 35.75 to 18, 6 to 3, 5 to 2.5, 4 to 2.
+- Move speed on 6 entries halved: 0.07 to 0.035, 0.056 to 0.028, 0.049 to 0.025, 0.035 to 0.018, 0.028 to 0.014, 0.021 to 0.011.
+- On the test save the two prismatic armor pieces drop from 71.5 armor to 36, which with the equipment multiplier goes from 90.1 to 45.4.
+- 19 equipment descriptions updated in both languages; language keys stay at 2685 each.
+
+ARMOR STACK HEX COEFFICIENT TRIMMED, MECHANISM KEPT
+====================================================
+- Kill Armor Fort was giving 0.15 percent armor per stack, so the capped 200 stacks were a flat plus 30 percent armor multiplier over the whole armor pool.
+- It now gives 0.05 percent per stack, so 200 stacks are plus 10 percent. Stacking itself is untouched and keeps working.
+- Correction to an earlier claim: `stack_attr:attribute:value` is itself the kill-stacking key and needs no separate `stack` block. The 453 stacks on that save were accumulated normally, not by bypassing a missing definition.
+
+FIXED 15 CORRUPTED JSON FILES FROM THE PREVIOUS PASS
+=====================================================
+- The attack-value pass used plain string replacement and only replaced the leading half of `30.0`, leaving a double decimal such as `13.5.0` in 15 equipment files, so those entries would have failed to load.
+- Rewritten through a JSON parser and serializer instead; 39 files normalised and a full parse of all 749 hex and equipment definitions returns 0 broken files.
+- A follow-up audit found four entries the same pass had skipped and one it had changed wrongly: Abyssal Mask health 60 to 27 and attack 2 to 1, Hazmat Suit health 40 to 18, Dragon Scale health 80 to 36, Moonshard health 40 to 18 and attack 2 to 1, Hexdrinker attack 3 to 1.5, Philosopher's Stone health had been written as 17 instead of 27 and its attack never lowered.
+- Collector description carried a double decimal `+22.2.5 percent`; it now reads `+22.5 percent`, and the execute threshold in its text was also corrected from 20 to the actual 15 percent in config.
+- Full audit result: 818 resource JSON files parse clean, 749 hex and 61 equipment definitions contain no broken file, all 68 equipment description values match their data, and both languages hold 2685 identical keys with no BOM and CRLF endings.
+
+STRUCTURE NOTE: THIS RELEASE ONLY TUNES NUMBERS
+================================================
+- Damage resolution still has 42 separate `dmgMul *=` multiplications, the attribute stacking still feeds four MULTIPLY_BASE injection points, and the same effect key still accepts unlimited sources. All three are structural and are planned as separate work; this release does not change them.
+
+COPY TEXT PASS: ABSOLUTE VALUES NO LONGER WRITTEN AS PERCENTAGES (25 entries):
+
+- Hex and equipment `mods.perLevel` are plain absolute values, but many descriptions used %, so the numbers on the attribute page did not match the text.
+- Fixed on the text side only, no balance change: "+40% attack speed" is now "+0.4 attack speed", an equipment's "+120% attack speed" is now "+1.2 attack speed", "+2% move speed" is now "+0.02 move speed", both languages updated.
+- Six knockback-resistance entries keep the percentage wording on purpose: that attribute is a 0 to 1 ratio, so 0.2 really is 20% resistance.
+- hex_thunderlord also lost an unsupported "damage x1.5" claim and now reads "per level: +25% crit chance, +0.2 attack speed".
+
+STACKING ATTACK / DEFENSE COEFFICIENTS LOWERED ONE MORE STEP:
+- Per-stack coefficients of 17 hexes (18 entries) are halved; caps and tier thresholds untouched.
+- Attack: attack damage / attack power 0.002 to 0.001, attack speed 0.001 to 0.0005.
+- Defense: max health 0.004 to 0.002, armor 0.003 to 0.0015, Heartsteel health 0.0015 to 0.0008, Stack Tank health 0.001 to 0.0005.
+- All Chinese and English descriptions carry the new per-stack numbers.
+
+PRISMATIC FORGE MULTIPLIER 3x -> 4x:
+- Tier gradient is now Silver 1x / Gold 2x / Prismatic 4x, so the top tier actually matches the rarity gap.
+- Config forgeMultiplierPrismatic default changed to 4.0 and stays adjustable.
+- An existing config file keeps the old 3.0 until you edit it or delete the config and let it regenerate.
+
+BOTH MAIN PANELS NOW REFRESH IN PLACE:
+- Rebuilding the main page used to keep only the tab. It now keeps the full view state: tab, scroll position of every page, the hex category filter and the equipment gallery mode, so stacking growth, rolls, forging and equipment changes no longer throw the player back to the top.
+- The world hex page also keeps its scroll position when data changes.
+- Number sign normalization on the bond tier rows and forge stat values: negatives use a minus, existing signs are never doubled, so "++85%" and "+-85%" can no longer appear.
+
+WORLD HEX PAGE OPTIMIZATION:
+- A scroll indicator bar on the right appears when the list overflows and tracks the scroll position, so it is obvious that more content is below.
+- The empty-category hint is preserved.
+
+EXECUTE NUMBERS ALL LOWERED, HALVED ACROSS THE BOARD:
+- All 25 execute entries are halved: 22 hexes and 3 equipment items.
+- Five execute keys were lowered together: execute damage, percent health, spell execute, mark execute and reaper bonus; Chinese and English descriptions updated.
+- Examples: execute damage 8% to 4%, execute threshold 15% to 7.5%, spell execute 12% to 6%, shadow execute 30% to 15%, reaper 18% to 9%.
+- Equipment: collector 0.45 to 0.225 with 0.05 to 0.025 percent health, eclipse 0.55 to 0.275, irons shadowflame 0.10 to 0.05.
+
+ATTACK SPEED AND MOVE SPEED ALL LOWERED, 30 PERCENT OFF:
+- 38 attribute entries and 19 event entries are all lowered by 30 percent, descriptions updated in both languages.
+- Seven stacking attack-speed entries go from 0.0005 to 0.00035, shown as plus 0.035 percent per stack.
+- Examples: hex attack speed 0.4 to 0.28, 0.25 to 0.175, 0.15 to 0.105; move speed 0.03 to 0.021, 0.02 to 0.014; mobility buffs 0.35 to 0.245 and 0.25 to 0.175.
+- Equipment: attack speed 1.2 to 0.84, 0.78 to 0.546, 0.52 to 0.364; move speed 0.07 to 0.049, 0.05 to 0.035.
+- Also fixed a broken text "damage plus 22.2.5 percent" on collector equipment, now "damage plus 22.5 percent".
+
+EXECUTE CAP IS NOW 20 PERCENT BY DEFAULT, 40 PERCENT WITH A NEW SPECIAL PRISMATIC HEX:
+- Two new config options: executeCap default 0.2, range 0.05 to 0.4; executeCapBreak default 0, range 0 to 1.0. A zero means use the built-in 40 percent, anything between 0.1 and 1.0 is honoured as the player set it. Both are exposed in the config screen under execute.
+- Melee execute settlement and Iron's spell execute now share the same cap instead of each hard-coding 20 percent.
+- Breaching the cap is a new special prismatic hex, Execute Breach, with weight 2 and execute damage 5 percent per level. Holding it raises the execute damage cap to 40 percent, otherwise the cap stays at 20 percent.
+- Execute Breach joined the execution combo as its eleventh member; the tiers stay at 2, 4, 6, 8 and 10 pieces, no one is required to own every member.
+- Valid hexes 748 to 749, prismatic 200, gold 346, silver 203, language keys 2680 each.
+
+POWER HEXES LOWERED, STACKS NOW BENEFIT FROM THEIR OWN POWER BOOST:
+- Hextech power, forge power and equipment linkage are now 1.5 percent per level, down from 35 percent, with the same 3x ceiling.
+- Other equipment boosts: resonance core 25 to 16, equipment mastery 15 to 10, artifact resonance 18 to 12, relic boost and treasure aegis 20 to 13, niyuan resonance tiers 1 to 9 from 8/10/12/15/20/25/30/40/55 to 5/7/8/10/13/16/20/26/36 percent.
+- Stacks now scale with the power boost of their own source: hextech stacks use hextech power, equipment stacks use equipment power. Forge stats have no stacked attribute channel, so nothing to scale there.
+- Both Chinese and English descriptions updated.
+- Intro text synced to current numbers: the execute cap config line no longer claims the cap only breaks at full Execution flow, it now says it breaks while holding Execute Breach; the README feature table now lists the three power hexes at 1.5 percent per level, forge tiers at 1x/2x/4x, the 200 base permanent stack cap with 400/600/800/1000/unlimited tiers, and a new 48 combo entry including the 11-member Execution flow.
+
+TOOLTIP OVERLAP AND STACK CAP SYNC:
+- The world hex tooltip used to be drawn inline while walking the entry list, so it was covered by the delete button, neighbouring block frames, category counters and block bottoms. It is now collected and drawn last, after every self-drawn element and every widget.
+- Tooltip bounds are now measured in the scaled logical space instead of raw pixels, so a scaled UI no longer pushes the box off screen.
+- Stack cap now refreshes by itself: world hex changes alter the cap, and the player state is re-sent to everyone online at the same time, so the effective stack count on the attribute page updates immediately instead of staying on the old value.
+- Removed a combo description line I had added on my own; it was not part of the approved scope.
+
+TWO ATTRIBUTE PAGE DISPLAY BUGS FIXED:- Hidden attribute tooltips printed a doubled sign, for example melee attack damage plus plus 318 percent. The hint text already carries its own plus or minus, so the value is now passed in without a sign and all 54 hints show a single sign again.
+- A row scrolled out of the visible area could still be hovered: resting the mouse on the bottom Back button popped up a combo description that was not on screen. Hover now requires both the row and the cursor to be inside the clipped content area.
+
+Apology: the author's ability is limited, this mod is mostly built with AI assistance and may not live up to expectations. It is open source (MIT) and will keep being updated.
+
+54 NEW VANILLA-BEHAVIOR HEXES (covering 21 vanilla gameplay areas, all reusing the existing event framework, zero new hooks):
+- BOWS 16: quick draw / no slowdown while drawing / arrow velocity / multishot / pierce / fire / frost / poison / lightning / explosive / no consumption / recovery / lifesteal / long-range damage / full-charge crit / strong draw.
+- SHIELDS 4: block damage reduction / counter / daze / bash.
+- MOVEMENT 2: dash / dash strike.
+- WEAPONS 5: trident 3 (loyalty / power / riptide), crossbow 1 (quick reload), axe 1 (shield break).
+- LIFE AND BLOCK BEHAVIOR 27: fishing 2 (fast catch / treasure fish), mount 3 (attack / health / speed), pearl 1 (safe landing), totem 1 (keep), food 1 (quick eat), elytra 1, swim 1, boat 1, minecart 1, fall 1 (landing slam), brush 1, sleep 1, furnace 1, anvil 1 (keep item), enchant 1, brew 1, grindstone 1, beacon 1, bee 1, bucket 1 (blast safe), shulker 1, redstone 1, goat horn 1, armor trim 1, breeding 1.
+- Valid hex JSON 695 -> 748 (54 added, 1 duplicate irons entry hex_irons_arcane_strike retired).
+- New unified definition resolver HextechRegistry.resolveDef: a pure client process does not load datapacks and only has the synced cache, so combo members are no longer misjudged as missing.
+
+ATTRIBUTE PAGE DISPLAY POLISH (each point taken from your screenshots):
+- Long-name protection: name column 62px, value column 44px, ellipsis when overflowing, no more overlap with the value or the neighbouring column.
+- Top overview row: health / attack / armor / speed / crit in one line.
+- Collapsible sections: the four boxes collapse independently, the header indicator flips from v to >.
+- Quick anchors: four anchors on the right of the title row jump to the matching box; collapsed boxes are dimmed.
+- All UI text had its parentheses removed (both Chinese full-width and English round brackets). Display text only, no logic touched.
+
+TWO REFLECTION FIXES ONLY VISIBLE IN THE PRODUCTION ENVIRONMENT:
+- The Brew and Fishing event classes looked up fields by official names, but the production runtime is SRG and the reflection silently failed. Switched to srg names and they now really work.
+
+DLC INTRO AND DISPLAY - 8 ITEMS (from your DLC config screenshot and world-hex screenshot):
+- dlc.note placeholder was never given its argument, so a bare %s was shown. It now renders the pack's actual state.
+- Built-in example pack descriptions were shortened: the three long paragraphs for Vanilla Revival and Origin Hunt became one actionable line (enabled by default, safe to delete, copy the pack and replace the hexes under data/hex to make your own).
+- Source tag localization: new normalizeSource / sourceDisplayName. Forge page short codes (IAF / AC / TF / AM / IRONS / MOWZIE / FARMER) are normalized to modid; known sources use the hexcraft.source.* friendly names; third-party custom sources fall back to the raw identifier so a missing key name can never appear.
+- One unified explanation for built-in and external DLC at the top of the DLC page (built-in ships with the mod and its toggles live on the draw page; external packs go into hexworkshop_dlc/packs and are managed here). The per-pack note that repeated the same text is removed.
+- BowEvents and ShieldEvents now use effectBatch() for a single pass instead of several full single-key effect() scans.
+- Client list filtering results are cached and invalidated immediately on DLC or config changes.
+- Removed the redundant velocity calculation method in BowEvents.
+- Changing DLC config now rebuilds the combo member cache right away (ComboRegistry.invalidateResolved).
+
+WORLD HEX DELETE BUTTON (from screenshot one):
+- The button label used to be "Cancel, 800", putting the price inside the button. It now reads "Delete", and the price condition moved to the free space to the right of the button as "Delete costs %s coins", omitted on narrow screens.
+- Behavior unchanged; only the label and position.
+
+STACKING SYSTEM OVERHAUL (you said: class C really does stack, every stacking hex needs checking, and the math between stacking hexes needs optimizing):
+Before the fix a single session showed "Stackable Duo x94" and "Scabbard Flow x60", with the tooltip reading "each stack boosts all damage by +1661%". Nine defects were located:
+1. stack_growth self-feedback amplification (root cause): effect() was sum += v * e.level * (1 + e.stacks). Stack gain rate should only decide how fast stacks are gained, but it was multiplied by the current stack count. More stacks meant a faster rate, a faster rate meant more stacks - a positive feedback loop. A single 5% became 475% at 94 stacks and several of them multiplied out to 1661%. It is now a fixed v * e.level. The same formula was buried in effectBatch(); both query paths are now consistent.
+2. Copy did not match the mechanic: hexcraft.effect.hint.stack_growth used to say "kills grant stacks; each stack boosts all damage by %s", unrelated to damage. Renamed to Stack Gain Rate, tooltip is now "Stack gain rate %s; owned growth hexes stack faster", both languages.
+3. Pure amplifier hexes were accumulating dead stacks: the whole Stackable line, Rampage Rex and Origin Stackable added stacks to themselves whenever the event contained stack_growth, yet those stacks had no per-stack benefit. They are now amplifiers only and no longer stack themselves (11 hexes).
+4. Hurt stacks were not shown: the growth-stack box only collected stack_growth / stack_attr: / stack_attr_onhit:, missing stack_attr_onhurt:, so the hurt stacks of Undying Husk, Pain Swiftness and Life-Death Weave were completely invisible. The predicate is now a valid three-part key and hurt stacks are displayed and counted.
+5. Two unrelated caps: permanent stacking used PERMANENT_STACK_CAP while the Stack Master 400/600/800/1000/infinity only applied to combat stacks. They are now unified onto the Stack Master tiers.
+6. O(n^2) on hit: the loop called effect("stack_gain") and stackCapMultiplier twice per stacking hex, each doing a full scan over hexes and combos. With N stacking hexes that is N full scans. Now computed once outside the loop, and event tokenizing uses the cached eventTokens.
+7. Field overload: e.stacks served both as the permanent layer count and as the amplification base; resolved with item 1.
+8. Six two-part invalid keys (the worst): a value like stack_attr_onhit:0.01 needs three parts (stack_attr_onhit:<attribute>:<value>). The attribute layer requires parts.length == 3 and the hit chance only accepts a chance: key, so neither consumer accepted it - completely inert, while the stack count still rose at the default 25% chance and looked like it worked. Affects hex_aram_titan_stack and hex_niyuan_diediele_2/3/4/5/6. As you decided, a NEW GLOBAL EFFECT KEY stack_chance (stack chance bonus) was added: it is added as an absolute value on top of that hex's own chance, so a +1% amplifier turns a 25% base into 26%, and several amplifiers add up. All six now use this key, so their second effect really works. The bonus is computed once per hit or hurt event, not rescanned per stacking hex.
+9. Config 0 meant no clamping: HexConfig.PERMANENT_STACK_CAP documents "default 0 = decided by the mechanic: 200 in play, unlimited once you complete the 8/10 piece combo", but the code was pCap > 0 ? Math.min(...) : e.stacks, so 0 skipped clamping entirely and permanent stacking was actually unlimited, split from the combat cap. Now 0 follows the Stack Master tiers and a value > 0 is locked by the host.
+
+AFTER THE FIX (measured by the dedicated script selfcheck_stack_fix.py):
+- Still stack themselves: 17 hexes - Endurance Stack, Blade Draw Song, Scabbard Flow, Life-Death Weave, Sun-Chasing Spear, Heart of Steel, Undying Husk, Pain Swiftness, Immortal Echo, Bloodbathed Armor, Eternal Rush, Offense-Defense, Feral Instinct, Frenzy Claw, Ever-Conquest, Blood Pact Legacy, Tank Engine.
+- Converted to pure amplifiers: 11 hexes - Rampage Rex, Titan Stack, Stackable First/Second/Third/Quartet/Pentad/Final Combo, Origin Stackable Layer/Double/Infinite.
+- Two-part invalid keys: 0 left, and stack_chance is wired into all 6 of them.
+
+STACK PEAK COMBO (the three-piece hardcode moved into the combo system, option A):
+- Tank Engine / Swift Horn and hex_tick_damage_wax used to be checked with a hardcoded hasCombo(...) x1.3 inside stackCapMultiplier, invisible in the codex and impossible to tune.
+- A real combo hexcraft.combo.c17 "Stack Peak" was added: 3 pieces, one tier, effect key stack_cap +30%. It does NOT double at full members (prismaticMult = 1.0, keeping the original x1.3 strength instead of x2).
+- stackCapMultiplier dropped that hardcoded check and now sums through effect("stack_cap") like every other stack_cap source.
+- The combo tab and attribute page now split the prismatic check: only a combo with prismaticMult > 1 shows "Prismatic" and the doubling hint on completion; single-tier combos show a plain 3/3 and no longer claim a bonus that does not exist.
+
+FULL AUDIT (config / hexes / equipment / world hexes / event keys / language / values):
+New audit_all_0912.py (config consumers, data field validity, event-key consumers, stacking attribute key validity, value ranges, language keys, duplicate effects) plus audit_hardcoded_ids.py (cross-check of hardcoded ids against the data). One real defect was found and fixed:
+- 13 silently inert stacking attribute keys (the worst in this round): the second part of stack_attr*:<attribute>:<value> was only resolved against the nine short names in PlayerData.STACK_ATTRS (hp / atk / armor / spd / aspd / luck / knockback / resist / tough), while the data used the long names attack_speed / attack_damage / max_health in 13 places. The map lookup failed, so the stack count kept rising while every stack granted exactly 0. The "Scabbard Flow x60", "Blood Pact Legacy x12" and "Bloodbathed Armor x12" in your screenshot were exactly this dead weight. Affects 11 hexes: Endurance Stack, Blade Draw Song, Scabbard Flow, Offense-Defense, Bloodbathed Armor, Pain Swiftness, Eternal Rush, Feral Instinct, Frenzy Claw, Ever-Conquest, Blood Pact Legacy.
+  - Fix: STACK_ATTRS now accepts short and long names as the same attribute; hasStackAttr3 additionally validates that the attribute name is a registered attribute, so a mistyped key is no longer counted as a real stacking key; the attribute page category check accepts long names too, with max_health under Survival and attack_damage under Combat.
+- Audit passes: all 139 HexConfig options have a consumer and both translations; all 748 hex definitions have valid rarity, weight, attribute names and language keys; all 61 equipment entries are complete; 310 of 315 event keys have a literal consumer, the other 5 being declarative stacking keys resolved through the stack block; all 48 combo name keys exist; 2668 keys in each language with identical sets; all 410 hardcoded id references in code resolve to existing content.
+- Recorded but not changed unless you decide: hex_niyuan_bilei_3 has an empty event string (harmless redundancy, its mods still work).
+
+FIVE DUPLICATE PAIRS SPLIT APART (on your decision):
+- Warm Broth used to be byte-identical to Hearty Meal (both Farmers' Delight, regen 0.5 plus food drop on hit). It now takes the "hot soup" role of sustained recovery plus fire mitigation: regen 0.4 and fire_resist 0.15, so food drop on hit belongs to Hearty Meal alone. Both hexes stay in the pool.
+- The four cross-source same-role pairs keep their original values and each get one tiny source-flavoured second effect, so "same role" no longer means "identical": aram arcane pact and artifact keen discern and artifact steady drip and relic thorned bastion gain loot_bonus 0.02; mowzie primitive fang and niyuan mana circuit gain rampage 0.02; cataclysm fallen mettle and cataclysm netherite bulk gain xp_bonus 0.02. All of them reuse existing effect keys, no new hooks, and the zh/en descriptions are rewritten to match.
+
+CODE AND MATH OPTIMISATION (behaviour identical, no number changed):
+- effect() and effectBatch() now build the owned-hex set once instead of once per combo. The old code called tierOf(rc, hexes) for each of the 48 combos, and that overload rebuilt a HashSet every time, while effect() runs dozens of times inside a single combat event.
+- stackCapMultiplier() computes the stack-master tier once. The old code computed it twice, both times rebuilding a set and walking the members.
+- PlayerData.applyModifiers() now computes the permanent stack cap outside both loops instead of once per hex and per piece of equipment.
+- The on-hit and on-hurt stack sections now flag a dirty attribute set and rebuild attributes once after both loops, instead of fully rebuilding for every stack gained.
+- The attribute page's hidden-effect rows now cache for 250 ms and invalidate on any change in owned count, instead of rescanning roughly 60 effect keys against 48 combos every frame.
+- Removed the unused hasComboList().
+
+PERMANENT STACK CAP NOW SHARES THE COMBAT CAP MULTIPLIERS (on your decision):
+- Permanent stack attribute gains used to be clamped by the stack-master tier value alone (200 / 400 / 600 / 800 / 1000), while combat stack caps went through cap x capMul, which includes the stack-count synergy of 1.2 or 1.4, the stack_cap effect key and the world-hex bonus. With two stacking hexes, combat stacks could reach 240 while permanent gains above 200 did nothing.
+- A new permanentStackCapFor(data, level) multiplies the tier value by the synergy, stack_cap and world bonus, without re-applying the stack-master multiplier that the tier value already contains. PlayerData.applyModifiers and the sync packet that feeds the attribute page both use it, so the server result and the displayed cap finally agree.
+
+TWO MORE CONSISTENCY FIXES (on your decision):
+- Equipment stack_attr_onhurt used to add a flat 1 stack while hex on-hurt stacking took the stack-gain multiplier, contradicting the comment that on-hurt stacking is unified. Equipment now rolls gainWithMult(hurtMult) too, so the drake bonus and its +75% per level apply to equipment stacks as well.
+- stat_converter performed its armour-to-damage conversion in the middle of applyModifiers, reading the armour value while armour modifiers were still being removed and rebuilt, so the result depended on iteration order. It is now resolved after both the hex and equipment loops finish, using the fully rebuilt armour value; it still skips its own mods entry as before.
+
+TWO HARDCODED HEXES MADE DATA DRIVEN (on your decision):
+- hex_equip_count (Six Slots) and hex_slot_boost (Slot Expansion) used to work purely through e.id.equals(...) checks in PlayerData while their data entries were empty shells. They now declare effect keys the engine reads: equip_count_atk / equip_count_armor / equip_count_hp (value x level x equipped items x EQUIP_COUNT_MULT) and slot_boost (value x level, and a hex declaring it does not occupy a slot). occupiedSlots, hexSlotLimit and the draw gate all read the event keys, and no id check remains in code. Numbers are identical to the old implementation (0.5 / 0.5 / 2, +1 slot per level).
+
+THREE COMBO TIER TABLES REDESIGNED:
+- c3 Arcane Overlord and c15 Mana Spring have 11 members but declared tiers 3,6,8,10,12, so the last tier could never be completed; aram.archmage has 7 members but declared 2,4,6,8. All three now follow the rule "last tier = full roster": c3 / c15 -> 3,6,8,10,11 and aram.archmage -> 2,4,6,7, with the tier spacing and effect values unchanged, so completion is actually reachable. A new audit_combo_tiers.py validates all 48 combos (last tier within the roster, tiers strictly increasing, first tier >= 1) and every combo passes.
+
+STACK DISPLAY REWORK:
+- The growth-stack box now uses hasAnyStackAttr3 and lists only hexes and equipment with a real per-stack benefit; hurt stacks are included.
+- A dual-stacking hex shows the compact "x hit / x hurt" form and the hover tooltip gives the full breakdown "hit layers N, hurt layers M".
+- Owned but not yet grown shows "x0" instead of stacks that give nothing.
+
+LANGUAGE FILES:
+- zh_cn and en_us both hold 2676 keys, identical key sets, no zh-only or en-only keys, no duplicates, and no parentheses.
+- 20 copy issues fixed in this version: 4 parentheses in DLC UI text, 2 historical zh-only keys missing English, the stack_growth / stack_chance / stack_cap pairs, the combo c17 name and 8 keys for the new data-driven effect keys.
+
+SELF-CHECK AND ARTIFACT:
+- compileJava / build BUILD SUCCESSFUL (only historical deprecation warnings).
+- 63 parameterless self-check scripts all green, including the new audit_all_0912.py, audit_hardcoded_ids.py and audit_combo_tiers.py, with selfcheck_stack_fix.py extended to verify combo c17.
+- jar 2,500,217 B, SHA256 8803ABFE8A001A5F2E651A35CA45358419A7B3BFEB880A207C843C84AFC3BBB9, already copied into the production client with a matching hash.
+
+TAB INDEX FIX (reported): the roll, forge and equipment screens returned to the workshop with hardcoded tab numbers that were left behind when the Bonds tab was inserted at index 2 in v0.9.7, so a forge result landed on the Bonds page and an equipment result landed on the Forge page. All three now use named constants TAB_FORGE / TAB_HEXES / TAB_EQUIP, so a future tab reorder cannot break them again.
+
+STACK COEFFICIENTS LOWERED ACROSS THE BOARD (balance):
+- Design intent: this mod is meant to lighten the load in very hard modpacks. Equipment is supposed to hand out direct high stats early on and improve the early game experience, while stacking is supposed to keep you growing the whole time, and once a combo is complete you break the ceiling and keep growing for that payoff. So stacking has to show up only after you actually put the time in, and must not make you invincible in a few minutes.
+- Only the per-stack coefficients went down. No cap was touched, so permanent stacking still grows without a limit and the break-the-ceiling payoff is intact.
+- Anchor: at level 3, 100 stacks lands around +30% to +120%, and 500 stacks around +150% to +600%.
+- Max Health stackers: Blood Pact Legacy 0.5 to 0.004, Bloodforged Bulwark 0.05 to 0.004, the on-hurt half of Attacker Defender 0.03 to 0.004.
+- Armour: Harvest Plate 0.05 to 0.003.
+- Attack Damage: Eternal Conquest 0.03 to 0.002, the on-hit half of Attacker Defender 0.02 to 0.002, Mixed Damage Armour 0.02 to 0.002; Growth Spear 0.005 to 0.002 and Undying Echo 0.004 to 0.002 on attack.
+- Attack Speed: all seven stackers 0.02 to 0.001.
+- Heartsteel at 0.0015 and Stack Tank at 0.001 were already low and are unchanged.
+- Combat stackers per stack: Damage Spur, Tick Damage Wax and Timed Multi Aspect all 0.02 to 0.01; Crescendo Blade and Shield Surge stay at 0.01. These carry hard caps of 20 to 200 stacks, so the punch still comes from filling them up.
+- Equipment stackers stay as they are, since 0.002 to 0.0025 is already low and equipment is the early-game direct-stat layer.
+- All 18 hex descriptions were rewritten in both languages to match the new numbers.
+- Measured: the 3500-stack Blood Pact Legacy at level 3 in the reported save drops from 105,609 max health to about 860; 100 stacks gives about 140 and 500 stacks about 620.
+
 Hexcraft Workshop v0.9.11 - Weighted random gifts + font icon fallback + text shadows removed + fake-link fix
 =============================================================================
 

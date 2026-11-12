@@ -4,7 +4,7 @@
   "mods": [
     {
       "attr": "attack_speed",
-      "perLevel": 0.25
+      "perLevel": 0.175
     },
     {
       "attr": "attack_damage",

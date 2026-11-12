@@ -1,5 +1,5 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "mods": []
+  "event": "slot_boost:1"
 }

@@ -1,7 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "combat_damage_spur:0.02",
+  "event": "combat_damage_spur:0.01",
   "mods": [
     {
       "attr": "attack_damage",

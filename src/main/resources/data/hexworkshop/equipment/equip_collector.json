@@ -1,13 +1,13 @@
-{
-  "rarity": "GOLD",
-  "weight": 10,
-  "icon": "₿",
-  "sell": 625,
-  "mods": [
-    {
-      "attr": "attack_damage",
-      "perLevel": 30.0
-    }
-  ],
-  "event": "execute:0.45,coin_bonus:0.25,execute_pct:0.05"
-}
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "₿",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 13.5
+    }
+  ],
+  "event": "execute:0.225,coin_bonus:0.25,execute_pct:0.025"
+}

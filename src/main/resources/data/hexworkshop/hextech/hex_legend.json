@@ -16,11 +16,11 @@
     },
     {
       "attr": "movement_speed",
-      "perLevel": 0.008
+      "perLevel": 0.0056
     },
     {
       "attr": "attack_speed",
-      "perLevel": 0.15
+      "perLevel": 0.105
     }
   ]
 }

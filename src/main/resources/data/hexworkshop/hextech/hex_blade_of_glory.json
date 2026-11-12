@@ -13,11 +13,11 @@
     },
     {
       "attr": "attack_speed",
-      "perLevel": 0.25
+      "perLevel": 0.175
     },
     {
       "attr": "movement_speed",
-      "perLevel": 0.008
+      "perLevel": 0.0056
     }
   ],
   "event": "melee_power:0.20,lifesteal:0.08"

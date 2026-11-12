@@ -8,7 +8,11 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class ClientSetup {
     public static void init() {
+        // v0.9.12 联机客户端定义查找兜底：羁绊成员解析（resolveDef）可回退到 S2CSyncRegistry 同步缓存
+        com.hexcraft.hextech.HextechRegistry.setExtraDefLookup(id -> ClientDataStore.hexRegistryCache.get(id));
         MinecraftForge.EVENT_BUS.register(ClientEvents.class);
+        // v0.9.12 客户端弓箭事件（拉弓不减速）
+        MinecraftForge.EVENT_BUS.register(ClientBowEvents.class);
         // v0.6.16 滚动提示 HUD（随机馈赠等提示队列渲染）
         MinecraftForge.EVENT_BUS.register(com.hexcraft.client.gui.HexTipOverlay.class);
         MinecraftForge.EVENT_BUS.register(com.hexcraft.client.gui.HexHealthOverlay.class);

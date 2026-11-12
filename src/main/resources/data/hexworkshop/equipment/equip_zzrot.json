@@ -6,7 +6,7 @@
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.1
+      "perLevel": 0.035
     }
   ],
   "event": "regen:4.8,splash:0.5"

@@ -1,7 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 6,
-  "event": "stack_attr:atk:0.004,echo:0.1",
+  "event": "stack_attr:atk:0.001,echo:0.1",
   "stackTag": [
     "permanent_stack",
     "damage_stack",

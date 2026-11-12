@@ -6,11 +6,11 @@
     "source": "alexsmobs",
     "mods": [
         {
-            "perLevel": 2,
+            "perLevel": 1,
             "attr": "attack_damage"
         },
         {
-            "perLevel": 25,
+            "perLevel": 11,
             "attr": "max_health"
         }
     ],

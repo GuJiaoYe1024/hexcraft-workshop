@@ -9,7 +9,7 @@
     },
     {
       "attr": "movement_speed",
-      "perLevel": 0.004
+      "perLevel": 0.0028
     }
   ],
   "event": "tacz_power:0.30,tacz_crit:0.15,tacz_heal:2.0"

@@ -4,9 +4,9 @@
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.02
+      "perLevel": 0.014
     }
   ],
-  "event": "mobi_power:0.35",
+  "event": "mobi_power:0.245",
   "source": "dlc_vanilla"
 }

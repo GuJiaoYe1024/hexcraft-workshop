@@ -2,6 +2,6 @@
   "rarity": "SILVER",
   "weight": 10,
   "mods": [],
-  "event": "execute:0.15,xp_bonus:0.2,execute_pct:0.03",
+  "event": "execute:0.075,xp_bonus:0.2,execute_pct:0.015",
   "source": "dlc_vanilla"
 }

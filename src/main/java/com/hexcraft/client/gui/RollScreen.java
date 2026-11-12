@@ -158,7 +158,7 @@ public class RollScreen extends HexScaledScreen {
         PacketHandler.CHANNEL.sendToServer(new Packets.C2SCancelRoll());
         if (HexConfig.KEEP_WORKSHOP_OPEN.get()) {
             HextechPageScreen fresh = new HextechPageScreen();
-            fresh.setInitialTab(msg.forge ? 2 : 1);
+            fresh.setInitialTab(msg.forge ? HextechPageScreen.TAB_FORGE : HextechPageScreen.TAB_HEXES);
             net.minecraft.client.Minecraft.getInstance().setScreen(fresh);
         } else {
             net.minecraft.client.Minecraft.getInstance().setScreen(null);
@@ -178,7 +178,7 @@ public class RollScreen extends HexScaledScreen {
     private void done() {
         if (!HexConfig.KEEP_WORKSHOP_OPEN.get()) { net.minecraft.client.Minecraft.getInstance().setScreen(null); return; }
         HextechPageScreen fresh = new HextechPageScreen();
-        fresh.setInitialTab(msg.forge ? 2 : 1);
+        fresh.setInitialTab(msg.forge ? HextechPageScreen.TAB_FORGE : HextechPageScreen.TAB_HEXES);
         net.minecraft.client.Minecraft.getInstance().setScreen(fresh);
     }
 

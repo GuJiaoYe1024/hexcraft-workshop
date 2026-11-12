@@ -1,13 +1,13 @@
-{
-  "rarity": "GOLD",
-  "weight": 10,
-  "icon": "◈",
-  "sell": 625,
-  "mods": [
-    {
-      "attr": "attack_damage",
-      "perLevel": 30.0
-    }
-  ],
-  "event": "last_stand:0.3,lifesteal:0.34"
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "◈",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 13.5
+    }
+  ],
+  "event": "last_stand:0.3,lifesteal:0.34"
 }

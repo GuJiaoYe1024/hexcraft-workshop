@@ -177,16 +177,16 @@ public final class DlcManager {
     /** 示例包 dlc_meta.json（真实可被扫描加载，v0.9.3 起默认启用，玩家在 DLC 页可关闭） */
     private static final String EXAMPLE_META_VANILLA = """
             {
-              "name": "内置DLC·原版回归（示例模板，可删除）",
-              "description": "内置 DLC 示例包（原版向）：默认启用，海克斯「示例·原版回归」会进入抽取池。想自制内容包：复制本 zip、改名，按 data/hex 下的海克斯 JSON 结构编写自己的内容；海克斯 source 字段可任意填写，自制内容会归入「DLC」抽取按钮，启停随本包开关。不再需要时直接删除本 zip。",
+              "name": "内置DLC·原版回归 示例",
+              "description": "内置示例包，默认启用，可直接删除；复制本包并替换 data/hex 内海克斯即可自制内容包",
               "version": "1.0.0"
             }
             """;
 
     private static final String EXAMPLE_META_NIYUAN = """
             {
-              "name": "内置DLC·逆原（示例模板，可删除）",
-              "description": "内置 DLC 示例包（逆原向）：默认启用，海克斯「示例·逆原」会进入抽取池。结构同原版包，海克斯来源 source 任意填写即归入 DLC 抽取分类，启停随本包开关；不再需要时直接删除本 zip。",
+              "name": "内置DLC·逆原 示例",
+              "description": "内置示例包，默认启用，可直接删除；自制方式与原版示例包相同",
               "version": "1.0.0"
             }
             """;

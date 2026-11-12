@@ -23,6 +23,8 @@ import org.slf4j.Logger;
 public class Hexcraft {
     public static final String MODID = "hexworkshop";
     public static final Logger LOGGER = LogUtils.getLogger();
+    /** 当前服务端实例，仅服务端启动后可用，供不携带 level 的全局事件定位玩家 */
+    public static net.minecraft.server.MinecraftServer SERVER = null;
 
     // 注意：1.20.1 的 FMLModContainer 仅支持无参构造器实例化 @Mod 类（构造器参数注入是后续版本特性），
     // 因此必须通过 FMLJavaModLoadingContext 取 mod event bus（该方法在 1.20.1 标 deprecated，但无官方替代）。
@@ -42,8 +44,40 @@ public class Hexcraft {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, HexConfig.CLIENT_SPEC, "hexworkshop-client.toml");
 
         MinecraftForge.EVENT_BUS.register(ModCapabilities.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.ServerLifecycleEvents.class);
         MinecraftForge.EVENT_BUS.register(HextechEvents.class);
         MinecraftForge.EVENT_BUS.register(com.hexcraft.event.WorldHexEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.BowEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.ShieldEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.DashEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.FishingEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.MountEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.TridentEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.CrossbowEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.AxeBreakEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.PearlEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.TotemEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.QuickEatEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.ElytraEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.SwimEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.BoatEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.MinecartEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.LandingSlamEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.BrushEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.SleepEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.FurnaceEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.AnvilEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.EnchantEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.BrewEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.GrindstoneEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.BeaconEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.BeeEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.BucketEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.ShulkerEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.RedstoneEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.HornEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.TrimEvents.class);
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.BreedEvents.class);
         MinecraftForge.EVENT_BUS.register(HexCommand.class);
         // v0.6.20 Iron's Spells 'n Spellbooks 法术联动：仅安装时挂载（未安装零副作用，联动内容自动隐藏）
         if (net.minecraftforge.fml.ModList.get().isLoaded("irons_spellbooks")) {

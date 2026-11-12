@@ -1,11 +1,11 @@
 {
   "rarity": "GOLD",
   "weight": 7,
-  "event": "mobi_power:0.2",
+  "event": "mobi_power:0.14",
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.02
+      "perLevel": 0.014
     }
   ],
   "source": "dlc_niyuan"

@@ -1,13 +1,13 @@
-{
-  "rarity": "GOLD",
-  "weight": 10,
-  "icon": "◐",
-  "sell": 625,
-  "mods": [
-    {
-      "attr": "attack_damage",
-      "perLevel": 30.0
-    }
-  ],
-  "event": "shield_low:4.8,execute:0.55"
-}
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "◐",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 13.5
+    }
+  ],
+  "event": "shield_low:4.8,execute:0.275"
+}

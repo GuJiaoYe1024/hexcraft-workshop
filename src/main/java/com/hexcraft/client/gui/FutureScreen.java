@@ -127,7 +127,7 @@ public class FutureScreen extends HexScaledScreen {
                 if (h > 0 && e > 0) detail = "：海克斯 " + h + " / 装备 " + e;
                 else if (h > 0) detail = "：海克斯 " + h;
                 else if (e > 0) detail = "：装备 " + e;
-                missing.add(disp + detail + "（未安装，内容自动隐藏）");
+                missing.add(disp + detail + "，未安装，内容自动隐藏");
             }
         }
 

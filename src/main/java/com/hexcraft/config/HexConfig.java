@@ -134,6 +134,11 @@ public class HexConfig {
     public static final ForgeConfigSpec.DoubleValue EXECUTE_PCT_MAX_WEIGHT;
     /** 百分比削血（execute_pct）·当前生命部分权重（默认 1.0） */
     public static final ForgeConfigSpec.DoubleValue EXECUTE_PCT_CUR_WEIGHT;
+    // ---- v0.9.12 处决上限：默认 20%，斩杀流满档突破到 40% ----
+    /** 处决增伤默认上限：execute / spell_execute 键合计的封顶（默认 0.2=20%，范围 0.05~0.4） */
+    public static final ForgeConfigSpec.DoubleValue EXECUTE_CAP;
+    /** 处决增伤突破上限：持有特殊棱彩海克斯「破限处决」hex_execute_breach 后生效（0=按内置 40%，填 0.1~1.0 则按填的，范围 0~1.0） */
+    public static final ForgeConfigSpec.DoubleValue EXECUTE_CAP_BREAK;
     /** 迅捷咏唱每级施法速度（注入 Iron's CAST_TIME_REDUCTION 属性，默认 0.08=8%/级） */
     public static final ForgeConfigSpec.DoubleValue IRONS_CAST_HASTE;
     /** 魔力储备每级魔力上限（注入 Iron's MAX_MANA 属性，默认 4/级） */
@@ -337,7 +342,8 @@ public class HexConfig {
         // 收紧到 5 倍（已改超限配置会被 Forge 自动钳制到新上限），默认值 1/2/3 不变
         FORGE_MULT_SILVER = b.comment("白银锻造倍率（服务端生效，默认 1.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultSilver").defineInRange("forgeMultiplierSilver", 1.0, 0.1, 5.0);
         FORGE_MULT_GOLD = b.comment("黄金锻造倍率（服务端生效，默认 2.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultGold").defineInRange("forgeMultiplierGold", 2.0, 0.1, 5.0);
-        FORGE_MULT_PRISMATIC = b.comment("棱彩锻造倍率（服务端生效，默认 3.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultPrismatic").defineInRange("forgeMultiplierPrismatic", 3.0, 0.1, 5.0);
+        // v0.9.12 棱彩倍率 3.0→4.0：棱彩档是最高档位，强度要对得起稀有度差距（白银 1 / 黄金 2 / 棱彩 4）
+        FORGE_MULT_PRISMATIC = b.comment("棱彩锻造倍率（服务端生效，默认 4.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultPrismatic").defineInRange("forgeMultiplierPrismatic", 4.0, 0.1, 5.0);
         // v0.6.2 永久叠层全局倍率/上限（服务端权威，客户端修改不生效防作弊）
         PERMANENT_STACK_MULT = b.comment("永久叠层全局获取倍率（服务端生效，默认 1.0；叠角龙/世界海克斯等永久叠层海克斯击杀获取层数 × 该倍率）").translation("hexcraft.config.v060.permanentStackMult").defineInRange("permanentStackGlobalMultiplier", 1.0, 0.1, 10.0);
         // v0.9.7 修复轮：默认 200→0（0=游戏内机制决定：游玩默认生效上限 200，凑齐 8 件套/死亡系 10 件套满档的个人解锁无上限叠层；
@@ -360,6 +366,8 @@ public class HexConfig {
         EXECUTE_THRESHOLD = b.comment("海克斯斩杀阈值（目标当前生命低于最大生命该比例时触发斩杀增伤，默认 0.15=15%，原硬编码 20%；上限 0.2=总处决最高 20%；调低=更难斩杀）").translation("hexcraft.config.v060.executeThreshold").defineInRange("executeThreshold", 0.15, 0.01, 0.2);
         EXECUTE_PCT_MAX_WEIGHT = b.comment("百分比削血·最大生命部分权重（命中追加伤害 = 目标最大生命×键值×此权重 + 目标当前生命×键值×下项权重；默认 0.5）").translation("hexcraft.config.v060.executePctMaxWeight").defineInRange("executePctMaxWeight", 0.5, 0.0, 3.0);
         EXECUTE_PCT_CUR_WEIGHT = b.comment("百分比削血·当前生命部分权重（默认 1.0）").translation("hexcraft.config.v060.executePctCurWeight").defineInRange("executePctCurWeight", 1.0, 0.0, 3.0);
+        EXECUTE_CAP = b.comment("处决增伤默认上限（execute 与 spell_execute 合计封顶，默认 0.2=20%；调低=更难堆满）").translation("hexcraft.config.v0912.executeCap").defineInRange("executeCap", 0.2, 0.05, 0.4);
+        EXECUTE_CAP_BREAK = b.comment("处决增伤突破上限（持有特殊棱彩海克斯「破限处决」后生效；0 表示按内置 40%，填 0.1~1.0 则按填的）").translation("hexcraft.config.v0912.executeCapBreak").defineInRange("executeCapBreak", 0.0, 0.0, 1.0);
         IRONS_CAST_HASTE = b.comment("迅捷咏唱每级施法速度（注入 Iron's 施法时间缩减属性，默认 0.08=每级 -8% 施法时间）").translation("hexcraft.config.v060.ironsCastHaste").defineInRange("ironsCastHaste", 0.08, 0.0, 1.0);
         IRONS_MANA_MAX = b.comment("魔力储备每级魔力上限（注入 Iron's 魔力上限属性，默认 4/级）").translation("hexcraft.config.v060.ironsManaMax").defineInRange("ironsManaMax", 4.0, 0.0, 1000.0);
         IRONS_MANA_REGEN = b.comment("法力泉涌每级魔力回复（注入 Iron's 魔力回复属性，默认 0.5/级）").translation("hexcraft.config.v060.ironsManaRegen").defineInRange("ironsManaRegen", 0.5, 0.0, 100.0);

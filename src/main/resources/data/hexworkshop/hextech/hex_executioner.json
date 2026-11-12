@@ -2,5 +2,5 @@
   "rarity": "PRISMATIC",
   "weight": 4,
   "mods": [],
-  "event": "execute:0.08,melee_power:0.15,lifesteal:0.08,execute_pct:0.02"
+  "event": "execute:0.04,melee_power:0.15,lifesteal:0.08,execute_pct:0.01"
 }

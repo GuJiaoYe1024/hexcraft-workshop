@@ -3,5 +3,5 @@
   "weight": 8,
   "source": "relics",
   "mods": [],
-  "event": "thorns:2,last_stand:0.12"
+  "event": "thorns:2,last_stand:0.12,loot_bonus:0.02"
 }

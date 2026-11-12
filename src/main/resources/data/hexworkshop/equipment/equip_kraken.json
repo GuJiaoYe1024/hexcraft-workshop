@@ -1,17 +1,17 @@
-{
-  "rarity": "GOLD",
-  "weight": 10,
-  "icon": "☍",
-  "sell": 625,
-  "mods": [
-    {
-      "attr": "attack_speed",
-      "perLevel": 0.78
-    },
-    {
-      "attr": "attack_damage",
-      "perLevel": 13.5
-    }
-  ],
-  "event": "splash:0.5"
-}
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "☍",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "attack_speed",
+      "perLevel": 0.546
+    },
+    {
+      "attr": "attack_damage",
+      "perLevel": 6
+    }
+  ],
+  "event": "splash:0.5"
+}

@@ -106,6 +106,9 @@ public class HexDataLoader extends SimpleJsonResourceReloadListener {
             }
             if (stackTags.isEmpty()) stackTags = null;
         }
-        return new HextechDefinition(id, rarity, weight, mods, event, null, 0, source, stackSpec, stackTags);
+        // v0.9.12 叠层显式标记（数据驱动；默认自身可叠层、非叠层获取倍率来源）
+        boolean selfStack = GsonHelper.getAsBoolean(obj, "selfStack", true);
+        boolean stackGainMult = GsonHelper.getAsBoolean(obj, "stackGainMult", false);
+        return new HextechDefinition(id, rarity, weight, mods, event, null, 0, source, stackSpec, stackTags, selfStack, stackGainMult);
     }
 }

@@ -131,7 +131,7 @@ public class EquipRollScreen extends HexScaledScreen {
         PacketHandler.CHANNEL.sendToServer(new Packets.C2SCancelRoll());
         if (com.hexcraft.config.HexConfig.KEEP_WORKSHOP_OPEN.get()) {
             HextechPageScreen fresh = new HextechPageScreen();
-            fresh.setInitialTab(3);
+            fresh.setInitialTab(HextechPageScreen.TAB_EQUIP);
             net.minecraft.client.Minecraft.getInstance().setScreen(fresh);
         } else {
             net.minecraft.client.Minecraft.getInstance().setScreen(null);
@@ -151,7 +151,7 @@ public class EquipRollScreen extends HexScaledScreen {
     private void done() {
         if (!com.hexcraft.config.HexConfig.KEEP_WORKSHOP_OPEN.get()) { net.minecraft.client.Minecraft.getInstance().setScreen(null); return; }
         HextechPageScreen fresh = new HextechPageScreen();
-        fresh.setInitialTab(3);
+        fresh.setInitialTab(HextechPageScreen.TAB_EQUIP);
         net.minecraft.client.Minecraft.getInstance().setScreen(fresh);
     }
 

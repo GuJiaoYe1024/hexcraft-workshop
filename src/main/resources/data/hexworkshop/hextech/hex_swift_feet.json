@@ -4,11 +4,11 @@
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.03
+      "perLevel": 0.021
     },
     {
       "attr": "attack_speed",
-      "perLevel": 0.1
+      "perLevel": 0.07
     }
   ],
   "source": "dlc_vanilla"

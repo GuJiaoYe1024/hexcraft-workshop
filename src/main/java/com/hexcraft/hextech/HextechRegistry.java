@@ -37,6 +37,8 @@ public class HextechRegistry {
         POOL_CACHE.clear();
         EQUIP_CACHE.clear();
         FORGE_CACHE.clear();
+        // v0.9.12 联动失效羁绊有效成员解析缓存（成员过滤/档位重算即时重建）
+        ComboRegistry.invalidateResolved();
     }
 
     // ================= 内容来源分类（原版 / 联动 mod 内容，自动检测 + 配置开关） =================
@@ -85,6 +87,38 @@ public class HextechRegistry {
         }
         return "vanilla";
     }
+
+    /** 已知标准来源 key（modid 与内置 DLC 标识），这些 key 有对应友好名称 lang 键 */
+    private static final java.util.Set<String> KNOWN_SOURCES = java.util.Set.of(
+            "tacz", "irons_spellbooks", "alexscaves", "iceandfire", "twilightforest", "alexsmobs",
+            "slashblade", "artifacts", "cataclysm", "projecte", "farmersdelight", "goety",
+            "mowziesmobs", "ftbquests", "relics", "dlc_vanilla", "dlc_niyuan");
+
+    /** 锻造页短缩写到标准来源 key 的归一（短缩写与 modid 口径统一） */
+    private static final Map<String, String> SOURCE_ALIAS = Map.of(
+            "IAF", "iceandfire",
+            "AC", "alexscaves",
+            "TF", "twilightforest",
+            "AM", "alexsmobs",
+            "IRONS", "irons_spellbooks",
+            "MOWZIE", "mowziesmobs",
+            "FARMER", "farmersdelight");
+
+    /** 把任意来源标识（modid / 短缩写 / DLC 标识）归一到标准来源 key；已是标准 key 原样返回 */
+    public static String normalizeSource(String raw) {
+        if (raw == null || raw.isEmpty()) return null;
+        String aliased = SOURCE_ALIAS.get(raw);
+        return aliased != null ? aliased : raw;
+    }
+
+    /** 来源友好显示名：已知来源走 lang 友好名称，第三方自定义来源回退显示原始标识，避免出现缺失键名 */
+    public static net.minecraft.network.chat.Component sourceDisplayName(String raw) {
+        String key = normalizeSource(raw);
+        if (key != null && KNOWN_SOURCES.contains(key)) {
+            return net.minecraft.network.chat.Component.translatable("hexcraft.source." + key);
+        }
+        return net.minecraft.network.chat.Component.literal(raw == null ? "" : raw);
+    }
     private static final Map<String, HextechDefinition.ModSpec> FORGE_MODS = new LinkedHashMap<>();
     /** v0.6.21 事件型锻造词条：stat → [事件效果键, 每级倍率]。效果在 HextechEvents.effect() 按词条汇总
      *  （不注册属性，避免属性应用层 NPE；档位倍率 × 事件倍率，与属性词条同规格可叠加）。 */
@@ -101,7 +135,8 @@ public class HextechRegistry {
     @Deprecated
     public static final List<String> FORGE_TACZ_MECHANICS = List.of(
             "gun_aspect", "gun_crit_aspect", "ammo_aspect");
-    public static final int[] FORGE_TIER_MULT = {1, 2, 3};
+    /** v0.9.12 棱彩档由 ×3 提到 ×4：最高档位要与稀有度差距相称。实际倍率仍读 HexConfig（可配） */
+    public static final int[] FORGE_TIER_MULT = {1, 2, 4};
     public static final String[] FORGE_TIER_KEYS = {"basic", "gold", "prismatic"};
 
     /** v0.6.1 锻造档位倍率（配置化，服务端生效；默认 ×1/×2/×3，Cloth 可改——例 1/2/4 爽玩）。
@@ -211,6 +246,21 @@ public class HextechRegistry {
     public static HextechDefinition get(String id) { return DEFINITIONS.get(id); }
     public static Collection<HextechDefinition> all() { return DEFINITIONS.values(); }
     public static void put(String id, HextechDefinition def) { DEFINITIONS.put(id, def); }
+
+    // ---- v0.9.12 联机客户端统一解析：额外定义查找器（指向 S2CSyncRegistry 同步缓存） ----
+    // 根因：纯客户端进程不加载数据包，DEFINITIONS 仅含 static 内置，其余定义在 ClientDataStore.hexRegistryCache；
+    // 羁绊成员解析若只认 get 会把同步成员误判为缺失。服务端/单机同进程不注册此查找器（DEFINITIONS 已完整）。
+    public interface ExtraDefLookup { HextechDefinition lookup(String id); }
+    private static volatile ExtraDefLookup extraDefLookup;
+    public static void setExtraDefLookup(ExtraDefLookup l) { extraDefLookup = l; }
+
+    /** 统一解析定义：内置/数据包 Registry 优先，缺失再走额外查找器（联机客户端同步缓存）。 */
+    public static HextechDefinition resolveDef(String id) {
+        HextechDefinition d = DEFINITIONS.get(id);
+        if (d != null) return d;
+        ExtraDefLookup l = extraDefLookup;
+        return l != null ? l.lookup(id) : null;
+    }
 
     /** 来源是否启用（按内容小类细分）：原版恒可用；联动来源 = 已安装该 mod 且对应小类开关开启（总开关 && 细分开关） */
     public static boolean isSourceEnabled(String modid, String contentType) {

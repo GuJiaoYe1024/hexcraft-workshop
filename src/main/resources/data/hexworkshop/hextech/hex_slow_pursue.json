@@ -4,7 +4,7 @@
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.01
+      "perLevel": 0.007
     }
   ],
   "event": "slow_on_hit:0.15",

@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 4,
-  "event": "stack_attr_onhurt:max_health:0.05",
+  "event": "stack_attr_onhurt:max_health:0.002",
   "mods": [
     {
       "attr": "armor",

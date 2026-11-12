@@ -6,12 +6,12 @@
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.07
+      "perLevel": 0.025
     },
     {
       "attr": "attack_speed",
-      "perLevel": 0.52
+      "perLevel": 0.364
     }
   ],
-  "event": "mobi_power:0.6"
+  "event": "mobi_power:0.42"
 }

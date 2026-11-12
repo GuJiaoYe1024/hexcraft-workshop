@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 2,
-  "event": "melee_power:0.55,execute:0.12",
+  "event": "melee_power:0.55,execute:0.06",
   "source": "dlc_niyuan",
   "mods": [
     {

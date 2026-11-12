@@ -3,5 +3,5 @@
   "weight": 6,
   "source": "tacz",
   "mods": [],
-  "event": "tacz_close_power:0.2,splash:0.18,execute:0.08"
+  "event": "tacz_close_power:0.2,splash:0.18,execute:0.04"
 }

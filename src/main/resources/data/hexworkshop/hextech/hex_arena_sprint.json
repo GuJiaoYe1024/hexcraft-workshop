@@ -1,6 +1,6 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "mobi_power:0.15,dig_speed:0.4",
+  "event": "mobi_power:0.105,dig_speed:0.4",
   "source": "dlc_vanilla"
 }

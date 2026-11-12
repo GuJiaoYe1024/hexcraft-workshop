@@ -1,13 +1,13 @@
-{
-  "rarity": "GOLD",
-  "weight": 10,
-  "icon": "☄",
-  "sell": 625,
-  "mods": [
-    {
-      "attr": "attack_damage",
-      "perLevel": 30.0
-    }
-  ],
-  "event": "arcane_shield:0.3,spell_power:0.35"
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "☄",
+  "sell": 625,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 13.5
+    }
+  ],
+  "event": "arcane_shield:0.3,spell_power:0.35"
 }

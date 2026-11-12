@@ -102,18 +102,50 @@ public class HextechEvents {
     /** v0.6.0 校准：stack_attr_onhit 叠层概率数据化——JSON event 中带 chance:xxx 则读取（0~1），
      *  缺省回退 0.25f（兼容旧数据包，如心之钢 v0.5.0 前无 chance 字段）。概率不随等级缩放。 */
     public static float stackOnHitChance(HextechDefinition def) {
-        if (def == null || def.event == null) return 0.25f;
-        for (String token : def.event.split(",")) {
-            int ci = token.indexOf(':');
-            if (ci <= 0) continue;
-            if (token.substring(0, ci).equals("chance")) {
-                try {
-                    float v = Float.parseFloat(token.substring(ci + 1));
-                    if (v > 0 && v <= 1f) return v;
-                } catch (Exception ignored) { }
+        return stackOnHitChance(def, 0f);
+    }
+
+    /** v0.9.12 叠层几率 = 本海克斯的 chance 键（缺省 0.25）+ 全局「叠层几率增幅」stack_chance 汇总。
+     *  增幅取绝对值叠加：持有 +1% 的增幅器，25% 基础几率就变成 26%，多个增幅器相加。
+     *  调用方须在循环外把增幅算好一次传入，避免每个叠层海克斯重复全量扫描。 */
+    public static float stackOnHitChance(HextechDefinition def, float chanceAmp) {
+        float base = 0.25f;
+        if (def != null && def.event != null) {
+            for (String token : eventTokens(def.event)) {
+                int ci = token.indexOf(':');
+                if (ci <= 0) continue;
+                if (token.substring(0, ci).equals("chance")) {
+                    try {
+                        float v = Float.parseFloat(token.substring(ci + 1));
+                        if (v > 0 && v <= 1f) { base = v; break; }
+                    } catch (Exception ignored) { }
+                }
             }
         }
-        return 0.25f;
+        return Math.min(1f, base + chanceAmp);
+    }
+
+    /** v0.9.12 叠层有效键判定：只有三段式 stack_attr*:属性:倍率 才产生真实的每层属性收益。
+     *  两段写法（如 stack_attr_onhit:0.01 缺少属性名）在 PlayerData 属性层要求 parts.length==3 而读不到，
+     *  纯 stack_growth 增幅类也没有每层收益——这两类若继续累计自身层数，就只是"空转层数"，
+     *  会被属性页当成成长成果展示，还会在旧公式下反向放大叠速。故统一按本判据决定是否允许自身叠层。 */
+    public static boolean hasStackAttr3(HextechDefinition def, String key) {
+        if (def == null || def.event == null || def.event.isEmpty()) return false;
+        String prefix = key + ":";
+        for (String token : eventTokens(def.event)) {
+            if (!token.startsWith(prefix)) continue;
+            int ci = token.indexOf(':', prefix.length());
+            if (ci <= 0) continue;
+            // 属性名还必须是 PlayerData 认识的键，否则层数会涨但每层收益恒为 0
+            if (com.hexcraft.capability.PlayerData.isValidStackAttrKey(token.substring(prefix.length(), ci))) return true;
+        }
+        return false;
+    }
+
+    /** 该海克斯是否存在任意一种有效的每层属性叠层键（stack_attr / stack_attr_onhit / stack_attr_onhurt） */
+    public static boolean hasAnyStackAttr3(HextechDefinition def) {
+        return hasStackAttr3(def, "stack_attr") || hasStackAttr3(def, "stack_attr_onhit")
+                || hasStackAttr3(def, "stack_attr_onhurt");
     }
 
     /** v0.6.16 叠角龙统一倍率：每级 +75%（对齐 lang 描述"多获得 75%"），无叠角龙 = 1。
@@ -122,9 +154,18 @@ public class HextechEvents {
     public static double drakeMult(PlayerData data) {
         if (data == null) return 1;
         for (PlayerData.HexEntry e : data.getHexes()) {
-            if (e.id.equals("hex_stack_drake")) return 1 + com.hexcraft.config.HexConfig.STACK_DRAKE_MULT.get() * e.level;
+            // v0.9.12 数据驱动：按 stackGainMult 标记查找（不再硬编码 id），倍率值仍读可配置项 STACK_DRAKE_MULT
+            HextechDefinition ddef = HextechRegistry.get(e.id);
+            if (ddef != null && ddef.stackGainMult) return 1 + com.hexcraft.config.HexConfig.STACK_DRAKE_MULT.get() * e.level;
         }
         return 1;
+    }
+
+    /** v0.9.12 叠层获取速率总倍率：stack_gain 与 stack_growth 同口径相加。
+     *  旧实现把 stack_growth 错当全局伤害倍率，叠层专家满档实际等于 +100% 全伤害，介绍却写叠层更快。
+     *  现统一由本方法接入叠层获取通道，伤害结算不再消费 stack_growth。 */
+    public static double stackGainMult(PlayerData data) {
+        return 1 + effect(data, "stack_gain") + effect(data, "stack_growth");
     }
 
     /** 按叠层倍率生成整数层数增量：整数部分固定 + 小数部分按概率进位（长期期望 = 倍率），叠层字段为 int 时的精确表达 */
@@ -197,22 +238,28 @@ public class HextechEvents {
                 if (token.substring(0, ci).equals(effect)) {
                     try {
                         double v = Double.parseDouble(token.substring(ci + 1));
-                        if ("stack_growth".equals(effect)) {
-                            sum += v * e.level * (1 + e.stacks);
-                        } else {
-                            sum += v * e.level;
-                        }
+                        // v0.9.12 修正：stack_growth 是"叠层获取速率加成"，按 值×等级 固定计算。
+                        // 旧实现额外乘 (1+自身层数) 会让层数越多加成越大，形成"层数→获取→更多层数"的正反馈，
+                        // 实测单个 5% 加成在 94 层时被放大到 475%，属性页总览一度显示 +1661%。已移除自乘。
+                        sum += v * e.level;
                     } catch (Exception ignored) { }
                 }
             }
         }
-        // v0.9.0 组合羁绊：v0.9.7 v2 起三件套 16 已升级为分档羁绊（BASE_COMBOS），与逆原/大乱斗/新增流派/叠层专家统一遍历 allTiered()
-        for (com.hexcraft.hextech.ComboRegistry.TieredCombo tc : com.hexcraft.hextech.ComboRegistry.allTiered()) {
-            int tier = com.hexcraft.hextech.ComboRegistry.tierOf(tc, hexes);
-            // v0.9.7 v2 棱彩：全部成员凑齐（=最高档）→ 该羁绊所有档位效果叠加后 ×prismaticMult（巨大提升）
-            double mult = (tier >= tc.tierCounts().length) ? tc.prismaticMult() : 1.0;
+        // v0.9.12 羁绊效果统一遍历有效羁绊视图（联动成员已过滤、档位已重算）；满档（=最高档）×prismaticMult
+        // v0.9.12 性能：持有集合只建一次。旧实现每条羁绊各调一次 tierOf(rc, hexes)，而该重载每次都重新 new HashSet
+        // 并填充全部持有 id —— 48 条羁绊 = 48 次集合构建，且本方法在一次事件里被调用数十次。
+        java.util.Set<String> owned = null;
+        for (com.hexcraft.hextech.ComboRegistry.ResolvedCombo rc : com.hexcraft.hextech.ComboRegistry.resolvedAll()) {
+            if (owned == null) {
+                owned = new java.util.HashSet<>();
+                for (PlayerData.HexEntry he : hexes) owned.add(he.id);
+            }
+            int tier = com.hexcraft.hextech.ComboRegistry.tierOf(rc, owned);
+            // 棱彩：全部有效成员凑齐（=最高档）→ 该羁绊所有档位效果叠加后 ×prismaticMult
+            double mult = (tier >= rc.tierCounts().length) ? rc.prismaticMult() : 1.0;
             for (int t = 0; t < tier; t++) {
-                if (tc.effects()[t].equals(effect)) sum += tc.values()[t] * mult;
+                if (rc.effects()[t].equals(effect)) sum += rc.values()[t] * mult;
             }
         }
         return sum;
@@ -234,6 +281,31 @@ public class HextechEvents {
         return t;
     }
 
+    /** v0.9.12 单个定义 event 中某键的数值总和（值 × 等级由调用方决定）。
+     *  用于"按外部数量结算"的效果键：equip_count_atk / equip_count_armor / equip_count_hp（值 × 等级 × 已装备件数）、
+     *  slot_boost（值 × 等级，且带该键的海克斯不占用栏位）。
+     *  与 effect() 的区别：effect() 汇总全玩家所有来源，本方法只看这一个定义，语义不受其它海克斯同名键干扰。 */
+    public static double tokenValueOf(HextechDefinition def, String key) {
+        if (def == null || def.event == null || def.event.isEmpty() || key == null) return 0;
+        double sum = 0;
+        String prefix = key + ":";
+        for (String token : eventTokens(def.event)) {
+            if (!token.startsWith(prefix)) continue;
+            try {
+                sum += Double.parseDouble(token.substring(prefix.length()).trim());
+            } catch (Exception ignored) { }
+        }
+        return sum;
+    }
+
+    /** 定义是否声明了某效果键（用于栏位占用等"有则为真"的判定，不关心数值） */
+    public static boolean declaresKey(HextechDefinition def, String key) {
+        if (def == null || def.event == null || def.event.isEmpty() || key == null) return false;
+        String prefix = key + ":";
+        for (String token : eventTokens(def.event)) if (token.startsWith(prefix)) return true;
+        return false;
+    }
+
     /** 批量查询多个效果键（一次遍历全部来源；onTick 等高频路径替代多次单键 effect() 全量扫描） */
     public static java.util.Map<String, Double> effectBatch(PlayerData data, java.util.Collection<String> keys) {
         java.util.Map<String, Double> out = new java.util.HashMap<>();
@@ -253,18 +325,24 @@ public class HextechEvents {
                 if (!out.containsKey(key)) continue;
                 try {
                     double v = Double.parseDouble(token.substring(ci + 1));
-                    double add = "stack_growth".equals(key) ? v * e.level * (1 + e.stacks) : v * e.level;
-                    out.merge(key, add, Double::sum);
+                    // v0.9.12 与单键 effect() 同口径：stack_growth 不再乘 (1+层数)，避免自反馈放大
+                    out.merge(key, v * e.level, Double::sum);
                 } catch (Exception ignored) { }
             }
         }
-        // v0.9.7 v2：分档羁绊统一遍历 allTiered()（三件套升级/新增流派/叠层专家/逆原/大乱斗），低档叠加；满员棱彩 ×prismaticMult
-        for (com.hexcraft.hextech.ComboRegistry.TieredCombo tc : com.hexcraft.hextech.ComboRegistry.allTiered()) {
-            int tier = com.hexcraft.hextech.ComboRegistry.tierOf(tc, data.getHexes());
-            double mult = (tier >= tc.tierCounts().length) ? tc.prismaticMult() : 1.0;
+        // v0.9.12：羁绊统一遍历有效羁绊视图（成员过滤/档位重算），低档叠加；满员棱彩 ×prismaticMult
+        // v0.9.12 性能：持有集合只建一次，不再每条羁绊各建一个
+        java.util.Set<String> ownedBatch = null;
+        for (com.hexcraft.hextech.ComboRegistry.ResolvedCombo rc : com.hexcraft.hextech.ComboRegistry.resolvedAll()) {
+            if (ownedBatch == null) {
+                ownedBatch = new java.util.HashSet<>();
+                for (PlayerData.HexEntry he : data.getHexes()) ownedBatch.add(he.id);
+            }
+            int tier = com.hexcraft.hextech.ComboRegistry.tierOf(rc, ownedBatch);
+            double mult = (tier >= rc.tierCounts().length) ? rc.prismaticMult() : 1.0;
             for (int t = 0; t < tier; t++) {
-                if (!out.containsKey(tc.effects()[t])) continue;
-                out.merge(tc.effects()[t], tc.values()[t] * mult, Double::sum);
+                if (!out.containsKey(rc.effects()[t])) continue;
+                out.merge(rc.effects()[t], rc.values()[t] * mult, Double::sum);
             }
         }
         // 装备 event
@@ -307,19 +385,34 @@ public class HextechEvents {
         return true;
     }
 
-    private static boolean hasComboList(java.util.List<PlayerData.HexEntry> hexes, String[] ids) {
-        java.util.Set<String> owned = new java.util.HashSet<>();
-        for (PlayerData.HexEntry e : hexes) owned.add(e.id);
-        for (String id : ids) if (!owned.contains(id)) return false;
-        return true;
-    }
-
     /** 拥有叠层类海克斯数量（v0.9.0 叠层联动档位：≥2 叠速/上限 +20%，≥4 各 +40%） */
     public static int countStackHexes(PlayerData data) {
         if (data == null) return 0;
         int n = 0;
         for (PlayerData.HexEntry e : data.getHexes()) if (com.hexcraft.hextech.ComboRegistry.STACK_HEXES.contains(e.id)) n++;
         return n;
+    }
+
+    /** v0.9.12 处决增伤上限：默认 HexConfig.EXECUTE_CAP（20%），持有特殊棱彩海克斯「破限处决」hex_execute_breach 时抬到 EXECUTE_CAP_BREAK（40%）。
+     *  处决键值（execute / spell_execute）本身可被多个海克斯与装备叠加，靠这个上限兜住总增伤。 */
+    public static float executeCapFor(PlayerData data) {
+        float base = HexConfig.EXECUTE_CAP.get().floatValue();
+        if (data == null) return base;
+        java.util.Set<String> owned = new java.util.HashSet<>();
+        for (PlayerData.HexEntry e : data.getHexes()) owned.add(e.id);
+        return executeCapFor(owned);
+    }
+
+    /** 同上，直接用已构建的持有集合（命中结算里已有 owned，避免重复构集合） */
+    public static float executeCapFor(java.util.Set<String> owned) {
+        float base = HexConfig.EXECUTE_CAP.get().floatValue();
+        if (owned == null) return base;
+        if (owned.contains("hex_execute_breach")) {
+            // 0 表示以内置默认 40% 为准，玩家改过配置就按玩家填的
+            double brk = HexConfig.EXECUTE_CAP_BREAK.get();
+            return (float) (brk > 0 ? brk : 0.4);
+        }
+        return base;
     }
 
     /** v0.9.7 v2-C：个人叠层无上限解锁判定——叠层专家羁绊满档（10 件 = 档 5）即解锁（个人生效）。
@@ -343,29 +436,47 @@ public class HextechEvents {
         return 200;
     }
 
-    /** 叠层专家当前档位（0=未激活，1..5=档1..档5满员） */
+    /** 叠层专家当前档位（0=未激活，1..5=有效视图最高档满员）；v0.9.12 起统一走有效成员视图，口径与界面一致。 */
     private static int stackMasterTierOf(PlayerData data) {
+        com.hexcraft.hextech.ComboRegistry.ResolvedCombo rsm = com.hexcraft.hextech.ComboRegistry.resolvedStackMaster();
+        if (rsm == null) return 0;
         java.util.Set<String> owned = new java.util.HashSet<>();
         for (com.hexcraft.capability.PlayerData.HexEntry e : data.getHexes()) owned.add(e.id);
-        return com.hexcraft.hextech.ComboRegistry.stackMasterTier(owned);
+        return com.hexcraft.hextech.ComboRegistry.tierOf(rsm, owned);
     }
 
-    /** v0.9.4：叠层实时上限乘区（叠层档位 1.2/1.4 × 组合「叠层之巅」+30% × 效果键 stack_cap × 世界海克斯叠层上限加成）。
+    /** v0.9.12 永久叠层生效上限（与战斗叠层同一套乘区口径）：
+     *  叠层专家档位值 200/400/600/800/1000 × 叠层连携 1.2/1.4 × 效果键 stack_cap × 世界海克斯叠层上限。
+     *  档位值本身已含专家乘区，故不再乘 tierMult，避免重复放大。
+     *  旧实现永久叠层只按档位值截断、不含连携与 stack_cap，导致战斗层能到 240 而永久层收益仍按 200 结算。 */
+    public static int permanentStackCapFor(PlayerData data, net.minecraft.server.level.ServerLevel level) {
+        int base = stackCapFor(data);
+        if (base == Integer.MAX_VALUE || data == null || level == null) return base;
+        double bonus = 1 + effect(data, "stack_cap") + com.hexcraft.event.WorldHexEvents.combatStackCapBonus(level);
+        int n = countStackHexes(data);
+        double combo = n >= 4 ? 1.4 : (n >= 2 ? 1.2 : 1.0);
+        double v = base * bonus * combo;
+        if (!(v > 0)) return base;
+        return v >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) v;
+    }
+
+    /** 叠层实时上限乘区（叠层连携 1.2/1.4 × 效果键 stack_cap × 世界海克斯叠层上限加成 × 叠层专家档位）。
      *  与 addStack 截断、满层爆发 realCap、客户端属性页显示（Packets 同步实时 cap）完全同源，杜绝"显示 200 层实际 240 层"的口径分叉。
      *  v0.9.7 修复轮：个人解锁无上限叠层后返回超大乘数（cap×乘数→Infinity→min 不截断，满层爆发不触发），对应显示处按 ∞ 处理。
-     *  v0.9.7 v2-C：叠层专家档位梯级注入乘区（档1 ×2=400 / 档2 ×3=600 / 档3 ×4=800 / 档4 ×5=1000，基于基础 200）。 */
+     *  v0.9.7 v2-C：叠层专家档位梯级注入乘区（档1 ×2=400 / 档2 ×3=600 / 档3 ×4=800 / 档4 ×5=1000，基于基础 200）。
+     *  v0.9.12：「叠层之巅」三件套 +30% 不再硬编码于此，改为 ComboRegistry 正式羁绊 hexcraft.combo.c17，
+     *  经 effect("stack_cap") 汇总进入本乘区——图鉴可见、数值可调、无隐藏规则。 */
     public static double stackCapMultiplier(PlayerData data, net.minecraft.server.level.ServerLevel level) {
         if (data == null || level == null) return 1.0;
-        if (unlimitedStackCap(data)) return Double.MAX_VALUE;
-        double tierMult = 1.0;
+        // v0.9.12 性能：档位只算一次。旧实现 unlimitedStackCap() 内部算一遍、下面又算一遍，两次都新建集合逐条判定
         int smt = stackMasterTierOf(data);
-        if (smt >= 1) tierMult = smt + 1.0;
+        if (smt >= com.hexcraft.hextech.ComboRegistry.STACK_MASTER.tierCounts().length) return Double.MAX_VALUE;
+        double tierMult = smt >= 1 ? smt + 1.0 : 1.0;
         double whCapBonus = com.hexcraft.event.WorldHexEvents.combatStackCapBonus(level);
         double comboCap = 1.0;
         int n = countStackHexes(data);
         if (n >= 4) comboCap = 1.4;
         else if (n >= 2) comboCap = 1.2;
-        if (hasCombo(data, "hex_stack_tank", "hex_swift_horn_quick", "hex_tick_damage_wax")) comboCap *= 1.3;
         return (1 + effect(data, "stack_cap") + whCapBonus) * comboCap * tierMult;
     }
 
@@ -486,16 +597,15 @@ public class HextechEvents {
             double tHeal = effect(data, "tacz_heal");
             if (tHeal > 0 && isTaczSource(source)) killer.heal((float) tHeal);
 
-            // 成长性海克斯：击杀获得层数（stack_growth / stack_attr）；叠角龙自身不叠层，只让其它叠层效果翻倍（每级 +75%）
-            boolean drake = data.getHexes().stream().anyMatch(e -> e.id.equals("hex_stack_drake"));
+            // 成长性海克斯：击杀获得层数（stack_attr 三段式有效键）；叠层增幅类（stack_growth / 两段无效键 / selfStack=false）
+            // 自身不叠层，只让其它叠层更快——v0.9.12 起纯增幅类不再累计空转层数
             double dMult = drakeMult(data);
-            int gain = drake ? gainWithMult(dMult, killer.getRandom()) : 1;
+            boolean hasGainMult = dMult > 1.0;
+            int gain = hasGainMult ? gainWithMult(dMult, killer.getRandom()) : 1;
             boolean grew = false;
             for (PlayerData.HexEntry e : data.getHexes()) {
-                if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不叠层
                 HextechDefinition def = HextechRegistry.get(e.id);
-                if (def != null && def.event != null
-                        && (def.event.contains("stack_growth") || def.event.contains("stack_attr:"))) {
+                if (def != null && def.selfStack && hasStackAttr3(def, "stack_attr")) {
                     e.stacks = safeStackAdd(e.stacks, gain);
                     grew = true;
                     // 提示说清楚叠的是哪个海克斯
@@ -524,7 +634,7 @@ public class HextechEvents {
             }
 
             // ===== v0.6.2 击杀触发叠层（def.stack.onKill=true）=====
-            // 击杀获取 1 层（叠角龙在场翻倍；永续成长世界海克斯 +50%）；永久叠层吃全局倍率/上限（服务端配置）
+            // 击杀获取 1 层（叠层获取倍率来源在场翻倍；永续成长世界海克斯 +50%）；永久叠层吃全局倍率/上限（服务端配置）
             boolean killStacked = false;
             for (PlayerData.HexEntry e : data.getHexes()) {
                 HextechDefinition sdef = HextechRegistry.get(e.id);
@@ -534,7 +644,7 @@ public class HextechEvents {
                             sdef.stack.decayDelay, sdef.stack.decayRate));
                 }
                 double g = 1.0;
-                if (drake) g *= dMult;
+                if (hasGainMult) g *= dMult;
                 if (killer.level() instanceof net.minecraft.server.level.ServerLevel whKL) {
                     g *= (1 + com.hexcraft.event.WorldHexEvents.permStackGainBonus(whKL));
                 }
@@ -1050,6 +1160,10 @@ public class HextechEvents {
         boolean ranged = !melee && !tacz && direct != null;
         if (melee) dmgMul *= (float) (1 + effect(data, "melee_power"));
         if (ranged) dmgMul *= (float) (1 + effect(data, "ranged_power"));
+        // v0.9.12 双子射击通用化：twin_shot 原本只在枪械分支结算，连击流/游击羁绊把近战成员也拉进来了，
+        // 近战玩家拿到该档等于无效。现改为近战与枪械都判定，语义为「几率造成双倍伤害」。
+        double twinShot = effect(data, "twin_shot");
+        if (twinShot > 0 && sp.getRandom().nextFloat() < (float) twinShot) dmgMul *= 2; 
         // v0.8.0 维度专属海克斯：末地/下界攻击伤害提升（仅对应维度生效）
         if (inEnd(sp)) dmgMul *= (float) (1 + effect(data, "end_damage"));
         else if (inNether(sp)) dmgMul *= (float) (1 + effect(data, "nether_damage"));
@@ -1081,8 +1195,7 @@ public class HextechEvents {
                 } catch (Exception ignored) { }
                 MULTI_BUSY.remove(sp.getUUID());
             }
-            double twin = effect(data, "twin_shot"); // 双子射击：几率双倍枪伤
-            if (twin > 0 && sp.getRandom().nextFloat() < (float) twin) dmgMul *= 2;
+            // 双子射击（twin_shot）已上移到通用命中段判定，近战与枪械共用，此处不再重复结算
             // v0.6.0 机制海克斯化：枪械之刃/枪械暴击已并入 tacz_power/tacz_crit 海克斯（原 gun_aspect/gun_crit_aspect 锻造词条迁出）
             if (target != null) {
                 double dist = sp.distanceTo(target);
@@ -1205,8 +1318,8 @@ public class HextechEvents {
                 dmgMul *= (float) (1 + Math.min(armor / 50.0, 1.0) * pierce);
             }
         }
-        // 成长性全伤害加成
-        dmgMul *= (float) (1 + effect(data, "stack_growth"));
+        // v0.9.12 修正：stack_growth 的语义是「叠层获取速率」，旧实现把它当全局伤害倍率乘进 dmgMul，
+        // 导致叠层专家满档实际等于 +100% 全伤害（介绍却写叠层更快）。现统一由 stackGainMult() 接入叠层获取通道，伤害段不再消费。
         // v0.9.7 力场（逆原羁绊）：站立叠层增伤（每层 +1%，上限 10 层，移动清零）
         int standLayers = STAND_LAYERS.getOrDefault(sp.getUUID(), 0);
         if (standLayers > 0) dmgMul *= (float) (1 + standLayers * 0.01);
@@ -1225,14 +1338,18 @@ public class HextechEvents {
             // v0.9.0 组合羁绊「处决者」：斩杀阈值 +3%（同时拥有刽子手/永世刽子手/致命创伤）
             float execThr = HexConfig.EXECUTE_THRESHOLD.get().floatValue();
             if (hasCombo(data, "hex_executioner", "hex_executioner_eternal", "hex_fatal_wound")) execThr += 0.03f;
-            // v0.9.1 总处决封顶：execute 键值合计最高 20%（叠加多海克斯不超过 20% 斩杀增伤）
+            // v0.9.12 总处决封顶改为可突破：默认 20%，斩杀流满档 40%
             if (tRatio < execThr) {
-                dmgMul *= (float) (1 + Math.min(0.2f, (float) effect(data, "execute")));
+                dmgMul *= (float) (1 + Math.min(executeCapFor(data), (float) effect(data, "execute")));
                 // 处决收藏家：低血命中即标记"处决命中"，1.5s 内死亡视为处决击杀（onKill 消费）
                 if (effect(data, "collector") > 0) EXEC_HIT_UNTIL.put(target.getUUID(), System.currentTimeMillis() + 1500);
             }
             if (target.getMaxHealth() >= 40) dmgMul *= (float) (1 + effect(data, "boss_power"));
-            if (target.getMobType() == net.minecraft.world.entity.MobType.UNDEAD) dmgMul *= (float) (1 + effect(data, "enchant_smite"));
+            if (target.getMobType() == net.minecraft.world.entity.MobType.UNDEAD) {
+                // v0.9.12 修复魂能增伤空转：goety_soul 在 48 条羁绊里被写入 7 个档位，却没有任何结算点。
+                // 现接入亡灵增伤通道，与亡灵杀手附魔同段相加。
+                dmgMul *= (float) (1 + effect(data, "enchant_smite") + effect(data, "goety_soul"));
+            }
             if (target.getMobType() == net.minecraft.world.entity.MobType.ARTHROPOD) dmgMul *= (float) (1 + effect(data, "enchant_arthropod"));
         }
         // 条件增伤
@@ -1249,11 +1366,12 @@ public class HextechEvents {
         // 连杀狂潮（击杀后 5 秒）
         if (System.currentTimeMillis() < RAMPAGE_UNTIL.getOrDefault(sp.getUUID(), 0L)) {
             dmgMul *= (float) (1 + effect(data, "rampage"));
+        }
         // v0.9.7 v2 飞升（ascend，深渊守望羁绊满档）：持续战斗 8 秒后全伤害加成，脱战 2 秒重置
+        // v0.9.12 修正：本段原被误嵌在「连杀狂潮」的 if 内，飞升只在狂潮 5 秒窗口才生效，现已移出独立判定
         double ascendDmg = effect(data, "ascend");
         if (ascendDmg > 0 && ASCEND_TICKS.getOrDefault(sp.getUUID(), 0) >= 160) {
             dmgMul *= (float) (1 + ascendDmg);
-        }
         }
         // 世界海克斯独立乘区：全体玩家造成伤害倍率 + 对中立生物伤害倍率（独立于玩家海克斯，不与其它 mod 冲突）
         if (sp.level() instanceof net.minecraft.server.level.ServerLevel whLevel) {
@@ -1292,8 +1410,7 @@ public class HextechEvents {
         // 已有海克斯机制键覆盖的（frost_bite/lifesteal/crit/execute/splash/gold_punch/regen/tacz_power 等）不再保留锻造版本；
         // 新机制海克斯（fire_blade/poison_blade/pierce_blade/lightning_blade/dance_blade/bloodlust_blade/reaper_blade/crescendo）在本段结算。
         if (target != null && target.isAlive()) {
-            // 叠角龙在场时命中叠层翻倍（每级 +75%，v0.6.16 统一倍率；受击叠层同样生效）
-            boolean onHitDrake = data.getHexes().stream().anyMatch(e -> e.id.equals("hex_stack_drake"));
+            // 命中叠层获取倍率（v0.9.12 起数据驱动：drakeMult 按 stackGainMult 标记计算，不再硬编码 id）
             double onHitMult = drakeMult(data);
             boolean attrStacked = false;
             // 火淬之刃：点燃 2 秒 + 燃烧额外伤害（等级加深）
@@ -1363,20 +1480,25 @@ public class HextechEvents {
             int stackHexCount = countStackHexes(data);
             if (stackHexCount >= 4) comboGain = 1.4;
             else if (stackHexCount >= 2) comboGain = 1.2;
+            // v0.9.12 性能：叠速倍率与上限乘区在一次命中事件内恒定，提到循环外算一次。
+            // 旧实现每个叠层海克斯都调 effect(stack_gain) 与两次 stackCapMultiplier（各自全量扫描海克斯+羁绊），
+            // 叠层海克斯有 N 个时就是 N 次全量扫描，属 O(n²)。
+            net.minecraft.server.level.ServerLevel hitLevel = (net.minecraft.server.level.ServerLevel) sp.level();
+            double stackGainMul = 1 + effect(data, "stack_gain") + effect(data, "stack_growth");
+            double capMul = stackCapMultiplier(data, hitLevel);
             for (PlayerData.HexEntry e : data.getHexes()) {
                 HextechDefinition sdef = HextechRegistry.get(e.id);
-                if (sdef == null || sdef.stack == null) continue;
+                if (sdef == null || sdef.stack == null || sdef.event == null) continue;
                 // v0.6.2 onKill=true 的叠层（击杀触发）：命中时不获取层数（击杀时获取），但仍按层数结算每层伤害
                 boolean killStack = sdef.stack.onKill;
                 if (!killStack) {
                     if (data.getStack(sdef.stack.key) == null) {
                         data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat, sdef.stack.decayDelay, sdef.stack.decayRate));
                     }
-                    data.addStack(sdef.stack.key, (1 + effect(data, "stack_gain")) * comboGain,
-                            stackCapMultiplier(data, (net.minecraft.server.level.ServerLevel) sp.level()));
+                    data.addStack(sdef.stack.key, stackGainMul * comboGain, capMul);
                 }
                 double perStack = 0;
-                for (String token : sdef.event.split(",")) {
+                for (String token : eventTokens(sdef.event)) {
                     int ci = token.indexOf(':');
                     if (ci > 0 && token.substring(0, ci).equals(sdef.stack.key)) {
                         try { perStack += Double.parseDouble(token.substring(ci + 1)) * e.level; } catch (Exception ignored) { }
@@ -1385,7 +1507,7 @@ public class HextechEvents {
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
                 if (perStack > 0 && s != null && s.value > 0) {
                     // v0.9.0 满层爆发：叠满（达到实时上限）时该叠层海克斯每层效果额外 +50%
-                    double realCap = s.cap * stackCapMultiplier(data, (net.minecraft.server.level.ServerLevel) sp.level());
+                    double realCap = s.cap * capMul;
                     double perStackEff = (s.value >= realCap - 0.001) ? perStack * 1.5 : perStack;
                     extraDamage(sp, target, amount * (float) perStackEff * (float) s.value);
                     com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
@@ -1474,18 +1596,23 @@ public class HextechEvents {
                 data.addCoins(1);
                 com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.gold_punch"), 0);
             }
-            // 心之钢等：攻击命中概率叠永久属性层（stack_attr_onhit:键:倍率，25% 几率）；叠角龙在场时叠层翻倍——提示带海克斯名称
+            // 心之钢等：攻击命中概率叠永久属性层（stack_attr_onhit:键:倍率，25% 几率）；叠层获取倍率来源在场时叠层翻倍——提示带海克斯名称
             // v0.4.3 修复：荆棘/反伤伤害不再无脑触发叠层；v0.4.7 起：反伤默认在 onDamageDealt 开头已短路（纯反伤），
             // 持有「万伤皆刃」棱彩海克斯时反伤也触发叠层（到达此处时 thorns 只可能是 all_damage_proc 放行或非反伤来源）
+            // v0.9.12 增幅类（selfStack=false）统一由此字段排除，不再硬编码 id
+            // v0.9.12 全局叠层几率增幅（stack_chance）在循环外算一次，循环内直接用
+            float stackChanceAmp = (float) effect(data, "stack_chance");
+            // v0.9.12 性能：属性重建（移除全部 hexcraft 修正再重注入）在同一次命中里只需一次。
+            // 旧实现每个叠中层的海克斯、每件叠中层装备各调一次 applyModifiers，一次命中叠 N 层就全量重建 N 次。
+            boolean stackDirty = false;
             for (PlayerData.HexEntry e : data.getHexes()) {
-                if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不被命中叠层
                 HextechDefinition def = HextechRegistry.get(e.id);
-                if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
+                if (def != null && def.selfStack && hasStackAttr3(def, "stack_attr_onhit")) {
                     // v0.6.16 永续成长概率加成并入此处（原独立循环已删除，杜绝双重判定）
-                    float hitChance = Math.min(1f, stackOnHitChance(def) * (float) (1 + whPermGain));
+                    float hitChance = Math.min(1f, stackOnHitChance(def, stackChanceAmp) * (float) (1 + whPermGain));
                     if (sp.getRandom().nextFloat() < hitChance) {
                         e.stacks = safeStackAdd(e.stacks, gainWithMult(onHitMult, sp.getRandom()));
-                        data.applyModifiers(sp);
+                        stackDirty = true;
                         com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
                                 Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), 0);
                         attrStacked = true;
@@ -1495,17 +1622,18 @@ public class HextechEvents {
             // 可叠层装备（心之钢等装备的 stack_attr_onhit）：装备层数独立累计，chance 概率叠 1 层（叠角龙在场翻倍）——提示带装备名称
             for (PlayerData.EquipEntry eq : data.getEquipment()) {
                 HextechDefinition def = HextechRegistry.getEquip(eq.id);
-                if (def != null && def.event != null && def.event.contains("stack_attr_onhit:")) {
-                    float hitChance = Math.min(1f, stackOnHitChance(def) * (float) (1 + whPermGain));
+                if (def != null && hasStackAttr3(def, "stack_attr_onhit")) {
+                    float hitChance = Math.min(1f, stackOnHitChance(def, stackChanceAmp) * (float) (1 + whPermGain));
                     if (sp.getRandom().nextFloat() < hitChance) {
                         eq.stacks = safeStackAdd(eq.stacks, gainWithMult(onHitMult, sp.getRandom()));
-                        data.applyModifiers(sp);
+                        stackDirty = true;
                         com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.equip_stack_named",
                                 Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), 0);
                         attrStacked = true;
                     }
                 }
             }
+            if (stackDirty) data.applyModifiers(sp);
             // 命中回饱食度（food_on_hit）
             double foodHit = effect(data, "food_on_hit");
             if (foodHit > 0 && sp.getFoodData().getFoodLevel() < 20) {
@@ -1696,14 +1824,15 @@ public class HextechEvents {
         // 修复此前受击段漏乘叠层档位导致的"同是战斗叠层、上限口径不一"
         boolean hurtStacked = false;
         for (PlayerData.HexEntry e : data.getHexes()) {
-            if (e.id.equals("hex_stack_drake")) continue; // 叠角龙自身不受击叠层
+            // v0.9.12 增幅类无 stack 字段，下方 sdef.stack==null 已自动排除，无需硬编码 id
             HextechDefinition sdef = HextechRegistry.get(e.id);
-            if (sdef == null || sdef.stack == null || sdef.stack.onKill || !sdef.event.contains("hurt_gain")) continue;
+            if (sdef == null || sdef.stack == null || sdef.event == null || sdef.stack.onKill
+                    || !sdef.event.contains("hurt_gain")) continue;
             if (data.getStack(sdef.stack.key) == null) {
                 data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat,
                         sdef.stack.decayDelay, sdef.stack.decayRate));
             }
-            data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"),
+            data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain") + effect(data, "stack_growth"),
                     stackCapMultiplier(data, (net.minecraft.server.level.ServerLevel) sp.level()));
             PlayerData.StackEntry s = data.getStack(sdef.stack.key);
             if (s != null) {
@@ -1713,16 +1842,19 @@ public class HextechEvents {
             hurtStacked = true;
         }
         // ===== v0.6.2 受击永久属性层（stack_attr_onhurt：受击概率叠永久属性层，死亡保留）=====
-        // v0.6.16 双叠层修复：受击叠层写入独立 hurtStacks（不再与命中叠层共层）；叠角龙在场按每级 +75% 加成
+        // v0.6.16 双叠层修复：受击叠层写入独立 hurtStacks（不再与命中叠层共层）；叠层获取倍率来源按每级加成
+        // v0.9.12：增幅类（selfStack=false）统一由字段排除，不再硬编码 id
         boolean attrHurtStacked = false;
         double hurtMult = drakeMult(data);
+        float stackChanceAmp = (float) effect(data, "stack_chance");
+        // v0.9.12 性能：受击同理，属性重建一次足够
+        boolean hurtStackDirty = false;
         for (PlayerData.HexEntry e : data.getHexes()) {
-            if (e.id.equals("hex_stack_drake")) continue;
             HextechDefinition def = HextechRegistry.get(e.id);
-            if (def != null && def.event != null && def.event.contains("stack_attr_onhurt:")) {
-                if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
+            if (def != null && def.selfStack && hasStackAttr3(def, "stack_attr_onhurt")) {
+                if (sp.getRandom().nextFloat() < stackOnHitChance(def, stackChanceAmp)) {
                     e.hurtStacks = safeStackAdd(e.hurtStacks, gainWithMult(hurtMult, sp.getRandom()));
-                    data.applyModifiers(sp);
+                    hurtStackDirty = true;
                     com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
                             Component.translatable("hexcraft.hextech." + e.id + ".name"), e.hurtStacks), 0);
                     attrHurtStacked = true;
@@ -1731,16 +1863,18 @@ public class HextechEvents {
         }
         for (PlayerData.EquipEntry eq : data.getEquipment()) {
             HextechDefinition def = HextechRegistry.getEquip(eq.id);
-            if (def != null && def.event != null && def.event.contains("stack_attr_onhurt:")) {
-                if (sp.getRandom().nextFloat() < stackOnHitChance(def)) {
-                    eq.stacks = safeStackAdd(eq.stacks, 1);
-                    data.applyModifiers(sp);
+            if (def != null && hasStackAttr3(def, "stack_attr_onhurt")) {
+                if (sp.getRandom().nextFloat() < stackOnHitChance(def, stackChanceAmp)) {
+                    // v0.9.12 修复：装备受击叠层此前固定 +1 层，不吃叠层获取倍率；与海克斯受击叠层统一走 hurtMult
+                    eq.stacks = safeStackAdd(eq.stacks, gainWithMult(hurtMult, sp.getRandom()));
+                    hurtStackDirty = true;
                     com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.equip_stack_named",
                             Component.translatable("hexcraft.equip." + eq.id + ".name"), eq.stacks), 0);
                     attrHurtStacked = true;
                 }
             }
         }
+        if (hurtStackDirty) data.applyModifiers(sp);
         // ===== v0.6.2 荆棘点燃（thorns_fire）：被近战攻击概率点燃攻击者 4 秒 =====
         double thornFire = effect(data, "thorns_fire");
         if (thornFire > 0 && event.getSource().getDirectEntity() instanceof LivingEntity directAtk
@@ -2169,7 +2303,7 @@ public class HextechEvents {
                     data.putStack(new PlayerData.StackEntry(sdef.stack.key, sdef.stack.cap, sdef.stack.combat,
                             sdef.stack.decayDelay, sdef.stack.decayRate));
                 }
-                data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain"),
+                data.addStack(sdef.stack.key, 1 + effect(data, "stack_gain") + effect(data, "stack_growth"),
                         stackCapMultiplier(data, (net.minecraft.server.level.ServerLevel) sp.level()));
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
                 if (s != null) {

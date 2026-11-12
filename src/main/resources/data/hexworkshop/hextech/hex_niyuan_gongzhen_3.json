@@ -1,6 +1,6 @@
-{
-  "rarity": "GOLD",
-  "weight": 7,
-  "event": "equip_power:0.12,coin_bonus:0.05",
-  "source": "dlc_niyuan"
-}
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "event": "equip_power:0.02,coin_bonus:0.05",
+  "source": "dlc_niyuan"
+}

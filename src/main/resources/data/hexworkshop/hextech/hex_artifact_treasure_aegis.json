@@ -1,7 +1,7 @@
-{
-  "rarity": "PRISMATIC",
-  "weight": 6,
-  "source": "artifacts",
-  "mods": [],
-  "event": "equip_power:0.20,shield_low:3,death_defy:0.12"
-}
+{
+  "rarity": "PRISMATIC",
+  "weight": 6,
+  "source": "artifacts",
+  "mods": [],
+  "event": "equip_power:0.03,shield_low:3,death_defy:0.12"
+}

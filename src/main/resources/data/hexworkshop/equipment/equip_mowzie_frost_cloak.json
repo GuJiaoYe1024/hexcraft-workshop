@@ -7,11 +7,11 @@
   "mods": [
     {
       "attr": "armor",
-      "perLevel": 4.0
+      "perLevel": 2.0
     },
     {
       "attr": "max_health",
-      "perLevel": 40.0
+      "perLevel": 18
     }
   ],
   "event": "mowzie_resist:0.30,mowzie_damage:0.10"

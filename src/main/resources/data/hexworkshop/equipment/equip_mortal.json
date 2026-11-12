@@ -1,13 +1,13 @@
-{
-  "rarity": "GOLD",
-  "weight": 10,
-  "icon": "☠",
-  "sell": 625,
-  "event": "frost_bite:0.49,lifesteal:0.35",
-  "mods": [
-    {
-      "attr": "attack_damage",
-      "perLevel": 30.0
-    }
-  ]
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "icon": "☠",
+  "sell": 625,
+  "event": "frost_bite:0.49,lifesteal:0.35",
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 13.5
+    }
+  ]
 }

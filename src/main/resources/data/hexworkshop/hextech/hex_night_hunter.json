@@ -4,7 +4,7 @@
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.008
+      "perLevel": 0.0056
     }
   ],
   "event": "night_power:0.15",

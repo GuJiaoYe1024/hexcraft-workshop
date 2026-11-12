@@ -59,17 +59,16 @@ public final class StackTagKeys {
         return v != null ? v : key;
     }
 
-    /** tooltip 拼接：def.stackTags → 【叠层：xxx｜xxx｜xxx】（无标签返回 null，UI 不追加） */
+    /** tooltip 拼接：叠层标签用 ｜ 分隔，界面不出现任何括号（无标签返回 null，UI 不追加） */
     public static String tooltipSuffix(HextechDefinition def, boolean chinese) {
         if (def == null || def.stackTags == null || def.stackTags.isEmpty()) return null;
-        StringBuilder sb = new StringBuilder("【");
+        StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (String t : def.stackTags) {
             if (!first) sb.append('｜');
             sb.append(localized(t, chinese));
             first = false;
         }
-        sb.append('】');
         return sb.toString();
     }
 }

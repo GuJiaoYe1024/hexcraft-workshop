@@ -23,6 +23,11 @@ public class HextechDefinition {
     public final StackSpec stack;
     /** v0.6.2 叠层标签体系：stackTag[] 枚举字符串数组（代码内置中英翻译表），tooltip 运行时拼接【叠层：xxx｜xxx｜xxx】 */
     public final List<String> stackTags;
+    /** v0.9.12 自身是否可叠层（默认 true）：false = 叠层增幅类（如叠角龙/迅战之角），只给其他叠层提供增幅，自身不涨层数；
+     *  取代此前靠硬编码 id + 散落 continue 的隐式区分，数据驱动、不写死。 */
+    public final boolean selfStack;
+    /** v0.9.12 是否提供叠层获取倍率（默认 false，仅叠角龙 true）：drakeMult 按此标记查找，倍率值仍读可配置项，不写死 id。 */
+    public final boolean stackGainMult;
 
     public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event) {
         this(id, rarity, weight, mods, event, null, 0, null, null, null);
@@ -41,6 +46,12 @@ public class HextechDefinition {
     }
 
     public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event, String icon, int sell, String source, StackSpec stack, List<String> stackTags) {
+        this(id, rarity, weight, mods, event, icon, sell, source, stack, stackTags, true, false);
+    }
+
+    /** v0.9.12 完整构造器：显式传入 selfStack / stackGainMult（数据驱动）。 */
+    public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event, String icon, int sell,
+                             String source, StackSpec stack, List<String> stackTags, boolean selfStack, boolean stackGainMult) {
         this.id = id;
         this.rarity = rarity;
         this.weight = weight;
@@ -50,6 +61,8 @@ public class HextechDefinition {
         this.sell = sell;
         this.stack = stack;
         this.stackTags = stackTags;
+        this.selfStack = selfStack;
+        this.stackGainMult = stackGainMult;
         // 来源归一化：显式指定优先；否则按 id 前缀自动归类（tacz_ → tacz，其余 vanilla；未来联动注册见 HextechRegistry.registerSourcePrefix）
         this.source = source != null && !source.isEmpty() ? source : HextechRegistry.sourceOf(id);
     }

@@ -1,1 +1,16 @@
-{"rarity":"GOLD","weight":7,"event":"stack_attr:attack_speed:0.02","mods":[{"attr":"movement_speed","perLevel":0.003}],"stackTag":["permanent_stack","speed_stack","on_kill_stack"]}
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "event": "stack_attr:attack_speed:0.00035",
+  "mods": [
+    {
+      "attr": "movement_speed",
+      "perLevel": 0.0021
+    }
+  ],
+  "stackTag": [
+    "permanent_stack",
+    "speed_stack",
+    "on_kill_stack"
+  ]
+}

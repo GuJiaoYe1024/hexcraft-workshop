@@ -8,7 +8,7 @@
     },
     {
       "attr": "attack_speed",
-      "perLevel": 0.3
+      "perLevel": 0.21
     }
   ],
   "event": "ranged_power:0.20,crit:0.08"

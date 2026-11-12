@@ -716,7 +716,8 @@ public class Packets {
             if (pCap > 0) {
                 m.permStackCap = pCap;
             } else {
-                m.permStackCap = HextechEvents.stackCapFor(d);
+                // v0.9.12：与 ServerPlayer 侧属性结算同口径（档位 × 连携 × stack_cap × 世界海克斯）
+                m.permStackCap = HextechEvents.permanentStackCapFor(d, sp.serverLevel());
             }
             return m;
         }
@@ -1039,6 +1040,10 @@ public class Packets {
         S2CSyncWorldHexes msg = S2CSyncWorldHexes.of(server);
         for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
             PacketHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), msg);
+            // v0.9.12 自动更新：世界海克斯会改变叠层上限（combat_stack_cap 等），
+            // 只发世界海克斯列表的话，属性页上的「生效层数 / 上限」会停在旧值，看起来像写死。
+            // 这里顺带重发一次玩家状态，客户端收到即为新上限。
+            HextechEvents.sync(sp);
         }
     }
 

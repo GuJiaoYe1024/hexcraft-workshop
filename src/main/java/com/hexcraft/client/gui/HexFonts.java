@@ -96,6 +96,11 @@ public final class HexFonts {
      *  深蓝半透明背景 + 细边框 + 文字无阴影，并自动防止超出屏幕。
      *  rows 每项为 Component（普通行）或 ColLine（固定列对齐行，档位行用）。 */
     public static void tooltip(GuiGraphics g, java.util.List<?> rows, int mx, int my) {
+        tooltip(g, rows, mx, my, g.guiWidth(), g.guiHeight());
+    }
+
+    /** 显式传入可视区尺寸：界面启用缩放时鼠标与内容都在逻辑坐标系，边界必须用逻辑宽高，否则高缩放下会算出界面外 */
+    public static void tooltip(GuiGraphics g, java.util.List<?> rows, int mx, int my, int viewW, int viewH) {
         if (rows == null || rows.isEmpty()) return;
         int u = ui().width("件");
         int gap = Math.max(1, (int) (u * 0.4f));
@@ -135,8 +140,8 @@ public final class HexFonts {
         int h = rows.size() * 9 + 6;
         int sx = mx + 10;
         int sy = my - 4;
-        int gw = g.guiWidth();
-        int gh = g.guiHeight();
+        int gw = viewW;
+        int gh = viewH;
         if (sx + w + 6 > gw) sx = Math.max(0, gw - w - 10);
         if (sy + h + 6 > gh) sy = Math.max(0, gh - h - 10);
         g.fill(sx - 3, sy - 3, sx + w + 3, sy + h + 3, 0xF0101A2E);
