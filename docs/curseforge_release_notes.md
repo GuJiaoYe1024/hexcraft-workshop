@@ -1,3 +1,42 @@
+Hexcraft Workshop v0.9.14 - Four effectiveness fixes for non-arrow hexes
+=======================================================================
+
+SWIM SPEED NOW USES AN ATTRIBUTE MODIFIER
+=========================================
+- The old code called setDeltaMovement on the server player. Player movement is computed and reported by the client, so a delta set on the server is overwritten by the next position packet and had no visible effect.
+- It now adds a temporary MOVEMENT_SPEED modifier while in water and removes it on leaving water. Vanilla swimming reads that attribute directly, so it is server-authoritative and stays in sync.
+
+LANDING SLAM DAMAGE AND RADIUS SPLIT
+====================================
+- The single power value used to drive both damage and radius. At value 2 the slam dealt 2 damage in a 2 block radius, which felt like nothing.
+- Radius is now a fixed 3.5 blocks and damage takes power alone; hex_landing_slam.json goes from landing_slam:2 to landing_slam:8.
+
+BOAT AND MINECART THRUST COEFFICIENTS RAISED
+============================================
+- Boats and minecarts are not living entities and have no attribute map, so the only option is a per-tick thrust, which the old code already did. At 0.05 the thrust added roughly 5 percent to real speed and was invisible.
+- Boat coefficient 0.05 to 0.15, minecart 0.05 to 0.10; the minecart value stays lower because rails already impose a speed limit.
+
+BREWING MATCH NOW COMPARES CONTENT
+==================================
+- The old code compared item references to find the brewing stand behind the event. The stand copies its stacks, so the references differ, the match failed silently and the whole effect never ran once.
+- It now uses ItemStack.isSameItemSameTags, comparing item and NBT content instead of identity.
+
+NOT CHANGED IN THIS VERSION
+===========================
+- Elytra speed has the same server-side setDeltaMovement problem, but gliding speed does not read MOVEMENT_SPEED and the event layer has no hook there. A real fix needs a client hook or mixin.
+- Axe shield break only applies to blocking players, so it can never fire in a single-player save by design.
+
+Version 0.9.14, network protocol VERSION 23 unchanged, existing saves are safe.
+
+中文摘要
+=========
+- 游泳加速改为 MOVEMENT_SPEED 属性修饰，离水即移除，解决服务端 setDeltaMovement 无效
+- 落地重击伤害与范围解耦，范围固定 3.5 格，landing_slam 由 2 提到 8
+- 船推力系数 0.05 提到 0.15，矿车 0.05 提到 0.10
+- 酿造匹配由引用相等改 ItemStack.isSameItemSameTags 内容比较，避免静默失效
+- 鞘翅加速同样存在服务端推力无效问题，需客户端钩子，本版未动；斧破盾单人存档不触发属设计
+- 版本 0.9.14，协议 VERSION 23 不变，现有存档安全
+
 Hexcraft Workshop v0.9.13 - Explosive Arrow trigger fix
 =====================================================
 

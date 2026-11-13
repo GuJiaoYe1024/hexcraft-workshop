@@ -65,7 +65,9 @@ public class BrewEvents {
                     if (items != null && items.size() == event.getLength()) {
                         boolean same = true;
                         for (int i = 0; i < items.size(); i++) {
-                            if (event.getItem(i) != items.get(i)) {
+                            // v0.9.14：原来用引用相等判断，酿造台把栈复制一份后引用不同，
+                            // 匹配会静默失败、整条效果一次都不生效。改为按物品与 NBT 内容比较。
+                            if (!ItemStack.isSameItemSameTags(event.getItem(i), items.get(i))) {
                                 same = false;
                                 break;
                             }

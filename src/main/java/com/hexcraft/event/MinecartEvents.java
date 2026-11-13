@@ -27,6 +27,8 @@ public class MinecartEvents {
         Vec3 delta = cart.getDeltaMovement();
         Vec3 horizontal = new Vec3(delta.x, 0.0, delta.z);
         if (horizontal.lengthSqr() <= 1.0e-6) return;
-        cart.setDeltaMovement(delta.add(horizontal.normalize().scale(boost * 0.05)));
+        // v0.9.14：原系数 0.05 实际推力几乎不可见。矿车受轨道限速与自身物理约束，
+        // 系数提到 0.10，既能明显加速又不至于顶飞出轨。
+        cart.setDeltaMovement(delta.add(horizontal.normalize().scale(boost * 0.10)));
     }
 }

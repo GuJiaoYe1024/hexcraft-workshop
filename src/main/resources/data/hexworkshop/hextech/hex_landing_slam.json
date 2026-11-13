@@ -2,5 +2,5 @@
   "rarity": "GOLD",
   "weight": 8,
   "source": "dlc_vanilla",
-  "event": "landing_slam:2"
+  "event": "landing_slam:8"
 }

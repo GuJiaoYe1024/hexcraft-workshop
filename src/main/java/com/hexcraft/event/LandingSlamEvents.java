@@ -27,7 +27,9 @@ public class LandingSlamEvents {
         if (power <= 0) return;
         if (event.getDistance() < 3f) return;
         Level level = sp.level();
-        AABB area = sp.getBoundingBox().inflate(power, 1.0, power);
+        // v0.9.14：伤害与范围解耦。原来 power 同时当伤害和范围用，值小则两者都小，
+        // 表现为砸下来完全没感觉。现固定范围 3.5 格，伤害单独取 power。
+        AABB area = sp.getBoundingBox().inflate(3.5, 1.0, 3.5);
         List<LivingEntity> nearby = level.getEntitiesOfClass(LivingEntity.class, area, e -> e != sp);
         for (LivingEntity target : nearby) {
             target.hurt(sp.damageSources().playerAttack(sp), (float) power);

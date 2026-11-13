@@ -28,6 +28,9 @@ public class BoatEvents {
         Vec3 horizontal = new Vec3(look.x, 0.0, look.z);
         if (horizontal.lengthSqr() <= 1.0e-6) return;
         Vec3 delta = boat.getDeltaMovement();
-        boat.setDeltaMovement(delta.add(horizontal.normalize().scale(boost * 0.05)));
+        // v0.9.14：原系数 0.05 折算到实际航速只多约 5%，肉眼看不出来。
+        // 船与矿车都是非生物实体、没有属性表，无法走属性修饰，只能每 tick 持续补推力；
+        // 系数提到 0.15，约在原版航速上多出一成半，能被明显感知。
+        boat.setDeltaMovement(delta.add(horizontal.normalize().scale(boost * 0.15)));
     }
 }
