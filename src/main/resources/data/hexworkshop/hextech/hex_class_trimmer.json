@@ -1,0 +1,8 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "event": "trim_boost:0.1,equip_power:0.05",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

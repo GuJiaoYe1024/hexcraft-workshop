@@ -1,0 +1,8 @@
+{
+  "rarity": "SILVER",
+  "weight": 14,
+  "event": "tf_dimension_damage:0.12,tf_boss_resist:0.1",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

@@ -389,14 +389,19 @@ public class HextechRegistry {
 
     /** v0.9.17 职业包·联动职业海克斯：除所属内置 DLC(class) 开启外，还要求对应联动 mod 已安装；
      *  未安装即在抽取池与图鉴中隐藏，与联动来源海克斯的隐藏口径一致。 */
-    private static final Map<String, String> CLASS_REQUIRE_MOD = Map.of(
-            "hex_class_cook", "farmersdelight",
-            "hex_class_blade", "slashblade",
-            "hex_class_arcanist", "irons_spellbooks",
-            "hex_class_slayer", "cataclysm",
-            "hex_class_shaman", "goety",
-            "hex_class_curator", "artifacts",
-            "hex_class_relic", "relics"
+    private static final Map<String, String> CLASS_REQUIRE_MOD = Map.ofEntries(
+            Map.entry("hex_class_cook", "farmersdelight"),
+            Map.entry("hex_class_blade", "slashblade"),
+            Map.entry("hex_class_arcanist", "irons_spellbooks"),
+            Map.entry("hex_class_slayer", "cataclysm"),
+            Map.entry("hex_class_shaman", "goety"),
+            Map.entry("hex_class_curator", "artifacts"),
+            Map.entry("hex_class_relic", "relics"),
+            Map.entry("hex_class_dragonknight", "iceandfire"),
+            Map.entry("hex_class_beastmaster", "alexsmobs"),
+            Map.entry("hex_class_alchemist", "projecte"),
+            Map.entry("hex_class_gunsmith", "tacz"),
+            Map.entry("hex_class_woodwalker", "twilightforest")
     );
 
     /** 定义在当前环境是否可用（来源启用判定；contentType: hex / equip）。

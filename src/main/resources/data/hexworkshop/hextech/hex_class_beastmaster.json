@@ -1,0 +1,8 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "event": "am_beast_damage:0.15,am_kill_heal:2,am_wild_lord:0.1",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

@@ -1,0 +1,8 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 5,
+  "event": "iaf_dragon_damage:0.15,iaf_dragon_resist:0.12,iaf_dragon_kill_heal:2",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

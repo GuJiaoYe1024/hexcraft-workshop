@@ -1,0 +1,8 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "event": "beacon_range:1,regen:1",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

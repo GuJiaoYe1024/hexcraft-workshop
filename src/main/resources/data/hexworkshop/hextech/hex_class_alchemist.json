@@ -1,0 +1,8 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "event": "emc_bargain:0.1,emc_wealth:0.1,emc_transmute:0.1",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}
