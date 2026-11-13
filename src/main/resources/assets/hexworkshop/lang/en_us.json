@@ -2714,5 +2714,11 @@
   "hexcraft.theme.gamble": "Gamble",
   "hexcraft.theme.luck": "Luck",
   "hexcraft.theme.aram": "Arena Brawl",
-  "hexcraft.theme.niyuan": "Origin Hunt"
+  "hexcraft.theme.niyuan": "Origin Hunt",
+  "hexcraft.config.dlc.builtin_class": "Built-in DLC · Class",
+  "hexcraft.config.dlc.builtin_class.tip": "Profession hexes grow along profession playstyles and ship in the main draw pool; when disabled they no longer enter the pool while owned ones stay visible.",
+  "hexcraft.source.dlc_class": "Class",
+  "hexcraft.category.profession": "Profession",
+  "hexcraft.hextech.hex_forge_master.name": "Forgeborn Scion",
+  "hexcraft.hextech.hex_forge_master.desc": "Gain 1 stack each time you craft equipment at a crafting table: weapons and tools grant +0.1 Attack Damage per stack, armor grants +0.1 Armor per stack. The stack cap follows the Stack Master tier and stack breakthroughs."
 }

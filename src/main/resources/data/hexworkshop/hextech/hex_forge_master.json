@@ -1,0 +1,11 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 5,
+  "event": "stack_attr_craft:attack_damage:0.1,stack_attr_craft_guard:armor:0.1",
+  "stackTag": [
+    "permanent_stack"
+  ],
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

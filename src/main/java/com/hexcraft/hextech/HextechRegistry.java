@@ -92,7 +92,7 @@ public class HextechRegistry {
     private static final java.util.Set<String> KNOWN_SOURCES = java.util.Set.of(
             "tacz", "irons_spellbooks", "alexscaves", "iceandfire", "twilightforest", "alexsmobs",
             "slashblade", "artifacts", "cataclysm", "projecte", "farmersdelight", "goety",
-            "mowziesmobs", "ftbquests", "relics", "dlc_niyuan", "dlc_aram");
+            "mowziesmobs", "ftbquests", "relics", "dlc_niyuan", "dlc_aram", "dlc_class");
 
     /** 锻造页短缩写到标准来源 key 的归一（短缩写与 modid 口径统一） */
     private static final Map<String, String> SOURCE_ALIAS = Map.of(
@@ -268,6 +268,7 @@ public class HextechRegistry {
         // v0.9.15 内置 DLC 来源：非 mod 联动，纯配置开关控制（dlc_niyuan=逆原猎场增幅；dlc_aram=大乱斗套装）
         if ("dlc_niyuan".equals(modid)) return com.hexcraft.config.HexConfig.DLC_NIYUAN_ENABLED.get();
         if ("dlc_aram".equals(modid)) return com.hexcraft.config.HexConfig.DLC_ARAM_ENABLED.get();
+        if ("dlc_class".equals(modid)) return com.hexcraft.config.HexConfig.DLC_CLASS_ENABLED.get();
         if (!net.minecraftforge.fml.ModList.get().isLoaded(modid)) return false; // 自动检测：未安装 → 不启用
         if ("tacz".equals(modid)) {
             boolean master = com.hexcraft.config.HexConfig.ENABLE_TACZ_CONTENT.get();
@@ -444,8 +445,8 @@ public class HextechRegistry {
         switch (filter) {
             case 1: return "vanilla".equals(s);
             case 2: return !"vanilla".equals(s) && !"dlc_niyuan".equals(s) && !"dlc_aram".equals(s)
-                    && !com.hexcraft.dlc.DlcManager.isPackContent(def.id);
-            case 3: return "dlc_niyuan".equals(s) || "dlc_aram".equals(s)
+                    && !"dlc_class".equals(s) && !com.hexcraft.dlc.DlcManager.isPackContent(def.id);
+            case 3: return "dlc_niyuan".equals(s) || "dlc_aram".equals(s) || "dlc_class".equals(s)
                     || com.hexcraft.dlc.DlcManager.isPackContent(def.id);
             default: return true;
         }

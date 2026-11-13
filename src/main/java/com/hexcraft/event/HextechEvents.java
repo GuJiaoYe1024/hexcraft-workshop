@@ -142,10 +142,11 @@ public class HextechEvents {
         return false;
     }
 
-    /** 该海克斯是否存在任意一种有效的每层属性叠层键（stack_attr / stack_attr_onhit / stack_attr_onhurt） */
+    /** 该海克斯是否存在任意一种有效的每层属性叠层键（stack_attr / stack_attr_onhit / stack_attr_onhurt / 职业包合成叠层） */
     public static boolean hasAnyStackAttr3(HextechDefinition def) {
         return hasStackAttr3(def, "stack_attr") || hasStackAttr3(def, "stack_attr_onhit")
-                || hasStackAttr3(def, "stack_attr_onhurt");
+                || hasStackAttr3(def, "stack_attr_onhurt")
+                || hasStackAttr3(def, "stack_attr_craft") || hasStackAttr3(def, "stack_attr_craft_guard");
     }
 
     /** v0.6.16 叠角龙统一倍率：每级 +75%（对齐 lang 描述"多获得 75%"），无叠角龙 = 1。
@@ -527,6 +528,53 @@ public class HextechEvents {
         }
         com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp,
                 Component.translatable("message.hexcraft.craft_bonus", bonus.getHoverName(), count), 0);
+    }
+
+    // ===== v0.9.17 内置 DLC·职业：装备合成叠层（锻造神子） =====
+    /** 工作台合成出装备时叠一层：产物为武器/工具 → stacks（攻击向），防具 → hurtStacks（防御向）。
+     *  每层收益由 PlayerData 的 stack_attr_craft* 三段式按固定点数结算；
+     *  层数不设独立硬顶，收益按全局叠层上限截断（默认 200，叠层专家档位与堆叠突破一起提升）。 */
+    @SubscribeEvent
+    public static void onCraftEquipStack(net.minecraftforge.event.entity.player.PlayerEvent.ItemCraftedEvent event) {
+        net.minecraft.world.entity.player.Player pl = event.getEntity();
+        if (!(pl instanceof ServerPlayer sp)) return;
+        if (sp.level().isClientSide) return;
+        ItemStack result = event.getCrafting();
+        if (result.isEmpty()) return;
+        boolean weapon = isWeaponOrTool(result.getItem());
+        boolean guard = result.getItem() instanceof net.minecraft.world.item.ArmorItem;
+        if (!weapon && !guard) return;
+        PlayerData data = ModCapabilities.get(sp);
+        if (data == null) return;
+        boolean grew = false;
+        for (PlayerData.HexEntry e : data.getHexes()) {
+            HextechDefinition def = HextechRegistry.get(e.id);
+            if (def == null) continue;
+            if (weapon && hasStackAttr3(def, "stack_attr_craft")) {
+                e.stacks = safeStackAdd(e.stacks, 1);
+                grew = true;
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable(
+                        "message.hexcraft.stack_named",
+                        Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), 0);
+            } else if (guard && hasStackAttr3(def, "stack_attr_craft_guard")) {
+                e.hurtStacks = safeStackAdd(e.hurtStacks, 1);
+                grew = true;
+                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable(
+                        "message.hexcraft.stack_named",
+                        Component.translatable("hexcraft.hextech." + e.id + ".name"), e.hurtStacks), 0);
+            }
+        }
+        if (grew) data.applyModifiers(sp);
+    }
+
+    /** 合成产物是否算武器/工具（攻击向叠层）：剑、镐斧锹锄、三叉戟、弓、弩、盾 */
+    private static boolean isWeaponOrTool(net.minecraft.world.item.Item item) {
+        return item instanceof net.minecraft.world.item.SwordItem
+                || item instanceof net.minecraft.world.item.DiggerItem
+                || item instanceof net.minecraft.world.item.TridentItem
+                || item instanceof net.minecraft.world.item.BowItem
+                || item instanceof net.minecraft.world.item.CrossbowItem
+                || item instanceof net.minecraft.world.item.ShieldItem;
     }
 
     @SubscribeEvent

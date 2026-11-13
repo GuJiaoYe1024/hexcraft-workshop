@@ -482,6 +482,26 @@ public class PlayerData {
                                             rate * e.level * cappedHurtStacks * hexPower);
                                 } catch (Exception ignored) { }
                             }
+                        } else if (token.startsWith("stack_attr_craft:")) {
+                            // v0.9.17 职业包·合成叠层（攻击向）：武器/工具合成层数 → 每层固定点数加法（ADDITION），不吃百分比增幅
+                            Attribute a = STACK_ATTRS.get(parts[1]);
+                            if (a != null && cappedStacks > 0) {
+                                try {
+                                    double rate = Double.parseDouble(parts[2]);
+                                    applyOne(player, a, "hex:" + e.id + "#cft" + idx++,
+                                            rate * e.level * cappedStacks);
+                                } catch (Exception ignored) { }
+                            }
+                        } else if (token.startsWith("stack_attr_craft_guard:")) {
+                            // v0.9.17 职业包·合成叠层（防御向）：防具合成层数存 hurtStacks 独立计数 → 每层固定点数加法
+                            Attribute a = STACK_ATTRS.get(parts[1]);
+                            if (a != null && cappedHurtStacks > 0) {
+                                try {
+                                    double rate = Double.parseDouble(parts[2]);
+                                    applyOne(player, a, "hex:" + e.id + "#cftg" + idx++,
+                                            rate * e.level * cappedHurtStacks);
+                                } catch (Exception ignored) { }
+                            }
                         }
                     }
                 }

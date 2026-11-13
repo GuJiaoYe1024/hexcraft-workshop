@@ -96,6 +96,8 @@ public class HexConfig {
     // ---- v0.9.2 内置 DLC（随 mod 打包，无需玩家额外下载；独立开关控制是否并入主抽取池） ----
     public static final ForgeConfigSpec.BooleanValue DLC_NIYUAN_ENABLED;
     public static final ForgeConfigSpec.BooleanValue DLC_ARAM_ENABLED;
+    /** v0.9.17 内置 DLC·职业：职业系海克斯（锻造神子等） */
+    public static final ForgeConfigSpec.BooleanValue DLC_CLASS_ENABLED;
 
     // ---- 世界海克斯（v0.3.21；全服共享的全局增强/诅咒体系） ----
     public static final ForgeConfigSpec.BooleanValue WORLD_ENABLED;
@@ -321,6 +323,7 @@ public class HexConfig {
         // 原版回归这个包与开关一并取消；DLC 只保留非原版扩展——逆原、大乱斗。
         DLC_NIYUAN_ENABLED = b.comment("内置 DLC·逆原：启用「逆原」猎场增幅海克斯（借鉴逆战原点猎场增幅：狂战/游击/壁垒三系羁绊 + 全局强化，含组合羁绊）").translation("hexcraft.config.dlc.builtin_niyuan").define("enableDlcNiyuan", true);
         DLC_ARAM_ENABLED = b.comment("内置 DLC·大乱斗：启用 20 个海克斯大乱斗套装海克斯（云顶式 9 套羁绊成员与专属机制，非原版玩法扩展，可独立关闭）").translation("hexcraft.config.dlc.builtin_aram").define("enableDlcAram", true);
+        DLC_CLASS_ENABLED = b.comment("内置 DLC·职业：启用职业系海克斯（锻造神子等按职业玩法分流的成长型海克斯；合成装备时叠层，非原版玩法扩展，可独立关闭）").translation("hexcraft.config.dlc.builtin_class").define("enableDlcClass", true);
         b.pop();
 
         b.comment("世界海克斯：全服共享的全局增强/诅咒体系（背包第二页签进入；抽取消耗经验、取消消耗晶币）").translation("hexcraft.config.cat.world").push("world");
