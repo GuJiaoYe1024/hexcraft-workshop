@@ -2720,5 +2720,8 @@
   "hexcraft.source.dlc_class": "Class",
   "hexcraft.category.profession": "Profession",
   "hexcraft.hextech.hex_forge_master.name": "Forgeborn Scion",
-  "hexcraft.hextech.hex_forge_master.desc": "Gain 1 stack each time you craft equipment at a crafting table: weapons and tools grant +0.1 Attack Damage per stack, armor grants +0.1 Armor per stack. The stack cap follows the Stack Master tier and stack breakthroughs."
+  "hexcraft.hextech.hex_forge_master.desc": "Gain 1 stack each time you craft equipment at a crafting table, and write the current stack count into the crafted item: weapons and tools grant +0.1 Attack Damage per stack, armor grants +0.1 Armor per stack. The bonus only applies while worn and disappears when removed, but stays on the item if traded away. The stack cap follows the Stack Master tier and stack breakthroughs.",
+  "message.hexcraft.forge_scion_craft": "%s stack %s: the crafted item now carries its own bonus",
+  "tooltip.hexcraft.forge_scion_attack": "Forgeborn Scion: Attack Damage +%s",
+  "tooltip.hexcraft.forge_scion_armor": "Forgeborn Scion: Armor +%s"
 }

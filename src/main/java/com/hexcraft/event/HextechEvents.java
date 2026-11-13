@@ -142,11 +142,10 @@ public class HextechEvents {
         return false;
     }
 
-    /** 该海克斯是否存在任意一种有效的每层属性叠层键（stack_attr / stack_attr_onhit / stack_attr_onhurt / 职业包合成叠层） */
+    /** 该海克斯是否存在任意一种有效的每层属性叠层键（stack_attr / stack_attr_onhit / stack_attr_onhurt / 职业包物品自带加成） */
     public static boolean hasAnyStackAttr3(HextechDefinition def) {
         return hasStackAttr3(def, "stack_attr") || hasStackAttr3(def, "stack_attr_onhit")
-                || hasStackAttr3(def, "stack_attr_onhurt")
-                || hasStackAttr3(def, "stack_attr_craft") || hasStackAttr3(def, "stack_attr_craft_guard");
+                || hasStackAttr3(def, "stack_attr_onhurt") || scionPer(def) > 0;
     }
 
     /** v0.6.16 叠角龙统一倍率：每级 +75%（对齐 lang 描述"多获得 75%"），无叠角龙 = 1。
@@ -530,13 +529,13 @@ public class HextechEvents {
                 Component.translatable("message.hexcraft.craft_bonus", bonus.getHoverName(), count), 0);
     }
 
-    // ===== v0.9.17 内置 DLC·职业：装备合成叠层（锻造神子） =====
-    /** 工作台合成出装备时叠一层：产物为武器/工具 → stacks（攻击向），防具 → hurtStacks（防御向）。
-     *  每层收益由 PlayerData 的 stack_attr_craft* 三段式按固定点数结算；
-     *  层数不设独立硬顶，收益按全局叠层上限截断（默认 200，叠层专家档位与堆叠突破一起提升）。 */
+    // ===== v0.9.17 内置 DLC·职业：锻造神子（合成时把层数写进物品）=====
+    /** 工作台合成出装备时叠 1 层，并把当时层数写进产物 NBT：
+     *  这件装备自带「每层 +per 点」的属性，穿戴时由 PlayerData 读 NBT 结算，脱下即失效；
+     *  NBT 随物品走，物品转手也保留。层数不设独立硬顶，收益按全局叠层上限截断。 */
     @SubscribeEvent
     public static void onCraftEquipStack(net.minecraftforge.event.entity.player.PlayerEvent.ItemCraftedEvent event) {
-        net.minecraft.world.entity.player.Player pl = event.getEntity();
+        Player pl = event.getEntity();
         if (!(pl instanceof ServerPlayer sp)) return;
         if (sp.level().isClientSide) return;
         ItemStack result = event.getCrafting();
@@ -549,25 +548,58 @@ public class HextechEvents {
         boolean grew = false;
         for (PlayerData.HexEntry e : data.getHexes()) {
             HextechDefinition def = HextechRegistry.get(e.id);
-            if (def == null) continue;
-            if (weapon && hasStackAttr3(def, "stack_attr_craft")) {
-                e.stacks = safeStackAdd(e.stacks, 1);
-                grew = true;
-                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable(
-                        "message.hexcraft.stack_named",
-                        Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), 0);
-            } else if (guard && hasStackAttr3(def, "stack_attr_craft_guard")) {
-                e.hurtStacks = safeStackAdd(e.hurtStacks, 1);
-                grew = true;
-                com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable(
-                        "message.hexcraft.stack_named",
-                        Component.translatable("hexcraft.hextech." + e.id + ".name"), e.hurtStacks), 0);
-            }
+            double per = scionPer(def);
+            if (per <= 0) continue;
+            e.stacks = safeStackAdd(e.stacks, 1);
+            grew = true;
+            // 把这件产物的自带属性写进 NBT：层数 × 每层点数，类型决定挂攻击还是护甲
+            CompoundTag tag = result.getOrCreateTag();
+            CompoundTag sub = tag.contains("hexcraft") ? tag.getCompound("hexcraft") : new CompoundTag();
+            sub.putInt("forge_scion", e.stacks);
+            sub.putDouble("forge_scion_per", per);
+            sub.putString("forge_scion_kind", guard ? "armor" : "attack");
+            tag.put("hexcraft", sub);
+            Packets.S2CTipMessage.sendTo(sp, Component.translatable(
+                    "message.hexcraft.forge_scion_craft",
+                    Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), 0);
         }
         if (grew) data.applyModifiers(sp);
     }
 
-    /** 合成产物是否算武器/工具（攻击向叠层）：剑、镐斧锹锄、三叉戟、弓、弩、盾 */
+    /** 锻造神子每层点数（forge_scion:0.1），无则 0 */
+    public static double scionPer(HextechDefinition def) {
+        if (def == null || def.event == null) return 0;
+        for (String token : eventTokens(def.event)) {
+            if (!token.startsWith("forge_scion:")) continue;
+            try { return Double.parseDouble(token.substring("forge_scion:".length()).trim()); } catch (Exception ignored) { }
+        }
+        return 0;
+    }
+
+    /** 装备变更后重算：锻造神子的物品自带加成随穿脱即时生效 */
+    @SubscribeEvent
+    public static void onEquipChanged(net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        PlayerData d = ModCapabilities.get(sp);
+        if (d != null) d.applyModifiers(sp);
+    }
+
+    /** 锻造神子物品 tooltip：显示这件装备自带多少加成 */
+    @SubscribeEvent
+    public static void onScionTooltip(net.minecraftforge.event.entity.player.ItemTooltipEvent event) {
+        ItemStack st = event.getItemStack();
+        if (st == null || st.isEmpty() || !st.hasTag()) return;
+        CompoundTag h = st.getTag().getCompound("hexcraft");
+        int n = h.getInt("forge_scion");
+        double per = h.getDouble("forge_scion_per");
+        if (n <= 0 || per <= 0) return;
+        boolean armor = "armor".equals(h.getString("forge_scion_kind"));
+        event.getToolTip().add(Component.translatable(
+                armor ? "tooltip.hexcraft.forge_scion_armor" : "tooltip.hexcraft.forge_scion_attack",
+                String.format("%.1f", per * n)).withStyle(net.minecraft.ChatFormatting.AQUA));
+    }
+
+    /** 合成产物是否算武器/工具（攻击向）：剑、镐斧锹锄、三叉戟、弓、弩、盾 */
     private static boolean isWeaponOrTool(net.minecraft.world.item.Item item) {
         return item instanceof net.minecraft.world.item.SwordItem
                 || item instanceof net.minecraft.world.item.DiggerItem

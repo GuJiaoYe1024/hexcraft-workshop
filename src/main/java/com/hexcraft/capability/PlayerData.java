@@ -13,6 +13,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -482,26 +483,6 @@ public class PlayerData {
                                             rate * e.level * cappedHurtStacks * hexPower);
                                 } catch (Exception ignored) { }
                             }
-                        } else if (token.startsWith("stack_attr_craft:")) {
-                            // v0.9.17 职业包·合成叠层（攻击向）：武器/工具合成层数 → 每层固定点数加法（ADDITION），不吃百分比增幅
-                            Attribute a = STACK_ATTRS.get(parts[1]);
-                            if (a != null && cappedStacks > 0) {
-                                try {
-                                    double rate = Double.parseDouble(parts[2]);
-                                    applyOne(player, a, "hex:" + e.id + "#cft" + idx++,
-                                            rate * e.level * cappedStacks);
-                                } catch (Exception ignored) { }
-                            }
-                        } else if (token.startsWith("stack_attr_craft_guard:")) {
-                            // v0.9.17 职业包·合成叠层（防御向）：防具合成层数存 hurtStacks 独立计数 → 每层固定点数加法
-                            Attribute a = STACK_ATTRS.get(parts[1]);
-                            if (a != null && cappedHurtStacks > 0) {
-                                try {
-                                    double rate = Double.parseDouble(parts[2]);
-                                    applyOne(player, a, "hex:" + e.id + "#cftg" + idx++,
-                                            rate * e.level * cappedHurtStacks);
-                                } catch (Exception ignored) { }
-                            }
                         }
                     }
                 }
@@ -556,6 +537,8 @@ public class PlayerData {
                 }
             }
         }
+        // v0.9.17 职业包·锻造神子：装备自带加成（读已穿戴物品 NBT，脱下即失效）
+        applyForgeScion(player, pCap);
         // v0.9.12 属性转化延迟结算：护甲与全部 mods 注入完成后才读护甲值，保证转化基数是最终护甲
         for (HexEntry e : hexes) {
             if (!"hex_stat_converter".equals(e.id)) continue;
@@ -589,6 +572,32 @@ public class PlayerData {
             if (inst.getModifier(uuid) != null) inst.removeModifier(uuid);
             inst.addPermanentModifier(new AttributeModifier(uuid, "hexcraft", -(v - cap), AttributeModifier.Operation.ADDITION));
         }
+    }
+
+    /** v0.9.17 锻造神子：合成时把层数写进物品 NBT，此处按已穿戴物品的 NBT 结算。
+     *  盔甲槽只吃防具类、主手/副手只吃武器类；每槽固定 modifier 键，换装时值被覆盖、不残留。 */
+    private void applyForgeScion(ServerPlayer player, int pCap) {
+        applyScionOne(player, player.getInventory().armor.get(0), true, Attributes.ARMOR, "scion:armor0", pCap);
+        applyScionOne(player, player.getInventory().armor.get(1), true, Attributes.ARMOR, "scion:armor1", pCap);
+        applyScionOne(player, player.getInventory().armor.get(2), true, Attributes.ARMOR, "scion:armor2", pCap);
+        applyScionOne(player, player.getInventory().armor.get(3), true, Attributes.ARMOR, "scion:armor3", pCap);
+        applyScionOne(player, player.getMainHandItem(), false, Attributes.ATTACK_DAMAGE, "scion:main", pCap);
+        applyScionOne(player, player.getOffhandItem(), false, Attributes.ATTACK_DAMAGE, "scion:off", pCap);
+    }
+
+    private void applyScionOne(ServerPlayer player, ItemStack st, boolean armorSlot,
+                               Attribute attr, String key, int pCap) {
+        if (st == null || st.isEmpty() || !st.hasTag()) return;
+        CompoundTag h = st.getTag().getCompound("hexcraft");
+        if (!h.contains("forge_scion")) return;
+        String kind = h.getString("forge_scion_kind");
+        if (armorSlot != "armor".equals(kind)) return;
+        int n = h.getInt("forge_scion");
+        double per = h.getDouble("forge_scion_per");
+        if (n <= 0 || per <= 0) return;
+        int capped = Math.min(n, pCap);
+        if (capped <= 0) return;
+        applyOne(player, attr, key, per * capped);
     }
 
     private void applyOne(ServerPlayer player, Attribute attr, String key, double amount) {

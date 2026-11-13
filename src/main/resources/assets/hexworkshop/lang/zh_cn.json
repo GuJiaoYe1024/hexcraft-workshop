@@ -2720,5 +2720,8 @@
   "hexcraft.source.dlc_class": "职业",
   "hexcraft.category.profession": "职业",
   "hexcraft.hextech.hex_forge_master.name": "锻造神子",
-  "hexcraft.hextech.hex_forge_master.desc": "每次在工作台合成装备时叠 1 层：合成武器/工具时每层 +0.1 攻击力，合成防具时每层 +0.1 护甲；层数上限跟随叠层专家档位与堆叠突破一起提升。"
+  "hexcraft.hextech.hex_forge_master.desc": "每次在工作台合成装备时叠 1 层，并把当时层数写进产出的那件装备：武器/工具每层 +0.1 攻击力，防具每层 +0.1 护甲；穿在身上才生效，脱下即失效，物品转手仍保留这份加成。层数上限跟随叠层专家档位与堆叠突破一起提升。",
+  "message.hexcraft.forge_scion_craft": "%s 第 %s 层：这件装备已写入自带加成",
+  "tooltip.hexcraft.forge_scion_attack": "锻造神子：攻击力 +%s",
+  "tooltip.hexcraft.forge_scion_armor": "锻造神子：护甲 +%s"
 }
