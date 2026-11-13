@@ -120,6 +120,9 @@ public final class EmcLink {
         return data == null ? 0 : HextechEvents.effect(data, key);
     }
 
+    /** 炼金术士：EMC 折算计数（每 5 次触发一次双倍入账） */
+    private static final java.util.Map<java.util.UUID, Integer> EMC_CONVERT = new java.util.concurrent.ConcurrentHashMap<>();
+
     // ================= EMC C：等价交换海克斯 =================
 
     /** 击杀掉落折算：掉落物总 EMC × 每级比例 → 晶币（额外，不销毁） */
@@ -137,6 +140,15 @@ public final class EmcLink {
         if (total <= 0) return;
         int coins = (int) Math.floor(total * Math.min(1.0, ratio) / Math.max(1.0, HexConfig.EMC_COIN_RATE.get()));
         if (coins > 0) {
+            // 炼金术士：每 5 次折算触发一次双倍入账
+            if (eff(sp, "class_emc_double") > 0) {
+                int n = EMC_CONVERT.getOrDefault(sp.getUUID(), 0) + 1;
+                if (n >= 5) {
+                    coins *= 2;
+                    n = 0;
+                }
+                EMC_CONVERT.put(sp.getUUID(), n);
+            }
             PlayerData data = ModCapabilities.get(sp);
             if (data != null) data.addCoins(coins);
         }

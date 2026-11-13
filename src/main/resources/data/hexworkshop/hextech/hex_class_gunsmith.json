@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "tacz_power:0.08,tacz_reload_haste:0.1,tacz_crit:0.05",
+  "event": "tacz_power:0.08,tacz_reload_haste:0.1,tacz_crit:0.05,class_gun_focus:1",
   "source": "dlc_class",
   "category": "profession",
   "theme": ""

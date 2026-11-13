@@ -41,4 +41,17 @@ public class BrushEvents {
         }
         BRUSH_ACC.put(sp.getUUID(), acc);
     }
+
+    /** 考古学家：刷取完成时 20% 概率返还 1 点耐久（机制键 class_brush_extra） */
+    @SubscribeEvent
+    public void onFinish(LivingEntityUseItemEvent.Finish event) {
+        if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        if (event.getItem().getUseAnimation() != UseAnim.BRUSH) return;
+        PlayerData data = ModCapabilities.get(sp);
+        if (data == null || HextechEvents.effect(data, "class_brush_extra") <= 0) return;
+        net.minecraft.world.item.ItemStack st = event.getItem();
+        if (!st.isEmpty() && st.isDamaged() && sp.getRandom().nextFloat() < 0.2f) {
+            st.setDamageValue(Math.max(0, st.getDamageValue() - 1));
+        }
+    }
 }

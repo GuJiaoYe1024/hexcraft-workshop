@@ -1,7 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 14,
-  "event": "relic_power:0.15,relic_ward:0.2,relic_drop:0.12",
+  "event": "relic_power:0.15,relic_ward:0.2,relic_drop:0.12,class_relic_guard:1",
   "source": "dlc_class",
   "category": "profession",
   "theme": ""

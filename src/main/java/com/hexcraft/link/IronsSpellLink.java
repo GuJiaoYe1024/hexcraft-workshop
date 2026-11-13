@@ -58,6 +58,9 @@ public class IronsSpellLink {
     /** 法术伤害命中缓存（victim UUID → Hit{caster,time}，10 秒过期）：用于法术击杀判定（击杀回蓝） */
     private static final Map<UUID, Hit> SPELL_LAST_HIT = new ConcurrentHashMap<>();
 
+    /** 奥术师机制：法术暴击充能层数（满 5 层下一发法术 +30%） */
+    private static final Map<UUID, Integer> ARCANE_CHARGE = new ConcurrentHashMap<>();
+
     private static final class Hit {
         final UUID caster;
         final long time;
@@ -195,6 +198,15 @@ public class IronsSpellLink {
             double dbl = eff(sp, "spell_double");
 
             double mul = 1.0 + power + school;
+            // 奥术师机制：满 5 层奥术充能，下一发法术 +30%
+            if (eff(sp, "class_arcane_charge") > 0) {
+                int charge = ARCANE_CHARGE.getOrDefault(sp.getUUID(), 0);
+                if (charge >= 5) {
+                    mul *= 1.3;
+                    ARCANE_CHARGE.put(sp.getUUID(), 0);
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.class_arcane_charge"), true);
+                }
+            }
             if (execute > 0 && victim.getHealth() <= victim.getMaxHealth() * HexConfig.IRONS_EXECUTE_THRESHOLD.get()) {
                 // v0.9.12 法术处决增伤与近战处决共用同一上限：默认 20%，斩杀流满档 40%
                 mul *= (1.0 + Math.min(HextechEvents.executeCapFor(ModCapabilities.get(sp)), execute));
@@ -218,6 +230,10 @@ public class IronsSpellLink {
                 if (sp.isAlive()) sp.heal(heal);
             }
             if (critted) {
+                // 奥术师机制：法术暴击叠 1 层充能
+                if (eff(sp, "class_arcane_charge") > 0) {
+                    ARCANE_CHARGE.merge(sp.getUUID(), 1, (a, b) -> Math.min(5, a + b));
+                }
                 sp.displayClientMessage(Component.translatable("message.hexcraft.spell_crit",
                         (int) Math.round(newAmount)), true);
             }

@@ -6,6 +6,8 @@ import com.hexcraft.config.HexConfig;
 import com.hexcraft.event.HextechEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -63,6 +65,8 @@ public class TwilightLink {
 
     /** 击杀 BOSS 后的爆发增伤 buff（UUID → 过期 tick） */
     private static final Map<UUID, Long> BOSS_KILL_BUFF = new ConcurrentHashMap<>();
+    /** 暮色行者机制冷却（UUID → 可再次触发的 gameTime） */
+    private static final Map<UUID, Long> TF_GUARD_CD = new ConcurrentHashMap<>();
 
     /** 主类守卫调用：仅 isLoaded("twilightforest") 为真时执行 */
     public static void init() {
@@ -176,6 +180,16 @@ public class TwilightLink {
             if (BOSS_KILL_BUFF.size() > 256) {
                 long now = sp.level().getGameTime();
                 BOSS_KILL_BUFF.entrySet().removeIf(e -> e.getValue() <= now);
+            }
+        }
+        // 暮色行者机制：击杀 BOSS 后 10 秒抗性 V（近似无敌），冷却 5 分钟
+        if (eff(sp, "class_twilight_guard") > 0) {
+            Long cd = TF_GUARD_CD.get(sp.getUUID());
+            long now = sp.level().getGameTime();
+            if (cd == null || now >= cd) {
+                TF_GUARD_CD.put(sp.getUUID(), now + 6000L);
+                sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 4, true, false));
+                sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.hexcraft.class_twilight_guard"), true);
             }
         }
     }

@@ -77,6 +77,8 @@ public class Hexcraft {
         MinecraftForge.EVENT_BUS.register(com.hexcraft.event.RedstoneEvents.class);
         MinecraftForge.EVENT_BUS.register(com.hexcraft.event.HornEvents.class);
         MinecraftForge.EVENT_BUS.register(com.hexcraft.event.TrimEvents.class);
+        // v0.9.20 职业专属机制层（16 个职业各一条机制，判定走 class_xxx 开关键）
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.ClassMechanics.class);
         MinecraftForge.EVENT_BUS.register(com.hexcraft.event.BreedEvents.class);
         MinecraftForge.EVENT_BUS.register(HexCommand.class);
         // v0.6.20 Iron's Spells 'n Spellbooks 法术联动：仅安装时挂载（未安装零副作用，联动内容自动隐藏）

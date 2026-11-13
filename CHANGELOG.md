@@ -1,4 +1,4 @@
-## v0.9.20 — 文案整修与移速全量下调（2026-11-13）
+## v0.9.20 — 文案整修、移速下调与 16 职业机制（2026-11-13）
 
 **四条要求逐条落地**
 1. **难度提升页悬停提示修复**：提示原挂在父类 `renderOverlay` 上（`@Override` 编不过被摘掉注解后成了孤儿方法，父类根本不会调用），改到 `renderScaled` 末尾按 `tips.clear()` → `drawOwned` → `renderWidgets` → `drawTips` 顺序绘制，悬停「名称 ×N」现在能弹出完整效果
@@ -11,6 +11,18 @@
 - `hex_hurt_speed_boost` / `hex_kill_speed_perm` 描述写「移速 +0.2% / +0.3%/级」，实际 JSON 是 0.14% / 0.21%，按下调后真实值改为 +0.11% / +0.17%
 - `equip_rapidfire` 描述写「移速 +0.028」，实际 JSON 是 0.014，按真实值改为 +0.0112
 - `hex_tacz_legend` 描述漏写移速，补上 +0.0022/级
+
+**🧬 16 个职业全部机制化**
+- 每个职业 JSON 新增一条 `class_xxx:1` 开关键，机制实现集中在新建的 `ClassMechanics.java`（铁魔法相关放 `IronsSpellLink`，EMC / 刷子 / 信标 / 暮色各自挂回原联动类），全部走已核实的活事件路径
+- 剑豪 `class_blade_finisher`：持拔刀剑连杀 5 次，下一击双倍；猎魔人 `class_hunt_mark`：对同一灾厄目标叠满 5 层印记，下一击双倍
+- 龙骑士 `class_dragon_slayer`：屠龙后 30 秒免疫龙类伤害并给移速 I；暮色行者 `class_twilight_guard`：击杀 BOSS 后 10 秒抗性 V，冷却 5 分钟
+- 遗物守护 `class_relic_guard`：致命伤挡成 1 点血，冷却 60 秒；古物商 `class_artifact_might`：每件神器减伤 1%，满 3 件额外 +1 真伤
+- 枪匠 `class_gun_focus`：同一目标连中 5 发，下一发双倍；奥术师 `class_arcane_charge`：法术暴击叠充能，满 5 层下一个法术 +30%
+- 巫祝 `class_soul_nova`：击杀叠灵魂，满 10 层释放 5 格新星；田园厨师 `class_satiety_stack`：进食叠饱食层，每层攻击 +0.5（上限 10）
+- 纹饰师 `class_trim_guard`：每件纹饰减伤 1%，满 4 件免疫一次爆炸，冷却 60 秒；驯兽师 `class_beast_calm`：击杀野兽后 8 秒野兽不索敌
+- 炼金术士 `class_emc_double`：EMC 折算每 5 次双倍入账；考古学家 `class_brush_extra`：刷取完成 20% 概率返还 1 点耐久
+- 守望者 `class_beacon_wide`：信标范围内再生等级 +1 并额外给伤害吸收 I；养蜂人 `class_bee_convert`：被蜜蜂蜇改为回血
+- 16 条职业 desc 中英同步改为「数值 + 机制」写法，新增 5 条机制提示语言键，语言键中英各 2819
 
 ## v0.9.19 — 「难度提升」（原敌方海克斯重做，2026-11-13）
 

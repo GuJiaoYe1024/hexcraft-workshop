@@ -31,6 +31,11 @@ public class BeaconEvents {
             }
         }
         if (!nearBeacon) return;
-        sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 60, 0, true, false));
+        // 守望者机制：信标范围内再生等级 +1，并额外给伤害吸收 I
+        int amp = HextechEvents.effect(data, "class_beacon_wide") > 0 ? 1 : 0;
+        sp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 60, amp, true, false));
+        if (amp > 0) {
+            sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 60, 0, true, false));
+        }
     }
 }
