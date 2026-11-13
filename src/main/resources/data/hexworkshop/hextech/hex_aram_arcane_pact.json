@@ -1,5 +1,6 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "spell_power:0.06,spell_mana_max:0.05,loot_bonus:0.02"
+  "event": "spell_power:0.06,spell_mana_max:0.05,loot_bonus:0.02",
+  "source": "dlc_aram"
 }

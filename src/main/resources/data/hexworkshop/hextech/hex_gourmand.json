@@ -1,6 +1,5 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "food_on_kill:2",
-  "source": "dlc_vanilla"
+  "event": "food_on_kill:2"
 }

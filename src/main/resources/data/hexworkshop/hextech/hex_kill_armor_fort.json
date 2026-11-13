@@ -12,6 +12,5 @@
     "permanent_stack",
     "armor_stack",
     "on_kill_stack"
-  ],
-  "source": "dlc_vanilla"
+  ]
 }

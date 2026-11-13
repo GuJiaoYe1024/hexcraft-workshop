@@ -7,6 +7,5 @@
       "perLevel": 0.1
     }
   ],
-  "event": "overshield:0.4",
-  "source": "dlc_vanilla"
+  "event": "overshield:0.4"
 }

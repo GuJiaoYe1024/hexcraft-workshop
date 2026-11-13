@@ -1,5 +1,6 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "firework:0.08"
+  "event": "firework:0.08",
+  "source": "dlc_aram"
 }

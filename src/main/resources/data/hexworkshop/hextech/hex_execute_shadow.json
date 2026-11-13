@@ -1,6 +1,5 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "execute:0.15,crit:0.05,execute_pct:0.025",
-  "source": "dlc_vanilla"
+  "event": "execute:0.15,crit:0.05,execute_pct:0.025"
 }

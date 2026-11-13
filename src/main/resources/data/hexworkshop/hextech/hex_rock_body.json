@@ -11,6 +11,5 @@
       "perLevel": 0.18
     }
   ],
-  "event": "last_stand:0.12",
-  "source": "dlc_vanilla"
+  "event": "last_stand:0.12"
 }

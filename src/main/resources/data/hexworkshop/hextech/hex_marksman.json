@@ -1,6 +1,5 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "ranged_power:0.18",
-  "source": "dlc_vanilla"
+  "event": "ranged_power:0.18"
 }

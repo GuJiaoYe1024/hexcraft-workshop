@@ -7,6 +7,5 @@
       "perLevel": 0.5
     }
   ],
-  "event": "frost_bite:0.5",
-  "source": "dlc_vanilla"
+  "event": "frost_bite:0.5"
 }

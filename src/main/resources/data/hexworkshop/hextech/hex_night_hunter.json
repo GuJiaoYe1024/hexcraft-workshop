@@ -7,6 +7,5 @@
       "perLevel": 0.0056
     }
   ],
-  "event": "night_power:0.15",
-  "source": "dlc_vanilla"
+  "event": "night_power:0.15"
 }

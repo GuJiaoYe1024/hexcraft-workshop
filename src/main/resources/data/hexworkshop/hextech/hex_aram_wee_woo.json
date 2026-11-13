@@ -1,5 +1,6 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "overshield:0.05"
+  "event": "overshield:0.05",
+  "source": "dlc_aram"
 }

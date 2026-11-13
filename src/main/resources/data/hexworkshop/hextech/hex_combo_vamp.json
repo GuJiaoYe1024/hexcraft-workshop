@@ -2,6 +2,5 @@
   "rarity": "SILVER",
   "weight": 10,
   "mods": [],
-  "event": "lifesteal:0.06,melee_power:0.1",
-  "source": "dlc_vanilla"
+  "event": "lifesteal:0.06,melee_power:0.1"
 }

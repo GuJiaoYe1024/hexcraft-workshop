@@ -1,6 +1,5 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "twin_shot:0.25",
-  "source": "dlc_vanilla"
+  "event": "twin_shot:0.25"
 }

@@ -6,6 +6,5 @@
     "permanent_stack",
     "leech_stack",
     "on_kill_stack"
-  ],
-  "source": "dlc_vanilla"
+  ]
 }

@@ -177,7 +177,7 @@ public final class DlcManager {
     /** 示例包 dlc_meta.json（真实可被扫描加载，v0.9.3 起默认启用，玩家在 DLC 页可关闭） */
     private static final String EXAMPLE_META_VANILLA = """
             {
-              "name": "内置DLC·原版回归 示例",
+              "name": "内置示例包·原版向",
               "description": "内置示例包，默认启用，可直接删除；复制本包并替换 data/hex 内海克斯即可自制内容包",
               "version": "1.0.0"
             }

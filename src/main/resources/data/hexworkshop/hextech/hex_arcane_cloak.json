@@ -7,6 +7,5 @@
       "perLevel": 4.0
     }
   ],
-  "event": "arcane_shield:0.15",
-  "source": "dlc_vanilla"
+  "event": "arcane_shield:0.15"
 }

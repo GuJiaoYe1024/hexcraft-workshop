@@ -1,6 +1,5 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "source": "dlc_vanilla",
   "event": "fish_treasure:0.15"
 }

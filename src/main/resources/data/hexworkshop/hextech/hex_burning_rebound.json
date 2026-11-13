@@ -7,6 +7,5 @@
       "perLevel": 2.0
     }
   ],
-  "event": "fire_resist:0.35,thorns_fire:0.4",
-  "source": "dlc_vanilla"
+  "event": "fire_resist:0.35,thorns_fire:0.4"
 }

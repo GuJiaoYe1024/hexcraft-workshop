@@ -1,6 +1,5 @@
 {
   "rarity": "GOLD",
   "weight": 6,
-  "event": "xp_bonus:0.6",
-  "source": "dlc_vanilla"
+  "event": "xp_bonus:0.6"
 }

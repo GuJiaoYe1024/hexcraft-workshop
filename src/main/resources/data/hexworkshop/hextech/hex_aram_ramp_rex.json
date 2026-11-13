@@ -1,5 +1,6 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "stack_growth:0.20"
+  "event": "stack_growth:0.20",
+  "source": "dlc_aram"
 }

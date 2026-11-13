@@ -92,7 +92,7 @@ public class HextechRegistry {
     private static final java.util.Set<String> KNOWN_SOURCES = java.util.Set.of(
             "tacz", "irons_spellbooks", "alexscaves", "iceandfire", "twilightforest", "alexsmobs",
             "slashblade", "artifacts", "cataclysm", "projecte", "farmersdelight", "goety",
-            "mowziesmobs", "ftbquests", "relics", "dlc_vanilla", "dlc_niyuan");
+            "mowziesmobs", "ftbquests", "relics", "dlc_niyuan", "dlc_aram");
 
     /** 锻造页短缩写到标准来源 key 的归一（短缩写与 modid 口径统一） */
     private static final Map<String, String> SOURCE_ALIAS = Map.of(
@@ -265,9 +265,9 @@ public class HextechRegistry {
     /** 来源是否启用（按内容小类细分）：原版恒可用；联动来源 = 已安装该 mod 且对应小类开关开启（总开关 && 细分开关） */
     public static boolean isSourceEnabled(String modid, String contentType) {
         if (modid == null || "vanilla".equals(modid)) return true;
-        // v0.9.2 内置 DLC 来源：非 mod 联动，纯配置开关控制（dlc_vanilla=原版回归；dlc_niyuan=逆原猎场增幅）
-        if ("dlc_vanilla".equals(modid)) return com.hexcraft.config.HexConfig.DLC_VANILLA_ENABLED.get();
+        // v0.9.15 内置 DLC 来源：非 mod 联动，纯配置开关控制（dlc_niyuan=逆原猎场增幅；dlc_aram=大乱斗套装）
         if ("dlc_niyuan".equals(modid)) return com.hexcraft.config.HexConfig.DLC_NIYUAN_ENABLED.get();
+        if ("dlc_aram".equals(modid)) return com.hexcraft.config.HexConfig.DLC_ARAM_ENABLED.get();
         if (!net.minecraftforge.fml.ModList.get().isLoaded(modid)) return false; // 自动检测：未安装 → 不启用
         if ("tacz".equals(modid)) {
             boolean master = com.hexcraft.config.HexConfig.ENABLE_TACZ_CONTENT.get();
@@ -388,7 +388,7 @@ public class HextechRegistry {
 
     /** 定义在当前环境是否可用（来源启用判定；contentType: hex / equip）。
      *  v0.9.3 修正6：外接包内容（海克斯/装备/世界海克斯）的启停由所属 DLC 包决定（关闭包 → 不参与抽取），
-     *  内置 DLC（dlc_vanilla/dlc_niyuan）与非包内容仍走 source 开关判定。 */
+     *  内置 DLC（dlc_niyuan/dlc_aram）与非包内容仍走 source 开关判定。 */
     public static boolean isEnabled(HextechDefinition def, String contentType) {
         if (def == null) return false;
         Boolean packEn = com.hexcraft.dlc.DlcManager.packEnabledOf(def.id);
@@ -443,9 +443,9 @@ public class HextechRegistry {
         String s = def.source == null ? "vanilla" : def.source;
         switch (filter) {
             case 1: return "vanilla".equals(s);
-            case 2: return !"vanilla".equals(s) && !"dlc_vanilla".equals(s) && !"dlc_niyuan".equals(s)
+            case 2: return !"vanilla".equals(s) && !"dlc_niyuan".equals(s) && !"dlc_aram".equals(s)
                     && !com.hexcraft.dlc.DlcManager.isPackContent(def.id);
-            case 3: return "dlc_vanilla".equals(s) || "dlc_niyuan".equals(s)
+            case 3: return "dlc_niyuan".equals(s) || "dlc_aram".equals(s)
                     || com.hexcraft.dlc.DlcManager.isPackContent(def.id);
             default: return true;
         }

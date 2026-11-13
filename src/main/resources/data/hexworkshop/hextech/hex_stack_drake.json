@@ -6,7 +6,6 @@
     "permanent_stack",
     "damage_stack"
   ],
-  "source": "dlc_vanilla",
   "selfStack": false,
   "stackGainMult": true
 }

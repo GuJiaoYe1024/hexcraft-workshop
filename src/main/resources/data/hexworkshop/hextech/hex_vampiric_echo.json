@@ -1,6 +1,5 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "lifesteal:0.1,echo:0.15",
-  "source": "dlc_vanilla"
+  "event": "lifesteal:0.1,echo:0.15"
 }

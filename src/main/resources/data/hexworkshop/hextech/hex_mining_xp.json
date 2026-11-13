@@ -1,6 +1,5 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "mining_xp:2",
-  "source": "dlc_vanilla"
+  "event": "mining_xp:2"
 }

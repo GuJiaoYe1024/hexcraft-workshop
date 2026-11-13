@@ -2,6 +2,5 @@
   "rarity": "PRISMATIC",
   "weight": 2,
   "mods": [],
-  "event": "execute:0.05",
-  "source": "dlc_vanilla"
+  "event": "execute:0.05"
 }

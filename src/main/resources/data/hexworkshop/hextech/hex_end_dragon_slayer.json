@@ -2,6 +2,5 @@
   "rarity": "GOLD",
   "weight": 6,
   "mods": [],
-  "event": "end_damage:0.3",
-  "source": "dlc_vanilla"
+  "event": "end_damage:0.3"
 }

@@ -7,6 +7,5 @@
       "perLevel": 0.3
     }
   ],
-  "event": "echo:0.15",
-  "source": "dlc_vanilla"
+  "event": "echo:0.15"
 }

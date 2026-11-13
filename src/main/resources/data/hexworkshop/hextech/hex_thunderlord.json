@@ -7,6 +7,5 @@
       "perLevel": 0.14
     }
   ],
-  "event": "crit:0.25",
-  "source": "dlc_vanilla"
+  "event": "crit:0.25"
 }

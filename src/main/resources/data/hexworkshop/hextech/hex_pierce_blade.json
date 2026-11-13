@@ -1,6 +1,5 @@
 {
   "rarity": "GOLD",
   "weight": 6,
-  "event": "pierce_blade:1.0",
-  "source": "dlc_vanilla"
+  "event": "pierce_blade:1.0"
 }

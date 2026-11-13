@@ -1,6 +1,5 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "frost_bite:0.15,mobi_power:0.07",
-  "source": "dlc_vanilla"
+  "event": "frost_bite:0.15,mobi_power:0.07"
 }

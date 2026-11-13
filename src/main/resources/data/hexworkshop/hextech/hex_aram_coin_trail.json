@@ -1,5 +1,6 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "coin_bonus:0.06,bounty:1"
+  "event": "coin_bonus:0.06,bounty:1",
+  "source": "dlc_aram"
 }

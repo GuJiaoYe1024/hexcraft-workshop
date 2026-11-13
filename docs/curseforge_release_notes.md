@@ -1,3 +1,33 @@
+Hexcraft Workshop v0.9.15 - Base and DLC content regrouped
+======================================================
+
+BASE NOW MEANS VANILLA GAME CONTENT
+==================================
+- The Vanilla Revival DLC is removed as a pack. All 157 hexes it carried are folded into the base pool, their source field deleted, so they are drawable by default.
+- The 20 Arena Brawl hexes are split out of the base pool into a new built-in DLC called Arena Brawl, source dlc_aram, with its own toggle enableDlcAram, on by default.
+- Origin Hunt stays unchanged at 96. Vanilla dimensions and themes, including the End, the Nether, Abyss, Summon, Dragon and Mana lines, stay in base per the design call.
+- The 370 linked hexes are untouched and still follow each mod's install state.
+
+RESULTING DISTRIBUTION
+======================
+- Base 263, Arena Brawl 20, Origin Hunt 96, Linked 370, total 749.
+- All built-in packs are on by default, so the actual drawable count is the same as the previous version; only the classification labels and toggle granularity changed.
+
+TECHNICAL NOTES
+===============
+- DLC_VANILLA_ENABLED and all Vanilla Revival branches were removed from config and registry logic.
+- Known-source set, source enable check and both pool source filters now use dlc_aram instead of dlc_vanilla.
+- The bundled external sample pack display name changed from Vanilla Revival Sample to Vanilla-flavored Sample to avoid confusion with the removed pack.
+- Language keys stay at 2685 per language with identical key sets. Version 0.9.15, network protocol VERSION 23 unchanged, existing saves are safe.
+
+中文摘要
+=========
+- 本体口径改为「原版游戏内容」，原版回归 157 个全部并入本体，包与开关取消
+- 大乱斗 20 个独立成内置 DLC，新增 enableDlcAram 默认开启
+- 逆原 96 个不变，联动 370 个不受影响，末地下界深渊召唤龙法力等主题系留本体
+- 归属结果：本体 263、大乱斗 20、逆原 96、联动 370，合计 749，默认全开可抽数量不变
+- 语言键中英各 2685 集合一致，版本 0.9.15，协议 23 不变
+
 Hexcraft Workshop v0.9.14 - Four effectiveness fixes for non-arrow hexes
 =======================================================================
 

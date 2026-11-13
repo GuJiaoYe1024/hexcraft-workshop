@@ -1,6 +1,5 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "source": "dlc_vanilla",
   "event": "mount_health:0.5"
 }

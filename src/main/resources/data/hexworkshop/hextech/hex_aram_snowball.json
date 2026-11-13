@@ -1,5 +1,6 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "frost_bite:0.08"
+  "event": "frost_bite:0.08",
+  "source": "dlc_aram"
 }

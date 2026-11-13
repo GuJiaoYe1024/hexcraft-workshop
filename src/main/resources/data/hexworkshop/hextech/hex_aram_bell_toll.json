@@ -1,5 +1,6 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "last_stand:0.10"
+  "event": "last_stand:0.10",
+  "source": "dlc_aram"
 }

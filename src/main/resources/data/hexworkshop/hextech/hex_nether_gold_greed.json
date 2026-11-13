@@ -2,6 +2,5 @@
   "rarity": "PRISMATIC",
   "weight": 4,
   "mods": [],
-  "event": "nether_coin:0.5",
-  "source": "dlc_vanilla"
+  "event": "nether_coin:0.5"
 }
