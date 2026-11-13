@@ -1,7 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "dash:0.2",
+  "event": "dash:0.16",
   "category": "mobility",
   "theme": ""
 }

@@ -10,7 +10,7 @@
     },
     {
       "attr": "movement_speed",
-      "perLevel": 0.018
+      "perLevel": 0.0144
     }
   ],
   "event": "splash:0.5"

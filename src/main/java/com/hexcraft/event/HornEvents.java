@@ -23,7 +23,7 @@ public class HornEvents {
         if (!event.getItemStack().is(Items.GOAT_HORN)) return;
         PlayerData data = ModCapabilities.get(sp);
         if (data == null || HextechEvents.effect(data, "horn_blow") <= 0) return;
-        sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 200, 0));
+        sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 140, 0));
         sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 0));
     }
 }

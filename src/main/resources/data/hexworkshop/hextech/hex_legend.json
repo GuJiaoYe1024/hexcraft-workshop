@@ -16,7 +16,7 @@
     },
     {
       "attr": "movement_speed",
-      "perLevel": 0.0056
+      "perLevel": 0.0045
     },
     {
       "attr": "attack_speed",

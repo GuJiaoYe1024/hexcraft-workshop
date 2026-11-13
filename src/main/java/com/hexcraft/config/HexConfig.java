@@ -32,6 +32,14 @@ public class HexConfig {
     public static final ForgeConfigSpec.IntValue FORGE_PRISMATIC_PRICE;
     public static final ForgeConfigSpec.IntValue FORGE_RANDOM_PRICE;
     public static final ForgeConfigSpec.IntValue MAX_FORGES;
+    // v0.9.18 难度提升（原「敌方海克斯」）：阈值、价格与总开关
+    public static final ForgeConfigSpec.BooleanValue ENABLE_ENEMY_DIFFICULTY;
+    public static final ForgeConfigSpec.IntValue ENEMY_HEX_PER_DRAWS;
+    public static final ForgeConfigSpec.IntValue ENEMY_FORGE_PER_FORGES;
+    public static final ForgeConfigSpec.IntValue ENEMY_HEX_XP_COST;
+    public static final ForgeConfigSpec.IntValue ENEMY_HEX_COIN_COST;
+    public static final ForgeConfigSpec.IntValue ENEMY_FORGE_XP_COST;
+    public static final ForgeConfigSpec.IntValue ENEMY_FORGE_COIN_COST;
     public static final ForgeConfigSpec.IntValue REFUND_SILVER;
     public static final ForgeConfigSpec.IntValue REFUND_GOLD;
     public static final ForgeConfigSpec.IntValue REFUND_PRISMATIC;
@@ -255,6 +263,14 @@ public class HexConfig {
         FORGE_PRISMATIC_PRICE = b.comment("棱彩锻造器价格(晶币；v0.9.9 按 EMC 价值调价：400→450)").translation("hexcraft.config.eco.forgePrismaticPrice").defineInRange("forgePrismaticPrice", 450, 0, 100000);
         FORGE_RANDOM_PRICE = b.comment("随机锻造器价格(晶币)").translation("hexcraft.config.eco.forgeRandomPrice").defineInRange("forgeRandomPrice", 175, 0, 100000);
         MAX_FORGES = b.comment("锻造总次数上限（0=无限制，默认无限制）").translation("hexcraft.config.eco.forgeLimit").defineInRange("forgeLimit", 0, 0, 100000);
+        // v0.9.18 难度提升（原「敌方海克斯」）：抽/锻满阈值自动加一条，另可花经验+晶币手动抽
+        ENABLE_ENEMY_DIFFICULTY = b.comment("难度提升总开关（关闭后不再给精英/BOSS 应用敌方海克斯与敌方锻造器，也不再自动累计）").translation("hexcraft.config.enemy.enable").define("enemyDifficulty", true);
+        ENEMY_HEX_PER_DRAWS = b.comment("每抽取多少次海克斯，自动获得 1 条敌方海克斯（0=关闭该途径）").translation("hexcraft.config.enemy.hexPerDraws").defineInRange("enemyHexPerDraws", 5, 0, 1000);
+        ENEMY_FORGE_PER_FORGES = b.comment("每锻造多少次，自动获得 1 条敌方锻造器（0=关闭该途径）").translation("hexcraft.config.enemy.forgePerForges").defineInRange("enemyForgePerForges", 5, 0, 1000);
+        ENEMY_HEX_XP_COST = b.comment("手动抽取敌方海克斯消耗的经验点数").translation("hexcraft.config.enemy.hexXpCost").defineInRange("enemyHexXpCost", 300, 0, 1000000);
+        ENEMY_HEX_COIN_COST = b.comment("手动抽取敌方海克斯消耗的晶币").translation("hexcraft.config.enemy.hexCoinCost").defineInRange("enemyHexCoinCost", 50, 0, 100000);
+        ENEMY_FORGE_XP_COST = b.comment("手动抽取敌方锻造器消耗的经验点数").translation("hexcraft.config.enemy.forgeXpCost").defineInRange("enemyForgeXpCost", 200, 0, 1000000);
+        ENEMY_FORGE_COIN_COST = b.comment("手动抽取敌方锻造器消耗的晶币").translation("hexcraft.config.enemy.forgeCoinCost").defineInRange("enemyForgeCoinCost", 80, 0, 100000);
         REFUND_SILVER = b.comment("满级重复抽到白银海克斯的晶币补偿").translation("hexcraft.config.eco.refundSilver").defineInRange("refundSilver", 10, 0, 10000);
         REFUND_GOLD = b.comment("满级重复抽到黄金海克斯的晶币补偿").translation("hexcraft.config.eco.refundGold").defineInRange("refundGold", 30, 0, 10000);
         REFUND_PRISMATIC = b.comment("满级重复抽到棱彩海克斯的晶币补偿").translation("hexcraft.config.eco.refundPrismatic").defineInRange("refundPrismatic", 80, 0, 10000);

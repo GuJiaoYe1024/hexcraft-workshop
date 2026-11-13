@@ -325,9 +325,9 @@ public class WorldHexEvents {
             if (WorldHexRegistry.CAT_FRIENDLY.equals(cat)) ber = passiveBerserk(sl);
             else if (WorldHexRegistry.CAT_NEUTRAL.equals(cat)) ber = neutralBerserk(sl);
             if (ber > 0 && sl.getRandom().nextFloat() < (float) ber) {
-                int amp = ber >= 0.75 ? 2 : 1;
+                int amp = ber >= 0.75 ? 1 : 0;
                 victim.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 140, amp));
-                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 140, amp));
+                victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, amp));
             }
         }
 

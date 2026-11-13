@@ -169,7 +169,7 @@ public class AlexMobsLink {
         }
         double speedLvl = eff(sp, "am_kill_speed");
         if (speedLvl > 0) {
-            sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, (int) Math.min(5, speedLvl - 1), false, true));
+            sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 70, (int) Math.min(2, speedLvl - 1), false, true));
         }
     }
 }

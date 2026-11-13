@@ -10,7 +10,7 @@
     },
     {
       "attr": "movement_speed",
-      "perLevel": 0.014
+      "perLevel": 0.0112
     }
   ],
   "event": "ranged_power:0.6"

@@ -150,17 +150,17 @@ public class HextechRegistry {
 
     static {
         // ---- 白银（内置兜底，其余由数据包定义；数据包优先覆盖）----
-        register("hex_frenzy", HextechRarity.SILVER, 10, List.of(mod(Attributes.ATTACK_SPEED, 0.8), mod(Attributes.MOVEMENT_SPEED, 0.02)), null);
+        register("hex_frenzy", HextechRarity.SILVER, 10, List.of(mod(Attributes.ATTACK_SPEED, 0.8), mod(Attributes.MOVEMENT_SPEED, 0.0112)), null);
 
         // ---- 黄金（内置兜底）----
         register("hex_swiftblade", HextechRarity.GOLD, 8, List.of(mod(Attributes.ATTACK_SPEED, 0.25), mod(Attributes.ATTACK_DAMAGE, 0.6)), null);
-        register("hex_tracker", HextechRarity.GOLD, 8, List.of(mod(Attributes.MOVEMENT_SPEED, 0.015), mod(Attributes.ATTACK_DAMAGE, 0.6)), null);
+        register("hex_tracker", HextechRarity.GOLD, 8, List.of(mod(Attributes.MOVEMENT_SPEED, 0.0084), mod(Attributes.ATTACK_DAMAGE, 0.6)), null);
 
         // ---- 棱彩（6）----
         register("hex_titan", HextechRarity.PRISMATIC, 6, List.of(mod(Attributes.ATTACK_DAMAGE, 2.5), mod(Attributes.MAX_HEALTH, 6.0)), null);
         register("hex_legend", HextechRarity.PRISMATIC, 5, List.of(
                 mod(Attributes.ATTACK_DAMAGE, 1.0), mod(Attributes.ARMOR, 2.0), mod(Attributes.MAX_HEALTH, 4.0),
-                mod(Attributes.MOVEMENT_SPEED, 0.008), mod(Attributes.ATTACK_SPEED, 0.15)), null);
+                mod(Attributes.MOVEMENT_SPEED, 0.0045), mod(Attributes.ATTACK_SPEED, 0.15)), null);
         register("hex_warden", HextechRarity.PRISMATIC, 5, List.of(
                 mod(Attributes.ARMOR, 8.0), mod(Attributes.KNOCKBACK_RESISTANCE, 0.2), mod(Attributes.MAX_HEALTH, 8.0)), null);
 
@@ -176,7 +176,7 @@ public class HextechRegistry {
         FORGE_MODS.put("atk", mod(Attributes.ATTACK_DAMAGE, 0.75));
         FORGE_MODS.put("armor", mod(Attributes.ARMOR, 1.5));
         FORGE_MODS.put("hp", mod(Attributes.MAX_HEALTH, 3.0));
-        FORGE_MODS.put("spd", mod(Attributes.MOVEMENT_SPEED, 0.0015));
+        FORGE_MODS.put("spd", mod(Attributes.MOVEMENT_SPEED, 0.0012));
         FORGE_MODS.put("aspd", mod(Attributes.ATTACK_SPEED, 0.025));
         FORGE_MODS.put("luck", mod(Attributes.LUCK, 0.375));
         FORGE_MODS.put("knockback", mod(Attributes.ATTACK_KNOCKBACK, 0.12));
@@ -469,6 +469,25 @@ public class HextechRegistry {
                     || com.hexcraft.dlc.DlcManager.isPackContent(def.id);
             default: return true;
         }
+    }
+
+    // ================= v0.9.18 难度提升：敌方海克斯 / 敌方锻造器池 =================
+    /** 敌方海克斯池：药水型（前 9 条）+ 机制型（燃魂/吮血/尸爆/分裂/霜域/铁骨，靠 persistentData 标记驱动） */
+    public static final java.util.List<String> ENEMY_HEX_POOL =
+            java.util.List.of("fury", "swift", "bulwark", "shield", "regen",
+                    "phantom", "aegis", "titan", "aqua",
+                    "inferno", "vampiric", "volatile", "splinter", "frost", "unyielding");
+    /** 敌方锻造器词条池（怪物属性：百分比类 + 纯数值类，包括固定的生命/攻击值） */
+    public static final java.util.List<String> ENEMY_FORGE_POOL =
+            java.util.List.of("hp", "atk", "armor", "speed", "kb", "aspd",
+                    "tough", "knock", "range", "jump", "vital", "might");
+
+    public static String randomEnemyHex(net.minecraft.util.RandomSource r) {
+        return ENEMY_HEX_POOL.get(r.nextInt(ENEMY_HEX_POOL.size()));
+    }
+
+    public static String randomEnemyForge(net.minecraft.util.RandomSource r) {
+        return ENEMY_FORGE_POOL.get(r.nextInt(ENEMY_FORGE_POOL.size()));
     }
 
     // ================= 锻造器词条（v0.6.0 重构：仅静态属性，机制全部海克斯化） =================

@@ -5,7 +5,7 @@
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.0084
+      "perLevel": 0.0067
     }
   ],
   "event": "tacz_heal:3"

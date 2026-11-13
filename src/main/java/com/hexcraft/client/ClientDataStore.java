@@ -42,6 +42,21 @@ public class ClientDataStore {
     public static int hexLimit;
     // v0.6.16 服务端权威永久叠层上限（属性页"生效层数"显示用）
     public static int permStackCap = 200;
+    // v0.9.18 难度提升：层数、进度与价格快照（服务端权威）
+    public static boolean enemyEnabled = true;
+    public static int enemyHexCount;
+    public static int enemyForgeCount;
+    public static int drawToEnemy;
+    public static int forgeToEnemy;
+    public static int enemyHexNeed = 5;
+    public static int enemyForgeNeed = 5;
+    public static int enemyHexXpCost = 300;
+    public static int enemyHexCoinCost = 50;
+    public static int enemyForgeXpCost = 200;
+    public static int enemyForgeCoinCost = 80;
+    /** v0.9.19 已获得词条与层数汇总（"id:count|id:count"），「难度提升」页按此逐条显示玩家自己的强化 */
+    public static String enemyHexSummary = "";
+    public static String enemyForgeSummary = "";
     /** v0.9.5 数据版本号：apply/applyWorld 每次递增，界面缓存（组合羁绊行等）据此失效 */
     public static int dataVersion;
 
@@ -115,6 +130,20 @@ public class ClientDataStore {
         occSlots = msg.occSlots;
         hexLimit = msg.hexLimit;
         permStackCap = msg.permStackCap; // v0.6.16 服务端权威叠层上限
+        // v0.9.18 难度提升快照
+        enemyEnabled = msg.enemyEnabled;
+        enemyHexCount = msg.enemyHexCount;
+        enemyForgeCount = msg.enemyForgeCount;
+        drawToEnemy = msg.drawToEnemy;
+        forgeToEnemy = msg.forgeToEnemy;
+        enemyHexNeed = msg.enemyHexNeed;
+        enemyForgeNeed = msg.enemyForgeNeed;
+        enemyHexXpCost = msg.enemyHexXpCost;
+        enemyHexCoinCost = msg.enemyHexCoinCost;
+        enemyForgeXpCost = msg.enemyForgeXpCost;
+        enemyForgeCoinCost = msg.enemyForgeCoinCost;
+        enemyHexSummary = msg.enemyHexSummary == null ? "" : msg.enemyHexSummary;
+        enemyForgeSummary = msg.enemyForgeSummary == null ? "" : msg.enemyForgeSummary;
         costVersion++;
         dataVersion++; // v0.9.5 数据版本号：属性页组合羁绊/叠层档位缓存据此失效（避免每帧重算）
     }

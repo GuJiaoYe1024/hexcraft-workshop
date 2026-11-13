@@ -14,7 +14,7 @@
     },
     {
       "attr": "movement_speed",
-      "perLevel": 0.011
+      "perLevel": 0.0088
     }
   ],
   "event": "echo:0.4"

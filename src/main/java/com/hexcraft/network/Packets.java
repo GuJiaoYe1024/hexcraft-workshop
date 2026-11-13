@@ -109,6 +109,7 @@ public class Packets {
                 }
                 sp.giveExperiencePoints(-cost);
                 data.setDrawCount(data.getDrawCount() + 1); // v0.8.8 经验递增：本次抽取计入已抽次数
+                tickEnemyProgress(sp, data, true); // v0.9.18 难度提升：海克斯抽取进度 +1，满阈值自动获得敌方海克斯
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(false, 0);
                 offer.options.addAll(HextechRoller.rollHexOptions(data, m.filter));
                 data.setPendingRoll(offer);
@@ -334,6 +335,7 @@ public class Packets {
                     return;
                 }
                 data.setForgesUsed(data.getForgesUsed() + 1);
+                tickEnemyProgress(sp, data, false); // v0.9.18 难度提升：锻造进度 +1，满阈值自动获得敌方锻造器
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(true, m.tier);
                 offer.options.addAll(HextechRoller.rollForgeOptions(m.tier)); // v0.5.0 按档位分池
                 data.setPendingRoll(offer);
@@ -371,11 +373,111 @@ public class Packets {
                     return;
                 }
                 data.setForgesUsed(data.getForgesUsed() + 1);
+                tickEnemyProgress(sp, data, false); // v0.9.18 难度提升：锻造进度 +1，满阈值自动获得敌方锻造器
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(true, tier);
                 offer.options.addAll(HextechRoller.rollForgeOptions(tier)); // v0.5.0 按档位分池
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
                 // v0.6.12 界面自动更新：随机锻造扣费后同步（同上）
+                HextechEvents.sync(sp);
+            });
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
+    // ================= v0.9.18 难度提升：进度累计 + 手动抽取敌方海克斯/敌方锻造器 =================
+    /** 抽/锻进度 +1，满阈值自动获得一条敌方强化并把进度归零；返回是否触发。
+     *  阈值配置为 0 表示该途径关闭；总开关关闭时直接跳过。 */
+    private static boolean tickEnemyProgress(ServerPlayer sp, PlayerData data, boolean hexSide) {
+        if (!HexConfig.ENABLE_ENEMY_DIFFICULTY.get()) return false;
+        if (hexSide) {
+            int need = HexConfig.ENEMY_HEX_PER_DRAWS.get();
+            if (need <= 0) return false;
+            int n = data.getDrawToEnemy() + 1;
+            if (n < need) { data.setDrawToEnemy(n); return false; }
+            data.setDrawToEnemy(0);
+            String id = com.hexcraft.hextech.HextechRegistry.randomEnemyHex(sp.getRandom());
+            data.addEnemyHex(id);
+            sp.displayClientMessage(Component.translatable("message.hexcraft.enemy_hex_gain",
+                    Component.translatable("hexcraft.gui.enemy_hex." + id), data.getEnemyHexes().size()), true);
+            return true;
+        }
+        int need = HexConfig.ENEMY_FORGE_PER_FORGES.get();
+        if (need <= 0) return false;
+        int n = data.getForgeToEnemy() + 1;
+        if (n < need) { data.setForgeToEnemy(n); return false; }
+        data.setForgeToEnemy(0);
+        String id = com.hexcraft.hextech.HextechRegistry.randomEnemyForge(sp.getRandom());
+        data.addEnemyForge(id);
+        sp.displayClientMessage(Component.translatable("message.hexcraft.enemy_forge_gain",
+                Component.translatable("hexcraft.gui.enemy_forge." + id), data.getEnemyForges().size()), true);
+        return true;
+    }
+
+    /** 手动抽取敌方海克斯：校验总开关 → 经验 → 晶币，扣费后随机一条入账 */
+    public static class C2SBuyEnemyHex {
+        public static void encode(C2SBuyEnemyHex m, FriendlyByteBuf b) { }
+        public static C2SBuyEnemyHex decode(FriendlyByteBuf b) { return new C2SBuyEnemyHex(); }
+        public static void handle(C2SBuyEnemyHex m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                ServerPlayer sp = ctx.get().getSender();
+                if (sp == null) return;
+                PlayerData data = ModCapabilities.get(sp);
+                if (data == null) return;
+                if (!HexConfig.ENABLE_ENEMY_DIFFICULTY.get()) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.enemy_disabled"), true);
+                    return;
+                }
+                int xp = HexConfig.ENEMY_HEX_XP_COST.get();
+                int coin = discounted(data, HexConfig.ENEMY_HEX_COIN_COST.get());
+                if (realTotalXp(sp) < xp) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.xp_not_enough", xp), true);
+                    return;
+                }
+                if (!data.deductCoins(coin)) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.coins_not_enough", coin), true);
+                    return;
+                }
+                sp.giveExperiencePoints(-xp);
+                String id = com.hexcraft.hextech.HextechRegistry.randomEnemyHex(sp.getRandom());
+                data.addEnemyHex(id);
+                sp.displayClientMessage(Component.translatable("message.hexcraft.enemy_hex_gain",
+                        Component.translatable("hexcraft.gui.enemy_hex." + id), data.getEnemyHexes().size()), true);
+                HextechEvents.sync(sp);
+            });
+            ctx.get().setPacketHandled(true);
+        }
+    }
+
+    /** 手动抽取敌方锻造器：校验总开关 → 经验 → 晶币，扣费后随机一条入账 */
+    public static class C2SBuyEnemyForge {
+        public static void encode(C2SBuyEnemyForge m, FriendlyByteBuf b) { }
+        public static C2SBuyEnemyForge decode(FriendlyByteBuf b) { return new C2SBuyEnemyForge(); }
+        public static void handle(C2SBuyEnemyForge m, Supplier<NetworkEvent.Context> ctx) {
+            ctx.get().enqueueWork(() -> {
+                ServerPlayer sp = ctx.get().getSender();
+                if (sp == null) return;
+                PlayerData data = ModCapabilities.get(sp);
+                if (data == null) return;
+                if (!HexConfig.ENABLE_ENEMY_DIFFICULTY.get()) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.enemy_disabled"), true);
+                    return;
+                }
+                int xp = HexConfig.ENEMY_FORGE_XP_COST.get();
+                int coin = discounted(data, HexConfig.ENEMY_FORGE_COIN_COST.get());
+                if (realTotalXp(sp) < xp) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.xp_not_enough", xp), true);
+                    return;
+                }
+                if (!data.deductCoins(coin)) {
+                    sp.displayClientMessage(Component.translatable("message.hexcraft.coins_not_enough", coin), true);
+                    return;
+                }
+                sp.giveExperiencePoints(-xp);
+                String id = com.hexcraft.hextech.HextechRegistry.randomEnemyForge(sp.getRandom());
+                data.addEnemyForge(id);
+                sp.displayClientMessage(Component.translatable("message.hexcraft.enemy_forge_gain",
+                        Component.translatable("hexcraft.gui.enemy_forge." + id), data.getEnemyForges().size()), true);
                 HextechEvents.sync(sp);
             });
             ctx.get().setPacketHandled(true);
@@ -659,6 +761,21 @@ public class Packets {
         public int hexLimit;
         // v0.6.16 服务端权威永久叠层上限（默认 200；客户端属性页叠层显示"生效层数"用，防"显示层数 vs 实际加成对不上"）
         public int permStackCap;
+        // v0.9.18 难度提升：服务端权威的层数、进度与价格（客户端「难度提升」页显示与实际扣费同源）
+        public boolean enemyEnabled;
+        public int enemyHexCount;
+        public int enemyForgeCount;
+        public int drawToEnemy;
+        public int forgeToEnemy;
+        public int enemyHexNeed;
+        public int enemyForgeNeed;
+        public int enemyHexXpCost;
+        public int enemyHexCoinCost;
+        public int enemyForgeXpCost;
+        public int enemyForgeCoinCost;
+        /** v0.9.19 客户端展示用：已获得词条与层数汇总，格式 "id:count|id:count" */
+        public String enemyHexSummary = "";
+        public String enemyForgeSummary = "";
 
         public static S2CSyncData of(PlayerData d, ServerPlayer sp) {
             S2CSyncData m = new S2CSyncData();
@@ -719,7 +836,35 @@ public class Packets {
                 // v0.9.12：与 ServerPlayer 侧属性结算同口径（档位 × 连携 × stack_cap × 世界海克斯）
                 m.permStackCap = HextechEvents.permanentStackCapFor(d, sp.serverLevel());
             }
+            // v0.9.18 难度提升快照
+            m.enemyEnabled = HexConfig.ENABLE_ENEMY_DIFFICULTY.get();
+            m.enemyHexCount = d.getEnemyHexes().size();
+            m.enemyForgeCount = d.getEnemyForges().size();
+            m.enemyHexSummary = summarizeEnemyList(d.getEnemyHexes());
+            m.enemyForgeSummary = summarizeEnemyList(d.getEnemyForges());
+            m.drawToEnemy = d.getDrawToEnemy();
+            m.forgeToEnemy = d.getForgeToEnemy();
+            m.enemyHexNeed = HexConfig.ENEMY_HEX_PER_DRAWS.get();
+            m.enemyForgeNeed = HexConfig.ENEMY_FORGE_PER_FORGES.get();
+            m.enemyHexXpCost = HexConfig.ENEMY_HEX_XP_COST.get();
+            m.enemyHexCoinCost = discounted(d, HexConfig.ENEMY_HEX_COIN_COST.get());
+            m.enemyForgeXpCost = HexConfig.ENEMY_FORGE_XP_COST.get();
+            m.enemyForgeCoinCost = discounted(d, HexConfig.ENEMY_FORGE_COIN_COST.get());
             return m;
+        }
+
+        /** v0.9.19 词条去重计数：按首次出现顺序拼成 "id:count|id:count"，供客户端逐条展示层数 */
+        private static String summarizeEnemyList(List<String> list) {
+            java.util.LinkedHashMap<String, Integer> map = new java.util.LinkedHashMap<>();
+            for (String s : list) {
+                if (s != null && !s.isEmpty()) map.merge(s, 1, Integer::sum);
+            }
+            StringBuilder sb = new StringBuilder();
+            for (java.util.Map.Entry<String, Integer> e : map.entrySet()) {
+                if (sb.length() > 0) sb.append('|');
+                sb.append(e.getKey()).append(':').append(e.getValue());
+            }
+            return sb.toString();
         }
 
         public static void encode(S2CSyncData m, FriendlyByteBuf b) {
@@ -753,6 +898,20 @@ public class Packets {
             b.writeInt(m.occSlots);
             b.writeInt(m.hexLimit);
             b.writeInt(m.permStackCap); // v0.6.16 服务端权威永久叠层上限（客户端显示"生效层数"用）
+            // v0.9.18 难度提升快照
+            b.writeBoolean(m.enemyEnabled);
+            b.writeInt(m.enemyHexCount);
+            b.writeInt(m.enemyForgeCount);
+            b.writeInt(m.drawToEnemy);
+            b.writeInt(m.forgeToEnemy);
+            b.writeInt(m.enemyHexNeed);
+            b.writeInt(m.enemyForgeNeed);
+            b.writeInt(m.enemyHexXpCost);
+            b.writeInt(m.enemyHexCoinCost);
+            b.writeInt(m.enemyForgeXpCost);
+            b.writeInt(m.enemyForgeCoinCost);
+            b.writeUtf(m.enemyHexSummary, 8192);
+            b.writeUtf(m.enemyForgeSummary, 8192);
         }
         public static S2CSyncData decode(FriendlyByteBuf b) {
             S2CSyncData m = new S2CSyncData();
@@ -807,6 +966,20 @@ public class Packets {
             m.occSlots = b.readInt();
             m.hexLimit = b.readInt();
             m.permStackCap = b.readInt(); // v0.6.16
+            // v0.9.18 难度提升快照
+            m.enemyEnabled = b.readBoolean();
+            m.enemyHexCount = b.readInt();
+            m.enemyForgeCount = b.readInt();
+            m.drawToEnemy = b.readInt();
+            m.forgeToEnemy = b.readInt();
+            m.enemyHexNeed = b.readInt();
+            m.enemyForgeNeed = b.readInt();
+            m.enemyHexXpCost = b.readInt();
+            m.enemyHexCoinCost = b.readInt();
+            m.enemyForgeXpCost = b.readInt();
+            m.enemyForgeCoinCost = b.readInt();
+            m.enemyHexSummary = b.readUtf(8192);
+            m.enemyForgeSummary = b.readUtf(8192);
             return m;
         }
         public static void handle(S2CSyncData m, Supplier<NetworkEvent.Context> ctx) {

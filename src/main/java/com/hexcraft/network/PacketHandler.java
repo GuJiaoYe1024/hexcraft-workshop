@@ -9,7 +9,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.Optional;
 
 public class PacketHandler {
-    public static final String VERSION = "23";
+    public static final String VERSION = "25";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Hexcraft.MODID, "main"),
             () -> VERSION,
@@ -45,6 +45,13 @@ public class PacketHandler {
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(id++, Packets.C2SRandomForge.class,
                 Packets.C2SRandomForge::encode, Packets.C2SRandomForge::decode, Packets.C2SRandomForge::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        // ---- v0.9.18 难度提升：手动抽取敌方海克斯 / 敌方锻造器（协议 VERSION bump 23→24）----
+        CHANNEL.registerMessage(id++, Packets.C2SBuyEnemyHex.class,
+                Packets.C2SBuyEnemyHex::encode, Packets.C2SBuyEnemyHex::decode, Packets.C2SBuyEnemyHex::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(id++, Packets.C2SBuyEnemyForge.class,
+                Packets.C2SBuyEnemyForge::encode, Packets.C2SBuyEnemyForge::decode, Packets.C2SBuyEnemyForge::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(id++, Packets.C2SBuyEquip.class,
                 Packets.C2SBuyEquip::encode, Packets.C2SBuyEquip::decode, Packets.C2SBuyEquip::handle,

@@ -7,6 +7,7 @@ import com.hexcraft.hextech.HextechRarity;
 import com.hexcraft.hextech.HextechRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -58,6 +59,14 @@ public class PlayerData {
     private int slotBoost;
     /** v0.8.8 经验递增：累计抽取次数（每次扣经验开启抽取 +1，驱动抽取成本递增） */
     private int drawCount;
+    /** v0.9.18 难度提升：已抽到的敌方海克斯（每元素一个池 id，可重复；新生成的精英/BOSS 按清单逐条吃） */
+    private final List<String> enemyHexes = new ArrayList<>();
+    /** v0.9.18 难度提升：已抽到的敌方锻造器词条（每元素一个词条 id，可重复） */
+    private final List<String> enemyForges = new ArrayList<>();
+    /** v0.9.18 难度提升：距下一次自动敌方海克斯还差几次海克斯抽取（满阈值归零） */
+    private int drawToEnemy;
+    /** v0.9.18 难度提升：距下一次自动敌方锻造器还差几次锻造（满阈值归零） */
+    private int forgeToEnemy;
     private final List<HexEntry> hexes = new ArrayList<>();
     private final List<ForgeEntry> forges = new ArrayList<>();
     /** 已装备列表（上限 6 槽位） */
@@ -188,6 +197,16 @@ public class PlayerData {
     /** v0.8.8 经验递增：已抽取次数 */
     public int getDrawCount() { return drawCount; }
     public void setDrawCount(int n) { drawCount = Math.max(0, n); }
+
+    // ================= v0.9.18 难度提升（原「敌方海克斯」） =================
+    public java.util.List<String> getEnemyHexes() { return enemyHexes; }
+    public java.util.List<String> getEnemyForges() { return enemyForges; }
+    public int getDrawToEnemy() { return drawToEnemy; }
+    public void setDrawToEnemy(int n) { drawToEnemy = Math.max(0, n); }
+    public int getForgeToEnemy() { return forgeToEnemy; }
+    public void setForgeToEnemy(int n) { forgeToEnemy = Math.max(0, n); }
+    public void addEnemyHex(String id) { if (id != null && !id.isEmpty()) enemyHexes.add(id); }
+    public void addEnemyForge(String id) { if (id != null && !id.isEmpty()) enemyForges.add(id); }
     public int getPityGold() { return pityGold; }
     public void setPityGold(int n) { pityGold = Math.max(0, n); }
     public int getPityPrismatic() { return pityPrismatic; }
@@ -283,6 +302,8 @@ public class PlayerData {
     public void clearAll() {
         coins = 0; forgesUsed = 0; pityGold = 0; pityPrismatic = 0; slotBoost = 0;
         hexes.clear(); forges.clear(); equipment.clear(); stacks.clear();
+        // v0.9.18 难度提升一并清零（换档/重置玩家时难度进度跟随清空）
+        enemyHexes.clear(); enemyForges.clear(); drawToEnemy = 0; forgeToEnemy = 0;
         pendingRoll = null;
         worldDrawOptions = null;
     }
@@ -636,6 +657,15 @@ public class PlayerData {
         tag.putInt("pityPrismatic", pityPrismatic);
         tag.putInt("slotBoost", slotBoost); // v0.6.9 棱彩锻造解锁栏位数
         tag.putInt("drawCount", drawCount); // v0.8.8 经验递增累计抽取次数
+        // v0.9.18 难度提升：进度计数 + 已抽清单（旧档缺省 0/空）
+        tag.putInt("drawToEnemy", drawToEnemy);
+        tag.putInt("forgeToEnemy", forgeToEnemy);
+        ListTag enemyHexList = new ListTag();
+        for (String s : enemyHexes) enemyHexList.add(StringTag.valueOf(s));
+        tag.put("enemyHexes", enemyHexList);
+        ListTag enemyForgeList = new ListTag();
+        for (String s : enemyForges) enemyForgeList.add(StringTag.valueOf(s));
+        tag.put("enemyForges", enemyForgeList);
         ListTag hexList = new ListTag();
         for (HexEntry e : hexes) {
             CompoundTag t = new CompoundTag();
@@ -689,6 +719,13 @@ public class PlayerData {
         pityPrismatic = tag.getInt("pityPrismatic");
         slotBoost = tag.getInt("slotBoost"); // v0.6.9 旧档缺省 0
         drawCount = tag.getInt("drawCount"); // v0.8.8 旧档缺省 0
+        // v0.9.18 难度提升（旧档缺省 0 与空清单，不追溯补发）
+        drawToEnemy = tag.getInt("drawToEnemy");
+        forgeToEnemy = tag.getInt("forgeToEnemy");
+        enemyHexes.clear();
+        for (Tag t : tag.getList("enemyHexes", 8)) enemyHexes.add(t.getAsString());
+        enemyForges.clear();
+        for (Tag t : tag.getList("enemyForges", 8)) enemyForges.add(t.getAsString());
         hexes.clear();
         int dropHex = 0, dropForge = 0, dropEquip = 0;
         for (Tag t : tag.getList("hexes", 10)) {
@@ -743,6 +780,13 @@ public class PlayerData {
         this.forgesUsed = old.forgesUsed;
         this.pityGold = old.pityGold;
         this.pityPrismatic = old.pityPrismatic;
+        // v0.9.18 难度提升：进度与已抽清单随重生/登录恢复保留
+        this.drawToEnemy = old.drawToEnemy;
+        this.forgeToEnemy = old.forgeToEnemy;
+        this.enemyHexes.clear();
+        this.enemyHexes.addAll(old.enemyHexes);
+        this.enemyForges.clear();
+        this.enemyForges.addAll(old.enemyForges);
         this.hexes.clear();
         for (HexEntry e : old.hexes) {
             // v0.5.0 存档消毒：已删除海克斯不复制（重生/登录恢复同样自动清理）

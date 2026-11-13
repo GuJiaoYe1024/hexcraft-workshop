@@ -4,7 +4,7 @@
   "mods": [
     {
       "attr": "movement_speed",
-      "perLevel": 0.014
+      "perLevel": 0.0112
     }
   ],
   "event": "mobi_power:0.245",

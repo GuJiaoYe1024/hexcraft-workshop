@@ -1,7 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "mount_speed:0.3",
+  "event": "mount_speed:0.24",
   "category": "mobility",
   "theme": ""
 }

@@ -1150,50 +1150,213 @@ public class HextechEvents {
         return e != null && e.level() != null && e.level().dimension().equals(net.minecraft.world.level.Level.NETHER);
     }
 
-    // ================= v0.9.1 敌方海克斯系统（ARAM 海克斯大乱斗 Enemy Hex 借鉴）=================
-    /** 敌方海克斯：精英/BOSS 生成时按附近玩家最高海克斯稀有度概率获得强化（狂怒/迅捷/铁壁/荆棘/再生），
-     *  玩家稀有度越高，敌人越容易获得且强度越高——"玩家变强，敌人同档变强"的镜像设计。 */
+    // ================= v0.9.18 难度提升（原「敌方海克斯」）=================
+    /** 难度提升：所有敌对生物生成时都按「难度清单」强化（不再限精英/BOSS）。
+     *  清单来源：优先 24 格内清单最长的玩家；附近没人时取全服清单最长者。
+     *  同一词条重复获得时按已叠层数提升药水等级 / 属性倍率，层数不设上限。 */
     @SubscribeEvent
     public static void onMobFinalizeSpawn(net.minecraftforge.event.entity.living.MobSpawnEvent.FinalizeSpawn event) {
         net.minecraft.world.entity.LivingEntity mob = event.getEntity();
         if (!(mob instanceof net.minecraft.world.entity.monster.Monster)) return;
-        if (mob.getMaxHealth() < 40) return; // 仅精英/首领（与悬赏猎人口径一致：≥40 精英，≥120 首领）
         if (mob.level().isClientSide) return;
-        // 取 24 格内玩家的最高海克斯稀有度（SILVER=1 / GOLD=2 / PRISMATIC=3）
-        int top = 0;
+
+        PlayerData best = null;
         net.minecraft.server.level.ServerPlayer notify = null;
+        int bestLen = 0;
         for (net.minecraft.server.level.ServerPlayer p : mob.level().getEntitiesOfClass(
                 net.minecraft.server.level.ServerPlayer.class, mob.getBoundingBox().inflate(24.0))) {
-            if (notify == null) notify = p;
             PlayerData d = ModCapabilities.get(p);
             if (d == null) continue;
-            for (PlayerData.HexEntry e : d.getHexes()) {
-                HextechDefinition def = HextechRegistry.get(e.id);
-                if (def == null || def.rarity == null) continue;
-                top = Math.max(top, def.rarity.ordinal() + 1);
+            int len = d.getEnemyHexes().size() + d.getEnemyForges().size();
+            if (len > bestLen) { bestLen = len; best = d; notify = p; }
+        }
+        if (best == null && mob.getServer() != null) {
+            for (net.minecraft.server.level.ServerPlayer p : mob.getServer().getPlayerList().getPlayers()) {
+                PlayerData d = ModCapabilities.get(p);
+                if (d == null) continue;
+                int len = d.getEnemyHexes().size() + d.getEnemyForges().size();
+                if (len > bestLen) { bestLen = len; best = d; notify = p; }
             }
         }
-        if (top == 0 || notify == null) return;
-        double chance = top == 1 ? 0.10 : top == 2 ? 0.20 : 0.35;
-        if (mob.getRandom().nextFloat() >= chance) return;
-        int count = 1 + (mob.getRandom().nextFloat() < 0.3 ? 1 : 0); // 30% 双敌方海克斯
-        for (int i = 0; i < count; i++) applyEnemyHex(mob, top);
-        com.hexcraft.network.Packets.S2CTipMessage.sendTo(notify,
-                Component.translatable("message.hexcraft.enemy_hex", mob.getDisplayName()), 0);
+        if (best == null || bestLen == 0) return;
+
+        java.util.Map<String, Integer> seen = new java.util.HashMap<>();
+        for (String id : best.getEnemyHexes()) {
+            int lv = seen.merge(id, 1, Integer::sum) - 1;
+            applyEnemyHex(mob, id, lv);
+        }
+        for (String stat : best.getEnemyForges()) {
+            int lv = seen.merge("F:" + stat, 1, Integer::sum) - 1;
+            applyEnemyForge(mob, stat, lv);
+        }
+        mob.setHealth(mob.getMaxHealth());
+        // 普通怪强化但不刷提示，仅精英/首领提示，避免每只僵尸都刷聊天栏
+        if (mob.getMaxHealth() >= 40 && notify != null) {
+            com.hexcraft.network.Packets.S2CTipMessage.sendTo(notify,
+                    Component.translatable("message.hexcraft.enemy_hex", mob.getDisplayName(), bestLen), 0);
+        }
     }
 
-    /** 敌方海克斯池（怪物永久强化，不可驱散）：狂怒(力量)/迅捷(移速)/铁壁(抗性)/荆棘(吸收护盾)/再生(回血) */
-    private static void applyEnemyHex(net.minecraft.world.entity.LivingEntity mob, int top) {
-        net.minecraft.world.effect.MobEffect[] pool = {
-                net.minecraft.world.effect.MobEffects.DAMAGE_BOOST,
-                net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED,
-                net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE,
-                net.minecraft.world.effect.MobEffects.ABSORPTION,
-                net.minecraft.world.effect.MobEffects.REGENERATION
-        };
-        net.minecraft.world.effect.MobEffect pick = pool[mob.getRandom().nextInt(pool.length)];
-        int amp = top >= 3 ? 1 : 0; // 棱彩档敌人强度高一档
-        mob.addEffect(new net.minecraft.world.effect.MobEffectInstance(pick, Integer.MAX_VALUE, amp, false, false));
+    /** 敌方海克斯：药水型（重复获得按层数升等级）+ 机制型（燃魂/吮血/尸爆/分裂/霜域/铁骨）。
+     *  机制型靠 entity persistentData 的 hex_xxx 标记驱动，具体结算见下方三个事件。 */
+    static void applyEnemyHex(net.minecraft.world.entity.LivingEntity mob, String id, int lv) {
+        // 机制型标记：随实体 NBT 保存，供伤害/死亡/tick 事件读取
+        mob.getPersistentData().putBoolean("hex_" + id, true);
+        int amp = Math.min(4, 1 + lv);
+        switch (id) {
+            case "fury" -> {
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_BOOST, amp);
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.JUMP, amp);
+            }
+            case "swift" -> {
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, Math.min(2, lv));
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.DIG_SPEED, amp);
+            }
+            case "bulwark" -> {
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, amp);
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, 0);
+            }
+            case "shield" -> {
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.ABSORPTION, Math.min(9, 3 + lv));
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.HEALTH_BOOST, Math.min(9, 3 + lv));
+            }
+            case "regen" -> {
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.REGENERATION, amp);
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.SATURATION, amp);
+            }
+            case "phantom" -> {
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.INVISIBILITY, 0);
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, Math.min(2, lv));
+            }
+            case "aegis" -> {
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, amp);
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.ABSORPTION, Math.min(9, 2 + lv));
+            }
+            case "titan" -> mobEffect(mob, net.minecraft.world.effect.MobEffects.HEALTH_BOOST, Math.min(9, 7 + lv));
+            case "aqua" -> {
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.WATER_BREATHING, 0);
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.DOLPHINS_GRACE, 0);
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, 0);
+            }
+            // ===== 机制型 =====
+            case "inferno" -> mobEffect(mob, net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, 0);
+            case "vampiric" -> mobEffect(mob, net.minecraft.world.effect.MobEffects.REGENERATION, 0);
+            case "volatile" -> mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 0);
+            case "splinter" -> mobEffect(mob, net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, 0);
+            case "frost" -> mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 0);
+            case "unyielding" -> {
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, 0);
+                java.util.UUID kb = java.util.UUID.nameUUIDFromBytes(
+                        ("hexcraft:enemy_hex:unyielding:" + mob.getUUID())
+                                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE, kb, 1.0,
+                        net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
+            }
+            default -> { }
+        }
+    }
+
+    private static void mobEffect(net.minecraft.world.entity.LivingEntity mob,
+                                  net.minecraft.world.effect.MobEffect eff, int amp) {
+        mob.addEffect(new net.minecraft.world.effect.MobEffectInstance(eff, Integer.MAX_VALUE, amp, false, false));
+    }
+
+    /** 敌方锻造器词条（新增怪物属性池：百分比每层 30%~50%，纯数值给高值；每层独立 UUID 可叠多层） */
+    static void applyEnemyForge(net.minecraft.world.entity.LivingEntity mob, String stat, int lv) {
+        java.util.UUID uid = java.util.UUID.nameUUIDFromBytes(
+                ("hexcraft:enemy_forge:" + mob.getUUID() + ":" + stat + ":" + lv).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        switch (stat) {
+            case "hp" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, uid, 0.45,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_BASE);
+            case "atk" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, uid, 0.40,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_BASE);
+            case "armor" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, uid, 18.0,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
+            case "speed" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED, uid, 0.18,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_BASE);
+            case "kb" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE, uid, 0.40,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
+            case "aspd" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED, uid, 0.35,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_BASE);
+            case "tough" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS, uid, 8.0,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
+            case "knock" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_KNOCKBACK, uid, 1.5,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
+            case "range" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE, uid, 0.50,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_BASE);
+            case "jump" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.JUMP_STRENGTH, uid, 0.5,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
+            // 纯数值类（固定值，不做百分比）
+            case "vital" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, uid, 30.0,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
+            case "might" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, uid, 8.0,
+                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
+            default -> { }
+        }
+    }
+
+    private static void addEnemyMod(net.minecraft.world.entity.LivingEntity mob,
+                                    net.minecraft.world.entity.ai.attributes.Attribute attr,
+                                    java.util.UUID uid, double amount,
+                                    net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation op) {
+        net.minecraft.world.entity.ai.attributes.AttributeInstance inst = mob.getAttribute(attr);
+        if (inst == null) return;
+        if (inst.getModifier(uid) != null) inst.removeModifier(uid);
+        inst.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(uid, "hexcraft_enemy_forge", amount, op));
+    }
+
+    /** 机制型敌方海克斯的运行时结算（标记由 applyEnemyHex 写入 persistentData） */
+    private static boolean hasEnemyHex(net.minecraft.world.entity.LivingEntity mob, String id) {
+        return mob.getPersistentData().getBoolean("hex_" + id);
+    }
+
+    /** 燃魂：怪物命中则点燃目标 5 秒；吮血：造成伤害的 30% 转成自身治疗 */
+    @SubscribeEvent
+    public static void onEnemyHexDealDamage(net.minecraftforge.event.entity.living.LivingDamageEvent event) {
+        net.minecraft.world.entity.Entity src = event.getSource().getEntity();
+        if (!(src instanceof net.minecraft.world.entity.monster.Monster m)) return;
+        if (m.level().isClientSide) return;
+        if (event.getEntity() == m) return;
+        if (hasEnemyHex(m, "inferno")) {
+            event.getEntity().setSecondsOnFire(5);
+        }
+        if (hasEnemyHex(m, "vampiric")) {
+            m.heal(event.getAmount() * 0.30F);
+        }
+    }
+
+    /** 尸爆：死亡原地爆炸（不破坏地形）；分裂：死亡分裂两只半血同类（分裂体不再继承清单，防无限增殖） */
+    @SubscribeEvent
+    public static void onEnemyHexDeath(net.minecraftforge.event.entity.living.LivingDeathEvent event) {
+        if (!(event.getEntity() instanceof net.minecraft.world.entity.monster.Monster m)) return;
+        if (m.level().isClientSide) return;
+        if (hasEnemyHex(m, "volatile")) {
+            m.level().explode(null, m.getX(), m.getY(), m.getZ(), 2.5F,
+                    net.minecraft.world.level.Level.ExplosionInteraction.NONE);
+        }
+        if (hasEnemyHex(m, "splinter") && m.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+            for (int i = 0; i < 2; i++) {
+                net.minecraft.world.entity.Entity e = m.getType().create(sl);
+                if (!(e instanceof net.minecraft.world.entity.monster.Monster sm)) continue;
+                sm.moveTo(m.getX() + (i == 0 ? 0.9 : -0.9), m.getY(), m.getZ(), m.getYRot(), 0.0F);
+                sm.setHealth(sm.getMaxHealth() * 0.5F);
+                sm.getPersistentData().putBoolean("hex_split_child", true);
+                sl.addFreshEntity(sm);
+            }
+        }
+    }
+
+    /** 霜域：每 20 tick 给 8 格内玩家挂 3 秒减速 */
+    @SubscribeEvent
+    public static void onEnemyHexTick(net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent event) {
+        if (!(event.getEntity() instanceof net.minecraft.world.entity.monster.Monster m)) return;
+        if (m.level().isClientSide || m.tickCount % 20 != 0) return;
+        if (!m.getPersistentData().getBoolean("hex_frost")) return;
+        for (net.minecraft.server.level.ServerPlayer p : m.level().getEntitiesOfClass(
+                net.minecraft.server.level.ServerPlayer.class, m.getBoundingBox().inflate(8.0))) {
+            p.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 60, 0, false, false));
+        }
     }
 
     /** 战利品翻倍：loot_double 使生物自身掉落数量翻倍（范围不限，生物掉什么都翻倍；海克斯/装备通用） */
