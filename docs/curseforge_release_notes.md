@@ -1,3 +1,21 @@
+Hexcraft Workshop v0.9.13 - Explosive Arrow trigger fix
+=====================================================
+
+EXPLOSIVE ARROW DID NOT DETONATE AT ALL
+=======================================
+- Root cause: the detonation was hooked to LivingHurtEvent, which only fires when an arrow deals entity damage. Shooting ground, walls, invulnerable targets or missing entirely never fired the event, so the effect could not run even once.
+- The detonation now hooks ProjectileImpactEvent: the arrow detonates at the impact point whether it hits an entity or a block. Power still comes from the arrow_explode data key, currently 2 and scaling with hex level.
+- Entity hits no longer detonate twice: the old block was removed from LivingHurtEvent and arrow_explode dropped from its key list.
+- Explosion type changed from MOB to NONE: entities still take damage, but blocks are not destroyed and nothing catches fire, matching the in-game description.
+- All 15 arrow and bow hexes were audited key by key; a full sweep of 319 event keys found zero dead keys.
+- Version 0.9.13, network protocol VERSION 23 unchanged, existing saves are safe.
+
+中文摘要
+=========
+- 爆炸箭改由箭矢碰撞事件驱动，命中实体与方块都在命中点起爆
+- 爆炸类型由 MOB 改 NONE，不破坏地形、不引燃，与描述一致
+- 命中实体不再重复起爆，弓箭类 15 个海克斯键名全量核对，319 个事件键零死键
+
 Hexcraft Workshop v0.9.12 - 54 vanilla-behavior hexes + attribute page display polish + unified DLC intro + stacking system overhaul + Stack Peak combo + full audit
 ==============================================================================================================================
 

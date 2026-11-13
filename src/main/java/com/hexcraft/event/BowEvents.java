@@ -197,10 +197,33 @@ public class BowEvents {
         applyOnHit(arrow, sp, data, event, mark);
     }
 
+    // ================= ③-b 箭矢碰撞（爆炸箭） =================
+
+    /** 爆炸箭：箭矢命中实体或方块，都在命中点起爆。
+     *  独立挂 ProjectileImpactEvent，不依赖 LivingHurtEvent —— 后者只在箭矢造成实体伤害时触发，
+     *  射地面、射无敌目标、箭被弹开等情况完全不触发，此前实测射地面与射生物均无反应。
+     *  起爆发生在伤害结算之前，命中实体时 onArrowHurt 不再重复起爆，避免一次命中连爆两次。 */
+    @SubscribeEvent
+    public void onProjectileImpact(net.minecraftforge.event.entity.ProjectileImpactEvent event) {
+        if (event.isCanceled()) return;
+        if (!(event.getProjectile() instanceof AbstractArrow arrow)) return;
+        if (arrow.level().isClientSide()) return;
+        if (!(arrow.getOwner() instanceof ServerPlayer sp)) return;
+        PlayerData data = ModCapabilities.get(sp);
+        if (data == null) return;
+        double power = HextechEvents.effect(data, "arrow_explode");
+        if (power <= 0) return;
+        net.minecraft.world.phys.Vec3 loc = event.getRayTraceResult().getLocation();
+        ServerLevel lvl = (ServerLevel) arrow.level();
+        // NONE：照常对实体造成伤害，但不破坏方块、不引燃，与"不破坏地形"的描述一致
+        lvl.explode(sp, loc.x, loc.y, loc.z, (float) power,
+                net.minecraft.world.level.Level.ExplosionInteraction.NONE);
+    }
+
     /** 箭矢命中时读取的效果键（一次批量查询，替代逐键全量扫描） */
     private static final java.util.List<String> HIT_KEYS = java.util.List.of(
             "arrow_fire", "arrow_frost", "arrow_poison", "arrow_lightning",
-            "arrow_explode", "arrow_distance", "arrow_crit", "arrow_lifesteal");
+            "arrow_distance", "arrow_crit", "arrow_lifesteal");
 
     /** 箭矢命中时的具体效果（C/D/E 组） */
     private void applyOnHit(AbstractArrow arrow, ServerPlayer sp, PlayerData data,
@@ -237,12 +260,8 @@ public class BowEvents {
             }
         }
 
-        // C 组：爆炸箭（命中小范围爆炸，MOB 交互不破坏地形）
-        float power = (float) v.get("arrow_explode").doubleValue();
-        if (power > 0) {
-            lvl.explode(sp, target.getX(), target.getY(), target.getZ(), power,
-                    net.minecraft.world.level.Level.ExplosionInteraction.MOB);
-        }
+        // C 组：爆炸箭已迁到 ProjectileImpactEvent（onProjectileImpact），此处不再重复起爆。
+        // 原因：LivingHurtEvent 只在箭矢造成实体伤害时触发，射方块完全不触发；实测射地面与射生物均无反应。
 
         // E 组：远距增伤（从发射起点算飞行距离，每格按比例提升伤害）
         double distMult = v.get("arrow_distance");
