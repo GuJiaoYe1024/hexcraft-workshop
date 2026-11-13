@@ -1314,7 +1314,7 @@
   "hexcraft.hextech.hex_emc_aura.name": "Exchange Aura",
   "hexcraft.hextech.hex_emc_bargain.desc": "+25% EMC-to-coin exchange rate per level",
   "hexcraft.hextech.hex_emc_bargain.name": "Merchant's Bargain",
-  "hexcraft.hextech.hex_emc_blank_shard.desc": "Lifesteal +6%, regen +0.4/s.",
+  "hexcraft.hextech.hex_emc_blank_shard.desc": "Lifesteal 6%, +0.4 HP/s regen, +20% overheal shield",
   "hexcraft.hextech.hex_emc_blank_shard.name": "Blank Shard",
   "hexcraft.hextech.hex_emc_closed_loop.desc": "EMC transmutation +30%, double loot, coin bonus +20%.",
   "hexcraft.hextech.hex_emc_closed_loop.name": "Closed Loop",

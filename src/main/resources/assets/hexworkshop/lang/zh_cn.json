@@ -1316,7 +1316,7 @@
   "hexcraft.hextech.hex_emc_aura.name": "等价光环",
   "hexcraft.hextech.hex_emc_bargain.desc": "每级 EMC 兑换晶币汇率 +25%",
   "hexcraft.hextech.hex_emc_bargain.name": "商贾之道",
-  "hexcraft.hextech.hex_emc_blank_shard.desc": "吸血 +6%，生命回复 +0.4/秒。",
+  "hexcraft.hextech.hex_emc_blank_shard.desc": "吸血 +6%，生命回复 +0.4/秒，溢出治疗转护盾 +20%",
   "hexcraft.hextech.hex_emc_blank_shard.name": "空白碎片",
   "hexcraft.hextech.hex_emc_closed_loop.desc": "EMC 转化效率 +30%，掉落双倍，晶币加成 +20%。",
   "hexcraft.hextech.hex_emc_closed_loop.name": "闭环循环",
