@@ -13,6 +13,13 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
  */
 public class AnvilEvents {
 
+    /** v0.9.17：铁砧界面每次改动（含逐字改名、来回换材料）都会重算输出并触发本事件，
+     *  若每次都叠层，玩家只改个名字就能刷层。这里按「左槽+右槽+产物类型/耐久」去重，
+     *  同一组合 2 秒内只叠 1 层；重复触发时只按当前层数补写 NBT，不叠加。 */
+    private static final java.util.Map<java.util.UUID, String> ANVIL_LAST_KEY = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.Map<java.util.UUID, Long> ANVIL_LAST_TIME = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long ANVIL_DEDUP_TICKS = 40L;
+
     @SubscribeEvent
     public void onAnvilUpdate(AnvilUpdateEvent event) {
         if (!(event.getPlayer() instanceof ServerPlayer sp)) return;
@@ -34,13 +41,20 @@ public class AnvilEvents {
             out.setDamageValue(Math.max(0, out.getDamageValue() - cut));
         }
         boolean armorKind = out.getItem() instanceof net.minecraft.world.item.ArmorItem;
-        if (armorKind || HextechEvents.isWeaponOrTool(out.getItem())) {
-            double[] ps = HextechEvents.scionStackUp(data, "forge_scion_anvil");
-            if (ps != null) {
-                HextechEvents.writeScionTag(out, ps, armorKind);
-                event.setOutput(out);
-                data.applyModifiers(sp);
-            }
-        }
+        if (!armorKind && !HextechEvents.isWeaponOrTool(out.getItem())) return;
+        String comboKey = out.getItem() + "|" + out.getDamageValue()
+                + "|" + event.getLeft().getItem() + "|" + event.getRight().getItem();
+        long now = sp.level().getGameTime();
+        Long last = ANVIL_LAST_TIME.get(sp.getUUID());
+        boolean repeat = comboKey.equals(ANVIL_LAST_KEY.get(sp.getUUID()))
+                && last != null && now - last < ANVIL_DEDUP_TICKS;
+        HextechEvents.ScionHit hit = repeat ? HextechEvents.scionCurrent(data, "forge_scion_anvil")
+                : HextechEvents.scionStackUp(data, "forge_scion_anvil");
+        if (hit == null) return;
+        HextechEvents.writeScionTag(out, hit, armorKind);
+        event.setOutput(out);
+        ANVIL_LAST_KEY.put(sp.getUUID(), comboKey);
+        ANVIL_LAST_TIME.put(sp.getUUID(), now);
+        if (!repeat) data.applyModifiers(sp);
     }
 }

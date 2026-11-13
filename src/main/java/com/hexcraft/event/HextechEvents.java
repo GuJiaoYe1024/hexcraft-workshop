@@ -553,7 +553,7 @@ public class HextechEvents {
             e.stacks = safeStackAdd(e.stacks, 1);
             grew = true;
             // 把这件产物的自带属性写进 NBT：层数 × 每层点数，类型决定挂攻击还是护甲
-            writeScionTag(result, new double[]{per, e.stacks}, guard);
+            writeScionTag(result, new ScionHit(e.id, per, e.stacks), guard);
             Packets.S2CTipMessage.sendTo(sp, Component.translatable(
                     "message.hexcraft.forge_scion_craft",
                     Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), 0);
@@ -578,27 +578,49 @@ public class HextechEvents {
                 || scionPer(def, "forge_scion_grind") > 0;
     }
 
-    /** 职业包·物品养成：为拥有该键的海克斯叠 1 层，返回 {每层点数, 当前层数}；没有则 null */
-    public static double[] scionStackUp(PlayerData data, String key) {
+    /** 职业包·物品养成命中：来源海克斯 id、每层点数、当前层数 */
+    public static final class ScionHit {
+        public final String id;
+        public final double per;
+        public final int stacks;
+        public ScionHit(String id, double per, int stacks) {
+            this.id = id;
+            this.per = per;
+            this.stacks = stacks;
+        }
+    }
+
+    /** 职业包·物品养成：为拥有该键的海克斯叠 1 层；没有则 null */
+    public static ScionHit scionStackUp(PlayerData data, String key) {
         if (data == null) return null;
         for (PlayerData.HexEntry e : data.getHexes()) {
-            HextechDefinition def = HextechRegistry.get(e.id);
-            double per = scionPer(def, key);
+            double per = scionPer(HextechRegistry.get(e.id), key);
             if (per <= 0) continue;
             e.stacks = safeStackAdd(e.stacks, 1);
-            return new double[]{per, e.stacks};
+            return new ScionHit(e.id, per, e.stacks);
         }
         return null;
     }
 
-    /** 把物品养成加成写进产物 NBT（层数 × 每层点数，类型决定穿戴时挂攻击还是护甲） */
-    public static void writeScionTag(ItemStack st, double[] ps, boolean armorKind) {
-        if (st == null || st.isEmpty() || ps == null) return;
+    /** 职业包·物品养成：只读当前层数（不叠层），用于同一次操作内的重复重算 */
+    public static ScionHit scionCurrent(PlayerData data, String key) {
+        if (data == null) return null;
+        for (PlayerData.HexEntry e : data.getHexes()) {
+            double per = scionPer(HextechRegistry.get(e.id), key);
+            if (per > 0) return new ScionHit(e.id, per, e.stacks);
+        }
+        return null;
+    }
+
+    /** 把物品养成加成写进产物 NBT（层数、每层点数、来源 id；穿戴时按来源显示名称） */
+    public static void writeScionTag(ItemStack st, ScionHit hit, boolean armorKind) {
+        if (st == null || st.isEmpty() || hit == null) return;
         CompoundTag tag = st.getOrCreateTag();
         CompoundTag sub = tag.contains("hexcraft") ? tag.getCompound("hexcraft") : new CompoundTag();
-        sub.putInt("forge_scion", (int) ps[1]);
-        sub.putDouble("forge_scion_per", ps[0]);
+        sub.putInt("forge_scion", hit.stacks);
+        sub.putDouble("forge_scion_per", hit.per);
         sub.putString("forge_scion_kind", armorKind ? "armor" : "attack");
+        sub.putString("forge_scion_src", hit.id);
         tag.put("hexcraft", sub);
     }
 
@@ -620,9 +642,11 @@ public class HextechEvents {
         double per = h.getDouble("forge_scion_per");
         if (n <= 0 || per <= 0) return;
         boolean armor = "armor".equals(h.getString("forge_scion_kind"));
+        String srcId = h.contains("forge_scion_src") ? h.getString("forge_scion_src") : "hex_forge_master";
         event.getToolTip().add(Component.translatable(
                 armor ? "tooltip.hexcraft.forge_scion_armor" : "tooltip.hexcraft.forge_scion_attack",
-                String.format("%.1f", per * n)).withStyle(net.minecraft.ChatFormatting.AQUA));
+                Component.translatable("hexcraft.hextech." + srcId + ".name"),
+                String.format("%.1f", per * n), String.valueOf(n)).withStyle(net.minecraft.ChatFormatting.AQUA));
     }
 
     /** 合成产物是否算武器/工具（攻击向）：剑、镐斧锹锄、三叉戟、弓、弩、盾 */
