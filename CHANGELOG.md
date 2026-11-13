@@ -1,3 +1,32 @@
+## v0.9.21 — 叠层经济重算后的四项数值调整（2026-11-13）
+
+按 200 层（前期）、800 层（中期）、1000 层以上（后期）的实测算完一轮叠层经济，四个失衡点全部按计算结果改。
+
+**① 5 件写死上限的叠层件接入全局上限**
+- `hex_combat_damage_spur` cap 60、`hex_combat_shield_surge` cap 40、`hex_tick_damage_wax` cap 30、`hex_timed_multi_aspect` cap 40、`hex_hurt_leech_burst` cap 30 → 全部 `cap=0`（不设单件上限，层数由 200 / 400 / 600 / 800 / 1000 / ∞ 档位决定）
+- `PlayerData.addStack` 增加 `cap<=0` 语义；`HextechEvents` 每层额外伤害段与护盾段按全局上限截断；`Packets` 下发叠层上限时 cap<=0 改用全局上限，客户端属性页显示与结算同源
+- 原因：这几件 200 层就封顶，到中期 800 层贡献与前期一模一样，等于中期后期不存在
+
+**② 永久件每层率 ×0.6**
+- 攻击 0.001→0.0006、最大生命 0.002→0.0012、生命 0.0008→0.00048、生命 0.0005→0.0003、护甲 0.0005→0.0003、攻速 0.00035→0.00021
+- 放开上限的 4 件同步到同级：`spur` / `shield_surge` 0.012 / 0.01 → 0.001，`tick_damage_wax` / `timed_multi_aspect` 0.015 / 0.01 → 0.0006
+- 实测：9 件攻击叠层全持有、等级 3、hexPower=1 时，200 层 +8.91（×9.91）→ **+3.72（×4.72）**；800 层 +17.91（×18.91）→ **+14.88（×15.88）**
+
+**③ 抽取成本下调**
+- `XP_COST_PER_DRAW` 500→400、`XP_INCREMENT_RATE` 0.20→0.10
+- 抽到 6 件叠层件（叠层档 3 = 800 层上限）从 257,274 xp（≈274 级）降到 **118,320 xp（≈180 级）**；抽到 10 件（档 5 = 无上限）从 680,963 xp（≈443 级）降到 **298,320 xp（≈275 级）**
+- 只改默认值，已有 `config/hexworkshop-common.toml` 不受影响；老存档需手动把 `xpCostPerDraw` 改 400、`xpIncrementRate` 改 0.10
+
+**④ crescendo 每层 1% → 0.5%**
+- `hex_crescendo_blade` / `hex_niyuan_diediele_4` / `hex_niyuan_diediele_8`
+- 200 层总伤害 ×7.00 → **×4.00**；1000 层 ×31 → **×16**；叠层之巅满档 3500 层 ×106 → **×53.5**
+
+**顺带修正**
+- `hex_hurt_leech_burst` 层数此前无任何消费（只有 `hurt_gain`，吸血是固定 effect，层数只用来显示）→ 追加 `stack_attr_onhurt:attack_damage:0.0006`，层数真正产生收益
+- 6 条 desc 删掉 event 里根本不存在的「护甲 / 攻击 +X/级」：`hex_hurt_perm_shield`、`hex_kill_armor_fort`、`hex_tick_shield_gain`、`hex_mixed_damage_armor`、`hex_perm_damage_apex`、`hex_hurt_leech_burst`
+- 24 件叠层件中英 desc 全部按新数值重写；`hex_artifact_endurance_stack` / `hex_blade_draw_song` / `hex_blade_scabbard_flow` 三件英文 desc 原写 +0.05% 与 JSON 0.035% 不符，一并改正
+
+
 ## v0.9.20 — 文案整修、移速下调与 16 职业机制（2026-11-13）
 
 **四条要求逐条落地**

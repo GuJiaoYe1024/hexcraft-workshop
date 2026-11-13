@@ -7,7 +7,7 @@
       "perLevel": 5.0
     }
   ],
-  "event": "stack_attr_onhit:hp:0.0008,thorns:2.0,chance:0.25",
+  "event": "stack_attr_onhit:hp:0.00048,thorns:2.0,chance:0.25",
   "stackTag": [
     "permanent_stack",
     "on_hit_stack"

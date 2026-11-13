@@ -104,7 +104,9 @@ public class PlayerData {
         StackEntry s = stacks.get(key);
         if (s == null) return;
         double add = 1.0 * gainMult;
-        double c = s.cap * capMult;
+        // v0.9.21 叠层 cap 语义：cap <= 0 表示"不设单件上限"，层数只受全局永久叠层上限（pCap）约束。
+        // 用于把原先写死 30/40/60 的命中/周期叠层件接入 200/400/600/800/1000/∞ 档位，避免中期后期完全不成长。
+        double c = s.cap <= 0 ? Double.MAX_VALUE : s.cap * capMult;
         if (c < 0) c = s.cap;
         s.value = Math.min(c, s.value + add);
         s.idle = 0;

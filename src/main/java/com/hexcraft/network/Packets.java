@@ -814,7 +814,9 @@ public class Packets {
             for (PlayerData.StackEntry s : d.getStacksForBonus()) {
                 PlayerData.StackEntry ns = new PlayerData.StackEntry(s.key, s.cap, s.combat, s.decayDelay, s.decayRate);
                 ns.value = s.value;
-                ns.cap = s.cap * stackCapMult;
+                ns.cap = s.cap <= 0
+                        ? HextechEvents.permanentStackCapFor(d, sp.serverLevel())
+                        : s.cap * stackCapMult;
                 m.stacks.add(ns);
             }
             // v0.6.3 费用快照：与实扣完全同源（discounted / draw_cost 乘区）

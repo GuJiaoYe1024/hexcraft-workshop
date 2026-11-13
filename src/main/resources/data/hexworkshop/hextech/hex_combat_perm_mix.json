@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "stack_attr_onhit:attack_damage:0.001,stack_attr_onhurt:max_health:0.002",
+  "event": "stack_attr_onhit:attack_damage:0.0006,stack_attr_onhurt:max_health:0.0012",
   "stackTag": [
     "permanent_stack",
     "damage_stack",

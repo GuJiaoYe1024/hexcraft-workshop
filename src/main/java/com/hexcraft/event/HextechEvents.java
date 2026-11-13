@@ -1798,13 +1798,18 @@ public class HextechEvents {
                     }
                 }
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
-                if (perStack > 0 && s != null && s.value > 0) {
+                // v0.9.21：cap<=0 的件（原写死 30/40/60）层数只受全局永久上限约束，这里与属性结算同口径截断，
+                // 否则 addStack 放开后 s.value 会一路涨到叠加乘区后的超大值，单次命中伤害失控。
+                int pCapP = HexConfig.PERMANENT_STACK_CAP.get();
+                if (pCapP <= 0) pCapP = permanentStackCapFor(data, hitLevel);
+                double liveP = s == null ? 0 : Math.min(s.value, pCapP);
+                if (perStack > 0 && liveP > 0) {
                     // v0.9.0 满层爆发：叠满（达到实时上限）时该叠层海克斯每层效果额外 +50%
-                    double realCap = s.cap * capMul;
-                    double perStackEff = (s.value >= realCap - 0.001) ? perStack * 1.5 : perStack;
-                    extraDamage(sp, target, amount * (float) perStackEff * (float) s.value);
+                    double realCap = s.cap <= 0 ? pCapP : Math.min(s.cap * capMul, pCapP);
+                    double perStackEff = (liveP >= realCap - 0.001) ? perStack * 1.5 : perStack;
+                    extraDamage(sp, target, amount * (float) perStackEff * (float) liveP);
                     com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
-                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) s.value), 0);
+                            Component.translatable("hexcraft.hextech." + e.id + ".name"), (int) liveP), 0);
                 }
                 hexStacked = true;
             }
@@ -2632,6 +2637,10 @@ public class HextechEvents {
                 if (sdef == null || sdef.stack == null || !sdef.event.contains("shield_gain")) continue;
                 PlayerData.StackEntry s = data.getStack(sdef.stack.key);
                 if (s == null || s.value <= 0) continue;
+                // v0.9.21：cap<=0 的件（原写死 20/30/40/60 的命中与周期叠层）层数已放开，护盾结算同样按全局上限截断，防溢出
+                int pCapSh = HexConfig.PERMANENT_STACK_CAP.get();
+                if (pCapSh <= 0) pCapSh = permanentStackCapFor(data, (net.minecraft.server.level.ServerLevel) sp.level());
+                double liveSh = Math.min(s.value, pCapSh);
                 double per = 0;
                 for (String token : sdef.event.split(",")) {
                     int ci = token.indexOf(':');
@@ -2639,8 +2648,8 @@ public class HextechEvents {
                         try { per += Double.parseDouble(token.substring(ci + 1)) * e.level; } catch (Exception ignored) { }
                     }
                 }
-                if (per > 0 && sp.getAbsorptionAmount() < s.value * per) {
-                    sp.setAbsorptionAmount((float) (s.value * per));
+                if (per > 0 && sp.getAbsorptionAmount() < liveSh * per) {
+                    sp.setAbsorptionAmount((float) (liveSh * per));
                 }
             }
         }

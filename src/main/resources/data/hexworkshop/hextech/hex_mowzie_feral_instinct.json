@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "mowziesmobs",
   "mods": [],
-  "event": "crit:0.15,stack_attr:attack_speed:0.00035"
+  "event": "crit:0.15,stack_attr:attack_speed:0.00021"
 }

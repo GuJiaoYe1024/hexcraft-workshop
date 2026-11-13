@@ -3,5 +3,5 @@
   "weight": 8,
   "source": "artifacts",
   "mods": [],
-  "event": "stack_attr:attack_speed:0.00035,last_stand:0.10"
+  "event": "stack_attr:attack_speed:0.00021,last_stand:0.10"
 }

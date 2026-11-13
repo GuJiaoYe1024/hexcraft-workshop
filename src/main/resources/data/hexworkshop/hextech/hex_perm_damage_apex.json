@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 4,
-  "event": "stack_attr:attack_damage:0.001,execute_pct:0.02",
+  "event": "stack_attr:attack_damage:0.0006,execute_pct:0.02",
   "mods": [
     {
       "attr": "attack_damage",

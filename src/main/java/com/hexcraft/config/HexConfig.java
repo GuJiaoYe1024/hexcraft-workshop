@@ -234,10 +234,10 @@ public class HexConfig {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
 
         b.comment("海克斯抽取").translation("hexcraft.config.cat.draw").push("draw");
-        XP_COST_PER_DRAW = b.comment("每次海克斯抽取消耗的经验点数（≈19级为500xp）").translation("hexcraft.config.draw.xpCostPerDraw").defineInRange("xpCostPerDraw", 500, 10, 1000000);
+        XP_COST_PER_DRAW = b.comment("每次海克斯抽取消耗的经验点数（≈19级为500xp；v0.9.21 由 500 下调到 400，配合递增幅度减半，让叠层套收集不再需要 270+ 级经验）").translation("hexcraft.config.draw.xpCostPerDraw").defineInRange("xpCostPerDraw", 400, 10, 1000000);
         // v0.8.8 经验递增（服务端生效，默认开启）
         XP_INCREMENT_ENABLED = b.comment("经验递增（默认开启：每抽一次海克斯，下次抽取经验需求提高；关闭后恒定基础值）").translation("hexcraft.config.draw.xpIncrementEnabled").define("xpIncrementEnabled", true);
-        XP_INCREMENT_RATE = b.comment("经验递增幅度（下次抽取需求 = 基础 × (1 + 幅度 × 已抽次数)；默认 0.20 = 每次 +20%）").translation("hexcraft.config.draw.xpIncrementRate").defineInRange("xpIncrementRate", 0.20, 0.0, 1.0);
+        XP_INCREMENT_RATE = b.comment("经验递增幅度（下次抽取需求 = 基础 × (1 + 幅度 × 已抽次数)；默认 0.10 = 每次 +10%，v0.9.21 由 0.20 减半）").translation("hexcraft.config.draw.xpIncrementRate").defineInRange("xpIncrementRate", 0.10, 0.0, 1.0);
         REROLL_COST = b.comment("三选一刷新一次消耗的晶币").translation("hexcraft.config.draw.rerollCost").defineInRange("rerollCost", 20, 0, 10000);
         // v0.6.16 海克斯基础上限拉高+范围放宽：默认 16（原 8），范围 0~9999（0=无限制）
         HEX_SLOT_COUNT = b.comment("海克斯槽位基础上限（0=无限制；默认 16；满员后通过『栏位扩展』海克斯或棱彩锻造器解锁栏位；已超上限的存量玩家不受限）").translation("hexcraft.config.draw.hexLimit").defineInRange("hexLimit", 16, 0, 9999);
