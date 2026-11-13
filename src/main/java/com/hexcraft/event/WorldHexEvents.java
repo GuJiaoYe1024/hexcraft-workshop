@@ -57,11 +57,21 @@ public class WorldHexEvents {
         for (String k : keys) MOD_UUIDS.put(k, UUID.nameUUIDFromBytes(("hexcraft_wh_" + k).getBytes()));
     }
 
-    // ================= 生物分类（原版标记接口判定；TACZ 等第三方敌对实体按 MobCategory.MONSTER 归类）=================
+    // ================= 生物分类（v0.9.24 统一敌对判定：Enemy 标记接口优先，再退到 MobCategory.MONSTER）=================
+    /** v0.9.24 统一敌对判定。
+     *  `Enemy` 是原版标记接口，任何 mod 的敌对生物只要实现它就会被识别；旧实现只看 MobCategory.MONSTER，
+     *  把敌对生物注册成 CREATURE 的第三方实体（Cataclysm / Goety / Mowzie 等）会整批漏掉。
+     *  难度提升（HextechEvents.onMobFinalizeSpawn）与世界海克斯共用本判定，两处口径必须保持同源。 */
+    public static boolean isHostile(LivingEntity e) {
+        if (e == null || e instanceof Player) return false;
+        if (e instanceof net.minecraft.world.entity.monster.Enemy) return true;
+        return e.getType().getCategory() == MobCategory.MONSTER;
+    }
+
     public static String categoryOf(LivingEntity e) {
         if (e instanceof Player) return null;
+        if (isHostile(e)) return WorldHexRegistry.CAT_HOSTILE;
         MobCategory cat = e.getType().getCategory();
-        if (cat == MobCategory.MONSTER) return WorldHexRegistry.CAT_HOSTILE;
         if (e instanceof NeutralMob) return WorldHexRegistry.CAT_NEUTRAL;
         if (cat == MobCategory.CREATURE || cat == MobCategory.AMBIENT
                 || cat == MobCategory.WATER_CREATURE || cat == MobCategory.UNDERGROUND_WATER_CREATURE
@@ -392,15 +402,17 @@ public class WorldHexEvents {
     }
 
     /** 驯服生物持续回血（天使眷顾）；低频节流避免每 tick 遍历开销 */
-    private static int TICK;
-
     @SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {
         if (event.getEntity().level().isClientSide()) return;
         LivingEntity e = event.getEntity();
         if (!(e instanceof OwnableEntity o)) return;
         if (o.getOwner() == null) return;
-        if ((++TICK & 15) != 0) return; // 每 16 tick（0.8s）检查一次
+        // 每只驯服生物按自身 tick 独立节流（每 16 tick = 0.8s 检查一次）。
+        // 旧实现用全局静态计数器 ++TICK & 15，同一世界里所有驯服生物共享一个计数，
+        // 生物越多单只被处理到的间隔越长且不固定（50 只时约每 tick 只有 3 只通过），
+        // 表现为治疗分配不均；改按 e.tickCount 后每只各自稳定在 0.8s 一次。
+        if (e.tickCount % 16 != 0) return;
         if (!(e.level() instanceof ServerLevel sl)) return;
         double regen = tamedRegen(sl);
         if (regen > 0 && e.isAlive() && e.getHealth() < e.getMaxHealth()) {

@@ -242,6 +242,21 @@ public final class ComboRegistry {
             new int[]{2, 4, 6, 8, 10}, new String[]{"stack_growth", "stack_growth", "stack_growth", "stack_growth", "stack_growth"},
             new double[]{0.05, 0.1, 0.15, 0.2, 0.25}, 1.0);
 
+    /** ================= 叠层之源（v0.9.24：从叠层专家接手上限解锁，5 档 2/4/6/8/10 → 400/600/800/1000/∞）=================
+     *  背景：v0.9.12 之前，个人叠层上限由「叠层专家」的件数档位在代码里硬编码给出，而叠层专家的效果声明全是
+     *  stack_growth，图鉴上只能看到"叠层变快"、看不到"解锁了多少层"。v0.9.24 把上限解锁独立成这条羁绊：
+     *  叠层专家只保留叠层获取，叠层之源负责上限，图鉴可见。
+     *  成员 10 件 = 叠层专家前 6 件 + 4 件补充（不朽回响 / 受击永久护盾 / 战斗伤害尖刺 / 渐强之刃），
+     *  覆盖永久攻击、永久生命、短时攻击、长期成长四类叠层。
+     *  values 存「解锁到多少层」，最后一档 0 表示无上限，渲染层单独翻译成 ∞。 */
+    public static final TieredCombo STACK_SOURCE = new TieredCombo("hexcraft.combo.v2.stacksource",
+            new String[]{"hex_heart_steel", "hex_stack_tank", "hex_stack_drake", "hex_combat_perm_mix",
+                    "hex_perm_damage_apex", "hex_timed_multi_aspect",
+                    "hex_immortal_echo", "hex_hurt_perm_shield", "hex_combat_damage_spur", "hex_crescendo_blade"},
+            new int[]{2, 4, 6, 8, 10},
+            new String[]{"stack_cap_tier", "stack_cap_tier", "stack_cap_tier", "stack_cap_tier", "stack_cap_tier"},
+            new double[]{400, 600, 800, 1000, 0}, 1.0);
+
     /** ================= 逆原 10 条升级（9 成员 1/3/5/7/9 奇数档）================= */
     public static final java.util.List<TieredCombo> TIERED_COMBOS = java.util.List.of(
             // 狂战：近战增伤流（9 件奇数档，满档 +70%）
@@ -416,6 +431,12 @@ public final class ComboRegistry {
         return null;
     }
 
+    /** v0.9.24 叠层之源的有效视图（group=5；负责个人叠层上限解锁）。 */
+    public static ResolvedCombo resolvedStackSource() {
+        for (ResolvedCombo rc : resolvedAll()) if (rc.group() == 5) return rc;
+        return null;
+    }
+
     // ================= v0.9.12 运行时有效羁绊视图（联动成员过滤 + 档位重算，数据驱动） =================
     /** 解析后的羁绊：成员仅含当前环境启用的海克斯；tierCounts 按可用成员重算。
      *  originalTotal = 原始成员数（参考）；group = 所属分组（0 原生/1 新流派/2 叠层专家/3 逆原/4 大乱斗）。 */
@@ -435,6 +456,7 @@ public final class ComboRegistry {
                     for (TieredCombo tc : BASE_COMBOS) addResolved(out, tc, 0);
                     for (TieredCombo tc : NEW_COMBOS) addResolved(out, tc, 1);
                     addResolved(out, STACK_MASTER, 2);
+                    addResolved(out, STACK_SOURCE, 5);
                     for (TieredCombo tc : TIERED_COMBOS) addResolved(out, tc, 3);
                     for (TieredCombo tc : ARAM_SETS) addResolved(out, tc, 4);
                     c = java.util.List.copyOf(out);

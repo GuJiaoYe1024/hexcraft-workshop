@@ -223,8 +223,7 @@ public class HextechEvents {
     public static double effect(List<PlayerData.HexEntry> hexes, String effect) {
         double sum = 0;
         // v0.9.7 别名兜底（同上）：直接调用本入口的历史键名同样归一化
-        if ("goldmine".equals(effect)) effect = "coin_bonus";
-        else if ("scholar".equals(effect)) effect = "xp_bonus";
+        effect = normalizeEffect(effect);
         for (PlayerData.HexEntry e : hexes) {
             HextechDefinition def = HextechRegistry.get(e.id);
             // v0.6.4 联机客户端兜底：客户端 Registry 只有 static 内置（数据包仅服务端加载），缺失时读服务端同步缓存
@@ -236,13 +235,10 @@ public class HextechEvents {
                 int ci = token.indexOf(':');
                 if (ci <= 0) continue;
                 if (token.substring(0, ci).equals(effect)) {
-                    try {
-                        double v = Double.parseDouble(token.substring(ci + 1));
-                        // v0.9.12 修正：stack_growth 是"叠层获取速率加成"，按 值×等级 固定计算。
-                        // 旧实现额外乘 (1+自身层数) 会让层数越多加成越大，形成"层数→获取→更多层数"的正反馈，
-                        // 实测单个 5% 加成在 94 层时被放大到 475%，属性页总览一度显示 +1661%。已移除自乘。
-                        sum += v * e.level;
-                    } catch (Exception ignored) { }
+                    // v0.9.12 修正：stack_growth 是"叠层获取速率加成"，按 值×等级 固定计算。
+                    // 旧实现额外乘 (1+自身层数) 会让层数越多加成越大，形成"层数→获取→更多层数"的正反馈，
+                    // 实测单个 5% 加成在 94 层时被放大到 475%，属性页总览一度显示 +1661%。已移除自乘。
+                    sum += tokenValue(token, ci) * e.level;
                 }
             }
         }
@@ -265,6 +261,64 @@ public class HextechEvents {
         return sum;
     }
 
+    /** 效果键别名归一（历史键名兜底）：goldmine → coin_bonus，scholar → xp_bonus */
+    private static String normalizeEffect(String key) {
+        if ("goldmine".equals(key)) return "coin_bonus";
+        if ("scholar".equals(key)) return "xp_bonus";
+        return key;
+    }
+
+    /** v0.9.24 客户端批量版：一次遍历 hexes + 羁绊视图汇总多个效果键，
+     *  替代属性页"每个键各调一次 effect()"的写法（约 50 个键，每键一次全量遍历）。
+     *  口径与单键版 effect(List&lt;HexEntry&gt;, String) 完全一致：只看海克斯与羁绊，不含装备/锻造。
+     *  返回 map 的 key 保持调用方传入的原样（含别名），值已归一到对应真实键。 */
+    public static java.util.Map<String, Double> effectBatch(java.util.List<PlayerData.HexEntry> hexes,
+                                                            java.util.Collection<String> keys) {
+        java.util.Map<String, Double> out = new java.util.HashMap<>();
+        if (hexes == null || keys == null || keys.isEmpty()) return out;
+        // 归一键 → 该归一后对应的所有原键（同一次查询里可能同时传 "goldmine" 和 "coin_bonus"）
+        java.util.Map<String, java.util.List<String>> byNorm = new java.util.HashMap<>();
+        for (String k : keys) {
+            if (k == null) continue;
+            out.putIfAbsent(k, 0.0);
+            byNorm.computeIfAbsent(normalizeEffect(k), x -> new java.util.ArrayList<>()).add(k);
+        }
+        // 海克斯
+        for (PlayerData.HexEntry e : hexes) {
+            HextechDefinition def = HextechRegistry.get(e.id);
+            // 联机客户端兜底：客户端 Registry 只有 static 内置，缺失时读服务端同步缓存
+            if (def == null) {
+                try { def = com.hexcraft.client.ClientDataStore.hexDef(e.id); } catch (Throwable ignored) { }
+            }
+            if (def == null || def.event == null || def.event.isEmpty()) continue;
+            for (String token : eventTokens(def.event)) {
+                int ci = token.indexOf(':');
+                if (ci <= 0) continue;
+                java.util.List<String> origs = byNorm.get(token.substring(0, ci));
+                if (origs == null) continue;
+                double v = tokenValue(token, ci);
+                if (v == 0.0) continue;
+                for (String o : origs) out.merge(o, v * e.level, Double::sum);
+            }
+        }
+        // 羁绊：与单键版同口径，遍历有效成员视图，档位重算，满档 ×prismaticMult
+        java.util.Set<String> owned = null;
+        for (com.hexcraft.hextech.ComboRegistry.ResolvedCombo rc : com.hexcraft.hextech.ComboRegistry.resolvedAll()) {
+            if (owned == null) {
+                owned = new java.util.HashSet<>();
+                for (PlayerData.HexEntry he : hexes) owned.add(he.id);
+            }
+            int tier = com.hexcraft.hextech.ComboRegistry.tierOf(rc, owned);
+            double mult = (tier >= rc.tierCounts().length) ? rc.prismaticMult() : 1.0;
+            for (int t = 0; t < tier; t++) {
+                java.util.List<String> origs = byNorm.get(rc.effects()[t]);
+                if (origs == null) continue;
+                for (String o : origs) out.merge(o, rc.values()[t] * mult, Double::sum);
+            }
+        }
+        return out;
+    }
+
     // ================= v0.9.1 性能：event 分词缓存 + 批量效果查询 =================
     private static final String[] EMPTY_TOKENS = new String[0];
     /** event 字符串 → 分词数组缓存（跨玩家/跨调用共享，避免高频查询重复 split） */
@@ -279,6 +333,25 @@ public class HextechEvents {
             EVENT_TOKEN_CACHE.putIfAbsent(ev, t);
         }
         return t;
+    }
+
+    /** token 数值解析缓存（v0.9.24 性能）：一个 token 形如 "key:value"，字符串本身唯一确定数值，
+     *  跨玩家/跨调用共享。onTick 每 tick 每玩家都要把所有海克斯 token 过一遍，parseDouble 单次很便宜
+     *  但次数累加明显（10 人服每 tick 数千次），缓存后降为一次查表。解析失败的 token 不缓存（保持静默忽略语义）。 */
+    private static final java.util.concurrent.ConcurrentHashMap<String, Double> TOKEN_VALUE_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static double tokenValue(String token, int colonIndex) {
+        Double cached = TOKEN_VALUE_CACHE.get(token);
+        if (cached != null) return cached;
+        double v;
+        try {
+            v = Double.parseDouble(token.substring(colonIndex + 1));
+        } catch (Exception ex) {
+            return 0.0;
+        }
+        TOKEN_VALUE_CACHE.putIfAbsent(token, v);
+        return v;
     }
 
     /** v0.9.12 单个定义 event 中某键的数值总和（值 × 等级由调用方决定）。
@@ -323,11 +396,10 @@ public class HextechEvents {
                 if (ci <= 0) continue;
                 String key = token.substring(0, ci);
                 if (!out.containsKey(key)) continue;
-                try {
-                    double v = Double.parseDouble(token.substring(ci + 1));
-                    // v0.9.12 与单键 effect() 同口径：stack_growth 不再乘 (1+层数)，避免自反馈放大
-                    out.merge(key, v * e.level, Double::sum);
-                } catch (Exception ignored) { }
+                double v = tokenValue(token, ci);
+                if (v == 0.0) continue;
+                // v0.9.12 与单键 effect() 同口径：stack_growth 不再乘 (1+层数)，避免自反馈放大
+                out.merge(key, v * e.level, Double::sum);
             }
         }
         // v0.9.12：羁绊统一遍历有效羁绊视图（成员过滤/档位重算），低档叠加；满员棱彩 ×prismaticMult
@@ -354,8 +426,9 @@ public class HextechEvents {
                 if (ci <= 0) continue;
                 String key = token.substring(0, ci);
                 if (!out.containsKey(key)) continue;
-                try { out.merge(key, Double.parseDouble(token.substring(ci + 1)) * eq.level, Double::sum); }
-                catch (Exception ignored) { }
+                double ev = tokenValue(token, ci);
+                if (ev == 0.0) continue;
+                out.merge(key, ev * eq.level, Double::sum);
             }
         }
         // 事件型锻造词条
@@ -415,19 +488,20 @@ public class HextechEvents {
         return base;
     }
 
-    /** v0.9.7 v2-C：个人叠层无上限解锁判定——叠层专家羁绊满档（10 件 = 档 5）即解锁（个人生效）。
-     *  v2 起个人叠层上限由「叠层专家」羁绊逐步解锁（档1=400/档2=600/档3=800/档4=1000/档5=∞），
-     *  修复轮 2 的「任意 ≥8 成员件套满档」过渡判定已收窄为叠层专家专属，避免三件套 12 成员满档误判。 */
+    /** v0.9.7 v2-C：个人叠层无上限解锁判定——「叠层之源」羁绊满档（10 件 = 档 5）即解锁（个人生效）。
+     *  v0.9.24 起个人叠层上限改由「叠层之源」逐步解锁（档1=400/档2=600/档3=800/档4=1000/档5=∞），
+     *  原「叠层专家」只保留叠层增速效果，不再承担上限解锁。 */
     public static boolean unlimitedStackCap(PlayerData data) {
         if (data == null) return false;
-        return stackMasterTierOf(data) >= com.hexcraft.hextech.ComboRegistry.STACK_MASTER.tierCounts().length;
+        return stackSourceTierOf(data) >= com.hexcraft.hextech.ComboRegistry.STACK_SOURCE.tierCounts().length;
     }
 
     /** v0.9.7 v2-C：个人叠层生效上限（服务端权威，客户端属性页显示同源）。
-     *  基础 200；叠层专家档1（2件）=400 / 档2（4件）=600 / 档3（6件）=800 / 档4（8件）=1000 / 档5 满员=∞ */
+     *  v0.9.24：上限解锁由「叠层之源」负责（不再借用叠层专家的件数），档位与叠层专家同构：
+     *  基础 200；叠层之源档1（2件）=400 / 档2（4件）=600 / 档3（6件）=800 / 档4（8件）=1000 / 档5 满员=∞ */
     public static int stackCapFor(PlayerData data) {
         if (data == null) return 200;
-        int tier = stackMasterTierOf(data);
+        int tier = stackSourceTierOf(data);
         if (tier >= 5) return Integer.MAX_VALUE;
         if (tier >= 4) return 1000;
         if (tier >= 3) return 800;
@@ -436,18 +510,18 @@ public class HextechEvents {
         return 200;
     }
 
-    /** 叠层专家当前档位（0=未激活，1..5=有效视图最高档满员）；v0.9.12 起统一走有效成员视图，口径与界面一致。 */
-    private static int stackMasterTierOf(PlayerData data) {
-        com.hexcraft.hextech.ComboRegistry.ResolvedCombo rsm = com.hexcraft.hextech.ComboRegistry.resolvedStackMaster();
-        if (rsm == null) return 0;
+    /** v0.9.24 叠层之源当前档位（0=未激活，1..5）：负责个人叠层上限解锁。 */
+    private static int stackSourceTierOf(PlayerData data) {
+        com.hexcraft.hextech.ComboRegistry.ResolvedCombo rsc = com.hexcraft.hextech.ComboRegistry.resolvedStackSource();
+        if (rsc == null) return 0;
         java.util.Set<String> owned = new java.util.HashSet<>();
         for (com.hexcraft.capability.PlayerData.HexEntry e : data.getHexes()) owned.add(e.id);
-        return com.hexcraft.hextech.ComboRegistry.tierOf(rsm, owned);
+        return com.hexcraft.hextech.ComboRegistry.tierOf(rsc, owned);
     }
 
     /** v0.9.12 永久叠层生效上限（与战斗叠层同一套乘区口径）：
-     *  叠层专家档位值 200/400/600/800/1000 × 叠层连携 1.2/1.4 × 效果键 stack_cap × 世界海克斯叠层上限。
-     *  档位值本身已含专家乘区，故不再乘 tierMult，避免重复放大。
+     *  叠层之源档位值 400/600/800/1000/∞ × 叠层连携 1.2/1.4 × 效果键 stack_cap × 世界海克斯叠层上限。
+     *  档位值本身已含档位乘区，故不再乘 tierMult，避免重复放大。
      *  旧实现永久叠层只按档位值截断、不含连携与 stack_cap，导致战斗层能到 240 而永久层收益仍按 200 结算。 */
     public static int permanentStackCapFor(PlayerData data, net.minecraft.server.level.ServerLevel level) {
         int base = stackCapFor(data);
@@ -463,15 +537,15 @@ public class HextechEvents {
     /** 叠层实时上限乘区（叠层连携 1.2/1.4 × 效果键 stack_cap × 世界海克斯叠层上限加成 × 叠层专家档位）。
      *  与 addStack 截断、满层爆发 realCap、客户端属性页显示（Packets 同步实时 cap）完全同源，杜绝"显示 200 层实际 240 层"的口径分叉。
      *  v0.9.7 修复轮：个人解锁无上限叠层后返回超大乘数（cap×乘数→Infinity→min 不截断，满层爆发不触发），对应显示处按 ∞ 处理。
-     *  v0.9.7 v2-C：叠层专家档位梯级注入乘区（档1 ×2=400 / 档2 ×3=600 / 档3 ×4=800 / 档4 ×5=1000，基于基础 200）。
+     *  v0.9.24：档位梯级注入乘区改由「叠层之源」提供（档1 ×2=400 / 档2 ×3=600 / 档3 ×4=800 / 档4 ×5=1000，基于基础 200）。
      *  v0.9.12：「叠层之巅」三件套 +30% 不再硬编码于此，改为 ComboRegistry 正式羁绊 hexcraft.combo.c17，
      *  经 effect("stack_cap") 汇总进入本乘区——图鉴可见、数值可调、无隐藏规则。 */
     public static double stackCapMultiplier(PlayerData data, net.minecraft.server.level.ServerLevel level) {
         if (data == null || level == null) return 1.0;
-        // v0.9.12 性能：档位只算一次。旧实现 unlimitedStackCap() 内部算一遍、下面又算一遍，两次都新建集合逐条判定
-        int smt = stackMasterTierOf(data);
-        if (smt >= com.hexcraft.hextech.ComboRegistry.STACK_MASTER.tierCounts().length) return Double.MAX_VALUE;
-        double tierMult = smt >= 1 ? smt + 1.0 : 1.0;
+        // v0.9.24：上限档位改由叠层之源提供（原为叠层专家）。档位只算一次，避免重复全量扫描。
+        int sst = stackSourceTierOf(data);
+        if (sst >= com.hexcraft.hextech.ComboRegistry.STACK_SOURCE.tierCounts().length) return Double.MAX_VALUE;
+        double tierMult = sst >= 1 ? sst + 1.0 : 1.0;
         double whCapBonus = com.hexcraft.event.WorldHexEvents.combatStackCapBonus(level);
         double comboCap = 1.0;
         int n = countStackHexes(data);
@@ -1157,7 +1231,8 @@ public class HextechEvents {
     @SubscribeEvent
     public static void onMobFinalizeSpawn(net.minecraftforge.event.entity.living.MobSpawnEvent.FinalizeSpawn event) {
         net.minecraft.world.entity.LivingEntity mob = event.getEntity();
-        if (!(mob instanceof net.minecraft.world.entity.monster.Monster)) return;
+        // v0.9.24：原版 Monster 收窄判定改为统一敌对判定，第三方 mod 的敌对实体同样按难度清单强化
+        if (!com.hexcraft.event.WorldHexEvents.isHostile(mob)) return;
         if (mob.level().isClientSide) return;
 
         PlayerData best = null;
@@ -1202,23 +1277,27 @@ public class HextechEvents {
     static void applyEnemyHex(net.minecraft.world.entity.LivingEntity mob, String id, int lv) {
         // 机制型标记：随实体 NBT 保存，供伤害/死亡/tick 事件读取
         mob.getPersistentData().putBoolean("hex_" + id, true);
-        int amp = Math.min(4, 1 + lv);
+        // v0.9.24 数值封顶（B 方案）：普通药水最高 III 级（原最高 V 级）
+        int amp = Math.min(2, 1 + lv);
+        // 抗性单独封顶 II 级 = 40% 减伤。旧版可到 V 级 = 100% 免疫，配合高护甲会让怪物完全打不动
+        int resAmp = Math.min(1, lv);
         switch (id) {
             case "fury" -> {
                 mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_BOOST, amp);
                 mobEffect(mob, net.minecraft.world.effect.MobEffects.JUMP, amp);
             }
             case "swift" -> {
-                mobEffect(mob, net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, Math.min(2, lv));
+                // v0.9.24：敌对移动系数下调，药水同步封顶 I 级（原 II 级 = +40% 与锻造乘算叠乘过高）
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, 0);
                 mobEffect(mob, net.minecraft.world.effect.MobEffects.DIG_SPEED, amp);
             }
             case "bulwark" -> {
-                mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, amp);
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, resAmp);
                 mobEffect(mob, net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE, 0);
             }
             case "shield" -> {
-                mobEffect(mob, net.minecraft.world.effect.MobEffects.ABSORPTION, Math.min(9, 3 + lv));
-                mobEffect(mob, net.minecraft.world.effect.MobEffects.HEALTH_BOOST, Math.min(9, 3 + lv));
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.ABSORPTION, Math.min(3, 1 + lv));
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.HEALTH_BOOST, Math.min(3, 1 + lv));
             }
             case "regen" -> {
                 mobEffect(mob, net.minecraft.world.effect.MobEffects.REGENERATION, amp);
@@ -1226,13 +1305,14 @@ public class HextechEvents {
             }
             case "phantom" -> {
                 mobEffect(mob, net.minecraft.world.effect.MobEffects.INVISIBILITY, 0);
-                mobEffect(mob, net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, Math.min(2, lv));
+                // v0.9.24：与 swift 同口径，移动药水封顶 I 级
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, 0);
             }
             case "aegis" -> {
-                mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, amp);
-                mobEffect(mob, net.minecraft.world.effect.MobEffects.ABSORPTION, Math.min(9, 2 + lv));
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, resAmp);
+                mobEffect(mob, net.minecraft.world.effect.MobEffects.ABSORPTION, Math.min(3, 1 + lv));
             }
-            case "titan" -> mobEffect(mob, net.minecraft.world.effect.MobEffects.HEALTH_BOOST, Math.min(9, 7 + lv));
+            case "titan" -> mobEffect(mob, net.minecraft.world.effect.MobEffects.HEALTH_BOOST, Math.min(3, 1 + lv));
             case "aqua" -> {
                 mobEffect(mob, net.minecraft.world.effect.MobEffects.WATER_BREATHING, 0);
                 mobEffect(mob, net.minecraft.world.effect.MobEffects.DOLPHINS_GRACE, 0);
@@ -1270,15 +1350,16 @@ public class HextechEvents {
                     net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_BASE);
             case "atk" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, uid, 0.40,
                     net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_BASE);
-            case "armor" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, uid, 18.0,
+            // v0.9.24 数值封顶（B 方案）：护甲/坚韧每层减到原来的三分之一，避免多层叠加把减伤表顶满
+            case "armor" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, uid, 6.0,
                     net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
-            case "speed" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED, uid, 0.18,
+            case "speed" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED, uid, 0.09,
                     net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_BASE);
             case "kb" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE, uid, 0.40,
                     net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
             case "aspd" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED, uid, 0.35,
                     net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.MULTIPLY_BASE);
-            case "tough" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS, uid, 8.0,
+            case "tough" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS, uid, 2.0,
                     net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
             case "knock" -> addEnemyMod(mob, net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_KNOCKBACK, uid, 1.5,
                     net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION);
@@ -1314,7 +1395,8 @@ public class HextechEvents {
     @SubscribeEvent
     public static void onEnemyHexDealDamage(net.minecraftforge.event.entity.living.LivingDamageEvent event) {
         net.minecraft.world.entity.Entity src = event.getSource().getEntity();
-        if (!(src instanceof net.minecraft.world.entity.monster.Monster m)) return;
+        if (!(src instanceof net.minecraft.world.entity.LivingEntity m)
+                || !com.hexcraft.event.WorldHexEvents.isHostile(m)) return;
         if (m.level().isClientSide) return;
         if (event.getEntity() == m) return;
         if (hasEnemyHex(m, "inferno")) {
@@ -1328,7 +1410,8 @@ public class HextechEvents {
     /** 尸爆：死亡原地爆炸（不破坏地形）；分裂：死亡分裂两只半血同类（分裂体不再继承清单，防无限增殖） */
     @SubscribeEvent
     public static void onEnemyHexDeath(net.minecraftforge.event.entity.living.LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof net.minecraft.world.entity.monster.Monster m)) return;
+        net.minecraft.world.entity.LivingEntity m = event.getEntity();
+        if (!com.hexcraft.event.WorldHexEvents.isHostile(m)) return;
         if (m.level().isClientSide) return;
         if (hasEnemyHex(m, "volatile")) {
             m.level().explode(null, m.getX(), m.getY(), m.getZ(), 2.5F,
@@ -1337,7 +1420,8 @@ public class HextechEvents {
         if (hasEnemyHex(m, "splinter") && m.level() instanceof net.minecraft.server.level.ServerLevel sl) {
             for (int i = 0; i < 2; i++) {
                 net.minecraft.world.entity.Entity e = m.getType().create(sl);
-                if (!(e instanceof net.minecraft.world.entity.monster.Monster sm)) continue;
+                if (!(e instanceof net.minecraft.world.entity.LivingEntity sm)
+                        || !com.hexcraft.event.WorldHexEvents.isHostile(sm)) continue;
                 sm.moveTo(m.getX() + (i == 0 ? 0.9 : -0.9), m.getY(), m.getZ(), m.getYRot(), 0.0F);
                 sm.setHealth(sm.getMaxHealth() * 0.5F);
                 sm.getPersistentData().putBoolean("hex_split_child", true);
@@ -1349,7 +1433,8 @@ public class HextechEvents {
     /** 霜域：每 20 tick 给 8 格内玩家挂 3 秒减速 */
     @SubscribeEvent
     public static void onEnemyHexTick(net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent event) {
-        if (!(event.getEntity() instanceof net.minecraft.world.entity.monster.Monster m)) return;
+        net.minecraft.world.entity.LivingEntity m = event.getEntity();
+        if (!com.hexcraft.event.WorldHexEvents.isHostile(m)) return;
         if (m.level().isClientSide || m.tickCount % 20 != 0) return;
         if (!m.getPersistentData().getBoolean("hex_frost")) return;
         for (net.minecraft.server.level.ServerPlayer p : m.level().getEntitiesOfClass(

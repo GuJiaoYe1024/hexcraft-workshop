@@ -82,8 +82,8 @@ public class HextechPageScreen extends HexScaledScreen {
     public static final int TAB_RECHARGE = 5;
     private static final int ACCENT = 0xFF4FD8FF;
     private static final int ACCENT_VIOLET = 0xFF7A6BFF;
-    /** v0.9.7 v2-A：羁绊页签组头颜色（原生/新流派/叠层专家/逆原/大乱斗） */
-    private static final int[] GROUP_COLORS = {0xFF4FD8FF, 0xFFFFD700, 0xFFC77DFF, 0xFF8AB4FF, 0xFFFF9FE0};
+    /** v0.9.7 v2-A：羁绊页签组头颜色（原生/新流派/叠层专家/逆原/大乱斗/叠层之源） */
+    private static final int[] GROUP_COLORS = {0xFF4FD8FF, 0xFFFFD700, 0xFFC77DFF, 0xFF8AB4FF, 0xFFFF9FE0, 0xFF7AFFB2};
 
     private int tab;
     private int hexScroll;
@@ -624,10 +624,10 @@ public class HextechPageScreen extends HexScaledScreen {
                         int hc = hoverColumn(hoverX, hoverY, rowY);
                         boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
                         if (hc != 0 && hitOwnCol) {
-                            String bid = "hex_" + bs.key; // 战伤突进→hex_combat_damage_spur，与 stackNameOf 的 probe 兜底一致
+                            String bid = stackIdOf(bs.key); // v0.9.24：与 stackNameOf 共用 id 解析（含 _blade 兜底）
                             java.util.List<Object> tip = new java.util.ArrayList<>();
                             tip.add(Component.literal(stackNameOf(bs.key)).withStyle(c -> c.withColor(0xFF9FE4FF)));
-                            if (ClientDataStore.hexDef(bid) != null) {
+                            if (bid != null) {
                                 tip.add(Component.translatable("hexcraft.hextech." + bid + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
                             }
                             tip.add(Component.literal("当前 " + (int) bs.value + " / " + capText((int) bs.cap) + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
@@ -656,7 +656,8 @@ public class HextechPageScreen extends HexScaledScreen {
                     // v0.9.7 v2 棱彩：每条羁绊满员（全部成员凑齐）→ 整行棱彩紫 + 状态「棱彩」+ 全效果 ×2（巨大提升）；
                     // 档位色阶梯（云顶式）：档1白 → 档2银 → 档3浅金 → 档4深金 → 满员棱彩紫
                     boolean maxTier = cr.tier() >= cr.tierCounts().length;
-                    boolean stackMaster = "hexcraft.combo.v2.stackmaster".equals(cr.nameKey());
+                    // v0.9.24：上限解锁已迁到「叠层之源」，特判与文案跟着走
+                    boolean stackSource = "hexcraft.combo.v2.stacksource".equals(cr.nameKey());
                     // v0.9.12：只有 prismaticMult>1 的羁绊满档才叫"棱彩"并享受翻倍；单档固定羁绊满员即普通满档
                     boolean prismaticUnlocked = maxTier && cr.prismaticMult() > 1.0;
                     String status = prismaticUnlocked
@@ -693,19 +694,22 @@ public class HextechPageScreen extends HexScaledScreen {
                             }
                         }
                         for (int t = 0; t < cr.tierCounts().length; t++) {
+                            boolean capTier = "stack_cap_tier".equals(cr.effects()[t]);
                             String en = Component.translatable("hexcraft.effect." + cr.effects()[t]).getString();
                             int pct = (int) Math.round(cr.values()[t] * 100);
+                            // v0.9.24：叠层之源的档位值存的是「解锁到多少层」，不是百分比
+                            String val = capTier ? capTierText(cr.values()[t]) : signPct(pct);
                             int tierColor = t < cr.tier() ? 0xFFFFD700 : 0xFFAAB6D8;
                             // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘；件数不带括号
                             tip.add(new HexFonts.ColLine(
-                                    new String[]{"档" + (t + 1), cr.tierCounts()[t] + "件", en, signPct(pct)},
+                                    new String[]{"档" + (t + 1), cr.tierCounts()[t] + "件", en, val},
                                     tierColor));
                         }
                         if (!maxTier) tip.add(Component.literal("再　" + (cr.tierCounts()[cr.tier()] - cr.have()) + "　件激活档　" + (cr.tier() + 1))
                                 .withStyle(t -> t.withColor(0xFFFF6B6B)));
-                        if (stackMaster) tip.add(Component.literal("叠层上限梯级：2　件　400　→　4　件　600　→　6　件　800　→　8　件　1000　→　10　件　∞（棱彩）")
+                        if (stackSource) tip.add(Component.literal("叠层上限梯级：2　件　400　→　4　件　600　→　6　件　800　→　8　件　1000　→　10　件　∞")
                                 .withStyle(t -> t.withColor(0xFF9FE4FF)));
-                        if (maxTier && stackMaster) tip.add(Component.literal("叠层上限已解锁：∞").withStyle(t -> t.withColor(0xFFC77DFF)));
+                        if (maxTier && stackSource) tip.add(Component.literal("叠层上限已解锁：∞").withStyle(t -> t.withColor(0xFFC77DFF)));
                         if (prismaticUnlocked) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.prismatic_bonus").getString())
                                 .withStyle(t -> t.withColor(0xFFC77DFF)));
                         hoverTip = tip;
@@ -763,19 +767,27 @@ public class HextechPageScreen extends HexScaledScreen {
     }
 
     private List<String[]> collectHiddenRows() {
+        boolean tacz = ModList.get().isLoaded("tacz");
+        java.util.List<String> keys = new java.util.ArrayList<>();
+        keys.add("crit");
+        keys.add("full_hp_crit");
+        keys.add("tacz_crit");
+        for (String[] e : EFFECT_KEYS) keys.add(e[0]);
+        if (tacz) for (String[] e : TACZ_KEYS) keys.add(e[0]);
+        // v0.9.24 性能：一次批量汇总替代原来约 50 次单键 effect()（旧写法每个键都是一次全量遍历）
+        java.util.Map<String, Double> eff = HextechEvents.effectBatch(ClientDataStore.hexes, keys);
         List<String[]> rows = new java.util.ArrayList<>();
-        double anyCrit = HextechEvents.effect(ClientDataStore.hexes, "crit")
-                + HextechEvents.effect(ClientDataStore.hexes, "full_hp_crit")
-                + HextechEvents.effect(ClientDataStore.hexes, "tacz_crit");
+        double anyCrit = eff.getOrDefault("crit", 0.0) + eff.getOrDefault("full_hp_crit", 0.0)
+                + eff.getOrDefault("tacz_crit", 0.0);
         if (anyCrit > 0) rows.add(new String[]{"crit_damage", "150%"});
         for (String[] e : EFFECT_KEYS) {
-            double v = HextechEvents.effect(ClientDataStore.hexes, e[0]);
+            double v = eff.getOrDefault(e[0], 0.0);
             if (v <= 0) continue;
             rows.add(new String[]{e[1], fmtEffect(v, "1".equals(e[2]))});
         }
-        if (ModList.get().isLoaded("tacz")) {
+        if (tacz) {
             for (String[] e : TACZ_KEYS) {
-                double v = HextechEvents.effect(ClientDataStore.hexes, e[0]);
+                double v = eff.getOrDefault(e[0], 0.0);
                 if (v <= 0) continue;
                 rows.add(new String[]{e[1], fmtEffect(v, "1".equals(e[2]))});
             }
@@ -783,16 +795,22 @@ public class HextechPageScreen extends HexScaledScreen {
         return rows;
     }
 
-    /** v0.6.0 战斗叠层显示名：优先取对应海克斯名（crescendo → hex_crescendo_blade），无则用键名 */
-    private static String stackNameOf(String key) {
+    /** v0.6.0 战斗叠层对应的真实海克斯 id：优先 _blade 后缀（crescendo → hex_crescendo_blade），
+     *  再退回同名 id（战伤突进 → hex_combat_damage_spur）。找不到返回 null。
+     *  v0.9.24 修复：属性页 tooltip 的 desc 判定原先单独拼 "hex_"+key，漏掉 _blade 兜底，
+     *  导致「积聚之刃」这类带后缀的海克斯在属性页只有名字与层数、没有介绍。现统一走本方法。 */
+    private static String stackIdOf(String key) {
         String candidate = "hex_" + key + "_blade";
-        if (ClientDataStore.hexDef(candidate) != null) {
-            return Component.translatable("hexcraft.hextech." + candidate + ".name").getString();
-        }
+        if (ClientDataStore.hexDef(candidate) != null) return candidate;
         String probe = "hex_" + key;
-        if (ClientDataStore.hexDef(probe) != null) {
-            return Component.translatable("hexcraft.hextech." + probe + ".name").getString();
-        }
+        if (ClientDataStore.hexDef(probe) != null) return probe;
+        return null;
+    }
+
+    /** v0.6.0 战斗叠层显示名：取对应海克斯名，无则用键名 */
+    private static String stackNameOf(String key) {
+        String id = stackIdOf(key);
+        if (id != null) return Component.translatable("hexcraft.hextech." + id + ".name").getString();
         return key;
     }
 
@@ -911,8 +929,8 @@ public class HextechPageScreen extends HexScaledScreen {
     /** v0.9.7 v2-A：羁绊页签可视高（标题 2 行 26px + 列表区 y+62 ~ y+H-40 ≈ 186px） */
     private int maxBondScroll() {
         java.util.List<BondRow> rows = bondRows();
-        // v0.9.12：行数随有效羁绊动态变化（纯联动整条隐藏后减少）；+5 为最多 5 个分组头的预留
-        int lineCount = rows.size() + 5;
+        // v0.9.24：新增「叠层之源」分组后最多 6 个分组头，预留数从 5 改 6，否则滚动范围少一行
+        int lineCount = rows.size() + 6;
         return Math.max(0, lineCount * ROW_H - 186);
     }
 
@@ -984,12 +1002,15 @@ public class HextechPageScreen extends HexScaledScreen {
                     }
                 }
                 for (int t = 0; t < br.tierCounts().length; t++) {
+                    boolean capTier = "stack_cap_tier".equals(br.effects()[t]);
                     String en = Component.translatable("hexcraft.effect." + br.effects()[t]).getString();
                     int pct = (int) Math.round(br.values()[t] * 100);
+                    // v0.9.24：叠层之源的档位值存的是「解锁到多少层」，不是百分比
+                    String val = capTier ? capTierText(br.values()[t]) : signPct(pct);
                     int slotColor = t < br.tier ? 0xFFFFD700 : 0xFFAAB6D8;
                     // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘；件数不带括号
                     tip.add(new HexFonts.ColLine(
-                            new String[]{"档" + (t + 1), br.tierCounts()[t] + "件", en, signPct(pct)},
+                            new String[]{"档" + (t + 1), br.tierCounts()[t] + "件", en, val},
                             slotColor));
                 }
                 if (!maxTier) tip.add(Component.literal("再　" + (br.tierCounts()[br.tier()] - br.have) + "　件激活档　" + (br.tier() + 1))
@@ -1152,6 +1173,9 @@ public class HextechPageScreen extends HexScaledScreen {
     }
 
     private static String signPct(int pct) { return signNum(String.valueOf(pct)) + "%"; }
+
+    /** v0.9.24 叠层之源档位值渲染：400/600/800/1000 直接写层数，0 表示无上限写成 ∞ */
+    private static String capTierText(double v) { return v <= 0 ? "∞" : ((int) v) + " 层"; }
 
     private String fmtEffect(double v, boolean percent) {
         if (v <= 0) return "--";

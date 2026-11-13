@@ -1,3 +1,40 @@
+## v0.9.24 — 敌对数值封顶 + 叠层上限迁羁绊 + 敌对判定统一 + 属性页介绍修复（2026-11-14）
+
+**① 敌对移动系数下调**
+- 难度提升的锻造 `speed` 词条：`MULTIPLY_BASE` 0.18 → **0.09**
+- 敌方海克斯 `swift` / `phantom` 的移动药水由 `min(2, lv)`（最高 II 级）压到 **I 级**；`aqua` / `splinter` 原本就是 I 级，不变
+
+**② 敌方药水全面封顶（B 方案）**
+- 普通药水 `amp` 上限：`min(4, 1+lv)`（V 级）→ **`min(2, 1+lv)`（III 级）**，覆盖力量 / 急迫 / 跳跃 / 再生 / 饱和
+- 抗性单独封顶：新增 `resAmp = min(1, lv)` → **最高 II 级（40% 减伤）**。**根因修复**：旧版 `bulwark` / `aegis` 可叠到 V 级 = 100% 减伤，出现「连僵尸都打不死」的完全免疫
+- 吸收 / 生命提升：`min(9, 3+lv)` / `min(9, 2+lv)` / `min(9, 7+lv)` → **`min(3, 1+lv)`**，最高 III 级（原可到 X 级 = +200 生命）
+- 锻造 `armor` 每层 +18 → **+6**、`tough` 每层 +8 → **+2**，避免多层叠加把护甲减伤表顶满
+
+**③ 叠层上限解锁迁到新羁绊「叠层之源」**
+- 原「叠层专家」只保留叠层增速（`stack_growth` 0.05~0.25），不再承担上限解锁
+- 新增 `hexcraft.combo.v2.stacksource`（分组 5），10 成员：`hex_heart_steel` / `hex_stack_tank` / `hex_stack_drake` / `hex_combat_perm_mix` / `hex_perm_damage_apex` / `hex_timed_multi_aspect` + 另选 `hex_immortal_echo` / `hex_hurt_perm_shield` / `hex_combat_damage_spur` / `hex_crescendo_blade`
+- 五档 2 / 4 / 6 / 8 / 10 → 叠层上限 **400 / 600 / 800 / 1000 / ∞**，效果键 `stack_cap_tier`
+- `stackCapFor` / `unlimitedStackCap` / `stackCapMultiplier` 全部改读 `stackSourceTierOf`，删除 `stackMasterTierOf`
+- 图鉴：羁绊页与属性页新增 `stack_cap_tier` 渲染分支，显示「叠层上限 400 层」/「∞」；羁绊页新增「叠层之源」分组色，滚动高度同步
+
+**④ 敌对生物判定统一（含第三方 mod）**
+- 新增 `WorldHexEvents.isHostile`：优先 `Enemy` 接口（Cataclysm / Goety / Mowzie 等把敌对生物注册成 `CREATURE` 的第三方实体也能识别），退回 `MobCategory.MONSTER`，排除玩家
+- `categoryOf` 改为先判 `isHostile` 再取原版分类，世界海克斯同步
+- 难度提升 `onMobFinalizeSpawn` 与机制结算 `onEnemyHexDealDamage` / `onEnemyHexDeath` / `onEnemyHexTick` 全部改用统一判定，替代原来的 `instanceof Monster`
+
+**⑤ 属性页「积聚之刃」介绍为空（修复）**
+- 根因：叠层 tip 的名字走 `hex_<key>_blade` 兜底，但描述 id 只拼 `hex_<key>`（`hex_crescendo` 查不到定义），`if (hexDef(bid) != null)` 判定失败，整段描述被跳过
+- 抽出 `stackIdOf(key)`，名字与描述共用同一套 id 解析，所有带 `_blade` 后缀的叠层海克斯一并修复
+
+**⑥ 性能优化**
+- `effectBatch` / `effect` 新增 `TOKEN_VALUE_CACHE`：token 数值只 `parseDouble` 一次，后续查表
+- 客户端属性页 `collectHiddenRows` 由约 50 次单键 `effect()` 改为一次批量 `effectBatch(List, keys)`
+- 驯服生物回血节流由全局静态 `TICK` 改为 `e.tickCount % 16`：多只驯服生物不再互相争抢结算额度，每只各自稳定 0.8s 一次
+
+**⑦ 静态审查**
+- 49 条羁绊档位校验 0 问题、149 个配置字段全部有消费方、中英 lang 集合一致、32 个事件类注册 0 遗漏
+- 审查清单落 `docs/静态审查清单_2026-11-14.md`；未修的 P4（Clone 口径）/ P5（4 处弃用 API）/ P6（羁绊成员 id 启动期校验）见清单
+
 ## v0.9.23 — 事件注册根因修复：32 个机制层恢复执行 + 联机三缺口 + 叠层显示去噪（2026-11-13）
 
 v0.9.22 及之前，`Hexcraft.java` 全部用 `MinecraftForge.EVENT_BUS.register(XxxEvents.class)`。Forge 的 `register(Class)` **只注册 static 方法**，而 event 目录下 32 个类共 **51 个 `@SubscribeEvent` 方法全部是非 static**，等于从未被注册。
