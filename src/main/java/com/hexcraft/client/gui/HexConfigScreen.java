@@ -52,6 +52,7 @@ public class HexConfigScreen {
         linkedCategory(b, eb);
         worldCategory(b, eb);
         v060Category(b, eb);
+        storageCategory(b, eb); // v0.9.25 存储联动顺序（海克斯产物优先进哪个背包/仓储）
         hudCategory(b, eb); // v0.6.16 HUD 优化：开关类条目
         layoutCategory(b, eb); // v0.7.1 界面布局：位置坐标 + 全屏布局编辑器
         dlcCategory(b, eb); // v0.6.2 DLC 外接内容包顶层页面
@@ -418,6 +419,17 @@ public class HexConfigScreen {
         cat.addEntry(eb.startSubCategory(Component.translatable("hexcraft.config.sub.gift"), List.of(
                 doubleEntryEntry(eb, "v060.randomGiftVanillaChance", HexConfig.RANDOM_GIFT_VANILLA_CHANCE, 0.0, 1.0, 0.85)
         )).build());
+    }
+
+    /** v0.9.25 存储联动顺序：海克斯产物（磁铁拾取/熔炉多产/箭矢返还/图腾补偿/潜影盒自动收/磨石附魔书/合成多产/熔炉多产）
+     *  进入背包或仓储时的优先级。数字小的先放，相同数字按 超越维度→精妙背包→精致存储→玩家背包 兜底。 */
+    private static void storageCategory(ConfigBuilder b, ConfigEntryBuilder eb) {
+        ConfigCategory cat = b.getOrCreateCategory(Component.translatable("hexcraft.config.cat.storage"));
+        cat.addEntry(eb.startTextDescription(Component.translatable("hexcraft.config.catdesc.storage")).build());
+        intEntry(eb, cat, "storage.orderBd", HexConfig.STORAGE_ORDER_BD, 0, 9, 1);
+        intEntry(eb, cat, "storage.orderSb", HexConfig.STORAGE_ORDER_SB, 0, 9, 2);
+        intEntry(eb, cat, "storage.orderRs", HexConfig.STORAGE_ORDER_RS, 0, 9, 3);
+        intEntry(eb, cat, "storage.orderBag", HexConfig.STORAGE_ORDER_BAG, 0, 9, 4);
     }
 
     /** v0.6.16 HUD 优化分组：开关类条目（滚动提示开关 / 拖动模式 / 队列上限 / 合并 / 血条开关 / 属性安全钳）；

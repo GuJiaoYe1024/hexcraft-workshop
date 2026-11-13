@@ -1,3 +1,16 @@
+Hexcraft Workshop v0.9.26 - Storage routing order is now configurable
+=====================================================================
+
+STORAGE ROUTING ORDER IS CONFIGURABLE
+=====================================
+- New "Storage Routing" config category with four integer priorities: Beyond Dimensions, Sophisticated Backpacks, Refined Storage, Player Inventory.
+- Lower numbers go first (0~9). Ties fall back to Beyond Dimensions -> Sophisticated Backpacks -> Refined Storage -> Player Inventory.
+- Defaults are 1 / 2 / 3 / 4, identical to the previous fixed order, so existing setups behave exactly the same.
+- Set Player Inventory to 0 to route hex rewards into your own backpack first and let storage act as overflow only.
+- Set Beyond Dimensions to 9 to stop a network from absorbing every reward before your backpack sees it.
+- Applies to all seven entry points: magnet pickup, crafting bonus, furnace bonus, grindstone book, shulker auto-collect, totem compensation and arrow refund.
+- Server-side switch; takes effect when the config is saved.
+
 Hexcraft Workshop v0.9.25 - Overflow shield cap, legacy save cleanup, storage routing
 =====================================================================================
 
@@ -18,7 +31,8 @@ LEGACY SAVES ARE CLEANED ON LOGIN
 CONTAINERS: WHAT WAS RULED OUT
 ==============================
 - Every event path that could block opening a container was checked and ruled out. The redstone hook only grants Haste on redstone blocks and never cancels. All four cancellations in the class mechanics sit on the damage event. The world hex cancellation is a drop event. The HUD and tooltip cancellations are client-side rendering only.
-- No code path blocks container opening. The current attribution is the overflow shield chain reacting through entity data and client-side heart rendering.
+- Follow-up review in v0.9.26 confirmed there is no link from a high shield value to a broken container: both client HUD layers ignore the shield value entirely and use fixed sizes. The earlier attribution to the overflow shield is withdrawn.
+- The real cause is still unknown and needs a server log or reproduction steps. Remaining candidates: a storage/backpack mod conflict, server tick starvation, or something outside this mod.
 - Please retest after this build. If containers still refuse to open, a server log plus reproduction steps are needed.
 
 DIRECT-TO-INVENTORY ENTRIES NOW USE STORAGE ROUTING
@@ -38,7 +52,8 @@ SHULKER AUTO-COLLECT NO LONGER DUPLICATES
 - 治疗溢出转护盾改为不超过最大生命，NaN/Infinity 归零后再算
 - 低血护盾与叠层护盾同步钳制，三处都不会超过满血
 - 登录时清理老存档：越界护盾钳回最大生命，旧档进游戏即恢复
-- 容器打不开：代码侧排除全部事件拦截，归因护盾溢出连锁，需日志复测
+- 容器打不开：代码侧排除全部事件拦截；v0.9.26 复核进一步确认与护盾数值无关（两层 HUD 都不读护盾值、尺寸固定），真正原因待日志
+- 存储联动顺序改为可配置：新增「存储联动」分类，四项优先级 0~9，数字小的先放，默认 1/2/3/4 与旧版一致
 - 六处直接进背包改走 StorageLink（合成/熔炉/砂轮/潜影盒/图腾/箭矢），有背包或仓储 mod 就进仓储，否则掉脚下
 - 晶币兑换绿宝石保持原回滚逻辑不接入，因它是主动兑换不是海克斯
 - 护盾上限是服务端配置开关「护盾上限」，默认开启，关闭恢复旧版无上限

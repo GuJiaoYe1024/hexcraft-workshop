@@ -183,6 +183,15 @@ public class HexConfig {
     public static final ForgeConfigSpec.IntValue CRAFT_BONUS_COUNT;
     /** v0.9.25 护盾上限开关（服务端生效，默认开启：溢出转盾/低血护盾/叠层护盾都不超过最大生命；关闭=恢复旧版无上限） */
     public static final ForgeConfigSpec.BooleanValue SHIELD_CAP;
+    // ---- v0.9.25 存储联动顺序（服务端生效：海克斯产物进入背包/仓储的优先级，数字小的先放，0~9） ----
+    /** 超越维度优先级（默认 1） */
+    public static final ForgeConfigSpec.IntValue STORAGE_ORDER_BD;
+    /** 精妙背包优先级（默认 2） */
+    public static final ForgeConfigSpec.IntValue STORAGE_ORDER_SB;
+    /** 精致存储优先级（默认 3） */
+    public static final ForgeConfigSpec.IntValue STORAGE_ORDER_RS;
+    /** 玩家背包优先级（默认 4） */
+    public static final ForgeConfigSpec.IntValue STORAGE_ORDER_BAG;
     // ---- HUD 优化（客户端）----
     /** v0.6.16 滚动提示总开关 */
     public static final ForgeConfigSpec.BooleanValue TIP_ENABLED;
@@ -416,6 +425,20 @@ public class HexConfig {
         SHIELD_CAP = b.comment("护盾上限（服务端生效，默认开启：吸收护盾不超过最大生命；关闭=无上限，溢出转盾会持续累积，可能出现无法被击杀）")
                 .translation("hexcraft.config.v0925.shieldCap")
                 .define("shieldCap", true);
+        b.pop();
+
+        // v0.9.25 存储联动顺序（服务端生效）：海克斯产物（磁铁拾取/熔炉多产/箭矢返还/图腾补偿/潜影盒自动收等）
+        // 进入背包或仓储时的优先级。数字小的先放；相同数字按 超越维度→精妙背包→精致存储→玩家背包 兜底。
+        b.comment("存储联动：海克斯产物进入背包/仓储的优先级（数字小的先放入，0~9；相同数字按 超越维度→精妙背包→精致存储→玩家背包 兜底）")
+                .translation("hexcraft.config.cat.storage").push("storage");
+        STORAGE_ORDER_BD = b.comment("超越维度优先级（默认 1：第一顺位）").translation("hexcraft.config.storage.orderBd")
+                .defineInRange("orderBeyondDimensions", 1, 0, 9);
+        STORAGE_ORDER_SB = b.comment("精妙背包优先级（默认 2）").translation("hexcraft.config.storage.orderSb")
+                .defineInRange("orderSophisticatedBackpacks", 2, 0, 9);
+        STORAGE_ORDER_RS = b.comment("精致存储优先级（默认 3）").translation("hexcraft.config.storage.orderRs")
+                .defineInRange("orderRefinedStorage", 3, 0, 9);
+        STORAGE_ORDER_BAG = b.comment("玩家背包优先级（默认 4：最后兜底）").translation("hexcraft.config.storage.orderBag")
+                .defineInRange("orderPlayerInventory", 4, 0, 9);
         b.pop();
 
         COMMON_SPEC = b.build();

@@ -10,8 +10,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * v0.8.2 存储 mod 联动：磁铁拾取（mining_magnet）的掉落优先存入第三方存储，放不下才进玩家背包。
- * 插入顺序：超越维度（Beyond Dimensions 玩家主维度网）→ 精妙背包（Sophisticated Backpacks，curios 背带槽 + 物品栏/装备）
+ * v0.8.2 存储 mod 联动：海克斯产物优先存入第三方存储与玩家背包，放不下才留在原地。
+ * v0.9.25 起插入顺序由配置决定（storage 分类四项优先级，数字小的先放），
+ *          默认：超越维度（Beyond Dimensions 玩家主维度网）→ 精妙背包（Sophisticated Backpacks，curios 背带槽 + 物品栏/装备）
  *          → 精致存储（Refined Storage，玩家 32 格内最近的网络）→ 玩家背包 → 剩余留原地。
  *
  * 全部经运行时反射调用第三方 API，零编译期依赖：未安装对应 mod 时自动跳过，任何异常静默回退到背包，
@@ -52,19 +53,39 @@ public final class StorageLink {
 
     private StorageLink() { }
 
-    /** 磁铁拾取入口：依次尝试各存储，最后回落玩家背包；返回仍未放下的剩余（调用方留在原地）。 */
+    /** 海克斯产物统一入口：按配置优先级依次尝试各存储，返回仍未放下的剩余（调用方留在原地/掉脚下）。
+     *  v0.9.25 顺序由配置控制（storage 分类四项优先级，数字小的先放；
+     *  相同数字按 超越维度→精妙背包→精致存储→玩家背包 兜底）。 */
     public static ItemStack insert(ServerPlayer sp, ItemStack stack) {
         if (sp == null || stack == null || stack.isEmpty()) return stack;
         ItemStack remain = stack;
-        // 1) 超越维度（玩家主维度网络，无位置限制）
-        if (!remain.isEmpty()) remain = insertBeyondDimensions(sp, remain);
-        // 2) 精妙背包（随身背包，curios + 物品栏/装备）
-        if (!remain.isEmpty()) remain = insertSophisticatedBackpacks(sp, remain);
-        // 3) 精致存储（玩家附近 32 格内网络）
-        if (!remain.isEmpty()) remain = insertRefinedStorage(sp, remain);
-        // 4) 玩家背包（尽力放入，剩余 shrink 后返回）
-        if (!remain.isEmpty() && sp.getInventory().add(remain)) {
-            remain = ItemStack.EMPTY;
+        int[] priority = {
+                com.hexcraft.config.HexConfig.STORAGE_ORDER_BD.get(),
+                com.hexcraft.config.HexConfig.STORAGE_ORDER_SB.get(),
+                com.hexcraft.config.HexConfig.STORAGE_ORDER_RS.get(),
+                com.hexcraft.config.HexConfig.STORAGE_ORDER_BAG.get()
+        };
+        // 稳定插入排序：同优先级保持 0/1/2/3 的默认先后
+        int[] order = {0, 1, 2, 3};
+        for (int i = 0; i < order.length; i++) {
+            for (int j = i + 1; j < order.length; j++) {
+                if (priority[order[j]] < priority[order[i]]) {
+                    int tmp = order[i];
+                    order[i] = order[j];
+                    order[j] = tmp;
+                }
+            }
+        }
+        for (int kind : order) {
+            if (remain.isEmpty()) break;
+            switch (kind) {
+                case 0 -> remain = insertBeyondDimensions(sp, remain);
+                case 1 -> remain = insertSophisticatedBackpacks(sp, remain);
+                case 2 -> remain = insertRefinedStorage(sp, remain);
+                default -> {
+                    if (sp.getInventory().add(remain)) remain = ItemStack.EMPTY;
+                }
+            }
         }
         return remain;
     }
