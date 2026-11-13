@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "mining_fortune:1"
+  "event": "mining_fortune:1",
+  "category": "mining",
+  "theme": ""
 }

@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 7,
   "event": "crit_damage:0.10",
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "melee",
+  "theme": "crit"
 }

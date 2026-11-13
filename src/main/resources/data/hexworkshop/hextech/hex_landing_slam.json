@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "landing_slam:8"
+  "event": "landing_slam:8",
+  "category": "mobility",
+  "theme": ""
 }

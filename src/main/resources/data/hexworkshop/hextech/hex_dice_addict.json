@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "dice_forge:0.08"
+  "event": "dice_forge:0.08",
+  "category": "economy",
+  "theme": "gamble"
 }

@@ -7,5 +7,7 @@
       "perLevel": 0.4
     }
   ],
-  "event": "jump:0.08"
+  "event": "jump:0.08",
+  "category": "mobility",
+  "theme": ""
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "shield_guard:1"
+  "event": "shield_guard:1",
+  "category": "sustain",
+  "theme": "shield"
 }

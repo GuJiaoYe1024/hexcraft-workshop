@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 12,
-  "event": "exchange_bonus:0.2"
+  "event": "exchange_bonus:0.2",
+  "category": "economy",
+  "theme": ""
 }

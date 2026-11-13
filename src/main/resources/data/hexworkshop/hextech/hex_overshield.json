@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "overshield:0.5"
+  "event": "overshield:0.5",
+  "category": "sustain",
+  "theme": "shield"
 }

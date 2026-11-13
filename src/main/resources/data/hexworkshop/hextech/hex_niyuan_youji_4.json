@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 7,
   "event": "twin_shot:0.25,tacz_reload_haste:1",
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "mobility",
+  "theme": ""
 }

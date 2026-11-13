@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "mount_attack:0.5"
+  "event": "mount_attack:0.5",
+  "category": "mobility",
+  "theme": ""
 }

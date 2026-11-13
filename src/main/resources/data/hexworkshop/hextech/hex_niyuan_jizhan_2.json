@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 7,
   "event": "spell_power:0.06,spell_mana_max:0.05,rampage:0.02",
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "spell",
+  "theme": "mana"
 }

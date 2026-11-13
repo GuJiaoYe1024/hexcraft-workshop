@@ -12,5 +12,7 @@
     "permanent_stack",
     "shield_stack",
     "on_hurt_stack"
-  ]
+  ],
+  "category": "stacking",
+  "theme": ""
 }

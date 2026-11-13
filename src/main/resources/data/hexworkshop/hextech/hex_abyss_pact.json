@@ -7,5 +7,7 @@
       "perLevel": 0.8
     }
   ],
-  "event": "ac_dark_damage:0.30,full_hp_crit:0.04"
+  "event": "ac_dark_damage:0.30,full_hp_crit:0.04",
+  "category": "abyss",
+  "theme": ""
 }

@@ -2,5 +2,7 @@
   "rarity": "PRISMATIC",
   "weight": 4,
   "mods": [],
-  "event": "nether_coin:0.5"
+  "event": "nether_coin:0.5",
+  "category": "dimension",
+  "theme": "nether"
 }

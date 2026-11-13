@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 3,
   "event": "death_defy:0.05",
-  "source": "dlc_aram"
+  "source": "dlc_aram",
+  "category": "sustain",
+  "theme": ""
 }

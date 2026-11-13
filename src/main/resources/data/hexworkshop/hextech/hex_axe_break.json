@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "axe_break:1"
+  "event": "axe_break:1",
+  "category": "melee",
+  "theme": ""
 }

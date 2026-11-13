@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "trident_loyalty:1"
+  "event": "trident_loyalty:1",
+  "category": "melee",
+  "theme": "lightning"
 }

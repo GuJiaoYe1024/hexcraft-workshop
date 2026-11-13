@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "food_on_hit:1"
+  "event": "food_on_hit:1",
+  "category": "utility",
+  "theme": ""
 }

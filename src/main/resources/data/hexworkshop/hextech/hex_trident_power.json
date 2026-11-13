@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "trident_power:0.25"
+  "event": "trident_power:0.25",
+  "category": "melee",
+  "theme": ""
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 6,
-  "event": "poison_blade:1.0"
+  "event": "poison_blade:1.0",
+  "category": "melee",
+  "theme": "poison"
 }

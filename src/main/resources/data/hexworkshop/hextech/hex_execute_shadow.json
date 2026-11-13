@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "execute:0.15,crit:0.05,execute_pct:0.025"
+  "event": "execute:0.15,crit:0.05,execute_pct:0.025",
+  "category": "melee",
+  "theme": "execute"
 }

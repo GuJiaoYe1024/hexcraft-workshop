@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 2,
-  "event": "transform:double"
+  "event": "transform:double",
+  "category": "economy",
+  "theme": "gamble"
 }

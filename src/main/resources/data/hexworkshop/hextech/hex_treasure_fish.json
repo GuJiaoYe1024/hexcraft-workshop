@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "fish_treasure:0.15"
+  "event": "fish_treasure:0.15",
+  "category": "utility",
+  "theme": ""
 }

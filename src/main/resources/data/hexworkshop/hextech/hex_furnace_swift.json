@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "furnace_swift:0.5"
+  "event": "furnace_swift:0.5",
+  "category": "utility",
+  "theme": ""
 }

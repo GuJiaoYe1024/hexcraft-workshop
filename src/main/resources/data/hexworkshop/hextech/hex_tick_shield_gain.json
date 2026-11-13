@@ -19,5 +19,7 @@
     "timed_stack",
     "on_tick_stack",
     "shield_stack"
-  ]
+  ],
+  "category": "stacking",
+  "theme": ""
 }

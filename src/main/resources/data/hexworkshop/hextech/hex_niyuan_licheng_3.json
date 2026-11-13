@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 7,
   "event": "stand_power:1.0,tacz_power:0.05",
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "sustain",
+  "theme": "shield"
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "firework:2.5,splash:0.1"
+  "event": "firework:2.5,splash:0.1",
+  "category": "elemental",
+  "theme": "fire"
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "horn_blow:1"
+  "event": "horn_blow:1",
+  "category": "utility",
+  "theme": ""
 }

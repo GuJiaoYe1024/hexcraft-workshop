@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 10,
-  "event": "dig_speed:0.6,coin_bonus:0.15"
+  "event": "dig_speed:0.6,coin_bonus:0.15",
+  "category": "mining",
+  "theme": ""
 }

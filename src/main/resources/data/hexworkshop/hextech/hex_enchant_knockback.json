@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "enchant_knockback:0.6"
+  "event": "enchant_knockback:0.6",
+  "category": "utility",
+  "theme": ""
 }

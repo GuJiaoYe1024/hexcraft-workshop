@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 5,
   "mods": [],
-  "event": "bounty:3.0"
+  "event": "bounty:3.0",
+  "category": "economy",
+  "theme": ""
 }

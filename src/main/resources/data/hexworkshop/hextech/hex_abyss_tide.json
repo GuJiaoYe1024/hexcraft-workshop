@@ -7,5 +7,7 @@
       "perLevel": 2.5
     }
   ],
-  "event": "ac_dark_damage:0.25,overshield:0.05"
+  "event": "ac_dark_damage:0.25,overshield:0.05",
+  "category": "abyss",
+  "theme": ""
 }

@@ -10,5 +10,7 @@
       "attr": "max_health",
       "perLevel": 6.0
     }
-  ]
+  ],
+  "category": "sustain",
+  "theme": ""
 }

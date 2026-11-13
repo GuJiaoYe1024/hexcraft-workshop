@@ -2,5 +2,7 @@
   "rarity": "SILVER",
   "weight": 8,
   "mods": [],
-  "event": "opening_forge:1"
+  "event": "opening_forge:1",
+  "category": "economy",
+  "theme": ""
 }

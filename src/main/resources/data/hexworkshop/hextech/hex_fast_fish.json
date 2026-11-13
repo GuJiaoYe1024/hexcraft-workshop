@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "fish_fast:0.3"
+  "event": "fish_fast:0.3",
+  "category": "utility",
+  "theme": ""
 }

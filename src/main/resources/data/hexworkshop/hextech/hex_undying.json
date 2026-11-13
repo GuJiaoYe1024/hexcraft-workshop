@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "kill_heal:2.0,regen:1.0,last_stand:0.15"
+  "event": "kill_heal:2.0,regen:1.0,last_stand:0.15",
+  "category": "sustain",
+  "theme": ""
 }

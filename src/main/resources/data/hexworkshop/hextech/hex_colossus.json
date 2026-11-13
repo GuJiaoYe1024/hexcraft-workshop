@@ -10,5 +10,7 @@
       "attr": "armor",
       "perLevel": 4.0
     }
-  ]
+  ],
+  "category": "sustain",
+  "theme": ""
 }

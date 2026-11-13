@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "breed_swift:1"
+  "event": "breed_swift:1",
+  "category": "utility",
+  "theme": ""
 }

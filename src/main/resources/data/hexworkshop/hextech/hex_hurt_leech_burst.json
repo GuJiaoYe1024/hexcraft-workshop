@@ -13,5 +13,7 @@
     "combat_stack",
     "leech_stack",
     "on_hurt_stack"
-  ]
+  ],
+  "category": "sustain",
+  "theme": "blood"
 }

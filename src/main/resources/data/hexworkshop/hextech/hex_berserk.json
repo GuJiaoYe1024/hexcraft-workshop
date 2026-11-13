@@ -6,5 +6,7 @@
       "attr": "attack_damage",
       "perLevel": 1.5
     }
-  ]
+  ],
+  "category": "melee",
+  "theme": ""
 }

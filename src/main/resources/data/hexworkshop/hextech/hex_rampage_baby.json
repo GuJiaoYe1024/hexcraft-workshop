@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 7,
-  "event": "rampage:0.2,kill_heal:0.5"
+  "event": "rampage:0.2,kill_heal:0.5",
+  "category": "melee",
+  "theme": ""
 }

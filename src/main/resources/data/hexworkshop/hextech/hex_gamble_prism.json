@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "transform:prismatic"
+  "event": "transform:prismatic",
+  "category": "economy",
+  "theme": "gamble"
 }

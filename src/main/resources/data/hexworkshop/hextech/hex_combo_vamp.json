@@ -2,5 +2,7 @@
   "rarity": "SILVER",
   "weight": 10,
   "mods": [],
-  "event": "lifesteal:0.06,melee_power:0.1"
+  "event": "lifesteal:0.06,melee_power:0.1",
+  "category": "melee",
+  "theme": "blood"
 }

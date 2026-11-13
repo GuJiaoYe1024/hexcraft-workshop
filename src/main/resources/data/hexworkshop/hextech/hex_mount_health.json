@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "mount_health:0.5"
+  "event": "mount_health:0.5",
+  "category": "mobility",
+  "theme": ""
 }

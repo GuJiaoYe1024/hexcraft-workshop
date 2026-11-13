@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "pearl_safe:1"
+  "event": "pearl_safe:1",
+  "category": "mobility",
+  "theme": ""
 }

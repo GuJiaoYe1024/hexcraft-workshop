@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 6,
   "mods": [],
-  "event": "nether_fire_reduce:0.7"
+  "event": "nether_fire_reduce:0.7",
+  "category": "dimension",
+  "theme": "nether"
 }

@@ -6,5 +6,7 @@
     "permanent_stack",
     "damage_stack",
     "on_kill_stack"
-  ]
+  ],
+  "category": "stacking",
+  "theme": ""
 }

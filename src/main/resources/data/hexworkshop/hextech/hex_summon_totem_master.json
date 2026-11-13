@@ -7,5 +7,7 @@
       "perLevel": 2.0
     }
   ],
-  "event": "goety_soul:0.18,shield_low:2.0"
+  "event": "goety_soul:0.18,shield_low:2.0",
+  "category": "summon",
+  "theme": ""
 }

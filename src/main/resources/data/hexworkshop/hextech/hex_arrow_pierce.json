@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 9,
-  "event": "arrow_pierce:2"
+  "event": "arrow_pierce:2",
+  "category": "ranged",
+  "theme": ""
 }

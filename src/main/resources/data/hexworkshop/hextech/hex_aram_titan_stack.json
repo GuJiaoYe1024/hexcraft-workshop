@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 3,
   "event": "stack_chance:0.01",
-  "source": "dlc_aram"
+  "source": "dlc_aram",
+  "category": "stacking",
+  "theme": ""
 }

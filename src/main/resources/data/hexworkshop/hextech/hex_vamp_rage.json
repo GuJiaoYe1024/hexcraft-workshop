@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "vamp_rage:0.1"
+  "event": "vamp_rage:0.1",
+  "category": "sustain",
+  "theme": "blood"
 }

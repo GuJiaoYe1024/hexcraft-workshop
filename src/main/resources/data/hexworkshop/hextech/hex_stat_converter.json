@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 5,
   "mods": [],
-  "event": "stat_converter:0.1"
+  "event": "stat_converter:0.1",
+  "category": "utility",
+  "theme": ""
 }

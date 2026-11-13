@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "hex_power:0.015"
+  "event": "hex_power:0.015",
+  "category": "utility",
+  "theme": ""
 }

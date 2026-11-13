@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
-  "event": "mining_smelt:1"
+  "event": "mining_smelt:1",
+  "category": "mining",
+  "theme": ""
 }

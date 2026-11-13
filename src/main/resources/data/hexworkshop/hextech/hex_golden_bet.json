@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 7,
-  "event": "gold_gamble:2"
+  "event": "gold_gamble:2",
+  "category": "economy",
+  "theme": "gamble"
 }

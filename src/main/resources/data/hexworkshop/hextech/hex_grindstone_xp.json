@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "grind_xp:0.5"
+  "event": "grind_xp:0.5",
+  "category": "utility",
+  "theme": ""
 }

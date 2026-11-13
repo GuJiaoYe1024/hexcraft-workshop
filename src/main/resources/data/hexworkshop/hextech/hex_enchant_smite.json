@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "enchant_smite:0.25"
+  "event": "enchant_smite:0.25",
+  "category": "utility",
+  "theme": ""
 }

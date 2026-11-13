@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
-  "event": "gold_punch:1,coin_bonus:0.5,bounty:15"
+  "event": "gold_punch:1,coin_bonus:0.5,bounty:15",
+  "category": "economy",
+  "theme": ""
 }

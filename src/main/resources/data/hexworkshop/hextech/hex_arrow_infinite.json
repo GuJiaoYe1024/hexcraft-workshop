@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 7,
-  "event": "arrow_infinite:1"
+  "event": "arrow_infinite:1",
+  "category": "ranged",
+  "theme": ""
 }

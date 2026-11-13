@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 6,
-  "event": "cleanse:1"
+  "event": "cleanse:1",
+  "category": "utility",
+  "theme": ""
 }

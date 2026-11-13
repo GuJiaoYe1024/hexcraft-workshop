@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 6,
-  "event": "combo_crit:1.0"
+  "event": "combo_crit:1.0",
+  "category": "melee",
+  "theme": "crit"
 }

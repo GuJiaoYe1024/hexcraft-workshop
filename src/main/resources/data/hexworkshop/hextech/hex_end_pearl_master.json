@@ -2,5 +2,7 @@
   "rarity": "SILVER",
   "weight": 10,
   "mods": [],
-  "event": "end_crit:0.15"
+  "event": "end_crit:0.15",
+  "category": "dimension",
+  "theme": "end"
 }

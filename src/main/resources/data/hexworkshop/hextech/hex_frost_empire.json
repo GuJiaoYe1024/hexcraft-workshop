@@ -7,5 +7,7 @@
       "perLevel": 2.0
     }
   ],
-  "event": "frost_bite:0.4,splash:0.2"
+  "event": "frost_bite:0.4,splash:0.2",
+  "category": "elemental",
+  "theme": "frost"
 }

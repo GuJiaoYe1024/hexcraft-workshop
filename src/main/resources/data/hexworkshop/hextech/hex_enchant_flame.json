@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "enchant_flame:3"
+  "event": "enchant_flame:3",
+  "category": "utility",
+  "theme": "fire"
 }

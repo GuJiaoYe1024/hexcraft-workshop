@@ -2,5 +2,7 @@
   "rarity": "PRISMATIC",
   "weight": 2,
   "mods": [],
-  "event": "execute:0.05"
+  "event": "execute:0.05",
+  "category": "melee",
+  "theme": "execute"
 }

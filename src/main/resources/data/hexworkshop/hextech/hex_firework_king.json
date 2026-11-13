@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
-  "event": "firework:5,splash:0.2,coin_bonus:0.1"
+  "event": "firework:5,splash:0.2,coin_bonus:0.1",
+  "category": "elemental",
+  "theme": "fire"
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "beacon_range:1"
+  "event": "beacon_range:1",
+  "category": "utility",
+  "theme": ""
 }

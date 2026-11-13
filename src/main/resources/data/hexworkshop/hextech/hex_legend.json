@@ -22,5 +22,7 @@
       "attr": "attack_speed",
       "perLevel": 0.105
     }
-  ]
+  ],
+  "category": "melee",
+  "theme": ""
 }

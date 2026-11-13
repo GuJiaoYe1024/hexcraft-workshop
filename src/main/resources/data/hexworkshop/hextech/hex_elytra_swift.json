@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "elytra_swift:0.3"
+  "event": "elytra_swift:0.3",
+  "category": "mobility",
+  "theme": ""
 }

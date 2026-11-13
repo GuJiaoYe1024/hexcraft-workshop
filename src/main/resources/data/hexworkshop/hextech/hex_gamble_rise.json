@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 4,
-  "event": "transform:gold"
+  "event": "transform:gold",
+  "category": "economy",
+  "theme": "gamble"
 }

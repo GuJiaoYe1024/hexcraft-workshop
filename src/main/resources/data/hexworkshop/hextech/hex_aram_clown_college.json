@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 3,
   "event": "fire_chain:0.08,firework:0.05",
-  "source": "dlc_aram"
+  "source": "dlc_aram",
+  "category": "elemental",
+  "theme": "fire"
 }

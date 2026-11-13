@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "sleep_heal:1"
+  "event": "sleep_heal:1",
+  "category": "utility",
+  "theme": ""
 }

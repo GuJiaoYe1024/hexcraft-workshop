@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "shield_counter:1"
+  "event": "shield_counter:1",
+  "category": "sustain",
+  "theme": "shield"
 }

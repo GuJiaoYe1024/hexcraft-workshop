@@ -1,3 +1,29 @@
+Hexcraft Workshop v0.9.16 - Combo pack ownership and hex categories
+================================================================
+
+COMBOS NOW BELONG TO THEIR PACK
+==============================
+- Every tiered combo carries an owner field. Vanilla combos stay unowned and are never affected by pack toggles.
+- The 10 Origin Hunt combos are owned by dlc_niyuan and the 9 Arena Brawl sets by dlc_aram.
+- When a built-in pack is turned off, its combos disappear entirely instead of surviving as a reduced-membership version.
+- This stacks with the existing member-level filter, so hexes from a disabled pack stop counting toward any combo.
+
+CATEGORY SYSTEM FOR 379 NON-LINKED HEXES
+========================================
+- 379 hexes now carry a category and a theme field; the 370 linked hexes are untouched.
+- 14 categories: Melee 79, Sustain 57, Utility 36, Ranged 32, Stacking 32, Economy 29, Mobility 25, Spell 23, Elemental 20, Vanilla Realms 13, Equipment 13, Gathering 9, Abyss 6, Summon 5.
+- 17 theme tags: The End, Nether, Dragon, Mana, Arcane, Fire, Frost, Lightning, Poison, Crit, Execute, Blood, Shield, Gamble, Luck, Arena Brawl, Origin Hunt.
+- HextechDefinition exposes both fields, the data loader reads them from JSON with an empty default, and external DLC packs get the same treatment.
+- Language keys are 2716 per language. Category icons and in-game icon slots are planned for the next version.
+
+中文摘要
+=========
+- 羁绊加包归属字段，逆原 10 条与大乱斗 9 套标注所属包，关包时整条羁绊消失，不再出现缩水版
+- 379 个非联动海克斯写入 14 类功能分类与 17 个主题标签，联动 370 个不动
+- 分类分布：近战 79、生存 57、生活 36、远程 32、叠层 32、经济 29、机动 25、法术 23、元素 20、原版维度 13、装备 13、采集 9、深渊 6、召唤 5
+- 定义层新增 category 与 theme 字段并接入加载器，外接 DLC 包同样生效
+- 语言键中英各 2716，分类图案与界面图标位留到下一版
+
 Hexcraft Workshop v0.9.15 - Base and DLC content regrouped
 ======================================================
 

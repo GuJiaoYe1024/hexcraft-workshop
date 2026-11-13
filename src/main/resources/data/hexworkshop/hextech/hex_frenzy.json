@@ -10,5 +10,7 @@
       "attr": "movement_speed",
       "perLevel": 0.014
     }
-  ]
+  ],
+  "category": "melee",
+  "theme": ""
 }

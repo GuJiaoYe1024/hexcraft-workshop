@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "bloodlust_blade:1.0"
+  "event": "bloodlust_blade:1.0",
+  "category": "melee",
+  "theme": "blood"
 }

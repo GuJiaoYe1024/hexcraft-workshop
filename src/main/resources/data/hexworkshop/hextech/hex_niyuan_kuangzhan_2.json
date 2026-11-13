@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 7,
   "event": "melee_power:0.1,low_hp_power:0.15",
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "melee",
+  "theme": "blood"
 }

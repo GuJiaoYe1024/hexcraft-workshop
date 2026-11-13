@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "reaper_blade:0.5"
+  "event": "reaper_blade:0.5",
+  "category": "melee",
+  "theme": ""
 }

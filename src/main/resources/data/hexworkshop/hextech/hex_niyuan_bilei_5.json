@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 6,
   "event": "arcane_shield:0.2,nether_fire_reduce:0.3",
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "sustain",
+  "theme": "shield"
 }

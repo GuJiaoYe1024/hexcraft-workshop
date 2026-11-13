@@ -20,7 +20,13 @@ public final class ComboRegistry {
      *  record 字段：nameKey 羁绊名 lang 键、members 成员海克斯 id、tierCounts 各档件数（升序）、
      *  effects 各档效果键（复用现键）、values 各档加成值。 */
     public record TieredCombo(String nameKey, String[] members, int[] tierCounts, String[] effects, double[] values,
-                              double prismaticMult) {}
+                              double prismaticMult, String owner) {
+        /** 6 参重载：不指定 owner 即视为本体羁绊，不受任何内置包开关影响。 */
+        public TieredCombo(String nameKey, String[] members, int[] tierCounts, String[] effects, double[] values,
+                           double prismaticMult) {
+            this(nameKey, members, tierCounts, effects, values, prismaticMult, null);
+        }
+    }
 
     /** ================= 三件套 16 升级（12 成员 3/6/8/10/12）================= */
     public static final java.util.List<TieredCombo> BASE_COMBOS = java.util.List.of(
@@ -244,67 +250,67 @@ public final class ComboRegistry {
                             "hex_niyuan_kuangzhan_4", "hex_niyuan_kuangzhan_5", "hex_niyuan_kuangzhan_6",
                             "hex_niyuan_kuangzhan_7", "hex_niyuan_kuangzhan_8", "hex_niyuan_kuangzhan_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"melee_power", "melee_power", "vamp_rage", "melee_power", "melee_power"},
-                    new double[]{0.025, 0.05, 0.0375, 0.125, 0.175}, 1.0),
+                    new double[]{0.025, 0.05, 0.0375, 0.125, 0.175}, 1.0, "dlc_niyuan"),
             // 游击：机动+远程流
             new TieredCombo("hexcraft.combo.tier.guerrilla",
                     new String[]{"hex_niyuan_youji_1", "hex_niyuan_youji_2", "hex_niyuan_youji_3",
                             "hex_niyuan_youji_4", "hex_niyuan_youji_5", "hex_niyuan_youji_6",
                             "hex_niyuan_youji_7", "hex_niyuan_youji_8", "hex_niyuan_youji_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"mobi_power", "tacz_power", "twin_shot", "mobi_power", "tacz_power"},
-                    new double[]{0.0375, 0.0625, 0.025, 0.1, 0.1875}, 1.0),
+                    new double[]{0.0375, 0.0625, 0.025, 0.1, 0.1875}, 1.0, "dlc_niyuan"),
             // 壁垒：防御流
             new TieredCombo("hexcraft.combo.tier.bulwark",
                     new String[]{"hex_niyuan_bilei_1", "hex_niyuan_bilei_2", "hex_niyuan_bilei_3",
                             "hex_niyuan_bilei_4", "hex_niyuan_bilei_5", "hex_niyuan_bilei_6",
                             "hex_niyuan_bilei_7", "hex_niyuan_bilei_8", "hex_niyuan_bilei_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"overshield", "overshield", "shield_low", "overshield", "thorn_armor"},
-                    new double[]{0.0375, 0.0625, 2, 0.1375, 0.2}, 1.0),
+                    new double[]{0.0375, 0.0625, 2, 0.1375, 0.2}, 1.0, "dlc_niyuan"),
             // 狙击：远程/枪械流（v0.9.5 新增，4→9 成员）
             new TieredCombo("hexcraft.combo.tier.sniping",
                     new String[]{"hex_niyuan_sniping_1", "hex_niyuan_sniping_2", "hex_niyuan_sniping_3", "hex_niyuan_sniping_4",
                             "hex_niyuan_sniping_5", "hex_niyuan_sniping_6", "hex_niyuan_sniping_7", "hex_niyuan_sniping_8", "hex_niyuan_sniping_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"tacz_power", "tacz_power", "tacz_crit", "tacz_power", "tacz_power"},
-                    new double[]{0.025, 0.05, 0.2, 0.125, 0.175}, 1.0),
+                    new double[]{0.025, 0.05, 0.2, 0.125, 0.175}, 1.0, "dlc_niyuan"),
             // 狩猎：近战/猎杀流（v0.9.5 新增，4→9 成员）
             new TieredCombo("hexcraft.combo.tier.hunting",
                     new String[]{"hex_niyuan_hunting_1", "hex_niyuan_hunting_2", "hex_niyuan_hunting_3", "hex_niyuan_hunting_4",
                             "hex_niyuan_hunting_5", "hex_niyuan_hunting_6", "hex_niyuan_hunting_7", "hex_niyuan_hunting_8", "hex_niyuan_hunting_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"melee_power", "melee_power", "execute", "melee_power", "melee_power"},
-                    new double[]{0.025, 0.05, 0.025, 0.125, 0.175}, 1.0),
+                    new double[]{0.025, 0.05, 0.025, 0.125, 0.175}, 1.0, "dlc_niyuan"),
             // 力场：站桩增伤流（专属 hook stand_power）
             new TieredCombo("hexcraft.combo.tier.forcefield",
                     new String[]{"hex_niyuan_licheng_1", "hex_niyuan_licheng_2", "hex_niyuan_licheng_3",
                             "hex_niyuan_licheng_4", "hex_niyuan_licheng_5", "hex_niyuan_licheng_6",
                             "hex_niyuan_licheng_7", "hex_niyuan_licheng_8", "hex_niyuan_licheng_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"stand_power", "stand_power", "stand_power", "stand_power", "stand_power"},
-                    new double[]{0.5, 1.0, 1.5, 2.0, 2.5}, 1.0),
+                    new double[]{0.5, 1.0, 1.5, 2.0, 2.5}, 1.0, "dlc_niyuan"),
             // 瞬暴：暴击爆发流
             new TieredCombo("hexcraft.combo.tier.burst",
                     new String[]{"hex_niyuan_shunbao_1", "hex_niyuan_shunbao_2", "hex_niyuan_shunbao_3",
                             "hex_niyuan_shunbao_4", "hex_niyuan_shunbao_5", "hex_niyuan_shunbao_6",
                             "hex_niyuan_shunbao_7", "hex_niyuan_shunbao_8", "hex_niyuan_shunbao_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"full_hp_crit", "crit_damage", "crit_damage", "crit_damage", "crit_damage"},
-                    new double[]{0.02, 0.0375, 0.0625, 0.0875, 0.125}, 1.0),
+                    new double[]{0.02, 0.0375, 0.0625, 0.0875, 0.125}, 1.0, "dlc_niyuan"),
             // 技战：技能战流
             new TieredCombo("hexcraft.combo.tier.techwar",
                     new String[]{"hex_niyuan_jizhan_1", "hex_niyuan_jizhan_2", "hex_niyuan_jizhan_3",
                             "hex_niyuan_jizhan_4", "hex_niyuan_jizhan_5", "hex_niyuan_jizhan_6",
                             "hex_niyuan_jizhan_7", "hex_niyuan_jizhan_8", "hex_niyuan_jizhan_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"spell_power", "fire_chain", "spell_mana_max", "spell_power", "fire_chain"},
-                    new double[]{0.025, 0.0375, 0.05, 0.0625, 0.075}, 1.0),
+                    new double[]{0.025, 0.0375, 0.05, 0.0625, 0.075}, 1.0, "dlc_niyuan"),
             // 共振：装备共鸣流（v0.9.7 新增，4→9 成员）
             new TieredCombo("hexcraft.combo.tier.resonance",
                     new String[]{"hex_niyuan_gongzhen_1", "hex_niyuan_gongzhen_2", "hex_niyuan_gongzhen_3", "hex_niyuan_gongzhen_4",
                             "hex_niyuan_gongzhen_5", "hex_niyuan_gongzhen_6", "hex_niyuan_gongzhen_7", "hex_niyuan_gongzhen_8", "hex_niyuan_gongzhen_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"equip_power", "equip_power", "coin_bonus", "equip_power", "equip_power"},
-                    new double[]{0.02, 0.0375, 0.15, 0.0875, 0.125}, 1.0),
+                    new double[]{0.02, 0.0375, 0.15, 0.0875, 0.125}, 1.0, "dlc_niyuan"),
             // 叠叠乐：叠层增幅流
             new TieredCombo("hexcraft.combo.tier.stackloop",
                     new String[]{"hex_niyuan_diediele_1", "hex_niyuan_diediele_2", "hex_niyuan_diediele_3",
                             "hex_niyuan_diediele_4", "hex_niyuan_diediele_5", "hex_niyuan_diediele_6",
                             "hex_niyuan_diediele_7", "hex_niyuan_diediele_8", "hex_niyuan_diediele_9"},
                     new int[]{1, 3, 5, 7, 9}, new String[]{"stack_growth", "stack_growth", "stack_chance", "stack_growth", "stack_growth"},
-                    new double[]{0.0375, 0.0625, 0.025, 0.1, 0.175}, 1.0)
+                    new double[]{0.0375, 0.0625, 0.025, 0.1, 0.175}, 1.0, "dlc_niyuan")
             // v0.9.12 修正：叠叠乐第 3 档原为 tick_gain，该键是海克斯叠层定义的标记字段，不是可汇总的数值效果，
             // 凑到 5 件时这一档完全空转。现改为 stack_chance，叠层触发几率，与本羁绊主题一致。
 
@@ -316,48 +322,48 @@ public final class ComboRegistry {
                     new String[]{"hex_tacz_crit_chain", "hex_tacz_crit_master", "hex_tacz_multi_shot", "hex_tacz_double_shot",
                             "hex_full_crit", "hex_twin_fire", "hex_aram_firecracker_rocket", "hex_aram_firecracker_bounce"},
                     new int[]{2, 4, 6, 8}, new String[]{"twin_shot", "twin_shot", "tacz_power", "tacz_power"},
-                    new double[]{0.025, 0.05, 0.1, 0.125}, 1.0),
+                    new double[]{0.025, 0.05, 0.1, 0.125}, 1.0, "dlc_aram"),
             new TieredCombo("hexcraft.combo.tier.aram.stackasaurus",
                     new String[]{"hex_heart_steel", "hex_stack_tank", "hex_tick_damage_wax", "hex_artifact_endurance_stack",
                             "hex_blade_draw_song", "hex_perm_damage_apex", "hex_aram_titan_stack", "hex_aram_ramp_rex"},
                     new int[]{2, 4, 6, 8}, new String[]{"stack_growth", "stack_growth", "stack_growth", "stack_growth"},
-                    new double[]{0.0625, 0.125, 0.1875, 0.25}, 1.0),
+                    new double[]{0.0625, 0.125, 0.1875, 0.25}, 1.0, "dlc_aram"),
             new TieredCombo("hexcraft.combo.tier.aram.archmage",
                     new String[]{"hex_irons_archmage", "hex_irons_arcane_focus", "hex_irons_archon_judgment",
                             "hex_irons_elemental_surge", "hex_irons_blood_siphon", "hex_aram_archmage_crest", "hex_aram_arcane_pact"},
                     new int[]{2, 4, 6, 7}, new String[]{"echo", "echo", "spell_power", "spell_power"},
-                    new double[]{0.05, 0.10, 0.075, 0.1125}, 1.0),
+                    new double[]{0.05, 0.10, 0.075, 0.1125}, 1.0, "dlc_aram"),
             new TieredCombo("hexcraft.combo.tier.aram.weewoo",
                     new String[]{"hex_undying", "hex_eternal_shield", "hex_immortal_wall", "hex_combat_shield_surge",
                             "hex_arcane_cloak", "hex_irons_healing_word", "hex_aram_wee_woo", "hex_aram_ambulance_sirens"},
                     new int[]{2, 4, 6, 8}, new String[]{"shield_low", "shield_low", "overshield", "overshield"},
-                    new double[]{2.0, 4.0, 0.075, 0.125}, 1.0),
+                    new double[]{2.0, 4.0, 0.075, 0.125}, 1.0, "dlc_aram"),
             new TieredCombo("hexcraft.combo.tier.aram.highroller",
                     new String[]{"hex_midas_hand", "hex_trade_discount", "hex_golden_bet", "hex_dice_maniac",
                             "hex_opening_forge", "hex_emc_savings_wallet", "hex_aram_high_roller", "hex_aram_lucky_anvil"},
                     new int[]{2, 4, 6, 8}, new String[]{"relic_drop", "relic_drop", "coin_bonus", "coin_bonus"},
-                    new double[]{0.10, 0.20, 0.20, 0.30}, 1.0),
+                    new double[]{0.10, 0.20, 0.20, 0.30}, 1.0, "dlc_aram"),
             new TieredCombo("hexcraft.combo.tier.aram.deathknell",
                     new String[]{"hex_death_defier", "hex_executioner_eternal", "hex_corpse_explosion",
                             "hex_soul_reaper", "hex_am_titan_subdue", "hex_death_dance", "hex_aram_deathknell", "hex_aram_bell_toll",
                             "hex_aram_dive_bomb", "hex_aram_clown_college"},
                     new int[]{2, 4, 6, 8}, new String[]{"death_defy", "death_defy", "last_stand", "last_stand"},
-                    new double[]{0.05, 0.10, 0.0375, 0.05}, 1.0),
+                    new double[]{0.05, 0.10, 0.0375, 0.05}, 1.0, "dlc_aram"),
             new TieredCombo("hexcraft.combo.tier.aram.fullyautomated",
                     new String[]{"hex_irons_echo", "hex_irons_echo_recovery", "hex_echo_blade", "hex_echo_cloak",
                             "hex_echo_rampage", "hex_irons_swiftcast", "hex_aram_auto_cast", "hex_aram_factory_line"},
                     new int[]{2, 4, 6, 8}, new String[]{"rampage", "rampage", "spell_power", "spell_power"},
-                    new double[]{0.025, 0.05, 0.075, 0.1125}, 1.0),
+                    new double[]{0.025, 0.05, 0.075, 0.1125}, 1.0, "dlc_aram"),
             new TieredCombo("hexcraft.combo.tier.aram.snowday",
                     new String[]{"hex_tf_snow_queen_bane", "hex_tf_snow_queen_ward", "hex_tf_yeti_winter", "hex_irons_frost_shard",
                             "hex_ice_crown", "hex_frost_crit", "hex_aram_snowball", "hex_aram_ice_day"},
                     new int[]{2, 4, 6, 8}, new String[]{"frost_bite", "frost_bite", "mobi_power", "tf_snow_queen_damage"},
-                    new double[]{0.025, 0.05, 0.075, 0.1}, 1.0),
+                    new double[]{0.025, 0.05, 0.075, 0.1}, 1.0, "dlc_aram"),
             new TieredCombo("hexcraft.combo.tier.aram.makeitrain",
                     new String[]{"hex_midas_hand", "hex_trade_discount", "hex_golden_bet", "hex_opening_forge",
                             "hex_emc_savings_wallet", "hex_dice_maniac", "hex_aram_make_it_rain", "hex_aram_coin_trail"},
                     new int[]{2, 4, 6, 8}, new String[]{"bounty", "bounty", "coin_bonus", "coin_bonus"},
-                    new double[]{3.0, 6.0, 0.20, 0.30}, 1.0)
+                    new double[]{3.0, 6.0, 0.20, 0.30}, 1.0, "dlc_aram")
     );
 
     /** 全部分档羁绊（三件套 16 + 新增流派 11 + 叠层专家 1 + 逆原 10 + 大乱斗 9 = 47 条），服务端结算与客户端渲染统一遍历此表 */
@@ -446,6 +452,8 @@ public final class ComboRegistry {
 
     /** 解析单条羁绊：过滤未启用成员 → 重算档位；无可用成员返回 null（整条隐藏）。 */
     public static ResolvedCombo resolve(TieredCombo tc, int group) {
+        // v0.9.16 包归属：所属内置 DLC 停用时整条羁绊不参与结算与展示（成员级过滤之外的第二道闸）
+        if (tc.owner() != null && !com.hexcraft.hextech.HextechRegistry.isSourceEnabled(tc.owner(), "hex")) return null;
         String[] orig = tc.members();
         int m = orig.length;
         // 1) 过滤当前环境启用的成员（contentType=hex；未装联动 mod / 开关关闭 / 所属 DLC 包停用均自动剔除）

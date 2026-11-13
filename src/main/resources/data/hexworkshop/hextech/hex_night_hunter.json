@@ -7,5 +7,7 @@
       "perLevel": 0.0056
     }
   ],
-  "event": "night_power:0.15"
+  "event": "night_power:0.15",
+  "category": "melee",
+  "theme": ""
 }

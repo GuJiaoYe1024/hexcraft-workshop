@@ -8,5 +8,7 @@
       "perLevel": 2.0
     }
   ],
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "melee",
+  "theme": ""
 }

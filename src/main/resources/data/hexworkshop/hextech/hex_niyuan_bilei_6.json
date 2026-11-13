@@ -12,5 +12,7 @@
       "perLevel": 0.3
     }
   ],
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "sustain",
+  "theme": "shield"
 }

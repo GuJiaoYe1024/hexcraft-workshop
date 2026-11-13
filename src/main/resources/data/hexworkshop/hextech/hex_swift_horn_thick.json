@@ -5,5 +5,7 @@
   "stackTag": [
     "combat_stack"
   ],
-  "selfStack": false
+  "selfStack": false,
+  "category": "stacking",
+  "theme": ""
 }

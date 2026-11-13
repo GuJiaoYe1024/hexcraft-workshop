@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "enchant_mending:1"
+  "event": "enchant_mending:1",
+  "category": "utility",
+  "theme": ""
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "crossbow_quick:0.3"
+  "event": "crossbow_quick:0.3",
+  "category": "ranged",
+  "theme": ""
 }

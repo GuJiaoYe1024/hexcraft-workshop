@@ -8,5 +8,7 @@
     "shield_stack",
     "on_hit_stack",
     "on_hurt_stack"
-  ]
+  ],
+  "category": "stacking",
+  "theme": ""
 }

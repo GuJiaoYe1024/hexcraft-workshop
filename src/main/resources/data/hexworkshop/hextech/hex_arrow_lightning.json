@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "arrow_lightning:1"
+  "event": "arrow_lightning:1",
+  "category": "ranged",
+  "theme": "lightning"
 }

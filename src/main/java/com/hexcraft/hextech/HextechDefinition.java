@@ -28,6 +28,10 @@ public class HextechDefinition {
     public final boolean selfStack;
     /** v0.9.12 是否提供叠层获取倍率（默认 false，仅叠角龙 true）：drakeMult 按此标记查找，倍率值仍读可配置项，不写死 id。 */
     public final boolean stackGainMult;
+    /** v0.9.16 功能分类键（对应 category.*，共 14 类；联动内容可为空串）。后续分类图案按此键出图。 */
+    public final String category;
+    /** v0.9.16 主题标签键（对应 theme.*，体系归属；可为空串）。仅文字展示，不参与筛选与图案。 */
+    public final String theme;
 
     public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event) {
         this(id, rarity, weight, mods, event, null, 0, null, null, null);
@@ -52,6 +56,13 @@ public class HextechDefinition {
     /** v0.9.12 完整构造器：显式传入 selfStack / stackGainMult（数据驱动）。 */
     public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event, String icon, int sell,
                              String source, StackSpec stack, List<String> stackTags, boolean selfStack, boolean stackGainMult) {
+        this(id, rarity, weight, mods, event, icon, sell, source, stack, stackTags, selfStack, stackGainMult, "", "");
+    }
+
+    /** v0.9.16 完整构造器：额外携带功能分类与主题标签（数据驱动，供分类图案与筛选使用）。 */
+    public HextechDefinition(String id, HextechRarity rarity, int weight, List<ModSpec> mods, String event, String icon, int sell,
+                             String source, StackSpec stack, List<String> stackTags, boolean selfStack, boolean stackGainMult,
+                             String category, String theme) {
         this.id = id;
         this.rarity = rarity;
         this.weight = weight;
@@ -63,6 +74,8 @@ public class HextechDefinition {
         this.stackTags = stackTags;
         this.selfStack = selfStack;
         this.stackGainMult = stackGainMult;
+        this.category = category == null ? "" : category;
+        this.theme = theme == null ? "" : theme;
         // 来源归一化：显式指定优先；否则按 id 前缀自动归类（tacz_ → tacz，其余 vanilla；未来联动注册见 HextechRegistry.registerSourcePrefix）
         this.source = source != null && !source.isEmpty() ? source : HextechRegistry.sourceOf(id);
     }

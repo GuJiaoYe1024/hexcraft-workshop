@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 6,
   "event": "melee_power:0.20,execute:0.025",
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "melee",
+  "theme": ""
 }

@@ -1,11 +1,13 @@
-{
-  "rarity": "PRISMATIC",
-  "weight": 2,
-  "mods": [
-    {
-      "attr": "max_health",
-      "perLevel": 3.0
-    }
-  ],
-  "event": "equip_power:0.04,regen:0.02"
-}
+{
+  "rarity": "PRISMATIC",
+  "weight": 2,
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 3.0
+    }
+  ],
+  "event": "equip_power:0.04,regen:0.02",
+  "category": "equip",
+  "theme": ""
+}

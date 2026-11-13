@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 6,
-  "event": "pierce_blade:1.0"
+  "event": "pierce_blade:1.0",
+  "category": "melee",
+  "theme": ""
 }

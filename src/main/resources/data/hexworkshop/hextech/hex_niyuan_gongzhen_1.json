@@ -1,6 +1,8 @@
-{
-  "rarity": "GOLD",
-  "weight": 7,
-  "event": "equip_power:0.01",
-  "source": "dlc_niyuan"
-}
+{
+  "rarity": "GOLD",
+  "weight": 7,
+  "event": "equip_power:0.01",
+  "source": "dlc_niyuan",
+  "category": "equip",
+  "theme": ""
+}

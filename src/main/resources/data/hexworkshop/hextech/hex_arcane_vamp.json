@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 6,
   "mods": [],
-  "event": "lifesteal:0.08,arcane_shield:0.25"
+  "event": "lifesteal:0.08,arcane_shield:0.25",
+  "category": "spell",
+  "theme": "arcane"
 }

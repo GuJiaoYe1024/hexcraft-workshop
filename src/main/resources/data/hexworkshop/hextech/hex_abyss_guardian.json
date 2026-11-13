@@ -7,5 +7,7 @@
       "perLevel": 4.0
     }
   ],
-  "event": "ac_dark_damage:0.40,lifesteal:0.05"
+  "event": "ac_dark_damage:0.40,lifesteal:0.05",
+  "category": "abyss",
+  "theme": ""
 }

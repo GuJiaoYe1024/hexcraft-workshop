@@ -7,5 +7,7 @@
       "perLevel": 3.0
     }
   ],
-  "event": "goety_soul:0.15,regen:0.02"
+  "event": "goety_soul:0.15,regen:0.02",
+  "category": "summon",
+  "theme": ""
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "brush_quick:0.5"
+  "event": "brush_quick:0.5",
+  "category": "mining",
+  "theme": ""
 }

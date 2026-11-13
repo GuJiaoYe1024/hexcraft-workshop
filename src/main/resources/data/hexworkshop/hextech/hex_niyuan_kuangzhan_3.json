@@ -2,5 +2,7 @@
   "rarity": "SILVER",
   "weight": 8,
   "event": "lifesteal:0.08,rampage:0.15",
-  "source": "dlc_niyuan"
+  "source": "dlc_niyuan",
+  "category": "melee",
+  "theme": "blood"
 }

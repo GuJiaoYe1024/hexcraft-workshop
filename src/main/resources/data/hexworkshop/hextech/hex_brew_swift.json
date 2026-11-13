@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "brew_swift:1"
+  "event": "brew_swift:1",
+  "category": "utility",
+  "theme": ""
 }

@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 6,
   "mods": [],
-  "event": "end_damage:0.3"
+  "event": "end_damage:0.3",
+  "category": "dimension",
+  "theme": "end"
 }

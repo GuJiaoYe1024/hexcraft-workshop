@@ -7,5 +7,7 @@
       "perLevel": 0.1
     }
   ],
-  "event": "overshield:0.4"
+  "event": "overshield:0.4",
+  "category": "sustain",
+  "theme": "shield"
 }

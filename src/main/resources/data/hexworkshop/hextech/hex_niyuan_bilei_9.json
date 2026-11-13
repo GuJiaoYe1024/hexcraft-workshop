@@ -8,5 +8,7 @@
       "attr": "max_health",
       "perLevel": 5.0
     }
-  ]
+  ],
+  "category": "sustain",
+  "theme": "shield"
 }

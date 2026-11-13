@@ -11,5 +11,7 @@
   "stackTag": [
     "permanent_stack",
     "on_hit_stack"
-  ]
+  ],
+  "category": "stacking",
+  "theme": ""
 }

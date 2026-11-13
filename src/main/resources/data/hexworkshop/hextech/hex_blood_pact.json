@@ -2,5 +2,7 @@
   "rarity": "PRISMATIC",
   "weight": 5,
   "mods": [],
-  "event": "blood_pact:0.5"
+  "event": "blood_pact:0.5",
+  "category": "sustain",
+  "theme": "blood"
 }

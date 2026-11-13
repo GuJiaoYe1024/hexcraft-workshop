@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "food_on_kill:2"
+  "event": "food_on_kill:2",
+  "category": "utility",
+  "theme": ""
 }

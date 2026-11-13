@@ -14,5 +14,7 @@
       "attr": "knockback_resistance",
       "perLevel": 0.15
     }
-  ]
+  ],
+  "category": "sustain",
+  "theme": ""
 }

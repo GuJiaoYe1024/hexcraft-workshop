@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "bucket_safe:1"
+  "event": "bucket_safe:1",
+  "category": "utility",
+  "theme": ""
 }

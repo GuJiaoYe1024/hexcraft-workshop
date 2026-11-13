@@ -2,5 +2,7 @@
   "rarity": "SILVER",
   "weight": 8,
   "mods": [],
-  "event": "potion_random:3"
+  "event": "potion_random:3",
+  "category": "utility",
+  "theme": ""
 }

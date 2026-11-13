@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "all_damage_proc:1"
+  "event": "all_damage_proc:1",
+  "category": "melee",
+  "theme": ""
 }

@@ -7,5 +7,7 @@
     "damage_stack"
   ],
   "selfStack": false,
-  "stackGainMult": true
+  "stackGainMult": true,
+  "category": "stacking",
+  "theme": ""
 }

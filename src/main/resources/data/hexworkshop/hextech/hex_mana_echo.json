@@ -7,5 +7,7 @@
       "perLevel": 0.6
     }
   ],
-  "event": "spell_mana_max:0.15,echo:0.05"
+  "event": "spell_mana_max:0.15,echo:0.05",
+  "category": "spell",
+  "theme": "mana"
 }

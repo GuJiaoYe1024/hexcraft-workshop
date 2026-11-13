@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 6,
-  "event": "xp_bonus:0.3,coin_bonus:0.25"
+  "event": "xp_bonus:0.3,coin_bonus:0.25",
+  "category": "economy",
+  "theme": ""
 }

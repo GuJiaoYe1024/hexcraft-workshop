@@ -7,5 +7,7 @@
       "perLevel": 0.3
     }
   ],
-  "event": "echo:0.15"
+  "event": "echo:0.15",
+  "category": "spell",
+  "theme": "arcane"
 }

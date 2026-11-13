@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 6,
   "mods": [],
-  "event": "dice_forge:0.1"
+  "event": "dice_forge:0.1",
+  "category": "economy",
+  "theme": "gamble"
 }

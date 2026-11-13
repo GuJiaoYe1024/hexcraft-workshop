@@ -109,6 +109,10 @@ public class HexDataLoader extends SimpleJsonResourceReloadListener {
         // v0.9.12 叠层显式标记（数据驱动；默认自身可叠层、非叠层获取倍率来源）
         boolean selfStack = GsonHelper.getAsBoolean(obj, "selfStack", true);
         boolean stackGainMult = GsonHelper.getAsBoolean(obj, "stackGainMult", false);
-        return new HextechDefinition(id, rarity, weight, mods, event, null, 0, source, stackSpec, stackTags, selfStack, stackGainMult);
+        // v0.9.16 功能分类与主题标签（可选，缺省空串；供分类图案与筛选使用）
+        String category = GsonHelper.getAsString(obj, "category", "");
+        String theme = GsonHelper.getAsString(obj, "theme", "");
+        return new HextechDefinition(id, rarity, weight, mods, event, null, 0, source, stackSpec, stackTags, selfStack, stackGainMult,
+                category, theme);
     }
 }

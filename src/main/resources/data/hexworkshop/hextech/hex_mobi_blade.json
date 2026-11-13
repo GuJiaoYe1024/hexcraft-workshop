@@ -7,5 +7,7 @@
       "perLevel": 0.014
     }
   ],
-  "event": "mobi_power:0.245"
+  "event": "mobi_power:0.245",
+  "category": "mobility",
+  "theme": ""
 }

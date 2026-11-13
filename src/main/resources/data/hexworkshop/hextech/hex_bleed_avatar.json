@@ -7,5 +7,7 @@
       "perLevel": 1.2
     }
   ],
-  "event": "bleed_damage:0.35,bleed_spread:0.25"
+  "event": "bleed_damage:0.35,bleed_spread:0.25",
+  "category": "melee",
+  "theme": "blood"
 }

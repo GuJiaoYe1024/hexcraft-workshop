@@ -6,5 +6,7 @@
       "attr": "armor",
       "perLevel": 3.0
     }
-  ]
+  ],
+  "category": "sustain",
+  "theme": ""
 }

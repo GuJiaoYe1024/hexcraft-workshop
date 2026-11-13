@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 3,
   "event": "tf_snow_queen_damage:0.08",
-  "source": "dlc_aram"
+  "source": "dlc_aram",
+  "category": "elemental",
+  "theme": "frost"
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "thorns:2,counter:0.2"
+  "event": "thorns:2,counter:0.2",
+  "category": "sustain",
+  "theme": ""
 }

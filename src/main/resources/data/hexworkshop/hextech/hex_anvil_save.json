@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "anvil_save:0.5"
+  "event": "anvil_save:0.5",
+  "category": "utility",
+  "theme": ""
 }

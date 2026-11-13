@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 6,
   "mods": [],
-  "event": "corpse_explosion:1"
+  "event": "corpse_explosion:1",
+  "category": "elemental",
+  "theme": "fire"
 }

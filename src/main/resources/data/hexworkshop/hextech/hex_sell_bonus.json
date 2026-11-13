@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "sell_bonus:0.15"
+  "event": "sell_bonus:0.15",
+  "category": "economy",
+  "theme": ""
 }

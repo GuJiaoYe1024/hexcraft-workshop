@@ -7,5 +7,7 @@
       "perLevel": 2.0
     }
   ],
-  "event": "fire_resist:0.35,thorns_fire:0.4"
+  "event": "fire_resist:0.35,thorns_fire:0.4",
+  "category": "sustain",
+  "theme": "fire"
 }

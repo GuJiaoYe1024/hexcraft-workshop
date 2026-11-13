@@ -1,12 +1,14 @@
-{
-  "rarity": "PRISMATIC",
-  "weight": 3,
-  "event": "equip_power:0.06,coin_bonus:0.15",
-  "source": "dlc_niyuan",
-  "mods": [
-    {
-      "attr": "max_health",
-      "perLevel": 3.0
-    }
-  ]
-}
+{
+  "rarity": "PRISMATIC",
+  "weight": 3,
+  "event": "equip_power:0.06,coin_bonus:0.15",
+  "source": "dlc_niyuan",
+  "mods": [
+    {
+      "attr": "max_health",
+      "perLevel": 3.0
+    }
+  ],
+  "category": "equip",
+  "theme": ""
+}

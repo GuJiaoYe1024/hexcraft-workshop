@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "bow_draw:1"
+  "event": "bow_draw:1",
+  "category": "ranged",
+  "theme": ""
 }

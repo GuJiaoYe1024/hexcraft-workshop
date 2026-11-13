@@ -13,5 +13,7 @@
     "damage_stack",
     "armor_stack",
     "on_kill_stack"
-  ]
+  ],
+  "category": "stacking",
+  "theme": ""
 }

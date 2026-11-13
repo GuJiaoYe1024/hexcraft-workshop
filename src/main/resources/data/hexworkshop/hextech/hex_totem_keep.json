@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "totem_keep:1"
+  "event": "totem_keep:1",
+  "category": "sustain",
+  "theme": ""
 }

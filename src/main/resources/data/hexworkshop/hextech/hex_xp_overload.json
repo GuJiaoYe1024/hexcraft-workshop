@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 6,
-  "event": "xp_drop:3,xp_bonus:0.3,melee_power:0.1"
+  "event": "xp_drop:3,xp_bonus:0.3,melee_power:0.1",
+  "category": "economy",
+  "theme": ""
 }

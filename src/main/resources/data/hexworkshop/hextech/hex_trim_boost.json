@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "trim_boost:1"
+  "event": "trim_boost:1",
+  "category": "utility",
+  "theme": ""
 }

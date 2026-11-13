@@ -7,5 +7,7 @@
       "perLevel": 0.007
     }
   ],
-  "event": "slow_on_hit:0.15"
+  "event": "slow_on_hit:0.15",
+  "category": "melee",
+  "theme": ""
 }

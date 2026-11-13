@@ -19,5 +19,7 @@
     "combat_stack",
     "damage_stack",
     "on_hit_stack"
-  ]
+  ],
+  "category": "stacking",
+  "theme": ""
 }

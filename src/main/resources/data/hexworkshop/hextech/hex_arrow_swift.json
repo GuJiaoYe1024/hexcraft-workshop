@@ -1,5 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 10,
-  "event": "arrow_speed:0.5"
+  "event": "arrow_speed:0.5",
+  "category": "ranged",
+  "theme": ""
 }

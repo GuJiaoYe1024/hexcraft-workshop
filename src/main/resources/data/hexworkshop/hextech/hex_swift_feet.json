@@ -10,5 +10,7 @@
       "attr": "attack_speed",
       "perLevel": 0.07
     }
-  ]
+  ],
+  "category": "mobility",
+  "theme": ""
 }

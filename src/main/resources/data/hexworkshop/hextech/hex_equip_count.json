@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 8,
-  "event": "equip_count_atk:0.5,equip_count_armor:0.5,equip_count_hp:2"
+  "event": "equip_count_atk:0.5,equip_count_armor:0.5,equip_count_hp:2",
+  "category": "equip",
+  "theme": ""
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "slot_boost:1"
+  "event": "slot_boost:1",
+  "category": "utility",
+  "theme": ""
 }

@@ -1,5 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 6,
-  "event": "enchant_sharp:0.4"
+  "event": "enchant_sharp:0.4",
+  "category": "utility",
+  "theme": ""
 }

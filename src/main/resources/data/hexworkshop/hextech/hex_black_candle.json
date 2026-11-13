@@ -2,5 +2,7 @@
   "rarity": "GOLD",
   "weight": 7,
   "mods": [],
-  "event": "cleanse:1,regen:0.3"
+  "event": "cleanse:1,regen:0.3",
+  "category": "utility",
+  "theme": ""
 }

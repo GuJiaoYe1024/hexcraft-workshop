@@ -1,11 +1,13 @@
-{
-  "rarity": "GOLD",
-  "weight": 4,
-  "mods": [
-    {
-      "attr": "attack_damage",
-      "perLevel": 0.4
-    }
-  ],
-  "event": "equip_power:0.02"
-}
+{
+  "rarity": "GOLD",
+  "weight": 4,
+  "mods": [
+    {
+      "attr": "attack_damage",
+      "perLevel": 0.4
+    }
+  ],
+  "event": "equip_power:0.02",
+  "category": "equip",
+  "theme": ""
+}
