@@ -92,6 +92,7 @@
   "hexcraft.config.client.uiScale": "UI Scale",
   "hexcraft.config.craft.bonusChance": "Bonus Chance",
   "hexcraft.config.craft.bonusCount": "Bonus Count",
+  "hexcraft.config.v0925.shieldCap": "Shield Cap",
   "hexcraft.config.craft.bonusEnabled": "Random Craft Bonus",
   "hexcraft.config.dlc.builtin_niyuan": "Built-in DLC · Origin Hunt 24",
   "hexcraft.config.dlc.builtin_niyuan.tip": "Origin-Grounds-inspired buff hexes, Berserk/Guerrilla/Bulwark bonds + 6 global buffs, shipped inside the mod and merged into the main draw pool. Turning off removes them from the pool; owned ones are kept.",

@@ -92,6 +92,7 @@
   "hexcraft.config.client.uiScale": "界面缩放",
   "hexcraft.config.craft.bonusChance": "多产概率",
   "hexcraft.config.craft.bonusCount": "多产份数",
+  "hexcraft.config.v0925.shieldCap": "护盾上限",
   "hexcraft.config.craft.bonusEnabled": "概率合成多产",
   "hexcraft.config.dlc.builtin_niyuan": "内置 DLC · 逆原 24 个",
   "hexcraft.config.dlc.builtin_niyuan.tip": "借鉴逆战原点猎场的增幅海克斯，狂战/游击/壁垒三系羁绊 + 6 个全局强化，随 mod 打包并入主抽取池；关闭后不再进入抽取池，已拥有项保留显示。",

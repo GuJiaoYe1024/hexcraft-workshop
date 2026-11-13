@@ -7,6 +7,7 @@ OVERFLOW SHIELD NOW CAPPED
 - AbsorptionAmount is stored in player NBT, so the value survived a relog and kept that save unkillable.
 - The shield is now capped at the player's max health. A non-finite value (NaN or Infinity) is reset before the new value is computed.
 - The two other shield writers are capped the same way: the low-health shield and the stacking shield both clamp their target to max health.
+- The cap is a server-side config switch ("Shield Cap", on by default). Turning it off restores the old uncapped behaviour, keeping only the non-finite guard and a Float.MAX_VALUE backstop.
 
 LEGACY SAVES ARE CLEANED ON LOGIN
 ================================
@@ -27,6 +28,11 @@ DIRECT-TO-INVENTORY ENTRIES NOW USE STORAGE ROUTING
 - With no backpack or storage mod installed the behaviour matches the previous build: into the inventory, and on the ground when it is full.
 - The coin-to-emerald exchange keeps its atomic rollback path and is not routed, since it is a player-initiated trade rather than a hex effect.
 
+SHULKER AUTO-COLLECT NO LONGER DUPLICATES
+=========================================
+- The shulker auto-collect check used an item copy, so a partial insert left the full stack on the ground while the backpack had already received part of it.
+- A partial insert now rewrites the ground entity to the remaining count.
+
 中文摘要
 =========
 - 治疗溢出转护盾改为不超过最大生命，NaN/Infinity 归零后再算
@@ -35,6 +41,8 @@ DIRECT-TO-INVENTORY ENTRIES NOW USE STORAGE ROUTING
 - 容器打不开：代码侧排除全部事件拦截，归因护盾溢出连锁，需日志复测
 - 六处直接进背包改走 StorageLink（合成/熔炉/砂轮/潜影盒/图腾/箭矢），有背包或仓储 mod 就进仓储，否则掉脚下
 - 晶币兑换绿宝石保持原回滚逻辑不接入，因它是主动兑换不是海克斯
+- 护盾上限是服务端配置开关「护盾上限」，默认开启，关闭恢复旧版无上限
+- 潜影盒自动收在部分插入时会复制物品，已修
 
 Hexcraft Workshop v0.9.24 - Enemy stat caps, stacking cap combo, hostile detection
 =================================================================================

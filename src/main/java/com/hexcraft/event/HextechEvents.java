@@ -2098,7 +2098,9 @@ public class HextechEvents {
             // 伤害被全额吃掉（打不死），客户端护盾心渲染也随之异常。
             float curAbs = sp.getAbsorptionAmount();
             if (!Float.isFinite(curAbs)) curAbs = 0f;
-            sp.setAbsorptionAmount(Math.min(sp.getMaxHealth(), curAbs + excess * (float) overflowRatio));
+            // v0.9.25 上限可配置：开启时不超过最大生命；关闭时用 Float.MAX_VALUE 兜底，仅防 Infinity 溢出
+            float cap = com.hexcraft.config.HexConfig.SHIELD_CAP.get() ? sp.getMaxHealth() : Float.MAX_VALUE;
+            sp.setAbsorptionAmount(Math.min(cap, curAbs + excess * (float) overflowRatio));
         }
     }
 
@@ -2223,8 +2225,9 @@ public class HextechEvents {
         // 应急护盾：低血时维持吸收护盾
         double lowShield = effect(data, "shield_low");
         if (lowShield > 0 && sp.getHealth() / Math.max(1f, sp.getMaxHealth()) < 0.35f) {
-            // v0.9.25 上限：护盾不超过最大生命
-            float target = (float) Math.min(sp.getMaxHealth(), lowShield);
+            // v0.9.25 上限可配置：开启时护盾不超过最大生命
+            float cap = com.hexcraft.config.HexConfig.SHIELD_CAP.get() ? sp.getMaxHealth() : Float.MAX_VALUE;
+            float target = (float) Math.min(cap, lowShield);
             if (sp.getAbsorptionAmount() < target) sp.setAbsorptionAmount(target);
         }
         // ===== v0.6.2 受击叠层（on_hurt_stack：event 含 hurt_gain 键的海克斯，受击叠 1 层）=====
@@ -2742,8 +2745,9 @@ public class HextechEvents {
                     }
                 }
                 if (per > 0) {
-                    // v0.9.25 上限：护盾不超过最大生命
-                    float target = (float) Math.min(sp.getMaxHealth(), liveSh * per);
+                    // v0.9.25 上限可配置：开启时护盾不超过最大生命
+                    float cap = com.hexcraft.config.HexConfig.SHIELD_CAP.get() ? sp.getMaxHealth() : Float.MAX_VALUE;
+                    float target = (float) Math.min(cap, liveSh * per);
                     if (sp.getAbsorptionAmount() < target) sp.setAbsorptionAmount(target);
                 }
             }
@@ -2799,11 +2803,12 @@ public class HextechEvents {
             }
             data.applyModifiers(sp);
             // v0.9.25 老存档护盾清理：此前溢出转盾无上限，absorptionAmount 可累积到天文数字甚至 Infinity，
-            // 表现是伤害恒被吃掉（永远打不死）。登录时把越界值钳回最大生命，NaN/Infinity 归零。
+            // 表现是伤害恒被吃掉（永远打不死）。NaN/Infinity 一律归零；开关开启时再把越界值钳回最大生命。
             float abs = sp.getAbsorptionAmount();
-            float absCap = sp.getMaxHealth();
-            if (!Float.isFinite(abs) || abs > absCap) {
-                sp.setAbsorptionAmount(Math.min(absCap, Float.isFinite(abs) ? abs : 0f));
+            if (!Float.isFinite(abs)) {
+                sp.setAbsorptionAmount(0f);
+            } else if (com.hexcraft.config.HexConfig.SHIELD_CAP.get() && abs > sp.getMaxHealth()) {
+                sp.setAbsorptionAmount(sp.getMaxHealth());
             }
             sync(sp);
             // v0.6.4 登录同步全量 Registry 定义（联机客户端 HextechRegistry 无数据包加载，海克斯页/属性页依赖此缓存）

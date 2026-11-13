@@ -181,6 +181,8 @@ public class HexConfig {
     public static final ForgeConfigSpec.DoubleValue CRAFT_BONUS_CHANCE;
     /** 合成额外多产份数（默认 1 份） */
     public static final ForgeConfigSpec.IntValue CRAFT_BONUS_COUNT;
+    /** v0.9.25 护盾上限开关（服务端生效，默认开启：溢出转盾/低血护盾/叠层护盾都不超过最大生命；关闭=恢复旧版无上限） */
+    public static final ForgeConfigSpec.BooleanValue SHIELD_CAP;
     // ---- HUD 优化（客户端）----
     /** v0.6.16 滚动提示总开关 */
     public static final ForgeConfigSpec.BooleanValue TIP_ENABLED;
@@ -409,6 +411,11 @@ public class HexConfig {
         CRAFT_BONUS_ENABLED = b.comment("概率合成多产总开关（服务端生效，默认开启：合成时概率额外多产出，可关闭）").translation("hexcraft.config.craft.bonusEnabled").define("craftBonusEnabled", true);
         CRAFT_BONUS_CHANCE = b.comment("合成额外多产触发概率（默认 0.15=15%；0=关闭多产）").translation("hexcraft.config.craft.bonusChance").defineInRange("craftBonusChance", 0.15, 0.0, 1.0);
         CRAFT_BONUS_COUNT = b.comment("合成额外多产份数（默认 1 份；叠加不超过物品最大堆叠数）").translation("hexcraft.config.craft.bonusCount").defineInRange("craftBonusCount", 1, 1, 64);
+        // v0.9.25 护盾上限（服务端生效，默认开启）：溢出转盾曾无上限累加，护盾涨到 Infinity 后伤害恒被吃掉，
+        // 出现「玩着玩着死不了」。关闭=恢复旧版无上限行为（自行承担无法被击杀的风险）
+        SHIELD_CAP = b.comment("护盾上限（服务端生效，默认开启：吸收护盾不超过最大生命；关闭=无上限，溢出转盾会持续累积，可能出现无法被击杀）")
+                .translation("hexcraft.config.v0925.shieldCap")
+                .define("shieldCap", true);
         b.pop();
 
         COMMON_SPEC = b.build();
