@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "overshield:0.5",
+  "event": "overshield:0.5,thorns:2",
   "mods": [
     {
       "attr": "armor",

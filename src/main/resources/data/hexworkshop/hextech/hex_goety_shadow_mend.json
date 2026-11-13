@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "goety",
   "mods": [],
-  "event": "shield_low:2"
+  "event": "shield_low:2,goety_soul:0.2"
 }

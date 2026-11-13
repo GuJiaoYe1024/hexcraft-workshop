@@ -1,7 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 10,
-  "event": "brew_swift:1",
+  "event": "brew_swift:1,potion_strength:4",
   "source": "dlc_class",
   "category": "profession",
   "theme": ""

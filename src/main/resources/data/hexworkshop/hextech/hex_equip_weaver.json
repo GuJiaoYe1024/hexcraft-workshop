@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "equip_power:0.003",
+  "event": "equip_power:0.03",
   "category": "equip",
   "theme": ""
 }

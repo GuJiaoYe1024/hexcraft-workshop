@@ -6,6 +6,13 @@
 3. **全角符号清零**：`（）` `【】` `「」` `『』` 在中英语言文件里全部为 0（界面 27 条 + 配置页长说明 102 条 + 全角引号 10 条）；删掉 `hexcraft.gui.enemy_hex_chance`（旧概率机制残留）与 `hexcraft.gui.enemy_forge.regen`（不在 12 条池中的死键）两条废键，语言键中英各 2814
 4. **移速全量下调**：敌方锻造器「疾行」+35%/层 → +18%/层；敌方海克斯「迅捷 / 隐匿」移速等级封顶 II；玩家侧 13 条海克斯与 6 件装备移速 ×0.8（海克斯 0.014→0.0112、0.0105→0.0084、0.0056→0.0045、0.021→0.0168、0.0084→0.0067，装备 0.035→0.028、0.028→0.0224、0.025→0.02、0.018→0.0144、0.014→0.0112、0.011→0.0088）；冲刺 20%→16%、坐骑 30%→24%、游泳 30%→24%、锻造器 spd 0.0015→0.0012；世界海克斯狂暴移速 II/III 降为 I/II 且时长 7 秒→5 秒，角笛移速 10 秒→7 秒，Alex's Mobs 击杀加速 5 秒→3.5 秒
 
+**🔍 774 件海克斯全面体检后的三项整改**
+- **4 条空壳写实**：`hex_combat_damage_spur`（命中叠层，每层攻击 +1.2%×级、流血 +10%）、`hex_combat_shield_surge`（命中叠层，每层攻击 +1%×级、护甲 +0.5/级）、`hex_tick_damage_wax`（每 5 秒叠层，每层攻击 +1.5%×级）、`hex_timed_multi_aspect`（每 5 秒叠层，每层攻击 +1%×级、吸血 +1%/级）。空壳的根因是三段式结算只读 `HexEntry.stacks`，combat / tick 类叠层实际记在 stacks map 的 `StackEntry`，两边分裂：`PlayerData` 改为「有 stack 块时用 stack 块层数结算」，`HextechEvents` 命中叠层分支对带 stack 块的海克斯改写 `StackEntry`（可衰减、吃上限），无 stack 块的心之钢 / 万伤皆刃行为不变
+- **同质化换机制键 61 件**：逆原 41 件 + base 与联动来源 20 件，每组只给其中一件追加 1 个已核实有真实消费的机制键（`crescendo` / `rampage` / `echo` / `splash` / `execute_pct` / `corpse_explosion` / `low_hp_power` / `vamp_rage` / `kill_streak` / `blood_pact` / `dash_strike` / `thorns` / `last_stand` / `overshield` / `loot_double` / `bounty` / `tacz_pierce` / `tacz_heal` / `full_hp_crit` / `spell_cd` / `spell_mana_regen` 等），原有数值一个不丢；键集合完全相同的重复组 90 组 237 件 → 79 组 182 件，键+值完全相同的纯换皮 9 组 19 件 → 0
+- **稀有度倒挂清零（12 项 → 0）**：`bilei_7` 溢出护盾 0.25→0.5、`cursed_blade` 处决 0.05→0.16、`thunderlord` 暴击 0.25→0.12、`thorn_shell` 反伤 5→3、`netherite_bulk` 反伤 2→3、`blood_sigil` 神器汲血 2→3.5、`patience` 神器掉落 0.15→0.28、`execute_gold` 处决阈值 0.01→0.03、`youji_2` 走射 1→0.3（原等于枪伤 +100%）、`mobile_tactics` 走射 0.15→0.35、`armor_piercer` 穿透 0.22→0.38；另修 `hex_equip_weaver` 0.003→0.03（棱彩装备增幅原比黄金弱 6 倍）、`hex_echo_rampage` 回响 0.12→0.28（黄金原低于白银）
+- **数值不生效的两处消费代码**：`TrimEvents` 抗性按值给等级（1=抗性 I、2=抗性 II，此前 1 与 0.1 效果完全相同），`FurnaceEvents` 小数视为概率、整数部分为份数（此前 0.5 与 1 都是 100% 一份）
+- **描述与数据不符**：`hex_niyuan_bilei_1` / `_6` 删掉从未存在过的「护甲 +2/级、击退抗性 +30%/级」，按实际 `shield_low` 改写
+
 **顺带修正的文案错误**
 - `hex_dragon_dance` 把 `mobi_power` 机动增伤写成「移速 +14%」，改正为「机动增伤 +14%」
 - `hex_hurt_speed_boost` / `hex_kill_speed_perm` 描述写「移速 +0.2% / +0.3%/级」，实际 JSON 是 0.14% / 0.21%，按下调后真实值改为 +0.11% / +0.17%

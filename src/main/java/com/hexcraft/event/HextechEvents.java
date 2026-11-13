@@ -1904,10 +1904,27 @@ public class HextechEvents {
                     // v0.6.16 永续成长概率加成并入此处（原独立循环已删除，杜绝双重判定）
                     float hitChance = Math.min(1f, stackOnHitChance(def, stackChanceAmp) * (float) (1 + whPermGain));
                     if (sp.getRandom().nextFloat() < hitChance) {
-                        e.stacks = safeStackAdd(e.stacks, gainWithMult(onHitMult, sp.getRandom()));
+                        int gained = gainWithMult(onHitMult, sp.getRandom());
+                        long shown;
+                        if (def.stack != null && def.stack.key != null) {
+                            // v0.9.20 修复：带 stack 块的命中叠层改走 StackEntry——层数记在 stacks map，
+                            // 既能按 combat/decay 配置衰减、吃叠层上限，也与 stack_attr 三段式共用同一份层数。
+                            // 此前这类块写入的是 e.stacks，而三段式只读 e.stacks、衰减只作用于 StackEntry，两边分裂。
+                            // 无 stack 块的老式 onhit（心之钢 / 万伤皆刃）仍走 e.stacks，行为不变。
+                            if (data.getStack(def.stack.key) == null) {
+                                data.putStack(new PlayerData.StackEntry(def.stack.key, def.stack.cap, def.stack.combat,
+                                        def.stack.decayDelay, def.stack.decayRate));
+                            }
+                            data.addStack(def.stack.key, gained, 1);
+                            PlayerData.StackEntry he = data.getStack(def.stack.key);
+                            shown = he == null ? 0 : (long) he.value;
+                        } else {
+                            e.stacks = safeStackAdd(e.stacks, gained);
+                            shown = e.stacks;
+                        }
                         stackDirty = true;
                         com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp, Component.translatable("message.hexcraft.stack_named",
-                                Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), 0);
+                                Component.translatable("hexcraft.hextech." + e.id + ".name"), shown), 0);
                         attrStacked = true;
                     }
                 }

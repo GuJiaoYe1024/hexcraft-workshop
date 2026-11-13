@@ -1,7 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 14,
-  "event": "breed_swift:1",
+  "event": "breed_swift:1,food_on_kill:2",
   "source": "dlc_class",
   "category": "profession",
   "theme": ""

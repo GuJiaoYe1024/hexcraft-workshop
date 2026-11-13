@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "shield_low:2",
+  "event": "shield_low:2,thorns:4",
   "mods": [
     {
       "attr": "armor",

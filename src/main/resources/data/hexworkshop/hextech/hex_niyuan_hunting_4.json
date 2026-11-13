@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "melee_power:0.22",
+  "event": "melee_power:0.22,execute_pct:0.02",
   "mods": [
     {
       "attr": "attack_damage",

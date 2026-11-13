@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "tick_gain:1,timed_multi_aspect:0.01,lifesteal:0.01",
+  "event": "stack_attr:attack_damage:0.01,lifesteal:0.01,tick_gain:1",
   "stack": {
     "key": "timed_multi_aspect",
     "cap": 40,

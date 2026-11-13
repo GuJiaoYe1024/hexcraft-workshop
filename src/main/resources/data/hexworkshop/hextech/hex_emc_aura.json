@@ -2,5 +2,5 @@
   "rarity": "GOLD",
   "weight": 8,
   "source": "projecte",
-  "event": "emc_bargain:0.45"
+  "event": "emc_bargain:0.45,emc_transmute:0.1"
 }

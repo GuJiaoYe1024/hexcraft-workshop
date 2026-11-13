@@ -7,7 +7,7 @@
       "perLevel": 0.14
     }
   ],
-  "event": "crit:0.25",
+  "event": "crit:0.12",
   "category": "melee",
   "theme": "crit"
 }

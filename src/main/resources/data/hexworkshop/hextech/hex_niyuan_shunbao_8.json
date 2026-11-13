@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "crit_damage:0.28,full_hp_crit:0.10",
+  "event": "crit_damage:0.28, full_hp_crit:0.10, vamp_rage:0.2",
   "source": "dlc_niyuan",
   "mods": [
     {

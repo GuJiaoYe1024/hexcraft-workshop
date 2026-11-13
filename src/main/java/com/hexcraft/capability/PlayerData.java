@@ -478,6 +478,12 @@ public class PlayerData {
             // v0.9.12 性能：pCap 已提到循环外统一计算。
             long cappedStacks = Math.min(e.stacks, pCap);
             long cappedHurtStacks = Math.min(e.hurtStacks, pCap);
+            // v0.9.20 修复：combat / tick 类叠层的层数记在 stacks map（StackEntry），e.stacks 恒为 0，
+            // 导致这类海克斯写 stack_attr 三段式时永远读不到层数（空转）。有 stack 块时改用 stack 块层数结算。
+            if (def.stack != null && def.stack.key != null) {
+                StackEntry se = stacks.get(def.stack.key);
+                if (se != null) cappedStacks = Math.min((long) se.value, pCap);
+            }
             // 叠层结算只看层数：stack_attr 三段式（如 stack_attr:armor:0.0015）本身就是击杀叠层键，
             // 不需要额外 stack 块，457 层这类层数是正常叠出来的，不是绕过
             if ((cappedStacks > 0 || cappedHurtStacks > 0) && def.event != null) {

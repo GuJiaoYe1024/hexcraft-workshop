@@ -2,7 +2,7 @@
   "rarity": "GOLD",
   "weight": 8,
   "mods": [],
-  "event": "execute:0.04,gold_punch:0.1,execute_pct:0.01",
+  "event": "execute:0.04,gold_punch:0.1,execute_pct:0.03",
   "category": "melee",
   "theme": "execute"
 }

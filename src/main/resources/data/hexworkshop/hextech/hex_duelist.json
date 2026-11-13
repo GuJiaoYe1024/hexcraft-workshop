@@ -1,7 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "melee_power:0.12,crit:0.05",
+  "event": "crit:0.05,melee_power:0.12,bleed_damage:0.12",
   "category": "melee",
   "theme": ""
 }

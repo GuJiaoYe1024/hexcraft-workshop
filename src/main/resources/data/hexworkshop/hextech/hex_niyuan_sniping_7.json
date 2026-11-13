@@ -1,7 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 4,
-  "event": "tacz_power:0.30,crit:0.08",
+  "event": "tacz_power:0.30, crit:0.08, full_hp_crit:0.2",
   "source": "dlc_niyuan",
   "category": "ranged",
   "theme": ""

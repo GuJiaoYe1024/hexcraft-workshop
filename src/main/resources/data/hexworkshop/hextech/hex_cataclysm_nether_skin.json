@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "cataclysm",
   "mods": [],
-  "event": "cataclysm_resist:0.12"
+  "event": "cataclysm_resist:0.12,cataclysm_damage:0.08"
 }

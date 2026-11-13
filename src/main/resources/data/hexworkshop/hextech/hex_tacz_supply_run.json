@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "tacz",
   "mods": [],
-  "event": "tacz_ammo:0.12"
+  "event": "tacz_ammo:0.12,tacz_heal:1.5"
 }

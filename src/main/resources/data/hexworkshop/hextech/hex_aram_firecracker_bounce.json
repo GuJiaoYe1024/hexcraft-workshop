@@ -1,7 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 3,
-  "event": "tacz_power:0.10",
+  "event": "tacz_power:0.10,firework:0.1",
   "source": "dlc_aram",
   "category": "ranged",
   "theme": ""

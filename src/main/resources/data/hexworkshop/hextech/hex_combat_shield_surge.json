@@ -1,7 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 7,
-  "event": "combat_shield_surge:0.01,shield_gain:0.5",
+  "event": "stack_attr_onhit:attack_damage:0.01,armor_gain:0.5",
   "stack": {
     "key": "combat_shield_surge",
     "cap": 40,

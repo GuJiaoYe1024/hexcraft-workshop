@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "projecte",
   "mods": [],
-  "event": "lifesteal:0.06,regen:0.4"
+  "event": "lifesteal:0.06,regen:0.4,max_health:2"
 }

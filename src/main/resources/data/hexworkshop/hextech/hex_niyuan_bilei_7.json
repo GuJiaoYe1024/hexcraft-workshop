@@ -1,7 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 5,
-  "event": "overshield:0.25,armor_gain:1.0",
+  "event": "overshield:0.5,armor_gain:1.0",
   "source": "dlc_niyuan",
   "category": "sustain",
   "theme": "shield"

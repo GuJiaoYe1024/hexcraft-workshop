@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "farmersdelight",
   "mods": [],
-  "event": "farmer_drop:0.12"
+  "event": "farmer_drop:0.12,farmer_chef:1"
 }

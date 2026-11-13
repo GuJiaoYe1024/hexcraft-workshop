@@ -3,5 +3,5 @@
   "weight": 10,
   "source": "mowziesmobs",
   "mods": [],
-  "event": "mowzie_drop:0.12"
+  "event": "mowzie_drop:0.12,mowzie_resist:0.08"
 }

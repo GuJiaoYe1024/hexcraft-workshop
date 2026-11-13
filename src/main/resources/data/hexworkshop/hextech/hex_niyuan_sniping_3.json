@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "tacz_power:0.18",
+  "event": "tacz_power:0.18,tacz_pierce:0.15",
   "mods": [
     {
       "attr": "attack_damage",

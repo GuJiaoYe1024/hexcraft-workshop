@@ -2,5 +2,5 @@
   "rarity": "GOLD",
   "weight": 8,
   "source": "artifacts",
-  "event": "artifact_rage:0.35,artifact_drop:0.15"
+  "event": "artifact_rage:0.35,artifact_drop:0.28"
 }
