@@ -1,3 +1,81 @@
+Hexcraft Workshop v0.9.25 - Overflow shield cap, legacy save cleanup, storage routing
+=====================================================================================
+
+OVERFLOW SHIELD NOW CAPPED
+==========================
+- healWithOverflow used to add every point of overheal into absorptionAmount with no cap. The shield only went up, and once the float reached Infinity every incoming hit was fully absorbed, so the player could not die.
+- AbsorptionAmount is stored in player NBT, so the value survived a relog and kept that save unkillable.
+- The shield is now capped at the player's max health. A non-finite value (NaN or Infinity) is reset before the new value is computed.
+- The two other shield writers are capped the same way: the low-health shield and the stacking shield both clamp their target to max health.
+
+LEGACY SAVES ARE CLEANED ON LOGIN
+================================
+- Changing the write path alone would not help an existing world: the huge stored shield stays in the save.
+- On login the mod now checks absorption once, resets NaN or Infinity to zero, and clamps anything above max health back to max health.
+- Old worlds recover as soon as the player logs in; no manual save editing is needed.
+
+CONTAINERS: WHAT WAS RULED OUT
+==============================
+- Every event path that could block opening a container was checked and ruled out. The redstone hook only grants Haste on redstone blocks and never cancels. All four cancellations in the class mechanics sit on the damage event. The world hex cancellation is a drop event. The HUD and tooltip cancellations are client-side rendering only.
+- No code path blocks container opening. The current attribution is the overflow shield chain reacting through entity data and client-side heart rendering.
+- Please retest after this build. If containers still refuse to open, a server log plus reproduction steps are needed.
+
+DIRECT-TO-INVENTORY ENTRIES NOW USE STORAGE ROUTING
+==================================================
+- Six places that pushed items straight into the inventory now call StorageLink first: crafting bonus output, furnace bonus output, grindstone enchanted book, shulker box auto-collect, totem compensation, and arrow refund.
+- Insertion order: Beyond Dimensions, Sophisticated Backpacks (curios slot plus inventory and equipment), Refined Storage within 32 blocks, player inventory, then the remainder drops at the player's feet.
+- With no backpack or storage mod installed the behaviour matches the previous build: into the inventory, and on the ground when it is full.
+- The coin-to-emerald exchange keeps its atomic rollback path and is not routed, since it is a player-initiated trade rather than a hex effect.
+
+中文摘要
+=========
+- 治疗溢出转护盾改为不超过最大生命，NaN/Infinity 归零后再算
+- 低血护盾与叠层护盾同步钳制，三处都不会超过满血
+- 登录时清理老存档：越界护盾钳回最大生命，旧档进游戏即恢复
+- 容器打不开：代码侧排除全部事件拦截，归因护盾溢出连锁，需日志复测
+- 六处直接进背包改走 StorageLink（合成/熔炉/砂轮/潜影盒/图腾/箭矢），有背包或仓储 mod 就进仓储，否则掉脚下
+- 晶币兑换绿宝石保持原回滚逻辑不接入，因它是主动兑换不是海克斯
+
+Hexcraft Workshop v0.9.24 - Enemy stat caps, stacking cap combo, hostile detection
+=================================================================================
+
+ENEMY MOBILITY AND POTION CAPS
+==============================
+- The difficulty-boost forge roll "speed" now applies 0.09 instead of 0.18 (multiplicative base).
+- Enemy hexes swift and phantom grant Movement Speed I only; aqua and splinter were already I.
+- All enemy potion effects are now capped: generic effects at III (was V), Resistance at II (40% reduction).
+- Root fix: bulwark and aegis previously reached Resistance V, which is 100% damage reduction, making mobs immune. This is why players reported they could not kill a single zombie.
+- Absorption and Health Boost now cap at III instead of reaching X (+200 HP).
+- Enemy forge armor reduced from +18 to +6 per stack, toughness from +8 to +2, so multiple stacks no longer saturate the armor reduction table.
+
+STACKING CAP MOVED TO A NEW COMBO
+=================================
+- The stacking cap unlock is no longer tied to Stack Master. Stack Master keeps its stacking-growth effects only.
+- New combo "Stack Origin" (hexcraft.combo.v2.stacksource, group 5) has 10 members: 6 carried over from Stack Master plus 4 new picks covering permanent attack, permanent health, short combat and long-term growth stacking.
+- Five tiers at 2/4/6/8/10 pieces unlock 400/600/800/1000/unlimited stacking cap, exposed through the new stack_cap_tier effect key.
+- The compendium shows the raw cap ("Stack cap 400") instead of a percentage, and unlimited renders as the infinity symbol.
+
+HOSTILE DETECTION NOW COVERS ALL MODS
+====================================
+- New WorldHexEvents.isHostile checks the Enemy interface first, then falls back to MobCategory.MONSTER, and always excludes players.
+- Third-party mobs registered as CREATURE but implementing Enemy (Cataclysm, Goety, Mowzies Mobs and similar) are now counted as hostile.
+- The difficulty boost on spawn and all enemy hex combat resolution use the same check; world hex categories follow it too.
+
+FIXES AND PERFORMANCE
+=====================
+- Fixed the attribute page showing no description for Crescendo Blade: the description id was built as hex_crescendo instead of hex_crescendo_blade, so the whole description line was skipped.
+- Token value parsing is cached, the attribute page now issues one batched effect query instead of about 50, and tamed pet regeneration ticks on the entity's own tick counter instead of a shared global counter.
+
+中文摘要
+=========
+- 敌对移动：锻造 speed 0.18→0.09，swift/phantom 移动药水封顶 I 级
+- 敌药水全面封顶：普通 III 级、抗性 II 级（修掉 V 级 100% 免疫导致打不死僵尸）、吸收/生命提升最高 III
+- 锻造护甲 +18→+6、坚韧 +8→+2
+- 叠层上限迁到新羁绊「叠层之源」，5 档 2/4/6/8/10 → 400/600/800/1000/∞
+- 敌对判定统一 isHostile，覆盖第三方 mod 的敌对实体，世界海克斯同步
+- 修复属性页「积聚之刃」介绍为空
+- 性能：token 解析缓存、属性页批量查询、驯服生物回血按自身 tick
+
 Hexcraft Workshop v0.9.16 - Combo pack ownership and hex categories
 ================================================================
 

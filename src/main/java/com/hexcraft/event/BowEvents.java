@@ -114,7 +114,9 @@ public class BowEvents {
         List<ItemStack> pending = AMMO_REFUND.remove(sp.getUUID());
         if (pending == null) return;
         for (ItemStack ammo : pending) {
-            if (!sp.getInventory().add(ammo)) sp.drop(ammo, false); // 背包满则掉在脚下
+            // v0.9.25 与其它进背包入口统一：优先存第三方存储，剩余掉在脚下
+            ItemStack ammoRemain = com.hexcraft.link.StorageLink.insert(sp, ammo);
+            if (!ammoRemain.isEmpty()) sp.drop(ammoRemain, false);
         }
     }
 

@@ -1,3 +1,31 @@
+## v0.9.25 — 治疗溢出护盾加上限 + 老存档清理 + 六处进背包统一走存储联动（2026-11-14）
+
+**① 治疗溢出转护盾加上限（修「玩着玩着死不了」）**
+- 根因：`healWithOverflow`（吸血分支）把溢出治疗按 `overshield` 比例累加进 `absorptionAmount`，**全程无上限**。护盾只增不减，float 累到 Infinity 后伤害恒被吃掉，玩家永远打不死；`AbsorptionAmount` 还会写进存档 NBT，退出重进照样带着
+- 上限口径：**护盾不超过最大生命**，跟随 `maxHealth` 成长，高生命玩家上限同步提高
+- 累加前先判断现有值，非有限值（NaN / Infinity）归零再算
+
+**② 另外两处护盾写入同步钳制**
+- `shield_low` 低血护盾：目标值改为 `min(maxHealth, lowShield)`
+- `shield_gain` 叠层护盾：目标值改为 `min(maxHealth, liveSh * per)`
+- 三处写入此后都不会产生超过最大生命的护盾，原来「补到目标值」的语义不变
+
+**③ 老存档护盾清理（关键）**
+- 只改写入逻辑救不了已有存档——里面存的几万点护盾会一直留着，玩家照样死不了
+- `onLogin` 登录时检查一次：`absorptionAmount` 为 NaN / Infinity 归零，超过最大生命钳回最大生命
+- 旧档进游戏即恢复正常，不需要手动清档或重建世界
+
+**④「背包和箱子打不开」排查结论**
+- 全部事件拦截路径逐一排除：`RedstoneEvents.onRightClickBlock` 只对红石类方块加急迫、不取消；`ClassMechanics` 四处 `setCanceled` 全在 `LivingHurtEvent`；`WorldHexEvents` 的取消是掉落事件；`HexHealthOverlay` / `HexTipOverlay` 的取消都在客户端渲染层
+- 代码侧没有任何地方拦截容器打开，当前归因于护盾值溢出后的连锁异常（玩家实体数据 / 客户端护盾心渲染）
+- 修复后请玩家复测；若仍复现，需要服务端日志与复现步骤再定位
+
+**⑤ 六处「直接进背包」统一改走存储联动**
+- 接入点：合成额外产出（`HextechEvents`）、熔炉额外产出（`FurnaceEvents`）、磨石匠附魔书（`GrindstoneEvents`）、潜影盒自动收（`ShulkerEvents`）、图腾补偿（`TotemEvents`）、箭矢返还（`BowEvents`）
+- 统一走 `StorageLink.insert`：超越维度 → 精妙背包（curios 背带槽 + 物品栏/装备）→ 精致存储（32 格内最近网络）→ 玩家背包 → **剩余掉在脚下**
+- 未装任何背包 / 仓储 mod 时行为与原来一致（先进背包，满了掉脚下）
+- 晶币兑换绿宝石（`Packets`）保持原有原子回滚逻辑，不接入——那是玩家主动兑换，不是海克斯触发
+
 ## v0.9.24 — 敌对数值封顶 + 叠层上限迁羁绊 + 敌对判定统一 + 属性页介绍修复（2026-11-14）
 
 **① 敌对移动系数下调**

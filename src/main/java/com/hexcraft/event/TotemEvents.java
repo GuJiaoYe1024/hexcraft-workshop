@@ -42,8 +42,10 @@ public class TotemEvents {
         // 若该手已空则直接放回，否则尽量放入背包，避免覆盖现有物品
         if (sp.getItemInHand(hand).isEmpty()) {
             sp.setItemInHand(hand, new ItemStack(Items.TOTEM_OF_UNDYING));
-        } else if (!sp.getInventory().add(new ItemStack(Items.TOTEM_OF_UNDYING))) {
-            sp.drop(new ItemStack(Items.TOTEM_OF_UNDYING), false);
+        } else {
+            // v0.9.25 与其它进背包入口统一：优先存第三方存储，剩余掉脚下
+            ItemStack totemRemain = com.hexcraft.link.StorageLink.insert(sp, new ItemStack(Items.TOTEM_OF_UNDYING));
+            if (!totemRemain.isEmpty()) sp.drop(totemRemain, false);
         }
     }
 }

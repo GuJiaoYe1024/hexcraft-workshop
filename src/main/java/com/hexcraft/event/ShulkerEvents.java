@@ -33,7 +33,9 @@ public class ShulkerEvents {
         PlayerData data = ModCapabilities.get(sp);
         if (data == null || HextechEvents.effect(data, "shulker_carry") <= 0) return;
         ItemStack copy = stack.copy();
-        if (sp.getInventory().add(copy)) {
+        // v0.9.25 与其它进背包入口统一：优先存第三方存储，全部收进去才移除地上的掉落物
+        ItemStack copyRemain = com.hexcraft.link.StorageLink.insert(sp, copy);
+        if (copyRemain.isEmpty()) {
             itemEntity.discard();
         }
     }

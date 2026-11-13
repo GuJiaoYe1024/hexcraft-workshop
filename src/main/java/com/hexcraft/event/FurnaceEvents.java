@@ -29,8 +29,10 @@ public class FurnaceEvents {
         int copies = Math.max(1, (int) Math.floor(fs));
         for (int i = 0; i < copies; i++) {
             ItemStack extra = original.copy();
-            if (!sp.getInventory().add(extra)) {
-                sp.drop(extra, false);
+            // v0.9.25 与其它进背包入口统一：优先存第三方存储，剩余掉脚下
+            ItemStack extraRemain = com.hexcraft.link.StorageLink.insert(sp, extra);
+            if (!extraRemain.isEmpty()) {
+                sp.drop(extraRemain, false);
             }
         }
     }

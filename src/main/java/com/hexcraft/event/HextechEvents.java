@@ -596,11 +596,14 @@ public class HextechEvents {
         int count = Math.min(com.hexcraft.config.HexConfig.CRAFT_BONUS_COUNT.get(), result.getMaxStackSize());
         ItemStack bonus = result.copy();
         bonus.setCount(count);
-        if (!sp.getInventory().add(bonus)) {
-            sp.drop(bonus, false);
+        Component bonusName = bonus.getHoverName();
+        // v0.9.25 与其它进背包入口统一：优先存第三方存储（背包/仓储 mod），剩余掉脚下
+        ItemStack bonusRemain = com.hexcraft.link.StorageLink.insert(sp, bonus);
+        if (!bonusRemain.isEmpty()) {
+            sp.drop(bonusRemain, false);
         }
         com.hexcraft.network.Packets.S2CTipMessage.sendTo(sp,
-                Component.translatable("message.hexcraft.craft_bonus", bonus.getHoverName(), count), 0);
+                Component.translatable("message.hexcraft.craft_bonus", bonusName, count), 0);
     }
 
     // ===== v0.9.17 内置 DLC·职业：锻造神子（合成时把层数写进物品）=====
@@ -2091,7 +2094,11 @@ public class HextechEvents {
         sp.heal(amount);
         if (overflowRatio > 0 && sp.getHealth() >= sp.getMaxHealth()) {
             float excess = Math.max(0f, before + amount - sp.getMaxHealth());
-            sp.setAbsorptionAmount(sp.getAbsorptionAmount() + excess * (float) overflowRatio);
+            // v0.9.25 上限：护盾不超过最大生命。此前无上限累加，absorptionAmount 可涨到 Infinity，
+            // 伤害被全额吃掉（打不死），客户端护盾心渲染也随之异常。
+            float curAbs = sp.getAbsorptionAmount();
+            if (!Float.isFinite(curAbs)) curAbs = 0f;
+            sp.setAbsorptionAmount(Math.min(sp.getMaxHealth(), curAbs + excess * (float) overflowRatio));
         }
     }
 
@@ -2215,9 +2222,10 @@ public class HextechEvents {
         }
         // 应急护盾：低血时维持吸收护盾
         double lowShield = effect(data, "shield_low");
-        if (lowShield > 0 && sp.getHealth() / Math.max(1f, sp.getMaxHealth()) < 0.35f
-                && sp.getAbsorptionAmount() < (float) lowShield) {
-            sp.setAbsorptionAmount((float) lowShield);
+        if (lowShield > 0 && sp.getHealth() / Math.max(1f, sp.getMaxHealth()) < 0.35f) {
+            // v0.9.25 上限：护盾不超过最大生命
+            float target = (float) Math.min(sp.getMaxHealth(), lowShield);
+            if (sp.getAbsorptionAmount() < target) sp.setAbsorptionAmount(target);
         }
         // ===== v0.6.2 受击叠层（on_hurt_stack：event 含 hurt_gain 键的海克斯，受击叠 1 层）=====
         // v0.9.4：受击叠层上限乘区与命中段统一（stackCapMultiplier：档位 1.2/1.4 × 叠层之巅 × stack_cap × 世界海克斯），
@@ -2733,8 +2741,10 @@ public class HextechEvents {
                         try { per += Double.parseDouble(token.substring(ci + 1)) * e.level; } catch (Exception ignored) { }
                     }
                 }
-                if (per > 0 && sp.getAbsorptionAmount() < liveSh * per) {
-                    sp.setAbsorptionAmount((float) (liveSh * per));
+                if (per > 0) {
+                    // v0.9.25 上限：护盾不超过最大生命
+                    float target = (float) Math.min(sp.getMaxHealth(), liveSh * per);
+                    if (sp.getAbsorptionAmount() < target) sp.setAbsorptionAmount(target);
                 }
             }
         }
@@ -2788,6 +2798,13 @@ public class HextechEvents {
                 sp.getPersistentData().remove("hexcraft_keep");
             }
             data.applyModifiers(sp);
+            // v0.9.25 老存档护盾清理：此前溢出转盾无上限，absorptionAmount 可累积到天文数字甚至 Infinity，
+            // 表现是伤害恒被吃掉（永远打不死）。登录时把越界值钳回最大生命，NaN/Infinity 归零。
+            float abs = sp.getAbsorptionAmount();
+            float absCap = sp.getMaxHealth();
+            if (!Float.isFinite(abs) || abs > absCap) {
+                sp.setAbsorptionAmount(Math.min(absCap, Float.isFinite(abs) ? abs : 0f));
+            }
             sync(sp);
             // v0.6.4 登录同步全量 Registry 定义（联机客户端 HextechRegistry 无数据包加载，海克斯页/属性页依赖此缓存）
             com.hexcraft.network.Packets.S2CSyncRegistry.sendTo(sp);

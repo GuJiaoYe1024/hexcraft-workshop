@@ -45,7 +45,8 @@ public class GrindstoneEvents {
             net.minecraft.world.item.ItemStack bk =
                     new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK);
             net.minecraft.world.item.enchantment.EnchantmentHelper.enchantItem(owner.getRandom(), bk, 30, false);
-            if (!owner.getInventory().add(bk)) owner.drop(bk, false);
+            net.minecraft.world.item.ItemStack bkRemain = com.hexcraft.link.StorageLink.insert(owner, bk);
+            if (!bkRemain.isEmpty()) owner.drop(bkRemain, false);
         }
     }
 }
