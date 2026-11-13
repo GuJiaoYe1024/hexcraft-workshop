@@ -2699,6 +2699,8 @@ public class HextechEvents {
                 com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 玩家 {} 登录：从 persistentData 恢复备份 海克斯={} 锻造={} 装备={} 晶币={}",
                         sp.getName().getString(), data.getHexes().size(), data.getForges().size(),
                         data.getEquipment().size(), data.getCoins());
+                // v0.9.23 联机修复：备份一旦消费即清除，避免旧死亡快照在后续 Clone 中被再次套用
+                sp.getPersistentData().remove("hexcraft_keep");
             }
             data.applyModifiers(sp);
             sync(sp);
@@ -2762,22 +2764,34 @@ public class HextechEvents {
         try {
             PlayerData neu = ModCapabilities.get(event.getEntity());
             PlayerData old = ModCapabilities.get(event.getOriginal());
-            // v0.4.13：死亡保留双通道恢复——通道 1：死亡瞬间写入 persistentData 的备份（最稳，capability 失效也能恢复）；
-            // 通道 2：capability copyFrom 兜底（旧实体 capability 仍有效时复制）
-            CompoundTag backup = event.getOriginal().getPersistentData().getCompound("hexcraft_keep");
-            if (neu != null && !backup.isEmpty()) {
-                neu.deserializeNBT(backup);
-                way = "persistentData备份";
-            }
-            if (neu != null && old != null) {
-                neu.copyFrom(old);
-                way = way.equals("NONE") ? "copyFrom" : "persistentData备份+copyFrom";
-            }
-            if (neu != null) {
-                com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 玩家重生恢复：方式={} 海克斯={} 锻造={} 装备={} 晶币={}",
-                        way, neu.getHexes().size(), neu.getForges().size(), neu.getEquipment().size(), neu.getCoins());
+            // v0.9.23 联机修复：Forge 规定 isWasDeath 用于区分「死亡重生」与「从末地返回」。
+            // 末地返回时数据本来就还在，若照旧走恢复通道，persistentData 里的旧死亡快照会把
+            // 末地期间拿到的进度打回旧值（旧实体 capability 取不到时必定发生）。
+            if (event.isWasDeath()) {
+                // v0.4.13：死亡保留双通道恢复——通道 1：死亡瞬间写入 persistentData 的备份（最稳，capability 失效也能恢复）；
+                // 通道 2：capability copyFrom 兜底（旧实体 capability 仍有效时复制）
+                CompoundTag backup = event.getOriginal().getPersistentData().getCompound("hexcraft_keep");
+                if (neu != null && !backup.isEmpty()) {
+                    neu.deserializeNBT(backup);
+                    way = "persistentData备份";
+                }
+                if (neu != null && old != null) {
+                    neu.copyFrom(old);
+                    way = way.equals("NONE") ? "copyFrom" : "persistentData备份+copyFrom";
+                }
+                if (neu != null) {
+                    com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 玩家重生恢复：方式={} 海克斯={} 锻造={} 装备={} 晶币={}",
+                            way, neu.getHexes().size(), neu.getForges().size(), neu.getEquipment().size(), neu.getCoins());
+                    // v0.9.23：备份已消费，清掉旧快照，下一次 Clone 不会再把旧值套回来
+                    event.getEntity().getPersistentData().remove("hexcraft_keep");
+                } else {
+                    com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft] 玩家重生恢复：方式={} (capability 为空!)", way);
+                }
             } else {
-                com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft] 玩家重生恢复：方式={} (capability 为空!)", way);
+                way = "末地返回-保留原有数据";
+                com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 玩家末地返回：保留现有数据 海克斯={} 锻造={} 装备={} 晶币={}",
+                        neu == null ? -1 : neu.getHexes().size(), neu == null ? -1 : neu.getForges().size(),
+                        neu == null ? -1 : neu.getEquipment().size(), neu == null ? -1 : neu.getCoins());
             }
         } catch (Exception e) {
             com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft] 玩家重生恢复异常：{}", e.toString());
@@ -2802,6 +2816,20 @@ public class HextechEvents {
                 sync(sp);
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void onChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        // v0.9.23 联机修复：跨维度后客户端 PlayerData 会随实体重建而清空，面板与悬停显示缺失。
+        // 用服务端主线程队列延后一 tick，等客户端维度切换完成后再补发全量。
+        if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        sp.server.execute(() -> {
+            PlayerData d = ModCapabilities.get(sp);
+            if (d != null) {
+                d.applyModifiers(sp);
+                sync(sp);
+            }
+        });
     }
 
     @SubscribeEvent

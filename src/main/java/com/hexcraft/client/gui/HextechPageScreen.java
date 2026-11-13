@@ -577,8 +577,17 @@ public class HextechPageScreen extends HexScaledScreen {
                             java.util.List<Object> tip = new java.util.ArrayList<>();
                             tip.add(Component.translatable("hexcraft.hextech." + h.id + ".name").withStyle(c -> c.withColor(0xFF9FE4FF)));
                             tip.add(Component.translatable("hexcraft.hextech." + h.id + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
-                            tip.add(Component.literal("命中层 " + h.stacks + " 层，受击层 " + h.hurtStacks + " 层")
-                                    .withStyle(c -> c.withColor(0xFFFFD28C)));
+                            // v0.9.23：只在真实存在层数时才写对应词条。全 0 的件（如靠 hasScionKey 进列表、
+                            // 本身没有 stack 块的锻造神子）不再出现「命中层 0 层，受击层 0 层」。
+                            if (h.stacks > 0 || h.hurtStacks > 0) {
+                                StringBuilder sb = new StringBuilder();
+                                if (h.stacks > 0) sb.append("命中层 ").append(h.stacks).append(" 层");
+                                if (h.hurtStacks > 0) {
+                                    if (sb.length() > 0) sb.append("，");
+                                    sb.append("受击层 ").append(h.hurtStacks).append(" 层");
+                                }
+                                tip.add(Component.literal(sb.toString()).withStyle(c -> c.withColor(0xFFFFD28C)));
+                            }
                             hoverTip = tip;
                         }
                         idx++;

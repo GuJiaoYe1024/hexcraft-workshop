@@ -1,4 +1,24 @@
-## v0.9.22 — 叠层数值反打：短时件恢复硬上限、全体系系数 ×3（2026-11-13）
+## v0.9.23 — 事件注册根因修复：32 个机制层恢复执行 + 联机三缺口 + 叠层显示去噪（2026-11-13）
+
+v0.9.22 及之前，`Hexcraft.java` 全部用 `MinecraftForge.EVENT_BUS.register(XxxEvents.class)`。Forge 的 `register(Class)` **只注册 static 方法**，而 event 目录下 32 个类共 **51 个 `@SubscribeEvent` 方法全部是非 static**，等于从未被注册。
+
+**① 事件注册改为实例注册（核心根因）**
+- `Hexcraft.java` 中 32 个类由 `register(X.class)` 改为 `register(new X())`：ServerLifecycleEvents、BowEvents、ShieldEvents、DashEvents、FishingEvents、MountEvents、TridentEvents、CrossbowEvents、AxeBreakEvents、PearlEvents、TotemEvents、QuickEatEvents、ElytraEvents、SwimEvents、BoatEvents、MinecartEvents、LandingSlamEvents、BrushEvents、SleepEvents、FurnaceEvents、AnvilEvents、EnchantEvents、BrewEvents、GrindstoneEvents、BeaconEvents、BeeEvents、BucketEvents、ShulkerEvents、RedstoneEvents、HornEvents、TrimEvents、BreedEvents
+- 保持 class 注册的：`ModCapabilities`、`HextechEvents`、`WorldHexEvents`、`ClassMechanics`、`HexCommand`（全 static 方法）
+- 连带修复：`Hexcraft.SERVER` 此前永远为 null（`ServerLifecycleEvents` 未生效），`BrewEvents:57` 与 `GrindstoneEvents:22` 拿到的都是 null
+- 受影响机制层：弓箭（含爆炸箭）、盾牌、冲刺、钓鱼、骑乘、三叉戟、弩、斧破盾、末影珍珠、不死图腾、进食、鞘翅、游泳、船、矿车、坠落、刷子、睡觉、熔炉、铁砧、附魔、酿造、砂轮、信标、养蜂、桶、潜影盒、红石、山羊角、纹饰、繁殖
+
+**② 联机三缺口**
+- `onClone` 增加 `isWasDeath()` 判定：死亡重生才走 persistentData + copyFrom 双通道恢复；**从末地返回不再覆盖数据**（此前 `hexcraft_keep` 里的旧死亡快照会先把数据打回旧值，若旧实体 capability 取不到就永久回退）
+- `hexcraft_keep` 消费即清除：`onLogin` 用备份恢复后、`onClone` 死亡分支恢复后，均在新实体上 `remove("hexcraft_keep")`
+- 新增 `PlayerEvent.PlayerChangedDimensionEvent` 订阅：跨维度后在服务端主线程队列延后一 tick 重算属性并同步，修复切维度后客户端数据为空导致的显示缺失
+
+**③ 叠层显示去噪**
+- `HextechPageScreen` 悬停层数行改为条件拼接：`stacks > 0` 才出「命中层 X 层」，`hurtStacks > 0` 才出「受击层 Y 层」，两者皆 0 则不出这一行
+- 修复「锻造神子」这类靠 `hasScionKey` 进入成长叠层列表、本身无 stack 块的件，悬停永远显示「命中层 0 层，受击层 0 层」
+
+
+
 
 按作者口径重做 v0.9.21 的叠层调整：v0.9.21「放开短时件上限、永久件每层率 ×0.6」的方向作废。
 
