@@ -1,3 +1,32 @@
+## v0.9.22 — 叠层数值反打：短时件恢复硬上限、全体系系数 ×3（2026-11-13）
+
+按作者口径重做 v0.9.21 的叠层调整：v0.9.21「放开短时件上限、永久件每层率 ×0.6」的方向作废。
+
+**① 5 件短时叠层恢复硬上限**
+- `hex_combat_damage_spur` cap 0→**60**、`hex_combat_shield_surge` 0→**40**、`hex_tick_damage_wax` 0→**30**、`hex_timed_multi_aspect` 0→**40**、`hex_hurt_leech_burst` 0→**30**
+- 每层率回到 0.9.20 后在原值上 ×3：攻击 0.012→**0.036**（spur）、0.01→**0.03**（shield_surge）、0.015→**0.045**（tick_wax）、0.01→**0.03**（multi_aspect）；斩伤 0.1→**0.3**、护甲获取 0.5→**1.5**
+- `hex_hurt_leech_burst` 删掉 0.9.21 追加的 `stack_attr_onhurt:attack_damage:0.0006`，回到 `hurt_gain:3,lifesteal:0.012`
+
+**② 5 件永久件每层率 ×3（0.9.21 的 ×0.6 全部撤销）**
+- 攻击 0.001→**0.003**（apex / mixed_damage_armor / combat_perm_mix）、`atk` 0.001→**0.003**（growth_spear / immortal_echo）
+- 最大生命 0.002→**0.006**（combat_perm_mix 受击段 / hurt_perm_shield / perm_leech_grow）
+- 副效果同步 ×3：处决 0.02→**0.06**、斩伤 0.15→**0.45**、回声 0.1→**0.3**
+
+**③ 其它叠层件（不含速度）系数 ×3**
+- 攻速 0.00035→**0.00105**：`artifact_endurance_stack`、`blade_draw_song`、`blade_scabbard_flow`、`hurt_speed_boost`、`kill_speed_perm`、`mowzie_feral_instinct`、`mowzie_frenzy_claw`
+- 生命 0.0008→**0.0024**（`heart_steel`）、0.0005→**0.0015**（`stack_tank`）；护甲 0.0005→**0.0015**（`kill_armor_fort`）
+- 副效果 ×3：背水 0.10→**0.30** / 0.08→**0.24**、回声 0.12→**0.36** / 0.15→**0.45**、荆棘 2.0→**6.0**、触发率 0.25→**0.75**、暴击 0.15→**0.45**、狂怒 0.18→**0.54**、吸血 0.008→**0.024**
+- `hex_crescendo_blade` 0.005→**0.03**
+
+**实测**（全部持有、等级 3、hexPower=1，读自改后 JSON）
+- 200 层：攻击 **+26.73（×27.73）**；单件 cap 乘区 ×1.4 → **+33.82（×34.82）**
+- 1000 层：**+62.73（×63.73）**；×1.4 → **+69.82（×70.82）**
+
+**未动**
+- 叠层速度件全部保持原值：`hex_stack_drake` 0.75、`hex_swift_horn_quick` 1.0、`hex_blade_soul_flurry` 0.12、`hex_aram_ramp_rex` 0.20、`hex_niyuan_diediele_1..9`
+- 抽取成本 400 xp / 递增 0.10 保持 v0.9.21 值
+
+
 ## v0.9.21 — 叠层经济重算后的四项数值调整（2026-11-13）
 
 按 200 层（前期）、800 层（中期）、1000 层以上（后期）的实测算完一轮叠层经济，四个失衡点全部按计算结果改。

@@ -1,7 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "stack_attr_onhit:attack_damage:0.001,bleed_damage:0.1",
+  "event": "stack_attr_onhit:attack_damage:0.036,bleed_damage:0.3",
   "mods": [
     {
       "attr": "attack_damage",
@@ -10,7 +10,7 @@
   ],
   "stack": {
     "key": "combat_damage_spur",
-    "cap": 0,
+    "cap": 60,
     "combat": true,
     "decayDelay": 80,
     "decayRate": 2

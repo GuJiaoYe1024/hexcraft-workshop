@@ -1,10 +1,10 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "stack_attr:attack_damage:0.0006,lifesteal:0.01,tick_gain:1",
+  "event": "stack_attr:attack_damage:0.03,lifesteal:0.03,tick_gain:3",
   "stack": {
     "key": "timed_multi_aspect",
-    "cap": 0,
+    "cap": 40,
     "combat": false,
     "decayDelay": -1,
     "decayRate": 0

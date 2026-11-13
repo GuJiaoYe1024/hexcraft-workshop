@@ -7,7 +7,7 @@
       "perLevel": 4.0
     }
   ],
-  "event": "stack_attr:hp:0.0003,last_stand:0.08",
+  "event": "stack_attr:hp:0.0015,last_stand:0.24",
   "stackTag": [
     "permanent_stack",
     "armor_stack",

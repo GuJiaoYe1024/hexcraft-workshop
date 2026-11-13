@@ -1,7 +1,7 @@
 {
   "rarity": "SILVER",
   "weight": 8,
-  "event": "stack_attr:armor:0.0003",
+  "event": "stack_attr:armor:0.0015",
   "mods": [
     {
       "attr": "armor",

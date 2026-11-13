@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 5,
-  "event": "crescendo:0.005",
+  "event": "crescendo:0.03",
   "stack": {
     "key": "crescendo",
     "cap": 200,

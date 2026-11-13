@@ -1,7 +1,7 @@
 {
   "rarity": "GOLD",
   "weight": 7,
-  "event": "stack_attr:max_health:0.0012,lifesteal:0.008",
+  "event": "stack_attr:max_health:0.006,lifesteal:0.024",
   "stackTag": [
     "permanent_stack",
     "leech_stack",
