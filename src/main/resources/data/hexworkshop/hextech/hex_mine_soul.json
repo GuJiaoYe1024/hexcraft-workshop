@@ -1,0 +1,8 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "event": "mining_vein:1,mining_smelt:1,mining_luck:0.1",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

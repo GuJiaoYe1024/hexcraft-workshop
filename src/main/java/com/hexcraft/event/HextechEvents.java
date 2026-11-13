@@ -145,7 +145,7 @@ public class HextechEvents {
     /** 该海克斯是否存在任意一种有效的每层属性叠层键（stack_attr / stack_attr_onhit / stack_attr_onhurt / 职业包物品自带加成） */
     public static boolean hasAnyStackAttr3(HextechDefinition def) {
         return hasStackAttr3(def, "stack_attr") || hasStackAttr3(def, "stack_attr_onhit")
-                || hasStackAttr3(def, "stack_attr_onhurt") || scionPer(def) > 0;
+                || hasStackAttr3(def, "stack_attr_onhurt") || hasScionKey(def);
     }
 
     /** v0.6.16 叠角龙统一倍率：每级 +75%（对齐 lang 描述"多获得 75%"），无叠角龙 = 1。
@@ -548,17 +548,12 @@ public class HextechEvents {
         boolean grew = false;
         for (PlayerData.HexEntry e : data.getHexes()) {
             HextechDefinition def = HextechRegistry.get(e.id);
-            double per = scionPer(def);
+            double per = scionPer(def, "forge_scion");
             if (per <= 0) continue;
             e.stacks = safeStackAdd(e.stacks, 1);
             grew = true;
             // 把这件产物的自带属性写进 NBT：层数 × 每层点数，类型决定挂攻击还是护甲
-            CompoundTag tag = result.getOrCreateTag();
-            CompoundTag sub = tag.contains("hexcraft") ? tag.getCompound("hexcraft") : new CompoundTag();
-            sub.putInt("forge_scion", e.stacks);
-            sub.putDouble("forge_scion_per", per);
-            sub.putString("forge_scion_kind", guard ? "armor" : "attack");
-            tag.put("hexcraft", sub);
+            writeScionTag(result, new double[]{per, e.stacks}, guard);
             Packets.S2CTipMessage.sendTo(sp, Component.translatable(
                     "message.hexcraft.forge_scion_craft",
                     Component.translatable("hexcraft.hextech." + e.id + ".name"), e.stacks), 0);
@@ -566,14 +561,45 @@ public class HextechEvents {
         if (grew) data.applyModifiers(sp);
     }
 
-    /** 锻造神子每层点数（forge_scion:0.1），无则 0 */
-    public static double scionPer(HextechDefinition def) {
+    /** 职业包·物品养成每层点数（键为 forge_scion / forge_scion_anvil / forge_scion_grind），无则 0 */
+    public static double scionPer(HextechDefinition def, String key) {
         if (def == null || def.event == null) return 0;
+        String prefix = key + ":";
         for (String token : eventTokens(def.event)) {
-            if (!token.startsWith("forge_scion:")) continue;
-            try { return Double.parseDouble(token.substring("forge_scion:".length()).trim()); } catch (Exception ignored) { }
+            if (!token.startsWith(prefix)) continue;
+            try { return Double.parseDouble(token.substring(prefix.length()).trim()); } catch (Exception ignored) { }
         }
         return 0;
+    }
+
+    /** 该海克斯是否带任意一种物品养成键 */
+    public static boolean hasScionKey(HextechDefinition def) {
+        return scionPer(def, "forge_scion") > 0 || scionPer(def, "forge_scion_anvil") > 0
+                || scionPer(def, "forge_scion_grind") > 0;
+    }
+
+    /** 职业包·物品养成：为拥有该键的海克斯叠 1 层，返回 {每层点数, 当前层数}；没有则 null */
+    public static double[] scionStackUp(PlayerData data, String key) {
+        if (data == null) return null;
+        for (PlayerData.HexEntry e : data.getHexes()) {
+            HextechDefinition def = HextechRegistry.get(e.id);
+            double per = scionPer(def, key);
+            if (per <= 0) continue;
+            e.stacks = safeStackAdd(e.stacks, 1);
+            return new double[]{per, e.stacks};
+        }
+        return null;
+    }
+
+    /** 把物品养成加成写进产物 NBT（层数 × 每层点数，类型决定穿戴时挂攻击还是护甲） */
+    public static void writeScionTag(ItemStack st, double[] ps, boolean armorKind) {
+        if (st == null || st.isEmpty() || ps == null) return;
+        CompoundTag tag = st.getOrCreateTag();
+        CompoundTag sub = tag.contains("hexcraft") ? tag.getCompound("hexcraft") : new CompoundTag();
+        sub.putInt("forge_scion", (int) ps[1]);
+        sub.putDouble("forge_scion_per", ps[0]);
+        sub.putString("forge_scion_kind", armorKind ? "armor" : "attack");
+        tag.put("hexcraft", sub);
     }
 
     /** 装备变更后重算：锻造神子的物品自带加成随穿脱即时生效 */
@@ -600,7 +626,7 @@ public class HextechEvents {
     }
 
     /** 合成产物是否算武器/工具（攻击向）：剑、镐斧锹锄、三叉戟、弓、弩、盾 */
-    private static boolean isWeaponOrTool(net.minecraft.world.item.Item item) {
+    public static boolean isWeaponOrTool(net.minecraft.world.item.Item item) {
         return item instanceof net.minecraft.world.item.SwordItem
                 || item instanceof net.minecraft.world.item.DiggerItem
                 || item instanceof net.minecraft.world.item.TridentItem

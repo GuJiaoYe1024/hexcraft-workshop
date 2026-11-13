@@ -1,0 +1,8 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "event": "forge_scion_anvil:0.5,anvil_save:0.5,anvil_repair:0.25",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

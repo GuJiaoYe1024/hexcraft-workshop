@@ -1,0 +1,8 @@
+{
+  "rarity": "SILVER",
+  "weight": 14,
+  "event": "fish_fast:0.3,fish_treasure:0.15,fish_line:1,fish_double:0.5",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

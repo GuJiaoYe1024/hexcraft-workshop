@@ -105,5 +105,14 @@ public class FishingEvents {
                 drops.set(0, new ItemStack(treasureItem));
             }
         }
+
+        // v0.9.17 职业包·沧海渔者：按概率额外获得一份渔获
+        double dbl = HextechEvents.effect(data, "fish_double");
+        if (dbl > 0 && sp.getRandom().nextFloat() < (float) dbl) {
+            List<ItemStack> drops = event.getDrops();
+            if (!drops.isEmpty()) {
+                drops.add(drops.get(0).copy());
+            }
+        }
     }
 }

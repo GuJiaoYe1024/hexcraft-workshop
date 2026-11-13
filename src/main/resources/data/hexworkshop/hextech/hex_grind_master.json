@@ -1,0 +1,8 @@
+{
+  "rarity": "SILVER",
+  "weight": 14,
+  "event": "grind_xp:0.5,grind_book:0.15",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

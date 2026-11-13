@@ -34,8 +34,18 @@ public class GrindstoneEvents {
         PlayerData data = ModCapabilities.get(owner);
         if (data == null) return;
         double mult = HextechEvents.effect(data, "grind_xp");
-        if (mult <= 0) return;
-        int base = event.getXp();
-        event.setXp(base + (int) Math.round(base * mult));
+        if (mult > 0) {
+            int base = event.getXp();
+            event.setXp(base + (int) Math.round(base * mult));
+        }
+        // v0.9.17 职业包·磨石匠：概率额外保留一本随机附魔书
+        // 注：OnTakeItem 不携带输出物品，1.20.1 Forge 无法在此改写砂轮产物，故磨石匠只做本职加成。
+        double book = HextechEvents.effect(data, "grind_book");
+        if (book > 0 && owner.getRandom().nextFloat() < (float) book) {
+            net.minecraft.world.item.ItemStack bk =
+                    new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK);
+            net.minecraft.world.item.enchantment.EnchantmentHelper.enchantItem(owner.getRandom(), bk, 30, false);
+            if (!owner.getInventory().add(bk)) owner.drop(bk, false);
+        }
     }
 }
