@@ -1,0 +1,8 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "event": "spell_double:0.1,spell_crit:0.12,spell_cd:0.06",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

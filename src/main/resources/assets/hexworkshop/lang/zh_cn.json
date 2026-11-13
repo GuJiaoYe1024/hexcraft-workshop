@@ -2739,5 +2739,19 @@
   "hexcraft.hextech.hex_breed_lord.name": "牧野之王",
   "hexcraft.hextech.hex_breed_lord.desc": "繁殖出的幼崽生长时间减半，更快成年并投入生产。",
   "hexcraft.hextech.hex_enchant_sage.name": "附魔贤者",
-  "hexcraft.hextech.hex_enchant_sage.desc": "附魔台提供的附魔等级 +1/级，同样的青金石与经验能换到更高一档的附魔。"
+  "hexcraft.hextech.hex_enchant_sage.desc": "附魔台提供的附魔等级 +1/级，同样的青金石与经验能换到更高一档的附魔。",
+  "hexcraft.hextech.hex_class_cook.name": "田园厨师",
+  "hexcraft.hextech.hex_class_cook.desc": "进食时额外回复生命，击杀生物按概率掉落农夫乐事食物，击杀后额外恢复饥饿值。",
+  "hexcraft.hextech.hex_class_blade.name": "剑豪",
+  "hexcraft.hextech.hex_class_blade.desc": "主手持有拔刀剑时伤害与爆发伤害提升，拔刀剑击杀额外掉落。",
+  "hexcraft.hextech.hex_class_arcanist.name": "奥术师",
+  "hexcraft.hextech.hex_class_arcanist.desc": "提升法术双重施放概率、法术暴击概率，并缩短法术冷却。",
+  "hexcraft.hextech.hex_class_slayer.name": "猎魔人",
+  "hexcraft.hextech.hex_class_slayer.desc": "对末地灾变生物增伤、减免来自它们的伤害，并提高其掉落。",
+  "hexcraft.hextech.hex_class_shaman.name": "巫祝",
+  "hexcraft.hextech.hex_class_shaman.desc": "对巫术生物增伤、灵魂收益提升，并提高其掉落。",
+  "hexcraft.hextech.hex_class_curator.name": "古物商",
+  "hexcraft.hextech.hex_class_curator.desc": "装备神器时提升狂暴增伤与吸血，神器掉落提高。",
+  "hexcraft.hextech.hex_class_relic.name": "遗物守护",
+  "hexcraft.hextech.hex_class_relic.desc": "遗物提供的增伤与防护提升，遗物掉落提高。"
 }

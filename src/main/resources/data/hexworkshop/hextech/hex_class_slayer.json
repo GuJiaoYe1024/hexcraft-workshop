@@ -1,0 +1,8 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "event": "cataclysm_damage:0.18,cataclysm_resist:0.15,cataclysm_drop:0.2",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

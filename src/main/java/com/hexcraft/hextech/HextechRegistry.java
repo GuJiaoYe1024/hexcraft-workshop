@@ -387,6 +387,18 @@ public class HextechRegistry {
         return true; // 未来联动来源默认启用（按需扩展配置）
     }
 
+    /** v0.9.17 职业包·联动职业海克斯：除所属内置 DLC(class) 开启外，还要求对应联动 mod 已安装；
+     *  未安装即在抽取池与图鉴中隐藏，与联动来源海克斯的隐藏口径一致。 */
+    private static final Map<String, String> CLASS_REQUIRE_MOD = Map.of(
+            "hex_class_cook", "farmersdelight",
+            "hex_class_blade", "slashblade",
+            "hex_class_arcanist", "irons_spellbooks",
+            "hex_class_slayer", "cataclysm",
+            "hex_class_shaman", "goety",
+            "hex_class_curator", "artifacts",
+            "hex_class_relic", "relics"
+    );
+
     /** 定义在当前环境是否可用（来源启用判定；contentType: hex / equip）。
      *  v0.9.3 修正6：外接包内容（海克斯/装备/世界海克斯）的启停由所属 DLC 包决定（关闭包 → 不参与抽取），
      *  内置 DLC（dlc_niyuan/dlc_aram）与非包内容仍走 source 开关判定。 */
@@ -394,6 +406,8 @@ public class HextechRegistry {
         if (def == null) return false;
         Boolean packEn = com.hexcraft.dlc.DlcManager.packEnabledOf(def.id);
         if (packEn != null) return packEn;
+        String req = CLASS_REQUIRE_MOD.get(def.id);
+        if (req != null && !net.minecraftforge.fml.ModList.get().isLoaded(req)) return false;
         return isSourceEnabled(def.source, contentType);
     }
 

@@ -2739,5 +2739,19 @@
   "hexcraft.hextech.hex_breed_lord.name": "Pasture Lord",
   "hexcraft.hextech.hex_breed_lord.desc": "Newborn animals grow up twice as fast, reaching adulthood and productivity sooner.",
   "hexcraft.hextech.hex_enchant_sage.name": "Enchant Sage",
-  "hexcraft.hextech.hex_enchant_sage.desc": "Enchanting table offers +1 enchant level per level, turning the same lapis and XP into a higher tier of enchantments."
+  "hexcraft.hextech.hex_enchant_sage.desc": "Enchanting table offers +1 enchant level per level, turning the same lapis and XP into a higher tier of enchantments.",
+  "hexcraft.hextech.hex_class_cook.name": "Farmstead Cook",
+  "hexcraft.hextech.hex_class_cook.desc": "Eating restores extra health, kills have a chance to drop Farmer's Delight food, and kills restore extra hunger.",
+  "hexcraft.hextech.hex_class_blade.name": "Blade Master",
+  "hexcraft.hextech.hex_class_blade.desc": "Increased damage and burst damage while holding a SlashBlade, with extra drops from SlashBlade kills.",
+  "hexcraft.hextech.hex_class_arcanist.name": "Arcanist",
+  "hexcraft.hextech.hex_class_arcanist.desc": "Adds spell double-cast chance, spell crit chance, and spell cooldown reduction.",
+  "hexcraft.hextech.hex_class_slayer.name": "Cataclysm Slayer",
+  "hexcraft.hextech.hex_class_slayer.desc": "Extra damage against L_Ender's Cataclysm mobs, reduced damage taken from them, and increased drops.",
+  "hexcraft.hextech.hex_class_shaman.name": "Goety Shaman",
+  "hexcraft.hextech.hex_class_shaman.desc": "Extra damage against Goety mobs, higher soul yield, and increased drops.",
+  "hexcraft.hextech.hex_class_curator.name": "Curio Curator",
+  "hexcraft.hextech.hex_class_curator.desc": "More rage damage and lifesteal while wearing Artifacts, with increased artifact drops.",
+  "hexcraft.hextech.hex_class_relic.name": "Relic Keeper",
+  "hexcraft.hextech.hex_class_relic.desc": "Stronger relic offense and protection, with increased relic drops."
 }

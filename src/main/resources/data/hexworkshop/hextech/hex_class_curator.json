@@ -1,0 +1,8 @@
+{
+  "rarity": "SILVER",
+  "weight": 14,
+  "event": "artifact_rage:0.25,artifact_vamp:3,artifact_drop:0.15",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

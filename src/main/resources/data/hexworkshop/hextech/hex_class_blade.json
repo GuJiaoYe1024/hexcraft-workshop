@@ -1,0 +1,8 @@
+{
+  "rarity": "PRISMATIC",
+  "weight": 5,
+  "event": "blade_damage:0.2,blade_burst:0.5,blade_drop:0.15",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}

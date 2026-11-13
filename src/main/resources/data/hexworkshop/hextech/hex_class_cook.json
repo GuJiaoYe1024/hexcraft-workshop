@@ -1,0 +1,8 @@
+{
+  "rarity": "GOLD",
+  "weight": 10,
+  "event": "farmer_chef:2,farmer_drop:0.15,food_on_kill:2",
+  "source": "dlc_class",
+  "category": "profession",
+  "theme": ""
+}
