@@ -267,7 +267,7 @@ public final class ClassMechanics {
                 try {
                     AABB box = sp.getBoundingBox().inflate(5.0);
                     List<LivingEntity> list = sp.level().getEntitiesOfClass(LivingEntity.class, box,
-                            e -> e != sp && e.isAlive());
+                            e -> e != sp && e.isAlive() && !(e instanceof Player));
                     for (LivingEntity e : list) {
                         e.hurt(sp.damageSources().indirectMagic(sp, sp), 5.0f);
                     }
