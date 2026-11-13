@@ -13,6 +13,11 @@
 - **数值不生效的两处消费代码**：`TrimEvents` 抗性按值给等级（1=抗性 I、2=抗性 II，此前 1 与 0.1 效果完全相同），`FurnaceEvents` 小数视为概率、整数部分为份数（此前 0.5 与 1 都是 100% 一份）
 - **描述与数据不符**：`hex_niyuan_bilei_1` / `_6` 删掉从未存在过的「护甲 +2/级、击退抗性 +30%/级」，按实际 `shield_low` 改写
 
+**🔧 收尾两项 + 属性型倒挂**
+- `hex_bow_noslow` 不再硬编码 id：`ClientBowEvents` 改按 event token `bow_noslow` 判定（走 `ClientDataStore.hexDef`，联机同步缓存也能命中），id 相等只作定义缺失时的兜底
+- `HextechRegistry` 7 条内置兜底注册与同名 JSON 对齐：`hex_swiftblade` / `hex_tracker` 由 GOLD 改 SILVER、`hex_titan` / `hex_legend` 由 PRISMATIC 改 GOLD、`hex_frenzy` 攻速 0.8→0.28 且权重 10→8、`hex_legend` 攻速 0.15→0.105（数据包存在时本就覆盖这些值，此前是误导性死值，注释也同步修正）
+- 属性型海克斯（只靠 `mods` 注入属性、event 为空）13 件复核后确认是正常设计，不是空壳；但同属性跨稀有度比对发现 3 项倒挂并修正：`hex_frenzy` 攻速 0.28→0.16（白银原高于黄金 `hex_blade_of_glory` 的 0.175）、`hex_swift_feet` 移速 0.0168→0.0098（白银原高于黄金 `hex_niyuan_youji_1` 的 0.0112）、`hex_tacz_gen_056` 移速 0.0067→0.014（棱彩原低于黄金），复跑 0 项
+
 **顺带修正的文案错误**
 - `hex_dragon_dance` 把 `mobi_power` 机动增伤写成「移速 +14%」，改正为「机动增伤 +14%」
 - `hex_hurt_speed_boost` / `hex_kill_speed_perm` 描述写「移速 +0.2% / +0.3%/级」，实际 JSON 是 0.14% / 0.21%，按下调后真实值改为 +0.11% / +0.17%

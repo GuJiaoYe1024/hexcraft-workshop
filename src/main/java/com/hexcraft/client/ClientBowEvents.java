@@ -30,9 +30,11 @@ public class ClientBowEvents {
         input.forwardImpulse /= 0.2F;
     }
 
-    /** 检查本地玩家是否持有拉弓不减速海克斯（读客户端同步缓存，不写死逻辑到别处） */
+    /** 检查本地玩家是否持有拉弓不减速海克斯：按 event token 判定，不再写死 id（定义缺失时回退 id） */
     private static boolean hasBowNoSlow() {
         for (PlayerData.HexEntry entry : ClientDataStore.hexes) {
+            com.hexcraft.hextech.HextechDefinition def = ClientDataStore.hexDef(entry.id);
+            if (def != null && def.event != null && def.event.contains("bow_noslow")) return true;
             if ("hex_bow_noslow".equals(entry.id)) return true;
         }
         return false;

@@ -149,18 +149,18 @@ public class HextechRegistry {
     }
 
     static {
-        // ---- 白银（内置兜底，其余由数据包定义；数据包优先覆盖）----
-        register("hex_frenzy", HextechRarity.SILVER, 10, List.of(mod(Attributes.ATTACK_SPEED, 0.8), mod(Attributes.MOVEMENT_SPEED, 0.0112)), null);
+        // ---- 兜底注册（同名 JSON 存在时由数据包覆盖；此处数值与 data/hexworkshop/hextech/*.json 保持一致）----
+        register("hex_frenzy", HextechRarity.SILVER, 8, List.of(mod(Attributes.ATTACK_SPEED, 0.28), mod(Attributes.MOVEMENT_SPEED, 0.0112)), null);
 
         // ---- 黄金（内置兜底）----
-        register("hex_swiftblade", HextechRarity.GOLD, 8, List.of(mod(Attributes.ATTACK_SPEED, 0.25), mod(Attributes.ATTACK_DAMAGE, 0.6)), null);
-        register("hex_tracker", HextechRarity.GOLD, 8, List.of(mod(Attributes.MOVEMENT_SPEED, 0.0084), mod(Attributes.ATTACK_DAMAGE, 0.6)), null);
+        register("hex_swiftblade", HextechRarity.SILVER, 8, List.of(mod(Attributes.ATTACK_SPEED, 0.175), mod(Attributes.ATTACK_DAMAGE, 0.6)), null);
+        register("hex_tracker", HextechRarity.SILVER, 8, List.of(mod(Attributes.MOVEMENT_SPEED, 0.0084), mod(Attributes.ATTACK_DAMAGE, 0.6)), null);
 
-        // ---- 棱彩（6）----
-        register("hex_titan", HextechRarity.PRISMATIC, 6, List.of(mod(Attributes.ATTACK_DAMAGE, 2.5), mod(Attributes.MAX_HEALTH, 6.0)), null);
-        register("hex_legend", HextechRarity.PRISMATIC, 5, List.of(
+        // ---- 黄金 / 棱彩（内置兜底）----
+        register("hex_titan", HextechRarity.GOLD, 6, List.of(mod(Attributes.ATTACK_DAMAGE, 2.5), mod(Attributes.MAX_HEALTH, 6.0)), null);
+        register("hex_legend", HextechRarity.GOLD, 5, List.of(
                 mod(Attributes.ATTACK_DAMAGE, 1.0), mod(Attributes.ARMOR, 2.0), mod(Attributes.MAX_HEALTH, 4.0),
-                mod(Attributes.MOVEMENT_SPEED, 0.0045), mod(Attributes.ATTACK_SPEED, 0.15)), null);
+                mod(Attributes.MOVEMENT_SPEED, 0.0045), mod(Attributes.ATTACK_SPEED, 0.105)), null);
         register("hex_warden", HextechRarity.PRISMATIC, 5, List.of(
                 mod(Attributes.ARMOR, 8.0), mod(Attributes.KNOCKBACK_RESISTANCE, 0.2), mod(Attributes.MAX_HEALTH, 8.0)), null);
 
