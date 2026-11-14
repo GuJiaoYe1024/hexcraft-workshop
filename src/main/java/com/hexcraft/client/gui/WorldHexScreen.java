@@ -264,10 +264,12 @@ public class WorldHexScreen extends HexScaledScreen {
                 int color = rarityColor(d.rarity);
                 Component name = Component.translatable("hexcraft.worldhex." + d.id + ".name");
                 String nstr = name.getString();
-                if (HexFonts.ui().width(nstr) > nameW()) {
-                    nstr = HexFonts.ui().plainSubstrByWidth(nstr, nameW()) + "…";
+                if (HexFonts.ui().width(nstr) > nameW() - 10) {
+                    nstr = HexFonts.ui().plainSubstrByWidth(nstr, nameW() - 10) + "…";
                 }
-                g.drawString(HexFonts.ui(), nstr, x, y + 3, color, false);
+                // v0.9.27 P3：行首档位徽标（单条 / 方框 / 双框），不依赖颜色也能分辨稀有度
+                RollScreen.CardButton.drawRarityGlyph(g, x, y + 4, color, 255, d.rarity);
+                g.drawString(HexFonts.ui(), nstr, x + 10, y + 3, color, false);
                 // hover 提示：名字 + 稀有度类型 + 描述（只记录，延迟到浮层绘制，避免被后续区块/按钮覆盖）
                 if (mx >= x - 2 && mx <= x + itemW() && my >= y - 1 && my <= y + rowH() - 1) {
                     List<Component> tip = new ArrayList<>();

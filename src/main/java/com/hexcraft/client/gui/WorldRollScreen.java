@@ -71,7 +71,8 @@ public class WorldRollScreen extends HexScaledScreen {
             WorldHexDefinition def = WorldHexRegistry.get(msg.options.get(idx));
             String label = def == null ? "" : Component.translatable("hexcraft.worldhex.category." + def.category).getString();
             int color = def == null ? 0xFFD0D8E8 : rarityColor(def.rarity);
-            cards[idx] = new CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> onCardClick(idx));
+            cards[idx] = new CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label,
+                    def == null ? null : def.rarity, b -> onCardClick(idx));
             this.addRenderableWidget(cards[idx]);
         }
         cancelBtn = new WBtn(centerX - 53, cardY + CARD_H + 18, 106, 22,
@@ -240,12 +241,15 @@ public class WorldRollScreen extends HexScaledScreen {
     static class CardButton extends Button {
         private final int color;
         private final String label;
+        /** v0.9.27 P3：稀有度几何编码用的标识键；null 时不画徽标 */
+        private final String rarityKey;
         boolean selected;
 
-        CardButton(int x, int y, int w, int h, int color, String label, OnPress onPress) {
+        CardButton(int x, int y, int w, int h, int color, String label, String rarityKey, OnPress onPress) {
             super(x, y, w, h, Component.empty(), onPress, DEFAULT_NARRATION);
             this.color = color;
             this.label = label;
+            this.rarityKey = rarityKey;
         }
 
         @Override
@@ -255,6 +259,8 @@ public class WorldRollScreen extends HexScaledScreen {
             g.fill(getX() - 1, getY() - 1, getX() + width + 1, getY() + height + 1, 0xFF << 24 | (border & 0x00FFFFFF));
             g.fillGradient(getX(), getY(), getX() + width, getY() + height, 0xF02C2E58, 0xF00D1220);
             g.fill(getX(), getY(), getX() + width, getY() + 16, 0xFF << 24 | (color & 0x00FFFFFF));
+            // v0.9.27 P3：缎带右端的档位徽标（单条 / 方框 / 双框），不依赖颜色也能分档
+            RollScreen.CardButton.drawRarityGlyph(g, getX() + width - 17, getY() + 4, border, 255, rarityKey);
             HexFonts.centered(g, label, getX() + width / 2, getY() + 4, 0xFF101018, false);
             HexFonts.centered(g, "◆", getX() + width / 2, getY() + 22,
                     0xFF << 24 | (color & 0x00FFFFFF), false);

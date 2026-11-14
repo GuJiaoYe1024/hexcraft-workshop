@@ -1,3 +1,44 @@
+## v0.9.28 — 稀有度加形状、埋点三条命令、第一组 GameTest（2026-11-14）
+
+**① 稀有度从「颜色编码」升级为「颜色 + 文字 + 形状」**
+- 原状：五个界面的稀有度只靠缎带颜色区分，色盲玩家在明度接近的档位之间分辨困难
+- 新增 `RollScreen.drawRarityGlyph`：最低档画 6×2 单横条、中档画 6×6 空心方框、最高档画 8×8 双框 + 中心 2×2 点，纯几何无字体依赖
+- 落点 6 处：`RollScreen` 卡片缎带右端、`EquipRollScreen`（复用 `RollScreen.CardButton`）、`WorldRollScreen` 自有卡片、`HextechPageScreen` 持有海克斯行 / 装备持有行 / 装备图鉴行、`WorldHexScreen` 条目
+- 列表类界面行首加徽标后名称统一右移 10px，截断宽度同步减 10，长名不会被挤掉
+- 未改动 `HextechPageScreen` 的 tooltip 稀有度行——纯文本浮层画不了图形，且它本来就写着「白银/黄金/棱彩」三个字
+
+**② 选取率埋点 `/hexworkshop pickstats`**
+- 新增 `HexPickStats`：纯内存 `HashMap`，按 `hex` / `forge` / `equip` / `world` 四类分别记「被抽到」与「被选中」，另有轮次、弃选、刷新三个计数
+- 埋点 7 处全在 `Packets`：海克斯抽取、海克斯刷新、锻造购买、随机锻造、装备购买、世界海克斯抽取、选卡确认
+- 命令输出总览 + 四类最冷门 8 条；`/hexworkshop pickstats reset` 清零
+- 不写盘、不进存档、不上传，重启即归零
+
+**③ tick 开销测量 `/hexworkshop tickstats`**
+- 新增 `TickProfiler` + `TickProfilerEvents`：在 `ServerTickEvent` 与 `PlayerTickEvent` 上各挂 HIGHEST / LOWEST 两个优先级，两端夹时间戳
+- 零侵入——不给 35 个事件类逐个加计时，测的是「这条事件上所有处理器的总耗时」
+- 输出 avg / max / 样本数；服务端 max > 50ms 或玩家端 max > 5ms 打 `[SPIKE]`
+- 已知局限：耗时无法归到某一类，只能回答「有没有尖峰」；真有尖峰再加细粒度埋点
+- 前提提醒：0.9.23 之前 32 个事件类全部注册失败、根本没执行，改实例注册后才真正开始跑，所以现在的开销基线从来没被测过
+
+**④ 第一组 GameTest（`gradlew runGameTestServer`）**
+- 新增 `com.hexcraft.gametest.HexGameTests`，10 个测试全绿
+- 存储顺序 4 个：优先级乱序重排 / 全部相同时保持默认先后 / 默认 1-2-3-4 不变 / 背包设 0 后排第一
+- 叠层上限 4 个：空配装 200 / 叠层之源 2 件 400 / 6 件 800 / 全员 10 件无上限
+- 护盾钳制 2 个：护盾上限等于最大生命 / 最大生命抬到 40 后上限跟着变
+- 模板 `platform.snbt` 放在 `src/main/resources/gameteststructures/`，`copyGameTestStructures` 任务在跑测试前复制到 `run/`；`jar` 里排除该目录，不污染产物
+- 首次运行当场抓到一个写错的断言（`order([3,1,2,0])` 的期望值算反了），确认这套框架真会拦错
+
+**⑤ 两处只为可测性的重构（行为不变）**
+- `StorageLink` 内联排序抽成 `public static int[] order(int[])`，采样与生产走同一份代码
+- `HextechEvents` 护盾钳制原本在五处各写一遍（溢出转盾 / 应急护盾 / 永久护盾 / 属性重算 / 登录清理越界值），抽成 `public static float shieldCap(LivingEntity)`；开关关闭时返回 `Float.MAX_VALUE`，与原先「不钳制」等价
+
+**⑥ 文档**
+- 新增 `41-术语表.md`（知识库第 41 份）：11 章、四列表格，覆盖稀有度、叠层体系、经济抽取、界面、配置、数值口径、易混词对照
+- 第八节标明两个数并存：774 是 JSON 文件数，749 是不含 `dlc_class` 25 个职业包的口径，引用必须写清
+- 第九节列八组易混词：`mods` vs `source`、单件上限 vs 全局档位、叠层之源 vs 叠层专家、等级 vs 层数、叠层速度 vs 叠层几率、词条 vs 海克斯、增幅 vs 海克斯、羁绊 vs 组合
+
+文档影响：29-无障碍设计、37-内容审计与定期复核、13-性能与预算、20-测试与验证流程、41-术语表（新增）
+
 ## v0.9.27 — 按规范反查的一轮修复（2026-11-14）
 
 **① 装备抽取界面 silver 稀有度被染成金色**

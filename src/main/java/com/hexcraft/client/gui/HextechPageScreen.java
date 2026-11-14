@@ -1256,12 +1256,14 @@ public class HextechPageScreen extends HexScaledScreen {
                 }
                 name = name.copy().append(st.toString());
             }
-            g.drawString(HexFonts.ui(), name, cx() + 6, ly, rarityColor(rk), false);
+            // v0.9.27 P3：行首档位徽标（单条 / 方框 / 双框），不依赖颜色也能分辨稀有度
+            RollScreen.CardButton.drawRarityGlyph(g, cx() + 6, ly + 2, rarityColor(rk), 255, rk);
+            g.drawString(HexFonts.ui(), name, cx() + 16, ly, rarityColor(rk), false);
             // 来源角标：联动 mod 内容（原版不标）——TACZ 青色 / 其它联动金色，一眼区分内容来源
             // v0.8.4：角标动态定位（名字后 4px），超右缘则不显示——第二批联动 modid 较长（CATACLYSM/FARMERSDELIGHT 等）固定 x 会溢出
             String src = HextechRegistry.sourceOf(h.id);
             if (!"vanilla".equals(src)) {
-                int tagX = cx() + 6 + HexFonts.ui().width(name) + 4;
+                int tagX = cx() + 16 + HexFonts.ui().width(name) + 4;
                 Component tag = HextechRegistry.sourceDisplayName(src);
                 if (tagX + HexFonts.ui().width(tag) <= cx() + 226) {
                     g.drawString(HexFonts.ui(), tag, tagX, ly,
@@ -1613,11 +1615,13 @@ public class HextechPageScreen extends HexScaledScreen {
                 String rk = def != null ? def.rarity.key : "gold";
                 String icon = def != null && def.icon != null ? def.icon : "◆";
                 String nm = Component.translatable("hexcraft.equip." + eq.id + ".name").getString();
-                g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 6, ly, rarityColor(rk), false);
+                // v0.9.27 P3：行首档位徽标（单条 / 方框 / 双框），不依赖颜色也能分辨稀有度
+                RollScreen.CardButton.drawRarityGlyph(g, cx() + 6, ly + 2, rarityColor(rk), 255, rk);
+                g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 16, ly, rarityColor(rk), false);
                 // 来源角标：联动装备行尾角标（原版不标）；v0.8.4 动态定位防长 modid 溢出
                 String src = HextechRegistry.sourceOf(eq.id);
                 if (!"vanilla".equals(src)) {
-                    int tagX = cx() + 6 + HexFonts.ui().width(icon + " " + nm) + 4;
+                    int tagX = cx() + 16 + HexFonts.ui().width(icon + " " + nm) + 4;
                     Component tag = HextechRegistry.sourceDisplayName(src);
                     if (tagX + HexFonts.ui().width(tag) <= cx() + 228) {
                         g.drawString(HexFonts.ui(), tag, tagX, ly, 0xFF4DE6FF, false);
@@ -1676,7 +1680,9 @@ public class HextechPageScreen extends HexScaledScreen {
             String icon = def != null && def.icon != null ? def.icon : "◆";
             String nm = Component.translatable("hexcraft.equip." + id + ".name").getString();
             g.fill(cx() + 3, ly - 1, cx() + 228, ly + 11, 0x18305080);
-            g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 6, ly, rarityColor(rk), false);
+            // v0.9.27 P3：行首档位徽标（单条 / 方框 / 双框），不依赖颜色也能分辨稀有度
+            RollScreen.CardButton.drawRarityGlyph(g, cx() + 6, ly + 2, rarityColor(rk), 255, rk);
+            g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 16, ly, rarityColor(rk), false);
             // 已拥有 Lv 标识
             PlayerData.EquipEntry owned = ownedEquip(id);
             if (owned != null) {

@@ -499,6 +499,14 @@ public class HextechEvents {
     /** v0.9.7 v2-C：个人叠层生效上限（服务端权威，客户端属性页显示同源）。
      *  v0.9.24：上限解锁由「叠层之源」负责（不再借用叠层专家的件数），档位与叠层专家同构：
      *  基础 200；叠层之源档1（2件）=400 / 档2（4件）=600 / 档3（6件）=800 / 档4（8件）=1000 / 档5 满员=∞ */
+    /** v0.9.27 护盾（吸收）上限：`SHIELD_CAP` 开时不超过最大生命，关时用 Float.MAX_VALUE 只防 Infinity 溢出。
+     *  原先这段判据在四处各写一遍（溢出转化 / 应急护盾 / 永久护盾 / 属性重算），
+     *  抽成一个函数既去掉重复，也让 GameTest 能直接验证「护盾不超过最大生命」这条。 */
+    public static float shieldCap(net.minecraft.world.entity.LivingEntity e) {
+        if (e == null) return 0f;
+        return com.hexcraft.config.HexConfig.SHIELD_CAP.get() ? e.getMaxHealth() : Float.MAX_VALUE;
+    }
+
     public static int stackCapFor(PlayerData data) {
         if (data == null) return 200;
         int tier = stackSourceTierOf(data);
@@ -2099,7 +2107,7 @@ public class HextechEvents {
             float curAbs = sp.getAbsorptionAmount();
             if (!Float.isFinite(curAbs)) curAbs = 0f;
             // v0.9.25 上限可配置：开启时不超过最大生命；关闭时用 Float.MAX_VALUE 兜底，仅防 Infinity 溢出
-            float cap = com.hexcraft.config.HexConfig.SHIELD_CAP.get() ? sp.getMaxHealth() : Float.MAX_VALUE;
+            float cap = shieldCap(sp);
             sp.setAbsorptionAmount(Math.min(cap, curAbs + excess * (float) overflowRatio));
         }
     }
@@ -2226,7 +2234,7 @@ public class HextechEvents {
         double lowShield = effect(data, "shield_low");
         if (lowShield > 0 && sp.getHealth() / Math.max(1f, sp.getMaxHealth()) < 0.35f) {
             // v0.9.25 上限可配置：开启时护盾不超过最大生命
-            float cap = com.hexcraft.config.HexConfig.SHIELD_CAP.get() ? sp.getMaxHealth() : Float.MAX_VALUE;
+            float cap = shieldCap(sp);
             float target = (float) Math.min(cap, lowShield);
             if (sp.getAbsorptionAmount() < target) sp.setAbsorptionAmount(target);
         }
@@ -2746,7 +2754,7 @@ public class HextechEvents {
                 }
                 if (per > 0) {
                     // v0.9.25 上限可配置：开启时护盾不超过最大生命
-                    float cap = com.hexcraft.config.HexConfig.SHIELD_CAP.get() ? sp.getMaxHealth() : Float.MAX_VALUE;
+                    float cap = shieldCap(sp);
                     float target = (float) Math.min(cap, liveSh * per);
                     if (sp.getAbsorptionAmount() < target) sp.setAbsorptionAmount(target);
                 }
@@ -2807,8 +2815,9 @@ public class HextechEvents {
             float abs = sp.getAbsorptionAmount();
             if (!Float.isFinite(abs)) {
                 sp.setAbsorptionAmount(0f);
-            } else if (com.hexcraft.config.HexConfig.SHIELD_CAP.get() && abs > sp.getMaxHealth()) {
-                sp.setAbsorptionAmount(sp.getMaxHealth());
+            } else {
+                float cap = shieldCap(sp);
+                if (abs > cap) sp.setAbsorptionAmount(cap);
             }
             sync(sp);
             // v0.6.4 登录同步全量 Registry 定义（联机客户端 HextechRegistry 无数据包加载，海克斯页/属性页依赖此缓存）

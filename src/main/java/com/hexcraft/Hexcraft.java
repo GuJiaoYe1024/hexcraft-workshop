@@ -46,6 +46,8 @@ public class Hexcraft {
         MinecraftForge.EVENT_BUS.register(ModCapabilities.class);
         MinecraftForge.EVENT_BUS.register(new com.hexcraft.event.ServerLifecycleEvents());
         MinecraftForge.EVENT_BUS.register(HextechEvents.class);
+        // v0.9.27 P3：tick 开销测量的两端夹取（不改任何现有事件类的代码）
+        MinecraftForge.EVENT_BUS.register(com.hexcraft.event.TickProfilerEvents.class);
         MinecraftForge.EVENT_BUS.register(com.hexcraft.event.WorldHexEvents.class);
         MinecraftForge.EVENT_BUS.register(new com.hexcraft.event.BowEvents());
         MinecraftForge.EVENT_BUS.register(new com.hexcraft.event.ShieldEvents());

@@ -52,6 +52,41 @@ public class HexCommand {
                                     ctx.getSource().sendSuccess(() -> Component.translatable("message.hexcraft.coins_add", p.getName(), IntegerArgumentType.getInteger(ctx, "amount")), true);
                                     return 1;
                                 })))))
+                .then(Commands.literal("tickstats")
+                        // v0.9.27 P3：tick 开销查询（只读内存计数，/hexworkshop tickstats reset 清零）
+                        .executes(ctx -> {
+                            String s = com.hexcraft.util.TickProfiler.summary();
+                            boolean spike = com.hexcraft.util.TickProfiler.serverSpiked(50.0)
+                                    || com.hexcraft.util.TickProfiler.playerSpiked(5.0);
+                            ctx.getSource().sendSuccess(() -> Component.literal(
+                                    "Hexcraft tickstats  " + s + (spike ? "  [SPIKE]" : "  [OK]")), false);
+                            return 1;
+                        })
+                        .then(Commands.literal("reset").executes(ctx -> {
+                            com.hexcraft.util.TickProfiler.reset();
+                            ctx.getSource().sendSuccess(() -> Component.literal("Hexcraft: tickstats reset"), true);
+                            return 1;
+                        })))
+                .then(Commands.literal("pickstats")
+                        // v0.9.27 P3：选取率埋点查询（仅内存计数，重启清零）
+                        .executes(ctx -> {
+                            ctx.getSource().sendSuccess(() -> Component.literal(
+                                    "Hexcraft pickstats  " + com.hexcraft.hextech.HexPickStats.summary()), false);
+                            for (String k : new String[]{"hex", "forge", "equip", "world"}) {
+                                int n = com.hexcraft.hextech.HexPickStats.distinct(k);
+                                ctx.getSource().sendSuccess(() -> Component.literal(
+                                        "[" + k + "] distinct=" + n + "  coldest:"), false);
+                                for (String line : com.hexcraft.hextech.HexPickStats.coldest(k, 0, 8)) {
+                                    ctx.getSource().sendSuccess(() -> Component.literal("  " + line), false);
+                                }
+                            }
+                            return 1;
+                        })
+                        .then(Commands.literal("reset").executes(ctx -> {
+                            com.hexcraft.hextech.HexPickStats.reset();
+                            ctx.getSource().sendSuccess(() -> Component.literal("Hexcraft: pickstats reset"), true);
+                            return 1;
+                        })))
                 .then(Commands.literal("view").then(Commands.argument("player", EntityArgument.player()).executes(ctx -> {
                     ServerPlayer p = EntityArgument.getPlayer(ctx, "player");
                     PlayerData data = ModCapabilities.get(p);

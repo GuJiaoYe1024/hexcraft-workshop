@@ -41,6 +41,18 @@ minecraft {
                 }
             }
         }
+        gameTestServer {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            property 'forge.enabledGameTestNamespaces', 'hexworkshop'
+            property 'forge.gameTestServer', 'true'
+            mods {
+                hexworkshop {
+                    source sourceSets.main
+                }
+            }
+        }
         data {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
@@ -83,6 +95,9 @@ dependencies {
 }
 
 jar {
+    // gameteststructures 只在开发环境跑 GameTest 用（StructureUtils 读文件系统路径，不读 jar 内资源），
+    // 打进产物没有任何运行时作用，排除掉保持 jar 干净。
+    exclude 'gameteststructures/**'
     manifest {
         attributes([
             "Specification-Title"     : "hexworkshop",
@@ -100,4 +115,16 @@ jar.finalizedBy('reobfJar')
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+// GameTest 的结构模板必须放在 run/gameteststructures 下（Forge 的 StructureUtils 从文件系统读，
+// 不认 jar 里的资源，也不认数据包里的 .snbt）。模板本身放在 src/main/resources 里跟代码一起受
+// 版本控制，跑测试前由这个任务复制到 run/，这样别人 clone 后不用手动准备文件。
+tasks.register('copyGameTestStructures', Copy) {
+    from layout.projectDirectory.dir('src/main/resources/gameteststructures')
+    into layout.projectDirectory.dir('run/gameteststructures')
+}
+
+tasks.matching { it.name == 'runGameTestServer' }.configureEach {
+    dependsOn 'copyGameTestStructures'
 }

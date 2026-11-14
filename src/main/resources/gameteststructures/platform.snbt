@@ -1,0 +1,5 @@
+{DataVersion:3465,size:[3,3,3],palette:[{Name:"minecraft:air"},{Name:"minecraft:stone"}],blocks:[
+{pos:[0,0,0],state:1},{pos:[1,0,0],state:1},{pos:[2,0,0],state:1},
+{pos:[0,0,1],state:1},{pos:[1,0,1],state:1},{pos:[2,0,1],state:1},
+{pos:[0,0,2],state:1},{pos:[1,0,2],state:1},{pos:[2,0,2],state:1}
+]}

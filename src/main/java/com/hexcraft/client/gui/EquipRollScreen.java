@@ -48,7 +48,7 @@ public class EquipRollScreen extends HexScaledScreen {
             final int idx = i;
             int color = rarityColor(msg.rarities.get(idx));
             String label = Component.translatable("hexcraft.rarity." + msg.rarities.get(idx)).getString();
-            cards[idx] = new RollScreen.CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> onCardClick(idx));
+            cards[idx] = new RollScreen.CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, msg.rarities.get(idx), b -> onCardClick(idx));
             this.addRenderableWidget(cards[idx]);
         }
         int btnY = cardY + CARD_H + 18;

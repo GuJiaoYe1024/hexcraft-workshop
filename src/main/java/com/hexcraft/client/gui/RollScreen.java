@@ -51,7 +51,8 @@ public class RollScreen extends HexScaledScreen {
             String label = msg.forge
                     ? Component.translatable("hexcraft.forge.tier." + (msg.tier == 0 ? "basic" : msg.tier == 1 ? "gold" : "prismatic")).getString()
                     : Component.translatable("hexcraft.rarity." + msg.rarities.get(idx)).getString();
-            cards[idx] = new CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, b -> onCardClick(idx));
+            String rarityKey = msg.forge ? (msg.tier == 0 ? "basic" : msg.tier == 1 ? "gold" : "prismatic") : msg.rarities.get(idx);
+            cards[idx] = new CardButton(cardX[i], cardY, CARD_W, CARD_H, color, label, rarityKey, b -> onCardClick(idx));
             // v0.9.7 修复轮：渲染内容 init 时固化（名称/描述/已拥有/叠层后缀），动画期间每帧零翻译零查询
             String id = msg.options.get(idx);
             net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
@@ -321,6 +322,8 @@ public class RollScreen extends HexScaledScreen {
     static class CardButton extends Button {
         private final int color;
         private final String label;
+        /** v0.9.27 P3：稀有度几何编码用的标识键（silver/basic・gold・prismatic）；null 时不画徽标 */
+        private final String rarityKey;
         boolean selected;
         float alpha = 1f;
         int dy;
@@ -334,10 +337,34 @@ public class RollScreen extends HexScaledScreen {
         int ownedLevel = -1;   // -1=未拥有
         String tagSuffix;      // 可为 null
 
-        CardButton(int x, int y, int w, int h, int color, String label, OnPress onPress) {
+        CardButton(int x, int y, int w, int h, int color, String label, String rarityKey, OnPress onPress) {
             super(x, y, w, h, Component.empty(), onPress, DEFAULT_NARRATION);
             this.color = color;
             this.label = label;
+            this.rarityKey = rarityKey;
+        }
+
+        /** v0.9.27 P3：稀有度几何编码——用形状区分档位，色盲玩家不靠颜色也能辨认。
+         *  最低档（silver / basic）= 单条；中档（gold）= 空心方框；最高档（prismatic）= 双框 + 中心点。 */
+        static void drawRarityGlyph(GuiGraphics g, int x, int y, int col, int a, String key) {
+            if (key == null) return;
+            int c = (a << 24) | (col & 0x00FFFFFF);
+            boolean mid = key.equals("gold");
+            boolean high = key.equals("prismatic");
+            if (high) {
+                g.fill(x, y + 1, x + 8, y + 2, c);
+                g.fill(x, y + 7, x + 8, y + 8, c);
+                g.fill(x, y + 1, x + 1, y + 8, c);
+                g.fill(x + 7, y + 1, x + 8, y + 8, c);
+                g.fill(x + 3, y + 4, x + 5, y + 6, c);
+            } else if (mid) {
+                g.fill(x + 1, y + 2, x + 7, y + 3, c);
+                g.fill(x + 1, y + 6, x + 7, y + 7, c);
+                g.fill(x + 1, y + 2, x + 2, y + 7, c);
+                g.fill(x + 6, y + 2, x + 7, y + 7, c);
+            } else {
+                g.fill(x + 1, y + 4, x + 7, y + 5, c);
+            }
         }
 
         @Override
@@ -367,6 +394,8 @@ public class RollScreen extends HexScaledScreen {
             }
             // 稀有度缎带
             g.fill(x1, y1, x1 + w2, y1 + 16, (a << 24) | (color & 0x00FFFFFF));
+            // v0.9.27 P3：缎带右端的档位徽标（单条 / 方框 / 双框），不依赖颜色也能分档
+            drawRarityGlyph(g, x1 + w2 - 17, y1 + 4, border, a, rarityKey);
             HexFonts.centered(g,
                     label == null ? "" : label, cx, y1 + 4, (a << 24) | 0x00101018, false);
             // 图标（菱形晶核）

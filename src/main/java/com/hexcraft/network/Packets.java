@@ -112,6 +112,9 @@ public class Packets {
                 tickEnemyProgress(sp, data, true); // v0.9.18 难度提升：海克斯抽取进度 +1，满阈值自动获得敌方海克斯
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(false, 0);
                 offer.options.addAll(HextechRoller.rollHexOptions(data, m.filter));
+                // v0.9.27 P3：选取率埋点——三个候选项各记一次「被抽到」
+                for (String oid : offer.options) com.hexcraft.hextech.HexPickStats.offered("hex", oid);
+                com.hexcraft.hextech.HexPickStats.round(false, false);
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
             });
@@ -169,6 +172,8 @@ public class Packets {
                 // 放弃本轮：清理待选状态（玩家海克斯/锻造/装备 pendingRoll + 世界海克斯 worldDrawOptions）
                 // 费用不退（取消=放弃本轮，防止零成本无限预览白嫖刷新）
                 boolean hadRoll = data.getPendingRoll() != null || data.getWorldDrawOptions() != null;
+                // v0.9.27 P3：取消计入轮次统计（弃选率的分母之一）
+                if (hadRoll) com.hexcraft.hextech.HexPickStats.round(true, false);
                 data.setPendingRoll(null);
                 data.setWorldDrawOptions(null);
                 if (hadRoll) {
@@ -204,6 +209,10 @@ public class Packets {
                         : (offer.equip ? HextechRegistry.rollEquipOptions(
                                 offer.tier == 1 ? com.hexcraft.hextech.HextechRarity.PRISMATIC : com.hexcraft.hextech.HextechRarity.GOLD)
                                 : HextechRoller.rollHexOptions(data)));
+                // v0.9.27 P3：刷新出的新候选同样记「被抽到」，并计入刷新轮次
+                String kind = offer.forge ? "forge" : (offer.equip ? "equip" : "hex");
+                for (String oid : offer.options) com.hexcraft.hextech.HexPickStats.offered(kind, oid);
+                com.hexcraft.hextech.HexPickStats.round(false, true);
                 offer.rerolled = true;
                 sendOpenRoll(sp, offer);
             });
@@ -225,6 +234,10 @@ public class Packets {
                 PlayerData.RollOffer offer = data.getPendingRoll();
                 if (offer == null || m.index < 0 || m.index >= offer.options.size()) return;
                 String pick = offer.options.get(m.index);
+                // v0.9.27 P3：选中即计入选取率（锻造 / 装备 / 海克斯三类分开统计）
+                String pickKind = offer.forge ? "forge" : (offer.equip ? "equip" : "hex");
+                com.hexcraft.hextech.HexPickStats.picked(pickKind, pick);
+                com.hexcraft.hextech.HexPickStats.round(false, false);
                 // v0.6.0 校准：锻造 hp/hppct 前记录最大生命（回血差额用）
                 double oldMaxHp = -1;
                 if (offer.forge) {
@@ -338,6 +351,9 @@ public class Packets {
                 tickEnemyProgress(sp, data, false); // v0.9.18 难度提升：锻造进度 +1，满阈值自动获得敌方锻造器
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(true, m.tier);
                 offer.options.addAll(HextechRoller.rollForgeOptions(m.tier)); // v0.5.0 按档位分池
+                // v0.9.27 P3：锻造三选一候选记「被抽到」
+                for (String oid : offer.options) com.hexcraft.hextech.HexPickStats.offered("forge", oid);
+                com.hexcraft.hextech.HexPickStats.round(false, false);
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
                 // v0.6.12 界面自动更新：购买已扣晶币+锻造次数，立即同步客户端缓存（取消三选一时主界面余额/次数显示正确）
@@ -376,6 +392,9 @@ public class Packets {
                 tickEnemyProgress(sp, data, false); // v0.9.18 难度提升：锻造进度 +1，满阈值自动获得敌方锻造器
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(true, tier);
                 offer.options.addAll(HextechRoller.rollForgeOptions(tier)); // v0.5.0 按档位分池
+                // v0.9.27 P3：随机锻造三选一候选记「被抽到」
+                for (String oid : offer.options) com.hexcraft.hextech.HexPickStats.offered("forge", oid);
+                com.hexcraft.hextech.HexPickStats.round(false, false);
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
                 // v0.6.12 界面自动更新：随机锻造扣费后同步（同上）
@@ -512,6 +531,9 @@ public class Packets {
                 PlayerData.RollOffer offer = new PlayerData.RollOffer(false, true, prismatic ? 1 : 0);
                 offer.options.addAll(HextechRegistry.rollEquipOptions(
                         prismatic ? com.hexcraft.hextech.HextechRarity.PRISMATIC : com.hexcraft.hextech.HextechRarity.GOLD));
+                // v0.9.27 P3：装备三选一候选记「被抽到」
+                for (String oid : offer.options) com.hexcraft.hextech.HexPickStats.offered("equip", oid);
+                com.hexcraft.hextech.HexPickStats.round(false, false);
                 data.setPendingRoll(offer);
                 sendOpenRoll(sp, offer);
                 // v0.6.12 界面自动更新：购买装备三选一扣费后同步（同上）
@@ -1095,6 +1117,9 @@ public class Packets {
                 sp.giveExperiencePoints(-cost);
                 com.hexcraft.hextech.WorldHexData wh = com.hexcraft.hextech.WorldHexData.get(sl);
                 List<String> opts = com.hexcraft.hextech.WorldHexRegistry.rollOptions(wh.active);
+                // v0.9.27 P3：世界海克斯三项各记一次「被抽到」
+                for (String oid : opts) com.hexcraft.hextech.HexPickStats.offered("world", oid);
+                com.hexcraft.hextech.HexPickStats.round(false, false);
                 data.setWorldDrawOptions(opts);
                 sendWorldDrawOptions(sp, opts);
             });
@@ -1140,6 +1165,9 @@ public class Packets {
                 List<String> opts = data.getWorldDrawOptions();
                 if (opts == null || m.index < 0 || m.index >= opts.size()) return;
                 String pick = opts.get(m.index);
+                // v0.9.27 P3：世界海克斯选中计入选取率
+                com.hexcraft.hextech.HexPickStats.picked("world", pick);
+                com.hexcraft.hextech.HexPickStats.round(false, false);
                 com.hexcraft.hextech.WorldHexDefinition def = com.hexcraft.hextech.WorldHexRegistry.get(pick);
                 com.hexcraft.hextech.WorldHexData wh = com.hexcraft.hextech.WorldHexData.get(sl);
                 data.setWorldDrawOptions(null);

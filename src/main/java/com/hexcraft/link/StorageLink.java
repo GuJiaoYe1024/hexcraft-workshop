@@ -65,17 +65,7 @@ public final class StorageLink {
                 com.hexcraft.config.HexConfig.STORAGE_ORDER_RS.get(),
                 com.hexcraft.config.HexConfig.STORAGE_ORDER_BAG.get()
         };
-        // 稳定插入排序：同优先级保持 0/1/2/3 的默认先后
-        int[] order = {0, 1, 2, 3};
-        for (int i = 0; i < order.length; i++) {
-            for (int j = i + 1; j < order.length; j++) {
-                if (priority[order[j]] < priority[order[i]]) {
-                    int tmp = order[i];
-                    order[i] = order[j];
-                    order[j] = tmp;
-                }
-            }
-        }
+        int[] order = order(priority);
         for (int kind : order) {
             if (remain.isEmpty()) break;
             switch (kind) {
@@ -88,6 +78,23 @@ public final class StorageLink {
             }
         }
         return remain;
+    }
+
+    /** 由优先级算出尝试顺序（0=超越维度 1=精妙背包 2=精致存储 3=玩家背包）。
+     *  稳定选择排序：priority 小的先试；priority 相同时保持 0/1/2/3 的默认先后。
+     *  拆成独立方法只为了能被 GameTest 直接验证（行为与原先内联版本完全一致）。 */
+    public static int[] order(int[] priority) {
+        int[] order = {0, 1, 2, 3};
+        for (int i = 0; i < order.length; i++) {
+            for (int j = i + 1; j < order.length; j++) {
+                if (priority[order[j]] < priority[order[i]]) {
+                    int tmp = order[i];
+                    order[i] = order[j];
+                    order[j] = tmp;
+                }
+            }
+        }
+        return order;
     }
 
     // ================= 超越维度 =================
