@@ -137,7 +137,7 @@ public class EnemyHexScreen extends HexScaledScreen {
             int tx = x + col * 64;
             int ty = y + 14 + row * 12;
             g.drawString(HexFonts.ui(), name + " ×" + n, tx, ty, 0xFFD0D8E8, false);
-            tips.add(new Object[]{tx, ty, HexFonts.ui().width(name + " ×" + n), full + " · " + n + " 层"});
+            tips.add(new Object[]{tx, ty, HexFonts.ui().width(name + " ×" + n), full + " · " + Component.translatable("hexcraft.unit.layers_n", n).getString()});
             row++;
         }
     }

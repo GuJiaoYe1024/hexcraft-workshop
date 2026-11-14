@@ -38,28 +38,29 @@ public class FutureScreen extends HexScaledScreen {
         }
     }
 
-    /** 联动来源显示名（modid → 展示名）；不在表中的 modid 原样显示 */
+    /** 联动来源显示名（modid → lang 键）；不在表中的 modid 原样显示。
+     *  v0.9.26 审查 P2：改走 hexcraft.source.* 键，与 HextechRegistry.sourceDisplayName 用同一套名称，避免两处显示不一致。 */
     private static final Map<String, String> LINK_NAMES = new LinkedHashMap<>();
 
     static {
-        LINK_NAMES.put("tacz", "TACZ 永恒枪械工坊");
-        LINK_NAMES.put("irons_spellbooks", "Iron's Spells 法术");
-        LINK_NAMES.put("iceandfire", "冰与火之歌");
-        LINK_NAMES.put("alexscaves", "Alex's Caves");
-        LINK_NAMES.put("twilightforest", "暮色森林");
-        LINK_NAMES.put("alexsmobs", "Alex's Mobs");
-        LINK_NAMES.put("cataclysm", "Cataclysm 末地灾变");
-        LINK_NAMES.put("goety", "Goety 巫术");
-        LINK_NAMES.put("mowziesmobs", "Mowzie's Mobs");
-        LINK_NAMES.put("artifacts", "Artifacts 神器");
-        LINK_NAMES.put("relics", "Relics 遗物");
-        LINK_NAMES.put("slashblade", "SlashBlade 拔刀剑");
-        LINK_NAMES.put("farmersdelight", "农夫乐事");
-        LINK_NAMES.put("ftbquests", "FTB Quests");
-        LINK_NAMES.put("projecte", "ProjectE 等价交换");
-        LINK_NAMES.put("dimensionstorage", "超越维度");
-        LINK_NAMES.put("sophisticatedbackpacks", "精妙背包");
-        LINK_NAMES.put("refinedstorage", "精致存储");
+        LINK_NAMES.put("tacz", "hexcraft.source.tacz");
+        LINK_NAMES.put("irons_spellbooks", "hexcraft.source.irons_spellbooks");
+        LINK_NAMES.put("iceandfire", "hexcraft.source.iceandfire");
+        LINK_NAMES.put("alexscaves", "hexcraft.source.alexscaves");
+        LINK_NAMES.put("twilightforest", "hexcraft.source.twilightforest");
+        LINK_NAMES.put("alexsmobs", "hexcraft.source.alexsmobs");
+        LINK_NAMES.put("cataclysm", "hexcraft.source.cataclysm");
+        LINK_NAMES.put("goety", "hexcraft.source.goety");
+        LINK_NAMES.put("mowziesmobs", "hexcraft.source.mowziesmobs");
+        LINK_NAMES.put("artifacts", "hexcraft.source.artifacts");
+        LINK_NAMES.put("relics", "hexcraft.source.relics");
+        LINK_NAMES.put("slashblade", "hexcraft.source.slashblade");
+        LINK_NAMES.put("farmersdelight", "hexcraft.source.farmersdelight");
+        LINK_NAMES.put("ftbquests", "hexcraft.source.ftbquests");
+        LINK_NAMES.put("projecte", "hexcraft.source.projecte");
+        LINK_NAMES.put("dimensionstorage", "hexcraft.source.dimensionstorage");
+        LINK_NAMES.put("sophisticatedbackpacks", "hexcraft.source.sophisticatedbackpacks");
+        LINK_NAMES.put("refinedstorage", "hexcraft.source.refinedstorage");
     }
 
     private int scrollY;
@@ -117,17 +118,17 @@ public class FutureScreen extends HexScaledScreen {
         for (String src : LINK_NAMES.keySet()) {
             int h = hexBy.getOrDefault(src, 0);
             int e = eqBy.getOrDefault(src, 0);
-            String disp = LINK_NAMES.get(src);
+            String disp = Component.translatable(LINK_NAMES.get(src)).getString();
             if (h + e == 0) continue; // 未注册任何内容的来源不展示
             if (ModList.get().isLoaded(src)) {
-                installed.add(disp + "：海克斯 " + h + " / 装备 " + e);
+                installed.add(Component.translatable("hexcraft.future.count_both", disp, h, e).getString());
             } else {
                 // v0.8.5 未安装行也展示数量，方便了解注册内容（介绍写全）
-                String detail = "";
-                if (h > 0 && e > 0) detail = "：海克斯 " + h + " / 装备 " + e;
-                else if (h > 0) detail = "：海克斯 " + h;
-                else if (e > 0) detail = "：装备 " + e;
-                missing.add(disp + detail + "，未安装，内容自动隐藏");
+                String detail;
+                if (h > 0 && e > 0) detail = Component.translatable("hexcraft.future.count_both", disp, h, e).getString();
+                else if (h > 0) detail = Component.translatable("hexcraft.future.count_hex", disp, h).getString();
+                else detail = Component.translatable("hexcraft.future.count_equip", disp, e).getString();
+                missing.add(Component.translatable("hexcraft.future.not_installed", detail).getString());
             }
         }
 

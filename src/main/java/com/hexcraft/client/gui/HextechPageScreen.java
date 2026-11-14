@@ -581,10 +581,10 @@ public class HextechPageScreen extends HexScaledScreen {
                             // 本身没有 stack 块的锻造神子）不再出现「命中层 0 层，受击层 0 层」。
                             if (h.stacks > 0 || h.hurtStacks > 0) {
                                 StringBuilder sb = new StringBuilder();
-                                if (h.stacks > 0) sb.append("命中层 ").append(h.stacks).append(" 层");
+                                if (h.stacks > 0) sb.append(Component.translatable("hexcraft.unit.stack_hit", h.stacks).getString());
                                 if (h.hurtStacks > 0) {
-                                    if (sb.length() > 0) sb.append("，");
-                                    sb.append("受击层 ").append(h.hurtStacks).append(" 层");
+                                    if (sb.length() > 0) sb.append(Component.translatable("hexcraft.unit.sep").getString());
+                                    sb.append(Component.translatable("hexcraft.unit.stack_hurt", h.hurtStacks).getString());
                                 }
                                 tip.add(Component.literal(sb.toString()).withStyle(c -> c.withColor(0xFFFFD28C)));
                             }
@@ -599,7 +599,7 @@ public class HextechPageScreen extends HexScaledScreen {
                     idx += 2;
                     for (PlayerData.EquipEntry e : stkEqs) {
                         drawAttrRow(g, inner, idx, Component.translatable("hexcraft.equip." + e.id + ".name"),
-                                "×" + e.stacks + "层");
+                                Component.translatable("hexcraft.unit.stack_x", e.stacks).getString());
                         int rowY = inner + (idx / 2) * ROW_H;
                         int hc = hoverColumn(hoverX, hoverY, rowY);
                         boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
@@ -607,7 +607,7 @@ public class HextechPageScreen extends HexScaledScreen {
                             java.util.List<Object> tip = new java.util.ArrayList<>();
                             tip.add(Component.translatable("hexcraft.equip." + e.id + ".name").withStyle(c -> c.withColor(0xFF9FE4FF)));
                             tip.add(Component.translatable("hexcraft.equip." + e.id + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
-                            tip.add(Component.literal("当前 " + e.stacks + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
+                            tip.add(Component.literal(Component.translatable("hexcraft.unit.stack_current", e.stacks).getString()).withStyle(c -> c.withColor(0xFFFFD28C)));
                             hoverTip = tip;
                         }
                         idx++;
@@ -619,7 +619,7 @@ public class HextechPageScreen extends HexScaledScreen {
                     idx += 2;
                     for (PlayerData.StackEntry bs : battleStacks) {
                         Component bname = Component.literal(stackNameOf(bs.key));
-                        drawAttrRow(g, inner, idx, bname, (int) bs.value + "/" + capText((int) bs.cap) + "层");
+                        drawAttrRow(g, inner, idx, bname, Component.translatable("hexcraft.unit.stack_ratio", (int) bs.value, capText((int) bs.cap)).getString());
                         int rowY = inner + (idx / 2) * ROW_H;
                         int hc = hoverColumn(hoverX, hoverY, rowY);
                         boolean hitOwnCol = (idx % 2 == 0) ? hc == 1 : hc == 2;
@@ -630,7 +630,7 @@ public class HextechPageScreen extends HexScaledScreen {
                             if (bid != null) {
                                 tip.add(Component.translatable("hexcraft.hextech." + bid + ".desc").withStyle(c -> c.withColor(0xFFAAB6D8)));
                             }
-                            tip.add(Component.literal("当前 " + (int) bs.value + " / " + capText((int) bs.cap) + " 层").withStyle(c -> c.withColor(0xFFFFD28C)));
+                            tip.add(Component.literal(Component.translatable("hexcraft.unit.stack_current_cap", (int) bs.value, capText((int) bs.cap)).getString()).withStyle(c -> c.withColor(0xFFFFD28C)));
                             hoverTip = tip;
                         }
                         idx++;
@@ -702,14 +702,17 @@ public class HextechPageScreen extends HexScaledScreen {
                             int tierColor = t < cr.tier() ? 0xFFFFD700 : 0xFFAAB6D8;
                             // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘；件数不带括号
                             tip.add(new HexFonts.ColLine(
-                                    new String[]{"档" + (t + 1), cr.tierCounts()[t] + "件", en, val},
+                                    new String[]{Component.translatable("hexcraft.gui.tier_no", t + 1).getString(),
+                                            Component.translatable("hexcraft.gui.tier_pieces", cr.tierCounts()[t]).getString(),
+                                            en, val},
                                     tierColor));
                         }
-                        if (!maxTier) tip.add(Component.literal("再　" + (cr.tierCounts()[cr.tier()] - cr.have()) + "　件激活档　" + (cr.tier() + 1))
+                        if (!maxTier) tip.add(Component.literal(Component.translatable("hexcraft.gui.tier_next",
+                                        cr.tierCounts()[cr.tier()] - cr.have(), cr.tier() + 1).getString())
                                 .withStyle(t -> t.withColor(0xFFFF6B6B)));
-                        if (stackSource) tip.add(Component.literal("叠层上限梯级：2　件　400　→　4　件　600　→　6　件　800　→　8　件　1000　→　10　件　∞")
+                        if (stackSource) tip.add(Component.translatable("hexcraft.gui.stackcap_ladder")
                                 .withStyle(t -> t.withColor(0xFF9FE4FF)));
-                        if (maxTier && stackSource) tip.add(Component.literal("叠层上限已解锁：∞").withStyle(t -> t.withColor(0xFFC77DFF)));
+                        if (maxTier && stackSource) tip.add(Component.translatable("hexcraft.gui.stackcap_unlocked").withStyle(t -> t.withColor(0xFFC77DFF)));
                         if (prismaticUnlocked) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.prismatic_bonus").getString())
                                 .withStyle(t -> t.withColor(0xFFC77DFF)));
                         hoverTip = tip;
@@ -733,7 +736,9 @@ public class HextechPageScreen extends HexScaledScreen {
                 if (hc != 0 && hitOwnCol) {
                     java.util.List<Object> tip = new java.util.ArrayList<>();
                     tip.add(Component.translatable("hexcraft.gui.combo.stack_tier").withStyle(t -> t.withColor(0xFF9FE4FF)));
-                    tip.add(Component.literal("拥有 " + comboStacks + " 件叠层海克斯 → 叠层获取/上限 " + (comboStacks >= 4 ? "+40%" : "+20%")).withStyle(t -> t.withColor(0xFFAAB6D8)));
+                    tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.stack_owned").getString()
+                            .replace("{n}", String.valueOf(comboStacks))
+                            .replace("{p}", comboStacks >= 4 ? "+40%" : "+20%")).withStyle(t -> t.withColor(0xFFAAB6D8)));
                     hoverTip = tip;
                 }
             }
@@ -831,10 +836,10 @@ public class HextechPageScreen extends HexScaledScreen {
     /** 成长叠层框的层数文本：命中层为主、受击层并列（双叠层海克斯）；均无层时显示 0 便于识别"已持有未成长"。
      *  数值列宽度有限（44px），双叠层用 ×命中/受受击 的紧凑写法，完整分解放在 hover 提示里。 */
     private static String stackTextOf(PlayerData.HexEntry h) {
-        if (h.stacks > 0 && h.hurtStacks > 0) return "×" + h.stacks + "/受" + h.hurtStacks + "层";
-        if (h.stacks > 0) return "×" + h.stacks + "层";
-        if (h.hurtStacks > 0) return "受击×" + h.hurtStacks + "层";
-        return "×0层";
+        if (h.stacks > 0 && h.hurtStacks > 0) return Component.translatable("hexcraft.unit.stack_compact_both", h.stacks, h.hurtStacks).getString();
+        if (h.stacks > 0) return Component.translatable("hexcraft.unit.stack_x", h.stacks).getString();
+        if (h.hurtStacks > 0) return Component.translatable("hexcraft.unit.stack_hurt_x", h.hurtStacks).getString();
+        return Component.translatable("hexcraft.unit.stack_zero").getString();
     }
 
     /** 可叠层装备：仅列真正有每层属性收益的（三段式 stack_attr / stack_attr_onhit / stack_attr_onhurt） */
@@ -1010,10 +1015,13 @@ public class HextechPageScreen extends HexScaledScreen {
                     int slotColor = t < br.tier ? 0xFFFFD700 : 0xFFAAB6D8;
                     // v0.9.10 分栏对齐：档号/件数/效果名自动列对齐，数值右对齐分栏区右缘；件数不带括号
                     tip.add(new HexFonts.ColLine(
-                            new String[]{"档" + (t + 1), br.tierCounts()[t] + "件", en, val},
+                            new String[]{Component.translatable("hexcraft.gui.tier_no", t + 1).getString(),
+                                    Component.translatable("hexcraft.gui.tier_pieces", br.tierCounts()[t]).getString(),
+                                    en, val},
                             slotColor));
                 }
-                if (!maxTier) tip.add(Component.literal("再　" + (br.tierCounts()[br.tier()] - br.have) + "　件激活档　" + (br.tier() + 1))
+                if (!maxTier) tip.add(Component.literal(Component.translatable("hexcraft.gui.tier_next",
+                                br.tierCounts()[br.tier()] - br.have, br.tier() + 1).getString())
                         .withStyle(t -> t.withColor(0xFFFF6B6B)));
                 if (prismaticRow) tip.add(Component.literal(Component.translatable("hexcraft.gui.combo.prismatic_bonus").getString())
                         .withStyle(t -> t.withColor(0xFFC77DFF)));
@@ -1175,7 +1183,10 @@ public class HextechPageScreen extends HexScaledScreen {
     private static String signPct(int pct) { return signNum(String.valueOf(pct)) + "%"; }
 
     /** v0.9.24 叠层之源档位值渲染：400/600/800/1000 直接写层数，0 表示无上限写成 ∞ */
-    private static String capTierText(double v) { return v <= 0 ? "∞" : ((int) v) + " 层"; }
+    private static String capTierText(double v) {
+        if (v <= 0) return Component.translatable("hexcraft.unit.cap_inf").getString();
+        return Component.translatable("hexcraft.unit.cap_tier", (int) v).getString();
+    }
 
     private String fmtEffect(double v, boolean percent) {
         if (v <= 0) return "--";
@@ -1236,12 +1247,12 @@ public class HextechPageScreen extends HexScaledScreen {
             if (h.stacks > 0 || h.hurtStacks > 0) {
                 StringBuilder st = new StringBuilder();
                 if (h.stacks > 0) {
-                    st.append("  ×").append(h.stacks).append("层");
-                    if (ClientDataStore.permStackCap < h.stacks) st.append("(生效").append(ClientDataStore.permStackCap).append(")");
+                    st.append(Component.translatable("hexcraft.unit.stack_inline_x", h.stacks).getString());
+                    if (ClientDataStore.permStackCap < h.stacks) st.append(Component.translatable("hexcraft.unit.effective_cap", ClientDataStore.permStackCap).getString());
                 }
                 if (h.hurtStacks > 0) {
-                    st.append("  受击×").append(h.hurtStacks).append("层");
-                    if (ClientDataStore.permStackCap < h.hurtStacks) st.append("(生效").append(ClientDataStore.permStackCap).append(")");
+                    st.append(Component.translatable("hexcraft.unit.stack_inline_hurt", h.hurtStacks).getString());
+                    if (ClientDataStore.permStackCap < h.hurtStacks) st.append(Component.translatable("hexcraft.unit.effective_cap", ClientDataStore.permStackCap).getString());
                 }
                 name = name.copy().append(st.toString());
             }
@@ -1485,7 +1496,7 @@ public class HextechPageScreen extends HexScaledScreen {
             String multStr = "×" + fmt(tierMultV);
             g.drawString(HexFonts.ui(), Component.literal(multStr),
                     cx() + 8 + HexFonts.ui().width(tierNameC) + 5, ly + 3, 0xFF7FD8FF, false);
-            g.drawString(HexFonts.ui(), Component.literal(grp.items.size() + " 条"), cx() + 178, ly + 3, 0xFF6A7B96, false);
+            g.drawString(HexFonts.ui(), Component.literal(Component.translatable("hexcraft.unit.count_items", grp.items.size()).getString()), cx() + 178, ly + 3, 0xFF6A7B96, false);
             // 组内词条两列（组内索引分列，不跨组，标题不再挤占列位）；v0.4.4 行距 12→13 防文字挤压
             for (int i = 0; i < grp.items.size(); i++) {
                 Object[] it = grp.items.get(i);
@@ -1617,8 +1628,8 @@ public class HextechPageScreen extends HexScaledScreen {
                     net.minecraft.network.chat.MutableComponent eqName = Component.translatable("hexcraft.equip." + eq.id + ".name").copy();
                     if (eq.level > 0) eqName = eqName.append("  Lv." + eq.level);
                     if (eq.stacks > 0) {
-                        eqName = eqName.append("  ×" + eq.stacks + "层");
-                        if (ClientDataStore.permStackCap < eq.stacks) eqName = eqName.append("(生效" + ClientDataStore.permStackCap + ")");
+                        eqName = eqName.append(Component.translatable("hexcraft.unit.stack_inline_x", eq.stacks).getString());
+                        if (ClientDataStore.permStackCap < eq.stacks) eqName = eqName.append(Component.translatable("hexcraft.unit.effective_cap", ClientDataStore.permStackCap).getString());
                     }
                     java.util.List<Object> tip = new java.util.ArrayList<>();
                     tip.add(eqName.withStyle(c -> c.withColor(rarityColor(rk))));
@@ -1681,7 +1692,7 @@ public class HextechPageScreen extends HexScaledScreen {
                 net.minecraft.network.chat.MutableComponent eqName = Component.translatable("hexcraft.equip." + id + ".name").copy();
                 if (owned != null) {
                     if (owned.level > 0) eqName = eqName.append("  Lv." + owned.level);
-                    if (owned.stacks > 0) eqName = eqName.append("  ×" + owned.stacks + "层");
+                    if (owned.stacks > 0) eqName = eqName.append(Component.translatable("hexcraft.unit.stack_inline_x", owned.stacks).getString());
                 }
                 java.util.List<Object> tip = new java.util.ArrayList<>();
                 tip.add(eqName.withStyle(c -> c.withColor(rarityColor(rk))));

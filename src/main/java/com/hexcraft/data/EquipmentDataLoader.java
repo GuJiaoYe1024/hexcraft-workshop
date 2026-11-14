@@ -61,6 +61,8 @@ public class EquipmentDataLoader extends SimpleJsonResourceReloadListener {
         Hexcraft.LOGGER.info("Hexcraft: equip pools -> gold={} prismatic={}",
                 HextechRegistry.equipPool(HextechRarity.GOLD).size(),
                 HextechRegistry.equipPool(HextechRarity.PRISMATIC).size());
+        // v0.9.26 审查 P1-A：两个 loader 执行顺序不确定，各自末尾都校验一次（幂等，仅多一行日志）
+        HextechRegistry.validateSources();
     }
 
     /** v0.6.2 抽公共解析：数据包 JSON / DLC 外接包共用 */

@@ -1,3 +1,24 @@
+## v0.9.27 — 按规范反查的一轮修复（2026-11-14）
+
+**① 装备抽取界面 silver 稀有度被染成金色**
+- `EquipRollScreen` 的 `rarityColor` 只有 `prismatic` 一个分支，`silver` 落到 default 的金色 `0xFFFFC94A`，显示与品质不符
+- 补 `case "silver" -> 0xFFD8D8D8`，与其余四个界面口径一致
+
+**② `source` 字段启动期白名单校验**
+- 新增 `HextechRegistry.validateSources()`，在 `HexDataLoader.apply` 与 `EquipmentDataLoader.apply` 末尾各调用一次（幂等，因两个 loader 执行顺序不确定）
+- 528 条带 `source` 的内容、18 种来源，静态核对全部落在 `KNOWN_SOURCES` 内，首次启动不会误报
+- 白名单内的 mod 即使玩家没装也不报警——那是正常状态、由 `isSourceEnabled` 的 `isLoaded` 判定静默过滤；只有「不在白名单」才可能是拼错
+- 同步新增 `VANILLA_CLASSES`（4 个纯原版机制职业包，刻意不进 `CLASS_REQUIRE_MOD`），`hex_class_*` 若既不在该表也不在白名单就告警，防未来新增时漏登记
+
+**③ UI 硬编码中文迁 lang**
+- `FutureScreen`：18 条联动 mod 显示名改走 `hexcraft.source.*`（与 `sourceDisplayName` 用同一套名称，术语统一），4 条数量拼接句迁 lang
+- `HextechPageScreen`：38 处「数字 + 中文单位词」全部迁到 `hexcraft.unit.*` / `hexcraft.gui.*`；中文值逐字保留原串（含全角空格 `　`），中文界面排版与改前完全一致
+- `EnemyHexScreen`：1 处层数单位迁 lang
+- 新增 30 个 lang 键，中英各一份（2833 → 2863）
+- 含百分号参数的文案改用 `{n}` / `{p}` 占位符手动替换，绕开 `Component.translatable` 底层 `String.format` 的非法格式异常
+
+文档影响：22-内容管线与数据驱动、34-跨mod联动设计
+
 ## v0.9.26 — 存储联动顺序改为玩家可配置（2026-11-14）
 
 **① 新增「存储联动」配置分类**

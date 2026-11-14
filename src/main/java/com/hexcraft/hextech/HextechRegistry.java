@@ -404,6 +404,11 @@ public class HextechRegistry {
             Map.entry("hex_class_woodwalker", "twilightforest")
     );
 
+    /** v0.9.26 审查 P1-B：纯原版机制职业包——不依赖任何外部 mod，刻意不进 CLASS_REQUIRE_MOD。
+     *  新增职业包海克斯时，要么登记进 CLASS_REQUIRE_MOD，要么加进这里，否则 validateSources() 会报出来。 */
+    private static final java.util.Set<String> VANILLA_CLASSES = java.util.Set.of(
+            "hex_class_archaeologist", "hex_class_beekeeper", "hex_class_trimmer", "hex_class_warden");
+
     /** 定义在当前环境是否可用（来源启用判定；contentType: hex / equip）。
      *  v0.9.3 修正6：外接包内容（海克斯/装备/世界海克斯）的启停由所属 DLC 包决定（关闭包 → 不参与抽取），
      *  内置 DLC（dlc_niyuan/dlc_aram）与非包内容仍走 source 开关判定。 */
@@ -414,6 +419,49 @@ public class HextechRegistry {
         String req = CLASS_REQUIRE_MOD.get(def.id);
         if (req != null && !net.minecraftforge.fml.ModList.get().isLoaded(req)) return false;
         return isSourceEnabled(def.source, contentType);
+    }
+
+    /** v0.9.26 审查 P1-A + P1-B：定义完整性校验（数据加载完成后调用）。
+     *  P1-A：source 是裸字符串，拼错（如 irons_spellbook 少个 s）既无编译错误、也无运行异常，
+     *  isSourceEnabled 的 isLoaded 判定只会静默返回 false，结果是这批内容永久抽不到、且查不出原因。
+     *  这里复用上方已有的 KNOWN_SOURCES 白名单，把「不在白名单」的 source 报出来。
+     *  白名单内的 mod 即使玩家没装也不报——那是正常状态，由 isSourceEnabled 静默过滤。
+     *  P1-B：职业包海克斯若既不在 CLASS_REQUIRE_MOD 登记、也不在 VANILLA_CLASSES 白名单，
+     *  则目标 mod 缺失时不会被隐藏（等同于守卫缺失），一并报出来。 */
+    public static void validateSources() {
+        Map<String, Integer> unknown = new LinkedHashMap<>();
+        List<String> unregistered = new ArrayList<>();
+        int checked = 0;
+        List<HextechDefinition> all = new ArrayList<>(DEFINITIONS.values());
+        all.addAll(EQUIPMENTS.values());
+        for (HextechDefinition d : all) {
+            if (d.id.startsWith("hex_class_")
+                    && !CLASS_REQUIRE_MOD.containsKey(d.id)
+                    && !VANILLA_CLASSES.contains(d.id)) {
+                unregistered.add(d.id);
+            }
+            String s = d.source;
+            if (s == null || s.isBlank()) continue;
+            checked++;
+            if ("vanilla".equals(s) || KNOWN_SOURCES.contains(s)) continue;
+            unknown.merge(s, 1, Integer::sum);
+        }
+        if (unknown.isEmpty()) {
+            com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] source 校验通过：{} 条带来源内容全部可识别", checked);
+        } else {
+            com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft] source 校验：{} 个未知来源（这些内容不会进池，检查是否拼错或漏登记白名单）", unknown.size());
+            for (Map.Entry<String, Integer> e : unknown.entrySet()) {
+                com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft]   source=\"{}\" 共 {} 条", e.getKey(), e.getValue());
+            }
+        }
+        if (unregistered.isEmpty()) {
+            com.hexcraft.Hexcraft.LOGGER.info("[Hexcraft] 职业包校验通过：全部 hex_class_* 已登记或属原版职业白名单");
+        } else {
+            com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft] 职业包校验：{} 个 hex_class_* 未登记且不在原版白名单（目标 mod 缺失时不会被隐藏）", unregistered.size());
+            for (String id : unregistered) {
+                com.hexcraft.Hexcraft.LOGGER.warn("[Hexcraft]   {}", id);
+            }
+        }
     }
 
     // ================= 装备 =================

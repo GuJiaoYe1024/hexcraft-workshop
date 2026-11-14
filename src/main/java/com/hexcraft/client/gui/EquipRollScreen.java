@@ -250,6 +250,7 @@ public class EquipRollScreen extends HexScaledScreen {
     private static int rarityColor(String key) {
         return switch (key) {
             case "prismatic" -> 0xFFC77DFF;
+            case "silver" -> 0xFFD8D8D8;
             default -> 0xFFFFC94A;
         };
     }

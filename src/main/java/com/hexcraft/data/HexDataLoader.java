@@ -62,6 +62,8 @@ public class HexDataLoader extends SimpleJsonResourceReloadListener {
                 HextechRegistry.pool(HextechRarity.SILVER).size(),
                 HextechRegistry.pool(HextechRarity.GOLD).size(),
                 HextechRegistry.pool(HextechRarity.PRISMATIC).size());
+        // v0.9.26 审查 P1-A：数据装载完毕后校验 source 白名单（拼错会静默失效，这里把它报出来）
+        HextechRegistry.validateSources();
     }
 
     /** v0.6.2 抽公共解析：数据包 JSON / DLC 外接包共用（stackTag[] 解析进定义，tooltip 运行时拼接标签后缀） */
