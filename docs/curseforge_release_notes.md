@@ -1,3 +1,60 @@
+﻿Hexcraft Workshop v0.9.31 - Fix for the 0.9.30 load failure
+============================================================
+
+THE GAME WOULD NOT START ON 0.9.30
+==================================
+- 0.9.30 shipped loaderVersion="[47.1.0,48)" in mods.toml.
+- loaderVersion validates the javafml language loader's module version, which is the integer 47 (i.e. 47.0.0) on every Forge 47.x install. It is not the Forge version number such as 47.4.23.
+- Under Maven range semantics 47 does not satisfy the lower bound 47.1.0, so Forge aborted during dependency validation with:
+  "Mod hexworkshop requires javafml version [47.1.0,48) or above, currently 47"
+- The game stopped during mod loading, before reaching the main menu.
+
+WHAT CHANGED
+============
+- loaderVersion: [47.1.0,48) -> [47,)   (javafml 47 and above, no upper bound)
+- forge dependency range: [47.1.0,48) -> [47,)   (Forge 47.x and above, no upper bound)
+- minecraft dependency range: [1.20.1,1.20.2) -> [1.20.1,1.21)   (Minecraft 1.20.1 through 1.20.x)
+
+[47,) has a lower bound only, which is exactly what "47 and above" means. [47.1.0,48) was hard-coded: it excluded 47.0 and rejected 48 and later.
+
+VERIFICATION
+============
+- runGameTestServer loaded the mod for real with Forge 47.4.28 and Minecraft 1.20.1: "All 10 required tests passed :)"
+- Datapack loading completed with 0 failures: 776 hextech definitions, 61 equipment definitions, 4 world hex definitions (45 total).
+- No LoadingFailedException, no "requires ... version", no ERROR, no Exception in the log.
+- Language files: 2825 / 2825 keys, no missing entry, no placeholder mismatch.
+- Reflection targets verified against six optional mods: all 15 referenced classes, methods and fields exist.
+Hexcraft Workshop v0.9.30 - Forge stat display fix
+==================================================
+
+DOUBLED SIGNS IN THE FORGE TOOLTIP
+==================================
+- The forge tooltip and the forge card face showed entries such as "Armor ++1.5/level" and "Cast time -+2%/level".
+- Cause: the lang template already carries the sign ("Armor +{displayValue}/level"), while both display functions added another one - signNum() on the attribute page and a literal "+" on the roll card.
+- Both functions now return the bare value; the sign comes from the lang template only.
+
+MISSING PERCENT STATS ON THE FORGE CARD
+=======================================
+- The card only treated hppct and aspdpct as percentages, so atkpct, armorpct and luckpct rendered as "+0.03" instead of "+3%".
+- All display paths now call the same predicate.
+
+DISPLAY-ONLY PERCENT PREDICATE
+==============================
+- cast_haste and spell_cd use an attribute unit where 1 point equals 1%, so perLevel 0.02 should read "2%". It used to read "0.02".
+- These two are applied as ADDITION in PlayerData, so folding them into isPercentForgeStat would have changed how they stack. They did not go in.
+- A new isPercentForgeDisplay predicate decides only whether to multiply by 100 and append "%". Stacking behaviour is untouched.
+
+EVENT-TYPE FORGE STATS REALIGNED (16 ENTRIES)
+=============================================
+- The value in FORGE_EVENT_MODS is the per-level percentage (0.05 means 5%), but all 17 entries rendered as "+0.05/level".
+- 16 of them are now treated as percentages. The single exception is deep_breath, whose value 1 is a breath level, so it keeps "+1.0/level".
+
+VERIFICATION
+============
+- compileJava BUILD SUCCESSFUL.
+- A standalone script recomputed 21 attribute stats and 17 event stats across all three tiers; no doubled sign combinations remain.
+- Samples: Armor 1.5 / 3.0 / 4.5, Max health 5% / 10% / 15%, Cast time -2% / -4% / -6%, Dragon damage 5% / 10% / 15%.
+
 Hexcraft Workshop v0.9.26 - Storage routing order is now configurable
 =====================================================================
 

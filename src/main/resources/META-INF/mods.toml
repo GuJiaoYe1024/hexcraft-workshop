@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[47.1.0,48)"
+loaderVersion="[47,)"
 license="MIT"
 
 [[mods]]
@@ -43,14 +43,14 @@ authors="GuJiaoYe, 豆包"
 [[dependencies.hexworkshop]]
 modId="forge"
 mandatory=true
-versionRange="[47.1.0,48)"
+versionRange="[47,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="minecraft"
 mandatory=true
-versionRange="[1.20.1,1.20.2)"
+versionRange="[1.20.1,1.21)"
 ordering="NONE"
 side="BOTH"
 

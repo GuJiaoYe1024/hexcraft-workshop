@@ -1,3 +1,32 @@
+﻿## v0.9.31 — 修复 0.9.30 无法进入游戏（2026-11-16）
+
+**① 根因：`mods.toml` 的 `loaderVersion` 填了一个不存在的版本**
+
+- 0.9.30 把 `loaderVersion="[47,)"` 改成了 `"[47.1.0,48)"`。
+- `loaderVersion` 校验的是 **javafml 语言加载器的模块版本**。Forge 47.x 里这个值恒为整数 `47`（即 `47.0.0`），不是 Forge 的版本号 47.4.23。
+- 按 Maven 范围语义，`47` 不满足下界 `47.1.0`，Forge 在依赖校验阶段直接抛 `LoadingFailedException`：
+  `Mod hexworkshop requires javafml version [47.1.0,48) or above, currently 47`
+- 结果：游戏在 mod 加载阶段中断，玩家进不去游戏。
+
+**② 修法：三个版本声明恢复为宽松范围**
+
+| 位置 | 0.9.30（错误） | 0.9.31（正确） | 含义 |
+|---|---|---|---|
+| `loaderVersion` | `[47.1.0,48)` | `[47,)` | javafml 47 及以上，无上界 |
+| `forge` 依赖范围 | `[47.1.0,48)` | `[47,)` | Forge 47.x 及以上，无上界 |
+| `minecraft` 依赖范围 | `[1.20.1,1.20.2)` | `[1.20.1,1.21)` | MC 1.20.1~1.20.x |
+
+`[47,)` 只有下界没有上界，正是「47 及以上」；`[47.1.0,48)` 才是写死——排除 47.0、挡掉 48 及以后。
+
+**验证**
+
+- `runGameTestServer` 真实加载：Forge 47.4.28 + MC 1.20.1，`All 10 required tests passed :)`
+- 数据全量加载 0 failed：776 hextech / 61 equipment / 4 world hex（total 45）
+- 全程无 `LoadingFailedException`、无 `requires ... version`、无 `ERROR`、无 `Exception`
+- lang 2825 / 2825 键零差异、零占位符不匹配
+- 6 个联动目标 mod 的 15 个反射类、方法名、字段名全部存在
+
+**文档影响**：无（仅构建配置修正，不涉及规范）
 ## v0.9.30 — 锻造词条显示修复（2026-11-15）
 
 **① 去掉锻造弹窗的重复符号**
