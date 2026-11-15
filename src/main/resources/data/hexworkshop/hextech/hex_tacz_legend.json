@@ -12,5 +12,6 @@
       "perLevel": 0.0022
     }
   ],
-  "event": "tacz_power:0.30,tacz_crit:0.15,tacz_heal:2.0"
+  "event": "tacz_power:0.30,tacz_crit:0.15,tacz_heal:2.0",
+  "category": "ranged"
 }

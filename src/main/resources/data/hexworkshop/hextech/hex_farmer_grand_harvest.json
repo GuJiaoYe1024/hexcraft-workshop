@@ -3,5 +3,5 @@
   "weight": 6,
   "source": "farmersdelight",
   "mods": [],
-  "event": "loot_double:1,coin_bonus:0.2,loot_bonus:0.3"
+  "event": "loot_double:1,coin_bonus:0.2,loot_bonus:0.4"
 }

@@ -2,5 +2,6 @@
     "rarity":  "SILVER",
     "weight":  7,
     "source": "tacz",
-    "event":  "tacz_pierce:0.35"
+    "event":  "tacz_pierce:0.35",
+    "category": "ranged"
 }

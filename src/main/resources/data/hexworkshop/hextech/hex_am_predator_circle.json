@@ -3,5 +3,5 @@
   "weight": 6,
   "source": "alexsmobs",
   "mods": [],
-  "event": "am_predator:0.18,am_kill_heal:2,crit:0.10"
+  "event": "am_predator:0.18,am_kill_heal:2,crit:0.15"
 }

@@ -3,5 +3,5 @@
   "weight": 6,
   "source": "farmersdelight",
   "mods": [],
-  "event": "potion_strength:4,food_on_kill:4,regen:1"
+  "event": "potion_strength:4,food_on_kill:6,regen:1"
 }

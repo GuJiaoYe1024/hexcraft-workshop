@@ -109,7 +109,40 @@ public final class DlcManager {
         } catch (IOException e) {
             Hexcraft.LOGGER.error("Hexcraft-DLC: 扫描 packs 失败", e);
         }
+        checkCycles(); // v0.9.29：依赖环检测（成环的包写入 error，下游自动跳过）
         Hexcraft.LOGGER.info("Hexcraft-DLC: 扫描完成，共 {} 个外接包", PACKS.size());
+    }
+
+    /** v0.9.29 依赖环检测：DLC 包的 dlc_meta.json 可声明 dependencies，
+     *  若互相成环（a→b→a），加载顺序无法确定、内容归属也会来回覆盖。
+     *  做法是把参与成环的包写进 {@link PackInfo#error}——activeDataPacks() 与
+     *  packEnabledOf() 本来就只认 error.isEmpty()，因此下游零改动、该包自动不加载，
+     *  其余包不受影响。环外的正常依赖不报警。 */
+    private static void checkCycles() {
+        for (PackInfo p : PACKS.values()) {
+            if (!p.error.isEmpty()) continue; // 已经无效的包不用再判
+            java.util.Set<String> path = new java.util.LinkedHashSet<>();
+            path.add(p.id);
+            for (String dep : p.dependencies) {
+                if (reachesSelf(dep, path)) {
+                    p.error = "依赖成环：" + String.join(" → ", path) + " → " + p.id;
+                    Hexcraft.LOGGER.warn("Hexcraft-DLC: 包 {} 依赖成环，已跳过加载（{}）", p.id, p.error);
+                    break;
+                }
+            }
+        }
+    }
+
+    /** 从 id 出发能否回到 path 里已有的包；path 会收集途经的包 id（成环时即环上成员） */
+    private static boolean reachesSelf(String id, java.util.Set<String> path) {
+        PackInfo p = PACKS.get(id);
+        if (p == null) return false; // 依赖指向未安装的包，不构成环
+        if (!path.add(id)) return true; // 回到路径上已有的包 = 成环
+        for (String dep : p.dependencies) {
+            if (reachesSelf(dep, path)) return true;
+        }
+        path.remove(id);
+        return false;
     }
 
     /** v0.9.3 内置示例包：packs 目录为空时写入两个 zip 模板（原版/逆原分开，命名 [中文]英文），
@@ -191,22 +224,24 @@ public final class DlcManager {
             }
             """;
 
-    /** 示例海克斯 1（原版向）：展示基础结构（稀有度/权重/来源/效果键事件，事件用合法键 melee_power=近战增伤） */
+    /** 示例海克斯 1（原版向）：展示基础结构（稀有度/权重/来源/效果键事件，事件用合法键 melee_power=近战增伤）
+     *  source 用 "vanilla"：白名单豁免且 isSourceEnabled 恒真，示例才能真的进抽取池 */
     private static final String EXAMPLE_HEX_VANILLA = """
             {
               "rarity": "SILVER",
               "weight": 10,
-              "source": "example_vanilla",
+              "source": "vanilla",
               "event": "melee_power:0.2"
             }
             """;
 
-    /** 示例海克斯 2（逆原向）：展示黄金档与吸血效果键（lifesteal=吸血） */
+    /** 示例海克斯 2（逆原向）：展示黄金档与吸血效果键（lifesteal=吸血）
+     *  source 用 "dlc_niyuan"：属内置来源白名单，isSourceEnabled 走 DLC_NIYUAN_ENABLED（默认 true），示例才能真的进池 */
     private static final String EXAMPLE_HEX_NIYUAN = """
             {
               "rarity": "GOLD",
               "weight": 6,
-              "source": "example_niyuan",
+              "source": "dlc_niyuan",
               "event": "lifesteal:0.05"
             }
             """;

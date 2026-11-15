@@ -2,5 +2,6 @@
   "rarity": "SILVER",
   "weight": 7,
   "source": "tacz",
-  "event": "tacz_strafe:0.15"
+  "event": "tacz_strafe:0.15",
+  "category": "ranged"
 }

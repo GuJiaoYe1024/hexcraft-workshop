@@ -488,14 +488,6 @@ public class HextechEvents {
         return base;
     }
 
-    /** v0.9.7 v2-C：个人叠层无上限解锁判定——「叠层之源」羁绊满档（10 件 = 档 5）即解锁（个人生效）。
-     *  v0.9.24 起个人叠层上限改由「叠层之源」逐步解锁（档1=400/档2=600/档3=800/档4=1000/档5=∞），
-     *  原「叠层专家」只保留叠层增速效果，不再承担上限解锁。 */
-    public static boolean unlimitedStackCap(PlayerData data) {
-        if (data == null) return false;
-        return stackSourceTierOf(data) >= com.hexcraft.hextech.ComboRegistry.STACK_SOURCE.tierCounts().length;
-    }
-
     /** v0.9.7 v2-C：个人叠层生效上限（服务端权威，客户端属性页显示同源）。
      *  v0.9.24：上限解锁由「叠层之源」负责（不再借用叠层专家的件数），档位与叠层专家同构：
      *  基础 200；叠层之源档1（2件）=400 / 档2（4件）=600 / 档3（6件）=800 / 档4（8件）=1000 / 档5 满员=∞ */
@@ -510,12 +502,14 @@ public class HextechEvents {
     public static int stackCapFor(PlayerData data) {
         if (data == null) return 200;
         int tier = stackSourceTierOf(data);
-        if (tier >= 5) return Integer.MAX_VALUE;
-        if (tier >= 4) return 1000;
-        if (tier >= 3) return 800;
-        if (tier >= 2) return 600;
-        if (tier >= 1) return 400;
-        return 200;
+        if (tier <= 0) return 200;
+        // v0.9.30 单一数据源：档位值直接从 STACK_SOURCE 羁绊读，不再在此硬编码第二份，
+        // 避免「图鉴显示一档、实际结算另一档」的双定义分叉。值 0 表示该档无上限。
+        double[] vals = com.hexcraft.hextech.ComboRegistry.STACK_SOURCE.values();
+        if (tier > vals.length) tier = vals.length;
+        double v = vals[tier - 1];
+        if (v <= 0) return Integer.MAX_VALUE;
+        return (int) Math.round(v);
     }
 
     /** v0.9.24 叠层之源当前档位（0=未激活，1..5）：负责个人叠层上限解锁。 */

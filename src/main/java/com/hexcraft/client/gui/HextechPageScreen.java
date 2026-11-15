@@ -1256,14 +1256,12 @@ public class HextechPageScreen extends HexScaledScreen {
                 }
                 name = name.copy().append(st.toString());
             }
-            // v0.9.27 P3：行首档位徽标（单条 / 方框 / 双框），不依赖颜色也能分辨稀有度
-            RollScreen.CardButton.drawRarityGlyph(g, cx() + 6, ly + 2, rarityColor(rk), 255, rk);
-            g.drawString(HexFonts.ui(), name, cx() + 16, ly, rarityColor(rk), false);
+            g.drawString(HexFonts.ui(), name, cx() + 6, ly, rarityColor(rk), false);
             // 来源角标：联动 mod 内容（原版不标）——TACZ 青色 / 其它联动金色，一眼区分内容来源
             // v0.8.4：角标动态定位（名字后 4px），超右缘则不显示——第二批联动 modid 较长（CATACLYSM/FARMERSDELIGHT 等）固定 x 会溢出
             String src = HextechRegistry.sourceOf(h.id);
             if (!"vanilla".equals(src)) {
-                int tagX = cx() + 16 + HexFonts.ui().width(name) + 4;
+                int tagX = cx() + 6 + HexFonts.ui().width(name) + 4;
                 Component tag = HextechRegistry.sourceDisplayName(src);
                 if (tagX + HexFonts.ui().width(tag) <= cx() + 226) {
                     g.drawString(HexFonts.ui(), tag, tagX, ly,
@@ -1276,6 +1274,12 @@ public class HextechPageScreen extends HexScaledScreen {
                 tip.add(name.copy().withStyle(c -> c.withColor(rarityColor(rk))));
                 // v0.8.5 稀有度行（白银/黄金/棱彩），一眼看出品质档位
                 tip.add(Component.translatable("hexcraft.rarity." + rk).withStyle(c -> c.withColor(rarityColor(rk))));
+                // v0.9.30 主题行：theme 原先是死字段（774 个里 163 个有值、15 种取值），此处接入显示
+                if (def != null && !def.theme.isEmpty()) {
+                    tip.add(Component.translatable("hexcraft.theme.label",
+                            Component.translatable("hexcraft.theme." + def.theme))
+                            .withStyle(c -> c.withColor(0xFF8FA6C8)));
+                }
                 tip.add(Component.translatable("hexcraft.hextech." + h.id + ".desc"));
                 // v0.6.2 叠层标签后缀：tooltip 运行时自动拼接【叠层：xxx｜xxx｜xxx】（新增海克斯仅改 JSON stackTag 数组）
                 String tagSuffix = com.hexcraft.hextech.StackTagKeys.tooltipSuffix(
@@ -1335,16 +1339,53 @@ public class HextechPageScreen extends HexScaledScreen {
         return n;
     }
 
-    /** 海克斯分类判定：优先按 ID 关键词（tacz→枪械、enchant→附魔、mining/miner→矿物、firework→趣味），
-     *  其次按事件 key 归类（矿工智慧 mining_xp→矿物、时运/冶炼/磁吸→矿物、TACZ 词条→枪械、附魔词条→附魔）；
-     *  stack_attr 特判第二段 atk→战斗 / hp→生存；未识别默认战斗 */
+    /** 海克斯分类判定（v0.9.30 改为三层，原先只按文件名+event 猜，JSON 的 category 字段全项目零读取）：
+     *  1) event token 前缀 → 枪械 tacz_ / 附魔 enchant_ / 矿物 mining_，**优先于 category**：
+     *     11 个 DLC 枪械内容（hex_niyuan_sniping_* 等）category 标的是 ranged，实际是 TACZ 玩法
+     *  2) 文件名关键词兜底：老内容没有对应 token 前缀，只能靠命名识别
+     *  3) 读 JSON 的 category 字段，15 种折叠进现有 8 个界面标签；
+     *     370 个联动内容 category 是空串（definition 注释允许），空串跳过本层、落到第 4 层
+     *  4) 仍不匹配则按 event key 旧猜法归类，stack_attr 特判 atk→战斗/hp→生存，最后默认战斗 */
     private static int hexCategoryOf(String id, com.hexcraft.hextech.HextechDefinition def) {
         String idl = id.toLowerCase(java.util.Locale.ROOT);
+        String ev = def != null && def.event != null ? def.event : "";
+        // 第一层：event token 前缀判武器/工具类型
+        for (String tok : ev.split(",")) {
+            int ci = tok.indexOf(':');
+            String ek = (ci > 0 ? tok.substring(0, ci) : tok).trim();
+            if (ek.startsWith("tacz_")) return 5;      // 枪械
+            if (ek.startsWith("enchant_")) return 6;   // 附魔
+            if (ek.startsWith("mining_")) return 7;    // 矿物
+        }
+        // 第二层：文件名兜底
         if (idl.contains("tacz")) return 5;        // 枪械（含 hex_tacz_*）
         if (idl.contains("enchant")) return 6;     // 附魔（含 hex_enchant_*）
         if (idl.contains("mining") || idl.contains("miner")) return 7; // 矿物（含 hex_mining_*、矿工智慧）
-        if (idl.contains("firework")) return 8;    // 趣味（烟花之王/烟花盛典）
-        String ev = def != null && def.event != null ? def.event : "";
+        if (idl.contains("firework")) return 8;    // 趣味（烟花之王/烟花盛典，保持原行为）
+        // 烟花类严格保持原行为：旧逻辑按 event token 顺序取第一个命中的 token 定分类，
+        // 所以 hex_party_big(firework,splash) / hex_aram_dive_bomb(firework) 归趣味，
+        // 而 hex_aram_clown_college(fire_chain,firework) 归战斗（fire_chain 先命中）。
+        // 这里只判「首个 token 是不是 firework」，复刻旧行为，不扩大到其它 token。
+        String firstSeg = ev;
+        int fci = ev.indexOf(',');
+        if (fci > 0) firstSeg = ev.substring(0, fci);
+        int fcol = firstSeg.indexOf(':');
+        String firstEk = (fcol > 0 ? firstSeg.substring(0, fcol) : firstSeg).trim();
+        if ("firework".equals(firstEk)) return 8;
+        // 第三层：读 category 字段（15 种 → 8 个界面标签）
+        if (def != null && !def.category.isEmpty()) {
+            int c = switch (def.category) {
+                case "melee", "ranged", "spell", "elemental" -> 1;          // 战斗
+                case "sustain", "abyss", "summon" -> 2;                     // 生存
+                case "stacking", "profession", "equip", "mobility" -> 3;    // 成长
+                case "economy" -> 4;                                        // 经济
+                case "mining" -> 7;                                         // 矿物
+                case "utility", "dimension" -> 8;                           // 趣味
+                default -> 0;                                               // 未知 category 落到第 4 层
+            };
+            if (c > 0) return c;
+        }
+        // 第四层：旧猜法
         for (String tok : ev.split(",")) {
             int ci = tok.indexOf(':');
             String ek = ci > 0 ? tok.substring(0, ci) : tok;
@@ -1561,14 +1602,14 @@ public class HextechPageScreen extends HexScaledScreen {
         com.hexcraft.hextech.HextechDefinition.ModSpec m = com.hexcraft.hextech.HextechRegistry.forgeMod(stat);
         if (m == null) return "?";
         double v = m.perLevel * com.hexcraft.hextech.HextechRegistry.tierMult(tier);
-        if (com.hexcraft.hextech.HextechRegistry.isPercentForgeStat(stat)) {
+        if (com.hexcraft.hextech.HextechRegistry.isPercentForgeDisplay(stat)) {
             String p = String.format(java.util.Locale.ROOT, "%.2f", v * 100.0).replaceFirst("\\.?0+$", "");
-            return signNum(p) + "%";
+            return p + "%";
         }
         String s = String.format(java.util.Locale.ROOT, "%.4f", v);
         s = s.replaceFirst("0+$", "");
         if (s.endsWith(".")) s += "0";
-        return signNum(s);
+        return s;
     }
 
     /** 全部分组总高度（含组间距 6） */
@@ -1615,13 +1656,11 @@ public class HextechPageScreen extends HexScaledScreen {
                 String rk = def != null ? def.rarity.key : "gold";
                 String icon = def != null && def.icon != null ? def.icon : "◆";
                 String nm = Component.translatable("hexcraft.equip." + eq.id + ".name").getString();
-                // v0.9.27 P3：行首档位徽标（单条 / 方框 / 双框），不依赖颜色也能分辨稀有度
-                RollScreen.CardButton.drawRarityGlyph(g, cx() + 6, ly + 2, rarityColor(rk), 255, rk);
-                g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 16, ly, rarityColor(rk), false);
+                g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 6, ly, rarityColor(rk), false);
                 // 来源角标：联动装备行尾角标（原版不标）；v0.8.4 动态定位防长 modid 溢出
                 String src = HextechRegistry.sourceOf(eq.id);
                 if (!"vanilla".equals(src)) {
-                    int tagX = cx() + 16 + HexFonts.ui().width(icon + " " + nm) + 4;
+                    int tagX = cx() + 6 + HexFonts.ui().width(icon + " " + nm) + 4;
                     Component tag = HextechRegistry.sourceDisplayName(src);
                     if (tagX + HexFonts.ui().width(tag) <= cx() + 228) {
                         g.drawString(HexFonts.ui(), tag, tagX, ly, 0xFF4DE6FF, false);
@@ -1680,9 +1719,7 @@ public class HextechPageScreen extends HexScaledScreen {
             String icon = def != null && def.icon != null ? def.icon : "◆";
             String nm = Component.translatable("hexcraft.equip." + id + ".name").getString();
             g.fill(cx() + 3, ly - 1, cx() + 228, ly + 11, 0x18305080);
-            // v0.9.27 P3：行首档位徽标（单条 / 方框 / 双框），不依赖颜色也能分辨稀有度
-            RollScreen.CardButton.drawRarityGlyph(g, cx() + 6, ly + 2, rarityColor(rk), 255, rk);
-            g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 16, ly, rarityColor(rk), false);
+            g.drawString(HexFonts.ui(), icon + " " + nm, cx() + 6, ly, rarityColor(rk), false);
             // 已拥有 Lv 标识
             PlayerData.EquipEntry owned = ownedEquip(id);
             if (owned != null) {

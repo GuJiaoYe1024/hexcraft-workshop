@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[47,)"
+loaderVersion="[47.1.0,48)"
 license="MIT"
 
 [[mods]]
@@ -9,7 +9,7 @@ displayName="Hexcraft Workshop 海克斯工坊"
 logoFile="hexworkshop_icon.png"
 description='''Hexcraft Workshop (海克斯工坊)
 以「双资源 → 三选一构筑」为核心的玩法强化模组，灵感来自英雄联盟海克斯大乱斗与斗魂竞技场。
-- 695 种海克斯增幅（白银/黄金/棱彩）：复合机制、永续成长、附魔与矿物联动，原版池 350、14 联动系 345 持续扩充
+- 774 种海克斯增幅（白银/黄金/棱彩）：复合机制、永续成长、附魔与矿物联动，原版池 404（含 3 个内置 DLC 包 141）、15 联动系 370 持续扩充
 - 属性锻造器：16 项普通属性 + 5 项法术属性（联动）+ 17 项事件锻造词条，锻造无上限、数值消毒防崩坏
 - 61 件词条装备：无尽之刃、饮血剑、心之钢等 LOL 风格机制移植，法强系装备法术联动，各联动模组均有专属装备
 - 世界海克斯 45 个：全服进度级构筑，生物/进度两种抽取途径
@@ -17,7 +17,7 @@ description='''Hexcraft Workshop (海克斯工坊)
 - v0.8.8 经验递增：每抽一次海克斯，下次抽取经验需求 +20%（可配置开关与幅度）
 - 完整经济系统：击杀掉落晶币，绿宝石双向兑换
 - TACZ 自动联动：安装永恒枪械工坊即解锁枪械海克斯/装备/锻造词条，弹药回复直通枪内子弹；未安装自动剔除
-- Iron's Spells 自动联动：安装法术与魔法书即解锁 39 个法术海克斯（施法/魔力/法术伤害/九大学校流派）、法术锻造词条、卢登/影焰/巫妖之祸法术联动；未安装自动剔除
+- Iron's Spells 自动联动：安装法术与魔法书即解锁 38 个法术海克斯（施法/魔力/法术伤害/九大学校流派）、法术锻造词条、卢登/影焰/巫妖之祸法术联动；未安装自动剔除
 - 冰与火之歌 自动联动：屠龙者/抗性/龙族克制海克斯与锻造词条
 - Alex's Caves 自动联动：辐射防护/洞穴生物克制海克斯与锻造词条
 - 暮色森林 自动联动：BOSS 进度/维度专属海克斯与锻造词条
@@ -43,14 +43,14 @@ authors="GuJiaoYe, 豆包"
 [[dependencies.hexworkshop]]
 modId="forge"
 mandatory=true
-versionRange="[47,)"
+versionRange="[47.1.0,48)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hexworkshop]]
 modId="minecraft"
 mandatory=true
-versionRange="[1.20.1,1.21)"
+versionRange="[1.20.1,1.20.2)"
 ordering="NONE"
 side="BOTH"
 

@@ -3,5 +3,6 @@
   "weight": 8,
   "source": "tacz",
   "mods": [],
-  "event": "tacz_far_power:0.15,crit:0.08"
+  "event": "tacz_far_power:0.15,crit:0.08",
+  "category": "ranged"
 }

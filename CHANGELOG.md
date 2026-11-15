@@ -1,11 +1,105 @@
-## v0.9.28 — 稀有度加形状、埋点三条命令、第一组 GameTest（2026-11-14）
+## v0.9.30 — 锻造词条显示修复（2026-11-15）
 
-**① 稀有度从「颜色编码」升级为「颜色 + 文字 + 形状」**
-- 原状：五个界面的稀有度只靠缎带颜色区分，色盲玩家在明度接近的档位之间分辨困难
-- 新增 `RollScreen.drawRarityGlyph`：最低档画 6×2 单横条、中档画 6×6 空心方框、最高档画 8×8 双框 + 中心 2×2 点，纯几何无字体依赖
-- 落点 6 处：`RollScreen` 卡片缎带右端、`EquipRollScreen`（复用 `RollScreen.CardButton`）、`WorldRollScreen` 自有卡片、`HextechPageScreen` 持有海克斯行 / 装备持有行 / 装备图鉴行、`WorldHexScreen` 条目
-- 列表类界面行首加徽标后名称统一右移 10px，截断宽度同步减 10，长名不会被挤掉
-- 未改动 `HextechPageScreen` 的 tooltip 稀有度行——纯文本浮层画不了图形，且它本来就写着「白银/黄金/棱彩」三个字
+**① 去掉锻造弹窗的重复符号**
+- 现象：锻造器弹窗与属性页 tooltip 出现 `护甲 ++1.5/级`、`施法时间 -+0.02/级`
+- 原因：lang 模板 `护甲 +{displayValue}/级` 自带符号，而 `HextechPageScreen.forgeValueText` 用 `signNum()` 又加一次，`RollScreen.forgeCardValueText` 用 `"+" +` 再加一次
+- 修法：两处显示函数改为返回不带符号的纯数值，符号统一由 lang 模板给
+
+**② 补上漏判的百分比词条**
+- `RollScreen.forgeCardValueText` 原来只判 `hppct`/`aspdpct`，漏了 `atkpct`/`armorpct`/`luckpct`，这三条在锻造卡面上会显示成 `+0.03` 而不是 `+3%`
+- 改为统一调用 `HextechRegistry.isPercentForgeDisplay`
+
+**③ 新增显示专用百分比判定**
+- `cast_haste` / `spell_cd` 的属性单位是 1 点 = 1%，`perLevel 0.02` 应显示 `2%`，原来显示 `0.02`
+- 但这两条在 `PlayerData.applyModifiers` 走 `ADDITION`，若并入 `isPercentForgeStat` 会连带改掉叠加方式
+- 故新增 `isPercentForgeDisplay`：只决定「×100 后加 %」，不参与叠加判定
+
+**④ 事件型锻造词条单位对齐（16 条）**
+- `FORGE_EVENT_MODS` 的值即「每级百分比」（`0.05` → 5%），原来 17 条全部显示成 `+0.05/级`
+- 16 条纳入显示判定；唯一例外 `deep_breath` 的 `1` 是「呼吸等级/级」，保持 `+1.0/级`，不转百分比
+
+**验证**
+- `compileJava` BUILD SUCCESSFUL（仅 6 条既有弃用警告，与本次改动无关）
+- 独立脚本复算 21 条属性词条 + 17 条事件词条 × 白银/黄金/棱彩三档，`++` / `-+` / `+-` 组合全归零
+- 抽样结果：护甲 `+1.5/+3.0/+4.5`、最大生命 `+5%/+10%/+15%`、施法时间 `-2%/-4%/-6%`、龙族伤害 `+5%/+10%/+15%`
+
+**文档影响**：01-介绍写法规范（数值写法统一口径）、17-本地化与翻译规范（占位符不自带符号，符号归模板）；知识库本次无需修订
+
+## v0.9.29 — 按 40 份规范全量对照后的第一批、第二批修复（2026-11-14）
+
+按 40 份规范逐条核对（`docs/规范对照_0.9.28.md`，254 条判定）后，用户批准「按顺序一个一个做」。本版完成前两批。
+
+**① 文案清理（6 项，已全量验证）**
+- 全角括号：`zh_cn.json` 5 行 6 对 → 半角，`check_cjk.py` 归零（17-4）
+- 感叹号：中文 21 处、英文 22 处全清，句中改逗号、英文改破折号（`背包已满！仅 %s` → `背包已满，仅 %s`、`Spell Crit!` → `Spell Crit —`）（35-4）
+- `desc` 数值词：56 条按 JSON 里的 `event` 真实数值重写，不再写「提升」「增强」这类无信息量词（01-5）
+- `desc` 长度：777 条 `hexcraft.hextech.*.desc` 全部 ≤50 字（原 11 条超标，最长 71 字）（01-7）
+- 退役残留键：19 个 `hexcraft.forge.*_aspect`（`FORGE_MECHANICS` / `FORGE_TACZ_MECHANICS` 均 `@Deprecated` 且零引用）+ `hex_irons_arcane_strike`，中英各删 40 键，2863 → 2824（17-7）
+- README / CHANGELOG 与代码矛盾：0.9.28 段与 README 的稀有度形状描述改写为「已撤回」（40-5）
+
+**② 稀有度几何图标撤回**
+- 见下方 0.9.28 段 ① 的撤回记录；本版源码已无 `drawRarityGlyph`
+
+**③ 配置文件版本标识（30-配置与选项设计）**
+- 新增 `HexConfig.CONFIG_VERSION` → `configVersion`，默认 1、范围 1~1000，注释标明「勿手动修改」
+- 目的：日后配置结构变更时可识别旧格式做迁移，而不是靠玩家反馈「配置项不见了」
+- 已校验：`translation()` 声明 164 个键，中英各 0 缺失
+
+**④ DLC 依赖环检测（19-存档迁移与数据安全 / 22-内容管线）**
+- 新增 `DlcManager.checkCycles()`：DFS 判断 `dependencies` 是否成环（a→b→a）
+- 成环的包写入既有 `PackInfo.error` 字段——`activeDataPacks()` 与 `packEnabledOf()` 本来就只认 `error.isEmpty()`，**下游零改动**，该包自动不加载，其余包不受影响
+- **实测验证**：临时造两个互相依赖的包 `zz_cycle_a` / `zz_cycle_b` 跑 `runGameTestServer`，日志真实打出「包 zz_cycle_a 依赖成环，已跳过加载（依赖成环：zz_cycle_a → zz_cycle_b → zz_cycle_a）」两条，同时 10 个 GameTest 全绿、776 条海克斯正常加载、无内容损失；测试包已清理，日志留 `build/gametest_cycle_check.log`
+- 环外正常依赖不报警；依赖指向未安装的包也不误判
+
+**⑥ 内容管线三件套（22-内容管线与数据驱动）**
+- 新增 `docs/schema/` 三份 JSON Schema：`hextech.schema.json` / `equipment.schema.json` / `world_hex.schema.json`，枚举值全部取自 839 个实际文件的实测并集，不是凭印象写的
+- 新增 `build/validate_schema.py`：**规则全部从 schema 文件读，脚本内不写死任何规则**，schema 改了脚本自动跟着变，不会漂移。支持必填/类型/枚举/正则/数值范围/未声明字段/UTF-8 BOM
+- 新增 `docs/内容管线手册.md`：三类 JSON 一览、`mods` vs `source` 字段陷阱、**热重载边界表**（能热更 vs 必须重启逐项列清）、**DLC 数据契约**（目录结构、ID 规则、meta 字段、五种拒绝加载情形、降级行为）
+- 校验基线：839 个文件、0 不合格、0 BOM
+
+**⑦ 配置总表（30-配置与选项设计，只整理不删）**
+- 新增 `build/gen_config_doc.py`，从 `HexConfig.java` 自动提取生成 `docs/配置总表.md`：**155 项、9 组**，逐项列出配置键 / 字段名 / 默认值 / 范围 / 说明
+- **刻意不改分组结构**：`b.push("group")` 决定 TOML 段名，改分组名会让玩家旧配置文件的键全部找不到，等于重置所有人的配置。文档里如实标出 `linked` 53 项、`v060` 39 项过载，并说明重排必须配套「旧键→新键迁移」逻辑，属独立改动
+- 维护纪律写进文档：不删配置项、新增必须补 `translation()` 与中英 lang、改默认值要记 CHANGELOG
+
+**这一批纠正了我自己的两处错误判断**（写 schema 时被 `validate_schema.py` 当场抓出，34 个文件不合格）：
+- `stackTag` 我以为是单个字符串，实际 **23 个文件全部是数组**（一个海克斯可同时归入多个叠层框）
+- `event` 我以为只有 `token:数值` 两段，实际还有 25 段 `token:属性名:数值` 三段式、3 段非数字值（`transform:prismatic`）
+两处都是「照印象写 schema」，被自己的校验脚本反过来打脸——这也证明这个校验器是有用的。
+
+**⑧ 对外文档（14 / 27 / 33 号）**
+- 新增 `docs/经济全景.md`：晶币与经验的全部 faucet / sink 逐条列出真实默认值（普通怪 1~3、精英 5~10、首领 20~50、锻造 100/200/450/175、抽卡 400 经验 +10%/次递增），附可填的收支比算法与三档玩家观察点。**明确标注四条没数据的东西**：三档实际收支比、反刷触发率、`loot_double` 隐性增量、EMC 充值使用频率——不假装有测量
+- 新增 `docs/玩家支持手册.md`：四章合一
+  - 反馈通道现状：如实写音效与粒子**不做**（用户拍板）、屏幕抖动与顿帧**不可行**（MC 事件层限制），并说明代价是打击感偏弱
+  - 已知问题清单 6 条按影响分排序：K1「背包打不开」标为**搁置**（用户决定暂不追根因）、K2 17 个 token 缺说明、K3 英文 desc 偏长、K4 modId vs 包名、K5 GameTest 进 jar、K6 `FORGE_MECHANICS` 死代码
+  - 玩家报告收集表 + 三问顺序（只装本 mod 能复现吗 / 有日志吗 / 什么版本）
+  - 六种回复模板（崩溃 / 玩法异常 / 不是 bug / 重复 / 需要信息 / 已修）
+  - 安装自查 5 步，含日志里该搜哪些关键词、`loaded N` 的失败数怎么看
+
+**⑤ 已核查但不需要改的**
+- `HexFonts` 反射兜底：`HexFonts.java:186` 早已是 `{"fontSets", "f_94999_"}` 双名尝试 + `catch (Throwable)` 兜底，原审查记「只用字面名」是误读
+
+**⑨ 联动海克斯功能分类补齐（TACZ 46 个，2026-11-15）**
+- 按 `source` 字段全扫 774 个 `hextech/*.json` 筛出 46 个 tacz 海克斯（不按文件名猜），逐条按「玩家主要使用场景」判一个主分类，取值落在既有 15 类枚举内，不新增分类
+- 结果：ranged 40、sustain 4、stacking 2；其余 14 个联动系 324 个 `category` 仍为空
+- 写回按字节精确插入：每个文件只多一行 `"category": ...`，既有行仅补语法必需的逗号；无 BOM，行尾风格（CRLF / LF）与结尾换行逐文件原样保留；46 份原件先备份到 `build/backup_category_tacz_20261115/`
+- 逐文件对照备份核验 46/46 只多预期插入段、其余字节零差异；`validate_schema.py` 839 文件 0 不合格、0 BOM
+- README 分类分布同步更新：远程 32→72、生存 57→61、叠层 32→34、补职业 25、未分类 370→324
+
+**验证**：`check_json.py` 843 文件语法错误 0；`check_cjk.py` `total: 0`；`compileJava` BUILD SUCCESSFUL；`runGameTestServer` 10 测试全绿
+
+文档影响：01-介绍写法规范、14-经济与资源循环、17-本地化与翻译规范、19-存档迁移与数据安全、22-内容管线与数据驱动、27-玩家反馈与bug处理、30-配置与选项设计、33-包体与首次启动体验、35-文本语气与写作一致性、40-文档与知识库维护
+
+---
+
+## v0.9.28 — 埋点三条命令、第一组 GameTest（2026-11-14）
+
+**① 稀有度几何图标（已撤回，原方案作废）**
+- 原方案：给五个界面的稀有度加几何徽标——最低档 6×2 单横条、中档 6×6 空心方框、最高档 8×8 双框 + 中心 2×2 点，落在卡片缎带右端与四处列表行首
+- **撤回原因**：29-无障碍设计规范第 14 行原文为「必须配**文字或形状**」——二者其一即可达标，现有列表行本就带文字标签，形状不是必需项。追加形状属于超出规范的自发改动
+- **撤回实测依据**：1px 描边在 Gui Scale 1 下几乎消失，最低档 6×1 横条被读成破折号，中档 6×6 空心框被读成「未勾选复选框」，最高档 8×8 与中档仅差 2px；图标宽度 6/6/8 不等还导致每行名称左边缘参差
+- 代码改动：删除 `RollScreen.drawRarityGlyph` 整个方法、`RollScreen.CardButton` 的 `rarityKey` 字段与构造参数，清理 `RollScreen` / `EquipRollScreen` / `WorldRollScreen` / `HextechPageScreen` / `WorldHexScreen` 全部 6 处调用，并还原为徽标预留的排版偏移（`cx()+16`→`cx()+6`、`nameW()-10`→`nameW()`、`x+10`→`x`）
+- 全项目 `grep drawRarityGlyph|rarityKey` 归零，`compileJava` 通过
 
 **② 选取率埋点 `/hexworkshop pickstats`**
 - 新增 `HexPickStats`：纯内存 `HashMap`，按 `hex` / `forge` / `equip` / `world` 四类分别记「被抽到」与「被选中」，另有轮次、弃选、刷新三个计数

@@ -8,5 +8,6 @@
       "perLevel": 0.014
     }
   ],
-  "event": "tacz_heal:3"
+  "event": "tacz_heal:3",
+  "category": "sustain"
 }

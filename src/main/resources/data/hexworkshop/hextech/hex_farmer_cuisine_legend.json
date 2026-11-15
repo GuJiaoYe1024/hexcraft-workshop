@@ -3,5 +3,5 @@
   "weight": 6,
   "source": "farmersdelight",
   "mods": [],
-  "event": "farmer_chef:4,potion_regen:1,kill_heal:2"
+  "event": "farmer_chef:4,potion_regen:1.5,kill_heal:2"
 }

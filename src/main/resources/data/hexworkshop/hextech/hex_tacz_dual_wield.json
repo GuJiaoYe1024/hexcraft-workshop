@@ -2,5 +2,6 @@
   "rarity": "GOLD",
   "weight": 6,
   "source": "tacz",
-  "event": "tacz_dual_wield:0.40"
+  "event": "tacz_dual_wield:0.40",
+  "category": "ranged"
 }

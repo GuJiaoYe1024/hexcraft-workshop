@@ -3,5 +3,5 @@
   "weight": 6,
   "source": "alexscaves",
   "mods": [],
-  "event": "loot_bonus:0.25,mining_fortune:0.20,xp_bonus:0.20"
+  "event": "loot_bonus:0.3,mining_fortune:0.20,xp_bonus:0.25"
 }

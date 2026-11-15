@@ -3,5 +3,6 @@
   "weight": 10,
   "source": "tacz",
   "mods": [],
-  "event": "tacz_heal:1.5,regen:0.4"
+  "event": "tacz_heal:1.5,regen:0.4",
+  "category": "sustain"
 }

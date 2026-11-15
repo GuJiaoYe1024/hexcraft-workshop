@@ -2,5 +2,6 @@
   "rarity": "SILVER",
   "weight": 8,
   "source": "tacz",
-  "event": "tacz_close_power:0.12,low_hp_power:0.08"
+  "event": "tacz_close_power:0.12,low_hp_power:0.08",
+  "category": "ranged"
 }

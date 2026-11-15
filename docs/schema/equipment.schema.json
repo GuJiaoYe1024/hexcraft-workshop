@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/GuJiaoYe1024/hexcraft-workshop/docs/schema/equipment.schema.json",
+  "title": "装备定义（equipment）",
+  "description": "对应 data/hexworkshop/equipment/*.json。ID 取文件名。取值枚举为 2026-11-14 对 61 件实际装备的实测并集。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rarity", "weight", "icon", "sell", "mods", "event"],
+  "properties": {
+    "rarity": {
+      "type": "string",
+      "enum": ["SILVER", "GOLD", "PRISMATIC"],
+      "description": "稀有度。实测现存 61 件只有 GOLD / PRISMATIC 两档，SILVER 留给后续内容。"
+    },
+    "weight": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000,
+      "description": "抽取权重。"
+    },
+    "icon": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2,
+      "description": "界面显示的单字符图标，取 Unicode 符号（如 ❤ ⚔ ⚡）。超出 2 字符会撑破格子。"
+    },
+    "sell": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "出售价（晶币）。"
+    },
+    "mods": {
+      "type": "array",
+      "description": "属性修饰。与 hextech 的 mods 同义——描述「每级加什么属性」，不是依赖模组。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attr", "perLevel"],
+        "properties": {
+          "attr": {
+            "type": "string",
+            "enum": ["armor", "attack_damage", "attack_speed", "max_health", "movement_speed", "tough"],
+            "description": "属性简写。装备侧实测只用到这 6 种。"
+          },
+          "perLevel": {
+            "type": "number",
+            "description": "每级增量。"
+          }
+        }
+      }
+    },
+    "event": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+:(?:[a-z0-9_]+:)?(?:-?\\d+(?:\\.\\d+)?|[a-z0-9_]+)(?:,\\s*[a-z0-9_]+:(?:[a-z0-9_]+:)?(?:-?\\d+(?:\\.\\d+)?|[a-z0-9_]+))*$",
+      "description": "事件定义，token:数值 逗号分隔；也允许 token:属性名:数值 三段式（如 stack_attr:atk:0.002）。装备无等级，数值按 +N 强化层数结算。"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["alexscaves", "alexsmobs", "artifacts", "cataclysm", "farmersdelight", "ftbquests", "goety", "iceandfire", "mowziesmobs", "projecte", "relics", "slashblade", "twilightforest"],
+      "description": "归属/依赖标记。必须在 KNOWN_SOURCES 白名单内。"
+    }
+  }
+}

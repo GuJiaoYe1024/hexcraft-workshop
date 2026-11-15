@@ -1,7 +1,7 @@
 {
   "rarity": "PRISMATIC",
   "weight": 3,
-  "event": "spell_power:0.25,fire_chain:0.25,echo:0.15",
+  "event": "spell_power:0.25,fire_chain:0.25,echo:0.2",
   "source": "dlc_niyuan",
   "mods": [
     {

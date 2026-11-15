@@ -123,23 +123,9 @@ public class HextechRegistry {
     /** v0.6.21 事件型锻造词条：stat → [事件效果键, 每级倍率]。效果在 HextechEvents.effect() 按词条汇总
      *  （不注册属性，避免属性应用层 NPE；档位倍率 × 事件倍率，与属性词条同规格可叠加）。 */
     private static final Map<String, String[]> FORGE_EVENT_MODS = new LinkedHashMap<>();
-    /** v0.6.0 锻造机制词条迁出（全部海克斯化）：fire/frost/poison/leech/pierce/crit/execute/splash/
-     *  lightning/stack/dance/bloodlust/reaper/thorn/gold/regen → 对应海克斯（含 TACZ gun/gun_crit/ammo）；
-     *  锻造器仅保留静态属性，强度靠档位倍率区分。以下常量保留供历史/总表统计，不再进入锻造池。 */
-    @Deprecated
-    public static final List<String> FORGE_MECHANICS = List.of(
-            "fire_aspect", "frost_aspect", "poison_aspect", "leech_aspect", "pierce_aspect",
-            "thorn_aspect", "regen_aspect", "gold_aspect",
-            "crit_aspect", "execute_aspect", "splash_aspect",
-            "lightning_aspect", "stack_aspect", "dance_aspect", "bloodlust_aspect", "reaper_aspect");
-    @Deprecated
-    public static final List<String> FORGE_TACZ_MECHANICS = List.of(
-            "gun_aspect", "gun_crit_aspect", "ammo_aspect");
-    /** v0.9.12 棱彩档由 ×3 提到 ×4：最高档位要与稀有度差距相称。实际倍率仍读 HexConfig（可配） */
-    public static final int[] FORGE_TIER_MULT = {1, 2, 4};
-    public static final String[] FORGE_TIER_KEYS = {"basic", "gold", "prismatic"};
+    /** v0.9.12 棱彩档由 ×3 提到 ×4：最高档位要与稀有度差距相称（实际倍率读 HexConfig，服务端生效） */
 
-    /** v0.6.1 锻造档位倍率（配置化，服务端生效；默认 ×1/×2/×3，Cloth 可改——例 1/2/4 爽玩）。
+    /** v0.6.1 锻造档位倍率（配置化，服务端生效；默认 ×1/×2/×4，Cloth 可改——例 1/2/4 爽玩）。
      *  服务端属性计算与客户端 tooltip 展示统一走这里，保证显示=实际加成。非法档位钳制回 1.0。 */
     public static double tierMult(int tier) {
         if (tier == 1) return com.hexcraft.config.HexConfig.FORGE_MULT_GOLD.get();
@@ -555,7 +541,7 @@ public class HextechRegistry {
     }
 
     /** 锻造词条单总池：三档共用同一词条池（当前 = 21 项属性词条 + 最多 17 项事件词条，事件词条按来源已装/开关过滤）；
-     *  档位强度由 FORGE_TIER_MULT 倍率（×1/×2/×3）与 forgeWeight 权重共同区分。
+     *  档位强度由 tierMult()（读 HexConfig.FORGE_MULT_*，默认 ×1/×2/×4）与 forgeWeight 权重共同区分。
      *  棱彩档（tier=2）额外加入「栏位扩展」特殊词条（slot_boost，非属性，选中解锁 1 个海克斯栏位）。 */
     public static List<String> forgePool(int tier) {
         return FORGE_CACHE.computeIfAbsent(tier, t -> List.copyOf(buildForgePool(t)));
@@ -601,6 +587,18 @@ public class HextechRegistry {
      *  （applyModifiers 对这些 stat 走 MULTIPLY_BASE，显示值 = 基础×档位倍率） */
     public static boolean isPercentForgeStat(String stat) {
         return "hppct".equals(stat) || "aspdpct".equals(stat) || "atkpct".equals(stat) || "armorpct".equals(stat) || "luckpct".equals(stat);
+    }
+
+    /** v0.9.30 显示用百分比判定：只决定「×100 后加 %」，不决定叠加方式。
+     *  cast_haste / spell_cd 的属性单位是 1 点 = 1%，perLevel 0.02 应显示 2%；
+     *  但它们在 PlayerData 走 ADDITION，「怎么叠」与「怎么显示」是两件事，
+     *  故不并入 isPercentForgeStat，避免顺手改掉数值行为。
+     *  事件型词条 17 条中 16 条的值即「每级百分比」（0.05 → 5%），
+     *  唯一例外 deep_breath 的 1 是「呼吸等级/级」，乘 100 会变成 100 级/级。 */
+    public static boolean isPercentForgeDisplay(String stat) {
+        if (isPercentForgeStat(stat) || "cast_haste".equals(stat) || "spell_cd".equals(stat)) return true;
+        if ("deep_breath".equals(stat)) return false;
+        return FORGE_EVENT_MODS.containsKey(stat);
     }
 
     /** v0.6.0 校准版：词条抽取权重（按档位；白银档压低高段位词条权重，但全部 >0 理论可出）

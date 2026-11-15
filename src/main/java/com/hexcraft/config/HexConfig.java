@@ -6,6 +6,8 @@ public class HexConfig {
 
     // ---- Common (server-authoritative) ----
     public static final ForgeConfigSpec COMMON_SPEC;
+    /** v0.9.29 配置文件版本（30-配置与选项设计：配置要有版本标识，便于日后识别旧格式做迁移） */
+    public static final ForgeConfigSpec.IntValue CONFIG_VERSION;
     public static final ForgeConfigSpec.IntValue XP_COST_PER_DRAW;
     // ---- v0.8.8 经验递增（服务端生效）----
     /** 经验递增开关（默认开启：每抽一次海克斯，下次抽取经验需求按已抽次数线性提高） */
@@ -244,6 +246,10 @@ public class HexConfig {
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
 
+        CONFIG_VERSION = b.comment("配置文件版本（仅供模组识别旧格式，请勿手动修改；当前为 1）")
+                .translation("hexcraft.config.meta.version")
+                .defineInRange("configVersion", 1, 1, 1000);
+
         b.comment("海克斯抽取").translation("hexcraft.config.cat.draw").push("draw");
         XP_COST_PER_DRAW = b.comment("每次海克斯抽取消耗的经验点数（≈19级为500xp；v0.9.21 由 500 下调到 400，配合递增幅度减半，让叠层套收集不再需要 270+ 级经验）").translation("hexcraft.config.draw.xpCostPerDraw").defineInRange("xpCostPerDraw", 400, 10, 1000000);
         // v0.8.8 经验递增（服务端生效，默认开启）
@@ -377,9 +383,9 @@ public class HexConfig {
         FORGE_MULT_PRISMATIC = b.comment("棱彩锻造倍率（服务端生效，默认 4.0；修改后 tooltip 实际加成随之变化）").translation("hexcraft.config.v060.forgeMultPrismatic").defineInRange("forgeMultiplierPrismatic", 4.0, 0.1, 5.0);
         // v0.6.2 永久叠层全局倍率/上限（服务端权威，客户端修改不生效防作弊）
         PERMANENT_STACK_MULT = b.comment("永久叠层全局获取倍率（服务端生效，默认 1.0；叠角龙/世界海克斯等永久叠层海克斯击杀获取层数 × 该倍率）").translation("hexcraft.config.v060.permanentStackMult").defineInRange("permanentStackGlobalMultiplier", 1.0, 0.1, 10.0);
-        // v0.9.7 修复轮：默认 200→0（0=游戏内机制决定：游玩默认生效上限 200，凑齐 8 件套/死亡系 10 件套满档的个人解锁无上限叠层；
+        // v0.9.7 修复轮：默认 200→0（0=游戏内机制决定：无羁绊基础 200，叠层之源 2/4/6/8/10 件逐档放宽到 400/600/800/1000/无上限；
         // >0=房主/服主锁死生效上限，锁定时羁绊解锁不生效）
-        PERMANENT_STACK_CAP = b.comment("永久叠层生效上限（服务端生效，默认 0=机制决定：游玩默认 200，个人凑齐 8/10 件套满档羁绊解锁无上限；填 >0 则锁死为固定上限，锁定时羁绊解锁不生效；原 0=无限制语义已变更）").translation("hexcraft.config.v060.permanentStackCap").defineInRange("permanentStackGlobalCap", 0, 0, 9999);
+        PERMANENT_STACK_CAP = b.comment("永久叠层生效上限（服务端生效，默认 0=机制决定：无羁绊基础 200，叠层之源 2/4/6/8/10 件逐档放宽到 400/600/800/1000/无上限；填 >0 则锁死为固定上限，锁定时羁绊解锁不生效；原 0=无限制语义已变更）").translation("hexcraft.config.v060.permanentStackCap").defineInRange("permanentStackGlobalCap", 0, 0, 9999);
         // v0.6.16 配置表扩展（服务端生效防作弊）
         EQUIP_GOLD_COST = b.comment("黄金装备购买费用（晶币；原硬编码 2500，现可配置）").translation("hexcraft.config.v060.equipGoldCost").defineInRange("equipGoldCost", 2500, 0, 1000000);
         EQUIP_PRISMATIC_COST = b.comment("棱彩装备购买费用（晶币；原硬编码 4000，现可配置）").translation("hexcraft.config.v060.equipPrismaticCost").defineInRange("equipPrismaticCost", 4000, 0, 1000000);

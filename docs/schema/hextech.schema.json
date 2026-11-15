@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/GuJiaoYe1024/hexcraft-workshop/docs/schema/hextech.schema.json",
+  "title": "海克斯定义（hextech）",
+  "description": "对应 data/hexworkshop/hextech/*.json。ID 取文件名（去掉 .json），文件里没有 id 字段。取值枚举均为 2026-11-14 对 774 个实际文件的实测并集。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rarity", "weight"],
+  "properties": {
+    "rarity": {
+      "type": "string",
+      "enum": ["SILVER", "GOLD", "PRISMATIC"],
+      "description": "稀有度。加载用 equalsIgnoreCase 比较，写小写也能识别，但统一写大写。缺省按 SILVER。"
+    },
+    "weight": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000,
+      "description": "抽取权重。同稀有度池内按此值加权随机。"
+    },
+    "event": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+:(?:[a-z0-9_]+:)?(?:-?\\d+(?:\\.\\d+)?|[a-z0-9_]+)(?:,\\s*[a-z0-9_]+:(?:[a-z0-9_]+:)?(?:-?\\d+(?:\\.\\d+)?|[a-z0-9_]+))*$",
+      "description": "事件定义，多个用逗号分隔。实测存在三种段形式：token:数值（1454 段）、token:属性名:数值（25 段，如 stack_attr:attack_speed:0.00105）、token:非数字值（3 段，如 transform:prismatic）。token 必须在 Java 侧有实现，否则该段静默失效。"
+    },
+    "mods": {
+      "type": "array",
+      "description": "属性修饰（不是「依赖哪些模组」）。每级给多少属性。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attr", "perLevel"],
+        "properties": {
+          "attr": {
+            "type": "string",
+            "enum": ["armor", "attack_damage", "attack_knockback", "attack_speed", "knockback_resistance", "luck", "max_health", "movement_speed", "tough"],
+            "description": "属性简写。引擎只认简写，写全名（如 attack_speed 以外的 attackSpeed）不会生效。"
+          },
+          "perLevel": {
+            "type": "number",
+            "description": "每级增量。实际值 = 等级 × perLevel。"
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "string",
+      "enum": ["alexscaves", "alexsmobs", "artifacts", "cataclysm", "dlc_aram", "dlc_class", "dlc_niyuan", "farmersdelight", "ftbquests", "goety", "iceandfire", "irons_spellbooks", "mowziesmobs", "projecte", "relics", "slashblade", "tacz", "twilightforest"],
+      "description": "归属/依赖标记（不是来源说明文字）。目标 mod 未安装时这批内容不进抽取池。必须在 HextechRegistry.KNOWN_SOURCES 白名单内，否则启动告警。"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["abyss", "dimension", "economy", "elemental", "equip", "melee", "mining", "mobility", "profession", "ranged", "spell", "stacking", "summon", "sustain", "utility"],
+      "description": "界面分类页签归属。"
+    },
+    "theme": {
+      "type": "string",
+      "enum": ["", "arcane", "blood", "crit", "dragon", "end", "execute", "fire", "frost", "gamble", "lightning", "luck", "mana", "nether", "poison", "shield"],
+      "description": "主题标签，用于羁绊归类与界面着色。空串表示无主题。"
+    },
+    "stackTag": {
+      "type": "array",
+      "description": "叠层分类标签，决定属性页归到哪些叠层框。实测 23 个带此字段的文件全部是数组（没有单字符串写法），一个海克斯可同时归入多个框。",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["armor_stack", "combat_stack", "damage_stack", "leech_stack", "on_hit_stack", "on_hurt_stack", "on_kill_stack", "on_tick_stack", "permanent_stack", "shield_stack", "speed_stack", "timed_stack"]
+      }
+    },
+    "stack": {
+      "type": "object",
+      "description": "战斗/临时叠层的显式参数。不写则用代码内默认。",
+      "additionalProperties": false,
+      "required": ["key"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "叠层在 PlayerData 里的存储键，全局唯一。改名等于清空玩家已有层数。"
+        },
+        "cap": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "叠层上限（个人上限）。全局档位解锁后按档位覆盖。"
+        },
+        "combat": {
+          "type": "boolean",
+          "description": "true=战斗叠层（脱战衰减），false=不衰减的常驻叠层。"
+        },
+        "decayDelay": {
+          "type": "integer",
+          "description": "脱战后多少 tick 开始衰减。-1 表示永不衰减。"
+        },
+        "decayRate": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "每次衰减掉几层。0 表示不衰减。"
+        }
+      }
+    },
+    "selfStack": {
+      "type": "boolean",
+      "description": "该海克斯自身叠层时的特殊处理开关。缺省按代码判定。"
+    },
+    "stackGainMult": {
+      "type": "boolean",
+      "description": "是否吃「叠层几率增幅」全局键。"
+    }
+  }
+}

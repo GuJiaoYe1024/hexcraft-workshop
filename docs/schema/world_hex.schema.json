@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/GuJiaoYe1024/hexcraft-workshop/docs/schema/world_hex.schema.json",
+  "title": "世界海克斯定义（world_hex）",
+  "description": "对应 data/hexworkshop/world_hexes/*.json。ID 取文件名。注意该类型用 effect 字段而不是 event，rarity 实测写小写。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rarity", "category", "effect"],
+  "properties": {
+    "rarity": {
+      "type": "string",
+      "enum": ["silver", "gold", "prismatic", "SILVER", "GOLD", "PRISMATIC"],
+      "description": "稀有度。现存 4 条写的是小写，加载用 equalsIgnoreCase 比较因此正常；两种写法都允许。"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["general"],
+      "description": "分类。现存只有 general 一类。"
+    },
+    "effect": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+:(?:[a-z0-9_]+:)?(?:-?\\d+(?:\\.\\d+)?|[a-z0-9_]+)(?:,\\s*[a-z0-9_]+:(?:[a-z0-9_]+:)?(?:-?\\d+(?:\\.\\d+)?|[a-z0-9_]+))*$",
+      "description": "效果定义，语法与 hextech 的 event 完全相同，但字段名是 effect。现存 4 条都是 token:数值 两段式。"
+    }
+  }
+}

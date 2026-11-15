@@ -2,5 +2,6 @@
   "rarity": "SILVER",
   "weight": 7,
   "source": "tacz",
-  "event": "tacz_siphon:0.12"
+  "event": "tacz_siphon:0.12",
+  "category": "ranged"
 }

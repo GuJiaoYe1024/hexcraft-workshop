@@ -2,5 +2,6 @@
     "weight":  5,
     "source": "tacz",
     "rarity":  "PRISMATIC",
-    "event":  "tacz_double_shot:1.0"
+    "event":  "tacz_double_shot:1.0",
+    "category": "ranged"
 }
